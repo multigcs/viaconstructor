@@ -84,7 +84,6 @@ def clean_segments(segments):
         if not matched:
             if key_1a not in cleaned and key_1b not in cleaned:
                 cleaned[key_1a] = segment1
-    print(list(cleaned.values()))
     return list(cleaned.values())
 
 
