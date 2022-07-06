@@ -103,15 +103,16 @@ def draw_grid(project):
     GL.glEnd()
 
     # Grid
+    size = project["setup"]["view"]["grid_size"]
     GL.glLineWidth(0.1)
     GL.glColor3f(0.9, 0.9, 0.9)
     GL.glBegin(GL.GL_LINES)
-    for p_x in range(int(min_max[0]), int(min_max[2]) + 10, 10):
+    for p_x in range(int(min_max[0]), int(min_max[2]) + size, size):
         GL.glVertex3f(p_x, min_max[1], project["setup"]["mill"]["depth"])
-        GL.glVertex3f(p_x, min_max[3], project["setup"]["mill"]["depth"])
-    for p_y in range(int(min_max[1]), int(min_max[3]) + 10, 10):
+        GL.glVertex3f(p_x, min_max[3] + size, project["setup"]["mill"]["depth"])
+    for p_y in range(int(min_max[1]), int(min_max[3]) + size, size):
         GL.glVertex3f(min_max[0], p_y, project["setup"]["mill"]["depth"])
-        GL.glVertex3f(min_max[2], p_y, project["setup"]["mill"]["depth"])
+        GL.glVertex3f(min_max[2] + size, p_y, project["setup"]["mill"]["depth"])
     GL.glEnd()
 
 

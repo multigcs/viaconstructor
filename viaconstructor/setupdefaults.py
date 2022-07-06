@@ -164,5 +164,13 @@ setup_defaults = {
             "title": "Path",
             "tooltip": "how to show the gcode path in the 3d-View",
         },
+        "grid_size": {
+            "default": 10,
+            "type": "int",
+            "min": 1,
+            "max": 1000,
+            "title": "Grid-Size",
+            "tooltip": "size of the grid",
+        },
     },
 }
