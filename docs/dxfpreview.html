@@ -1,0 +1,41 @@
+<h2>dxfpreview</h2>
+DXF-Previewer and to image cobverter for thumbnail generation
+
+<h3>Usage:</h3>
+<code><pre>
+$ dxfpreview -h
+usage: __main__.py [-h] [-x WIDTH] [-y HEIGHT] [-o OUTPUT] filename
+
+positional arguments:
+  filename              dxf file
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -x WIDTH, --width WIDTH
+                        screen width
+  -y HEIGHT, --height HEIGHT
+                        screen height
+  -o OUTPUT, --output OUTPUT
+                        save to image
+</pre></code>
+
+<h3>Examples:</h3>
+
+<h4>display</h4>
+<code><pre>
+$ dxfpreview tests/data/simple.dxf
+</pre></code>
+
+<img src="dxfpreview.png" /><br>
+
+<h4>convert to image</h4>
+<code><pre>
+$ dxfpreview tests/data/simple.ngc -x 320 -y 240 -o simple.jpg
+</pre></code>
+
+<img src="simple.jpg" /><br>
+
+
+
+
+

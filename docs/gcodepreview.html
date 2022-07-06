@@ -1,0 +1,41 @@
+<h2>gcodepreview</h2>
+gCode-Previewer and to image cobverter for thumbnail generation
+
+<h3>Usage:</h3>
+<code><pre>
+$ gcodepreview -h
+usage: __main__.py [-h] [-x WIDTH] [-y HEIGHT] [-o OUTPUT] filename
+
+positional arguments:
+  filename              gcode file
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -x WIDTH, --width WIDTH
+                        screen width
+  -y HEIGHT, --height HEIGHT
+                        screen height
+  -o OUTPUT, --output OUTPUT
+                        save to image
+</pre></code>
+
+<h3>Examples:</h3>
+
+<h4>display</h4>
+<code><pre>
+$ gcodepreview tests/data/simple.ngc
+</pre></code>
+
+<img src="gcodepreview.png" /><br>
+
+<h4>convert to image</h4>
+<code><pre>
+$ gcodepreview tests/data/simple.ngc -x 320 -y 240 -o simple.jpg
+</pre></code>
+
+<img src="simple.jpg" /><br>
+
+
+
+
+
