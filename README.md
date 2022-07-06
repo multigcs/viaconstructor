@@ -12,9 +12,9 @@ Features:
     * automatig order of multiple parts (nearest first)
     * nested parts will milled in the right order (inside parts first)
 
-![viaconstructor](https://raw.githubusercontent.com/multigcs/viaconstructor/docs/viaconstructor.png)
+![viaconstructor](https://raw.githubusercontent.com/multigcs/viaconstructor/main/docs/viaconstructor.png)
 
-![gcodepreview](https://raw.githubusercontent.com/multigcs/viaconstructor/docs/gcodepreview.png)
+![gcodepreview](https://raw.githubusercontent.com/multigcs/viaconstructor/main/docs/gcodepreview.png)
 
-![dxfpreview](https://raw.githubusercontent.com/multigcs/viaconstructor/docs/dxfpreview.png)
+![dxfpreview](https://raw.githubusercontent.com/multigcs/viaconstructor/main/docs/dxfpreview.png)
 
