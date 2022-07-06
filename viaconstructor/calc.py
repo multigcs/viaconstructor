@@ -62,12 +62,17 @@ def angle_2d(p_1, p_2):
 
 
 def clean_segments(segments):
-    # TODO: check double lines pylint: disable=W0511
-    cleaned = []
+    cleaned = {}
     for idx_1, segment1 in enumerate(segments):
+        key_1a = f"{segment1['start'][0]}#{segment1['start'][1]}#{segment1['end'][0]}#{segment1['end'][1]}#{round(segment1['bulge'], 6) or 0.0}"
+        key_1b = f"{segment1['end'][0]}#{segment1['end'][1]}#{segment1['start'][0]}#{segment1['start'][1]}#{round(-segment1['bulge'] ,6) or 0.0}"
         matched = False
         if segment1["bulge"] == 0.0:
             for idx_2, segment2 in enumerate(segments):
+                key_2a = f"{segment2['start'][0]}#{segment2['start'][1]}#{segment2['end'][0]}#{segment2['end'][1]}#{round(segment1['bulge'], 6) or 0.0}"
+                key_2b = f"{segment2['end'][0]}#{segment2['end'][1]}#{segment2['start'][0]}#{segment2['start'][1]}#{round(-segment1['bulge'] ,6) or 0.0}"
+                if {key_1a, key_1b}.intersection({key_2a, key_2b}):
+                    break
                 if segment2["bulge"] == 0.0 and idx_1 != idx_2:
                     if is_between(
                         segment1["start"], segment2["start"], segment2["end"]
@@ -77,8 +82,10 @@ def clean_segments(segments):
                         matched = True
                         break
         if not matched:
-            cleaned.append(segment1)
-    return cleaned
+            if key_1a not in cleaned and key_1b not in cleaned:
+                cleaned[key_1a] = segment1
+    print(list(cleaned.values()))
+    return list(cleaned.values())
 
 
 def is_inside_polygon(obj, point):
