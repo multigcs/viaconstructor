@@ -120,7 +120,8 @@ class GLWidget(QGLWidget):
         GL.glEnable(GL.GL_BLEND)
         GL.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA)
 
-        self.update_drawing()
+        if self.project["status"] != "INIT":
+            self.update_drawing()
 
     def resizeGL(self, width, hight):  # pylint: disable=C0103
         """glresize function."""
@@ -167,6 +168,9 @@ class GLWidget(QGLWidget):
 
     def timerEvent(self, event):  # pylint: disable=C0103,W0613
         """gltimer function."""
+        if self.project["status"] == "INIT":
+            self.project["status"] = "READY"
+            self.update_drawing()
         self.update()
 
     def mousePressEvent(self, event):  # pylint: disable=C0103
@@ -225,6 +229,7 @@ class PyMill:
         "minMax": [],
         "table": [],
         "glwidget": None,
+        "status": "INIT",
     }
 
     def gcode_reload(self):
