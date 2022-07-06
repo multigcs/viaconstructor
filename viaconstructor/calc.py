@@ -69,6 +69,8 @@ def clean_segments(segments):
         matched = False
         if segment1["bulge"] == 0.0:
             for idx_2, segment2 in enumerate(segments):
+                if idx_1 == idx_2:
+                    continue
                 key_2a = f"{segment2['start'][0]}#{segment2['start'][1]}#{segment2['end'][0]}#{segment2['end'][1]}#{round(segment1['bulge'], 6) or 0.0}"
                 key_2b = f"{segment2['end'][0]}#{segment2['end'][1]}#{segment2['start'][0]}#{segment2['start'][1]}#{round(-segment1['bulge'] ,6) or 0.0}"
                 if {key_1a, key_1b}.intersection({key_2a, key_2b}):
