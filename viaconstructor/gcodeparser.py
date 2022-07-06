@@ -172,12 +172,17 @@ class GcodeParser:
         elif angle_dir == 3:
             if start_angle > end_angle:
                 end_angle = end_angle + math.pi * 2
+
+        start_z = last_pos["Z"]
+        diff_z = cords["Z"] - last_pos["Z"]
+        diff_angle = end_angle - start_angle
         if start_angle < end_angle:
             angle = start_angle
             while angle < end_angle:
-                scenter_x = center_x - radius * math.sin(angle - math.pi / 2)
-                scenter_y = center_y + radius * math.cos(angle - math.pi / 2)
-                new_pos = {"X": scenter_x, "Y": scenter_y, "Z": last_pos["Z"]}
+                new_x = center_x - radius * math.sin(angle - math.pi / 2)
+                new_y = center_y + radius * math.cos(angle - math.pi / 2)
+                new_z = start_z + ((angle - start_angle) / diff_angle) * diff_z
+                new_pos = {"X": new_x, "Y": new_y, "Z": new_z}
                 self.path.append((last_pos, new_pos))
                 last_pos = new_pos
                 angle += 0.2
@@ -185,10 +190,12 @@ class GcodeParser:
         elif start_angle > end_angle:
             angle = start_angle
             while angle > end_angle:
-                scenter_x = center_x - radius * math.sin(angle - math.pi / 2)
-                scenter_y = center_y + radius * math.cos(angle - math.pi / 2)
-                new_pos = {"X": scenter_x, "Y": scenter_y, "Z": last_pos["Z"]}
+                new_x = center_x - radius * math.sin(angle - math.pi / 2)
+                new_y = center_y + radius * math.cos(angle - math.pi / 2)
+                new_z = start_z + ((angle - start_angle) / diff_angle) * diff_z
+                new_pos = {"X": new_x, "Y": new_y, "Z": new_z}
                 self.path.append((last_pos, new_pos))
                 last_pos = new_pos
                 angle -= 0.2
             self.path.append((last_pos, cords))
+        self.state["position"] = cords
