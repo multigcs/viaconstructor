@@ -191,7 +191,7 @@ def draw_object_faces(project):
 
 def draw_line(p_1, p_2, project):
     p_from = (p_1["X"], p_1["Y"], p_1["Z"])
-    p_to = (p_2["X"], p_2["Y"], p_1["Z"])
+    p_to = (p_2["X"], p_2["Y"], p_2["Z"])
     line_width = project["setup"]["tool"]["diameter"]
     mode = project["setup"]["view"]["path"]
     draw_mill_line(p_from, p_to, line_width, mode)
