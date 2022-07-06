@@ -118,6 +118,13 @@ setup_defaults = {
             "title": "Active",
             "tooltip": "enable/disable this object",
         },
+        "helix_mode": {
+            "default": False,
+            "type": "bool",
+            "per_object": True,
+            "title": "Helix-Mode",
+            "tooltip": "",
+        },
         "reverse": {
             "default": False,
             "type": "bool",

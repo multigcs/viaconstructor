@@ -116,11 +116,23 @@ def polylines2gcode(project):
                         bulge[num] = -bulge[num]
                     points = vertex2points((x_start, y_start, bulge))
 
+                helix_mode = polyline.mill["helix_mode"]
+
+                # get object distance
+                obj_distance = 0
+                last = points[0]
+                for point in points:
+                    obj_distance += calc_distance(point, last)
+                    last = point
+                if is_closed:
+                    obj_distance += calc_distance(point, points[0])
+
                 gcode.append("")
                 gcode.append("(--------------------------------------------------)")
                 gcode.append(f"(Level: {level})")
                 gcode.append(f"(Order: {order})")
                 gcode.append(f"(Object: {nearest_idx})")
+                gcode.append(f"(Distance: {obj_distance}mm)")
                 gcode.append(f"(Closed: {is_closed})")
                 gcode.append(f"(isPocket: {polyline.is_pocket})")
                 gcode.append(
@@ -146,6 +158,8 @@ def polylines2gcode(project):
                 arc_mode_r = False
 
                 depth = polyline.mill["step"]
+
+                last_depth = 0.0
                 while True:
                     if depth < polyline.mill["depth"]:
                         depth = polyline.mill["depth"]
@@ -159,14 +173,27 @@ def polylines2gcode(project):
                         gcode.append(f"G00 X{points[0][0]} Y{points[0][1]}")
 
                     gcode.append(f"F{project['setup']['mill']['rate_v']}")
-                    gcode.append(f"G01 Z{depth}")
+
+                    if helix_mode:
+                        gcode.append(f"G01 Z{last_depth}")
+                    else:
+                        gcode.append(f"G01 Z{depth}")
                     gcode.append(f"F{project['setup']['mill']['rate_h']}")
 
-                    last = (points[0][0], points[0][1], 0)
+                    trav_distance = 0
                     last = points[0]
-
                     for point in points:
                         bulge = last[2]
+
+                        if helix_mode:
+                            trav_distance += calc_distance(point, last)
+                            depth_diff = depth - last_depth
+                            set_depth = last_depth + (
+                                trav_distance / obj_distance * depth_diff
+                            )
+                        else:
+                            set_depth = depth
+
                         if bulge > 0.0:
                             (
                                 center,
@@ -176,13 +203,13 @@ def polylines2gcode(project):
                             ) = ezdxf.math.bulge_to_arc(last, point, bulge)
                             if arc_mode_r:
                                 gcode.append(
-                                    f"G03 X{round(point[0], 6)} Y{round(point[1], 6)} R{round(radius, 6)}"
+                                    f"G03 X{round(point[0], 6)} Y{round(point[1], 6)} Z{round(set_depth, 6)} R{round(radius, 6)}"
                                 )
                             else:
                                 i = center[0] - last[0]
                                 j = center[1] - last[1]
                                 gcode.append(
-                                    f"G03 X{round(point[0], 6)} Y{round(point[1], 6)} I{round(i, 6)} J{round(j, 6)}"
+                                    f"G03 X{round(point[0], 6)} Y{round(point[1], 6)} Z{round(set_depth, 6)} I{round(i, 6)} J{round(j, 6)}"
                                 )
                         elif bulge < 0.0:
                             (
@@ -193,17 +220,17 @@ def polylines2gcode(project):
                             ) = ezdxf.math.bulge_to_arc(last, point, bulge)
                             if arc_mode_r:
                                 gcode.append(
-                                    f"G02 X{round(point[0], 6)} Y{round(point[1], 6)} R{round(radius, 6)}"
+                                    f"G02 X{round(point[0], 6)} Y{round(point[1], 6)} Z{round(set_depth, 6)} R{round(radius, 6)}"
                                 )
                             else:
                                 i = center[0] - last[0]
                                 j = center[1] - last[1]
                                 gcode.append(
-                                    f"G02 X{round(point[0], 6)} Y{round(point[1], 6)} I{round(i, 6)} J{round(j, 6)}"
+                                    f"G02 X{round(point[0], 6)} Y{round(point[1], 6)} Z{round(set_depth, 6)} I{round(i, 6)} J{round(j, 6)}"
                                 )
                         else:
                             gcode.append(
-                                f"G01 X{round(point[0], 6)} Y{round(point[1], 6)}"
+                                f"G01 X{round(point[0], 6)} Y{round(point[1], 6)} Z{round(set_depth, 6)}"
                             )
 
                         last = point
@@ -211,6 +238,16 @@ def polylines2gcode(project):
                     if is_closed:
                         bulge = last[2]
                         point = points[0]
+
+                        if helix_mode:
+                            trav_distance += calc_distance(point, last)
+                            depth_diff = depth - last_depth
+                            set_depth = last_depth + (
+                                trav_distance / obj_distance * depth_diff
+                            )
+                        else:
+                            set_depth = depth
+
                         if bulge > 0.0:
                             (
                                 center,
@@ -220,13 +257,13 @@ def polylines2gcode(project):
                             ) = ezdxf.math.bulge_to_arc(last, point, bulge)
                             if arc_mode_r:
                                 gcode.append(
-                                    f"G03 X{round(point[0], 6)} Y{round(point[1], 6)} R{round(radius, 6)}"
+                                    f"G03 X{round(point[0], 6)} Y{round(point[1], 6)} Z{round(set_depth, 6)} R{round(radius, 6)}"
                                 )
                             else:
                                 i = center[0] - last[0]
                                 j = center[1] - last[1]
                                 gcode.append(
-                                    f"G03 X{round(point[0], 6)} Y{round(point[1], 6)} I{round(i, 6)} J{round(j, 6)}"
+                                    f"G03 X{round(point[0], 6)} Y{round(point[1], 6)} Z{round(set_depth, 6)} I{round(i, 6)} J{round(j, 6)}"
                                 )
                         elif bulge < 0.0:
                             (
@@ -237,20 +274,25 @@ def polylines2gcode(project):
                             ) = ezdxf.math.bulge_to_arc(last, point, bulge)
                             if arc_mode_r:
                                 gcode.append(
-                                    f"G02 X{round(point[0], 6)} Y{round(point[1], 6)} R{round(radius, 6)}"
+                                    f"G02 X{round(point[0], 6)} Y{round(point[1], 6)} Z{round(set_depth, 6)} R{round(radius, 6)}"
                                 )
                             else:
                                 i = center[0] - last[0]
                                 j = center[1] - last[1]
                                 gcode.append(
-                                    f"G02 X{round(point[0], 6)} Y{round(point[1], 6)} I{round(i, 6)} J{round(j, 6)}"
+                                    f"G02 X{round(point[0], 6)} Y{round(point[1], 6)} Z{round(set_depth, 6)} I{round(i, 6)} J{round(j, 6)}"
                                 )
                         else:
                             gcode.append(
-                                f"G01 X{round(point[0], 6)} Y{round(point[1], 6)}"
+                                f"G01 X{round(point[0], 6)} Y{round(point[1], 6)} Z{round(set_depth, 6)}"
                             )
 
+                    last_depth = depth
+
                     if depth <= polyline.mill["depth"]:
+                        if helix_mode:
+                            helix_mode = False
+                            continue
                         break
                     depth += polyline.mill["step"]
 
