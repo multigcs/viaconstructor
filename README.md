@@ -17,11 +17,6 @@ Features:
 
 ![viaconstructor](https://raw.githubusercontent.com/multigcs/viaconstructor/main/docs/viaconstructor.png)
 
-![gcodepreview](https://raw.githubusercontent.com/multigcs/viaconstructor/main/docs/gcodepreview.png)
-
-![dxfpreview](https://raw.githubusercontent.com/multigcs/viaconstructor/main/docs/dxfpreview.png)
-
-
 ## quikstart
 
 ### get code
@@ -45,4 +40,6 @@ pip3 install -r requirements.txt
 ./bin/dxfpreview tests/data/simple.dxf -o tests/data/simple.jpg
 ```
 
+![gcodepreview](https://raw.githubusercontent.com/multigcs/viaconstructor/main/docs/gcodepreview.png)
 
+![dxfpreview](https://raw.githubusercontent.com/multigcs/viaconstructor/main/docs/dxfpreview.png)
