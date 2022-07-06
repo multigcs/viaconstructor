@@ -21,3 +21,28 @@ Features:
 
 ![dxfpreview](https://raw.githubusercontent.com/multigcs/viaconstructor/main/docs/dxfpreview.png)
 
+
+## quikstart
+
+### get code
+```
+git clone git@github.com:multigcs/viaconstructor.git
+cd viaconstructor
+pip3 install -r requirements.txt
+```
+### start viaconstructor
+```
+./bin/viaconstructor tests/data/simple.dxf
+```
+
+### thumbnail generator: gcode to jpg
+```
+./bin/gcodepreview tests/data/simple.ngc -o tests/data/simple.jpg
+```
+
+### thumbnail generator: dxf to jpg
+```
+./bin/dxfpreview tests/data/simple.dxf -o tests/data/simple.jpg
+```
+
+
