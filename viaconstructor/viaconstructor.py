@@ -677,7 +677,7 @@ class ViaConstructor:
             print("saving gcode to file:", self.args.output)
             open(self.args.output, "w").write("\n".join(self.project["gcode"]))
         else:
-            self.main.resize(1800, 1600)
+            self.main.resize(1600, 1200)
             self.main.show()
             sys.exit(qapp.exec_())
 
