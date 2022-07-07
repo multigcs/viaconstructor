@@ -296,7 +296,10 @@ class ViaConstructor:
             with open(name[0], "w") as fd_gcode:
                 fd_gcode.write("\n".join(self.project["gcode"]))
                 fd_gcode.write("\n")
-                fd_gcode.write(f"(setup={json.dumps(self.project['setup'])})")
+                jsetup = deepcopy(self.project["setup"])
+                if "system" in jsetup:
+                    del jsetup["system"]
+                fd_gcode.write(f"(setup={json.dumps(jsetup)})")
                 fd_gcode.write("\n")
             self.status_bar.showMessage(f"save gcode..done ({name[0]})")
         else:
@@ -469,6 +472,24 @@ class ViaConstructor:
 
         self.update_drawing()
 
+    def toolbar_load_gcode_setup(self) -> None:
+        if os.path.isfile(self.project["filename_gcode"]):
+            self.status_bar.showMessage(
+                f"loading setup from gcode: {self.project['filename_gcode']}"
+            )
+            with open(self.project["filename_gcode"], "r") as fd_gcode:
+                gdata = fd_gcode.read()
+                for g_line in gdata.split("\n"):
+                    if g_line.startswith("(setup={"):
+                        setup_json = g_line.strip("()").split("=", 1)[1]
+                        ndata = json.loads(setup_json)
+                        for sname in self.project["setup"]:
+                            self.project["setup"][sname].update(ndata.get(sname, {}))
+                        self.update_drawing()
+                        self.status_bar.showMessage("loading setup from gcode..done")
+                        return
+        self.status_bar.showMessage("loading setup from gcode..failed")
+
     def toolbar_exit(self) -> None:
         """exit button."""
         sys.exit(0)
@@ -500,13 +521,15 @@ class ViaConstructor:
                 for sname in self.project["setup"]:
                     self.project["setup"][sname].update(ndata.get(sname, {}))
 
-        # load and prepare #
+        # load dxf #
         dxf_reader = DxfReader(self.args.filename)
         self.project["segments_org"] = dxf_reader.get_segments()
         self.project["filename_dxf"] = self.args.filename
         self.project[
             "filename_gcode"
         ] = f"{'.'.join(self.project['filename_dxf'].split('.')[:-1])}.ngc"
+
+        # prepare #
         self.project["segments"] = deepcopy(self.project["segments_org"])
         self.project["segments"] = clean_segments(self.project["segments"])
         self.project["objects"] = segments2objects(self.project["segments"])
@@ -558,6 +581,17 @@ class ViaConstructor:
         save_action.triggered.connect(self.toolbar_save_gcode)  # type: ignore
         toolbar = self.main.addToolBar("Save")
         toolbar.addAction(save_action)
+
+        if os.path.isfile(self.project["filename_gcode"]):
+            sgload_action = QAction(
+                QIcon(os.path.join(self.this_dir, "..", "data", "load-setup.png")),
+                "Load-Setup from gCode",
+                self.main,
+            )
+            sgload_action.setStatusTip("load setup from gcode file")
+            sgload_action.triggered.connect(self.toolbar_load_gcode_setup)  # type: ignore
+            toolbar = self.main.addToolBar("Load-Setup from gCode")
+            toolbar.addAction(sgload_action)
 
         ssave_action = QAction(
             QIcon(os.path.join(self.this_dir, "..", "data", "save-setup.png")),
