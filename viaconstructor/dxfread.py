@@ -19,6 +19,7 @@ class DxfReader:
                     {
                         "type": dxftype,
                         "object": None,
+                        "layer": element.dxf.layer,
                         "start": (
                             element.dxf.start.x,
                             element.dxf.start.y,
@@ -41,6 +42,7 @@ class DxfReader:
                             {
                                 "type": "LINE",
                                 "object": None,
+                                "layer": element.dxf.layer,
                                 "start": (last[0], last[1]),
                                 "end": (point[0], point[1]),
                                 "bulge": 0.0,
@@ -57,6 +59,7 @@ class DxfReader:
                                 {
                                     "type": "LINE",
                                     "object": None,
+                                    "layer": element.dxf.layer,
                                     "start": (last[0], last[1]),
                                     "end": (point[0], point[1]),
                                     "bulge": last[2],
@@ -70,6 +73,7 @@ class DxfReader:
                             {
                                 "type": "LINE",
                                 "object": None,
+                                "layer": element.dxf.layer,
                                 "start": (last[0], last[1]),
                                 "end": (first[0], first[1]),
                                 "bulge": last[2],
@@ -108,6 +112,7 @@ class DxfReader:
                             {
                                 "type": dxftype,
                                 "object": None,
+                                "layer": element.dxf.layer,
                                 "start": (start.x, start.y),
                                 "end": (end.x, end.y),
                                 "bulge": bulge,
@@ -117,7 +122,6 @@ class DxfReader:
                         angle += astep
 
                 else:
-
                     (start, end, bulge) = ezdxf.math.arc_to_bulge(
                         element.dxf.center,
                         element.dxf.start_angle / 180 * math.pi,
@@ -128,6 +132,7 @@ class DxfReader:
                         {
                             "type": dxftype,
                             "object": None,
+                            "layer": element.dxf.layer,
                             "start": (start.x, start.y),
                             "end": (end.x, end.y),
                             "bulge": bulge,
