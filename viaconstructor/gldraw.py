@@ -116,17 +116,41 @@ def draw_grid(project: dict) -> None:
     GL.glVertex3f(0.0, 0.0, project["setup"]["mill"]["depth"])
     GL.glEnd()
 
+    GL.glBegin(GL.GL_LINES)
+    GL.glVertex3f(-1, -1, 0.0)
+    GL.glVertex3f(1, 1, 0.0)
+    GL.glVertex3f(-1, 1, 0.0)
+    GL.glVertex3f(1, -1, 0.0)
+    GL.glEnd()
+
+    GL.glLineWidth(1)
+    GL.glColor4f(1.0, 1.0, 0.0, 1.0)
+    GL.glBegin(GL.GL_LINES)
+    for (x_1, y_1), (x_2, y_2) in font.lines_for_text("0,0,0"):
+        GL.glVertex3f(x_1, y_1 - 6.0, 0.0)
+        GL.glVertex3f(x_2, y_2 - 6.0, 0.0)
+    GL.glEnd()
+
     # Grid
     size = project["setup"]["view"]["grid_size"]
     GL.glLineWidth(0.1)
     GL.glColor3f(0.9, 0.9, 0.9)
     GL.glBegin(GL.GL_LINES)
-    for p_x in range(int(min_max[0]), int(min_max[2]) + size, size):
-        GL.glVertex3f(p_x, min_max[1], project["setup"]["mill"]["depth"])
+    for p_x in range(int(min_max[0]) - size, int(min_max[2]) + size, size):
+        GL.glVertex3f(p_x, min_max[1] - size, project["setup"]["mill"]["depth"])
         GL.glVertex3f(p_x, min_max[3] + size, project["setup"]["mill"]["depth"])
-    for p_y in range(int(min_max[1]), int(min_max[3]) + size, size):
-        GL.glVertex3f(min_max[0], p_y, project["setup"]["mill"]["depth"])
+
+        for (x_1, y_1), (x_2, y_2) in font.lines_for_text(f"{p_x}mm"):
+            GL.glVertex3f(p_x + x_1 / 4, y_1 / 4, project["setup"]["mill"]["depth"])
+            GL.glVertex3f(p_x + x_2 / 4, y_2 / 4, project["setup"]["mill"]["depth"])
+
+    for p_y in range(int(min_max[1]) - size, int(min_max[3]) + size, size):
+        GL.glVertex3f(min_max[0] - size, p_y, project["setup"]["mill"]["depth"])
         GL.glVertex3f(min_max[2] + size, p_y, project["setup"]["mill"]["depth"])
+        for (x_1, y_1), (x_2, y_2) in font.lines_for_text(f"{p_y}mm"):
+            GL.glVertex3f(x_1 / 4, p_y + y_1 / 4, project["setup"]["mill"]["depth"])
+            GL.glVertex3f(x_2 / 4, p_y + y_2 / 4, project["setup"]["mill"]["depth"])
+
     GL.glEnd()
 
 
@@ -134,14 +158,14 @@ def draw_object_ids(project: dict) -> None:
     """draws the object id's as text"""
     GL.glLineWidth(2)
     GL.glColor4f(1.0, 0.0, 0.0, 1.0)
+    GL.glBegin(GL.GL_LINES)
     for obj_idx, obj in project["objects"].items():
         p_x = obj["segments"][0]["start"][0]
         p_y = obj["segments"][0]["start"][1]
         for (x_1, y_1), (x_2, y_2) in font.lines_for_text(f"#{obj_idx}"):
-            GL.glBegin(GL.GL_LINES)
             GL.glVertex3f(p_x + x_1, p_y + y_1, 5.0)
             GL.glVertex3f(p_x + x_2, p_y + y_2, 5.0)
-            GL.glEnd()
+    GL.glEnd()
 
 
 def draw_object_edges(project: dict) -> None:

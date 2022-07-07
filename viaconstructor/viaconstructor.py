@@ -137,6 +137,10 @@ class GLWidget(QGLWidget):
         min_max = self.project["minMax"]
         if not min_max:
             return
+        size_x = min_max[2] - min_max[0]
+        size_y = min_max[3] - min_max[1]
+        scale = 1 / size_x / 1.5
+
         GL.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT)
         GL.glMatrixMode(GL.GL_MODELVIEW)
         GL.glPushMatrix()
@@ -147,13 +151,10 @@ class GLWidget(QGLWidget):
         GL.glRotatef(self.rot_y, 1.0, 0.0, 0.0)
         GL.glRotatef(self.rot_z, 0.0, 0.0, 1.0)
 
-        size_x = min_max[2] - min_max[0]
-        size_y = min_max[3] - min_max[1]
-        scale = 1 / size_x / 1.5
-
         GL.glTranslatef(
-            (min_max[0] - size_x / 2) * scale, (min_max[1] - size_y / 2) * scale, 0.0
+            (-size_x / 2 - min_max[0]) * scale, (-size_y / 2 - min_max[1]) * scale, 0.0
         )
+
         GL.glScalef(scale, scale, scale)
         GL.glCallList(self.project["gllist"])
 
@@ -200,7 +201,7 @@ class GLWidget(QGLWidget):
             self.rot_y = self.rot_y_last - moffset.y() / 4
         elif self.mbutton == 2:
             moffset = self.mpos - event.pos()
-            self.rot_z = self.rot_z_last + moffset.x() / 4
+            self.rot_z = self.rot_z_last - moffset.x() / 4
             self.trans_z = self.trans_z_last + moffset.y() / 500
         elif self.mbutton == 4:
             moffset = self.mpos - event.pos()
