@@ -1,8 +1,9 @@
 
-all: format lint test
+all: format lint test pdoc docindex
 
 pdoc:
-	pdoc -o docs/pdoc viaconstructor/ dxfpreview/ gcodepreview/
+	rm -rf docs/pdoc
+	pyvenv/bin/pdoc -o docs/pdoc viaconstructor/ dxfpreview/ gcodepreview/
 
 docindex:
 	pyvenv/bin/markdown_py README.md | sed "s|https://raw.githubusercontent.com/multigcs/viaconstructor/main/docs/|./|g" > docs/readme.html
