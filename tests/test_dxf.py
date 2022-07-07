@@ -11,6 +11,7 @@ from viaconstructor import dxfread
                 {
                     "type": "LINE",
                     "object": None,
+                    "layer": "0",
                     "start": (20.0, 70.0, 0.0),
                     "end": (80.0, 70.0, 0.0),
                     "bulge": 0.0,
@@ -18,6 +19,7 @@ from viaconstructor import dxfread
                 {
                     "type": "LINE",
                     "object": None,
+                    "layer": "0",
                     "start": (80.0, 70.0, 0.0),
                     "end": (20.0, 10.0, 0.0),
                     "bulge": 0.0,
@@ -25,6 +27,7 @@ from viaconstructor import dxfread
                 {
                     "type": "LINE",
                     "object": None,
+                    "layer": "0",
                     "start": (20.0, 10.0, 0.0),
                     "end": (20.0, 70.0, 0.0),
                     "bulge": 0.0,
@@ -32,6 +35,7 @@ from viaconstructor import dxfread
                 {
                     "type": "LINE",
                     "object": None,
+                    "layer": "0",
                     "start": (10.0, 90.0, 0.0),
                     "end": (120.0, 80.0, 0.0),
                     "bulge": 0.0,
@@ -39,6 +43,7 @@ from viaconstructor import dxfread
                 {
                     "type": "LINE",
                     "object": None,
+                    "layer": "0",
                     "start": (120.0, 80.0, 0.0),
                     "end": (110.0, -10.0, 0.0),
                     "bulge": 0.0,
@@ -46,6 +51,7 @@ from viaconstructor import dxfread
                 {
                     "type": "LINE",
                     "object": None,
+                    "layer": "0",
                     "start": (110.0, -10.0, 0.0),
                     "end": (0.0, 0.0, 0.0),
                     "bulge": 0.0,
@@ -53,6 +59,7 @@ from viaconstructor import dxfread
                 {
                     "type": "LINE",
                     "object": None,
+                    "layer": "0",
                     "start": (0.0, 0.0, 0.0),
                     "end": (10.0, 90.0, 0.0),
                     "bulge": 0.0,
