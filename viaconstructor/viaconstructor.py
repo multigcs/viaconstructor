@@ -48,9 +48,8 @@ from .calc import (
     clean_segments,
     segments2objects,
     find_tool_offsets,
-    # calc_distance,
-    # rotate_objects,
-    # mirror_objects,
+    rotate_objects,
+    mirror_objects,
 )
 
 try:
@@ -248,23 +247,6 @@ class ViaConstructor:
         psetup: dict = self.project["setup"]
         min_max = objects2minmax(self.project["objects"])
         self.project["minMax"] = min_max
-        """
-        if psetup["workpiece"]["rotate"] == "1":
-            rotate_objects(self.project["objects"])
-            mirror_objects(self.project["objects"], min_max, False, True)
-        elif psetup["workpiece"]["rotate"] == "2":
-            mirror_objects(self.project["objects"], min_max, True, True)
-        elif psetup["workpiece"]["rotate"] == "3":
-            rotate_objects(self.project["objects"])
-            mirror_objects(self.project["objects"], min_max, True, False)
-        if psetup["workpiece"]["mirrorV"] or psetup["workpiece"]["mirrorH"]:
-            mirror_objects(
-                self.project["objects"],
-                min_max,
-                psetup["workpiece"]["mirrorV"],
-                psetup["workpiece"]["mirrorH"],
-            )
-        """
 
         if psetup["workpiece"]["zero"] == "bottomLeft":
             move_objects(self.project["objects"], -min_max[0], -min_max[1])
@@ -315,6 +297,21 @@ class ViaConstructor:
             self.status_bar.showMessage(f"save gcode..done ({name[0]})")
         else:
             self.status_bar.showMessage("save gcode..cancel")
+
+    def toolbar_flipx(self) -> None:
+        mirror_objects(self.project["objects"], self.project["minMax"], vertical=True)
+        self.project["minMax"] = objects2minmax(self.project["objects"])
+        self.update_drawing()
+
+    def toolbar_flipy(self) -> None:
+        mirror_objects(self.project["objects"], self.project["minMax"], horizontal=True)
+        self.project["minMax"] = objects2minmax(self.project["objects"])
+        self.update_drawing()
+
+    def toolbar_rotate(self) -> None:
+        rotate_objects(self.project["objects"], self.project["minMax"])
+        self.project["minMax"] = objects2minmax(self.project["objects"])
+        self.update_drawing()
 
     def toolbar_centerview(self) -> None:
         """center view."""
@@ -574,10 +571,40 @@ class ViaConstructor:
             self.main,
         )
         view_action.setShortcut("Ctrl+0")
-        view_action.setStatusTip("center view")
+        view_action.setStatusTip("Center View")
         view_action.triggered.connect(self.toolbar_centerview)  # type: ignore
         toolbar = self.main.addToolBar("center view")
         toolbar.addAction(view_action)
+
+        flipx_action = QAction(
+            QIcon(os.path.join(self.this_dir, "..", "data", "flip-x.png")),
+            "Flip-X",
+            self.main,
+        )
+        flipx_action.setStatusTip("Flip-X")
+        flipx_action.triggered.connect(self.toolbar_flipx)  # type: ignore
+        toolbar = self.main.addToolBar("flip-x")
+        toolbar.addAction(flipx_action)
+
+        flipy_action = QAction(
+            QIcon(os.path.join(self.this_dir, "..", "data", "flip-y.png")),
+            "Flip-Y",
+            self.main,
+        )
+        flipy_action.setStatusTip("Flip-Y")
+        flipy_action.triggered.connect(self.toolbar_flipy)  # type: ignore
+        toolbar = self.main.addToolBar("flip-y")
+        toolbar.addAction(flipy_action)
+
+        rotate_action = QAction(
+            QIcon(os.path.join(self.this_dir, "..", "data", "rotate.png")),
+            "Rotate",
+            self.main,
+        )
+        rotate_action.setStatusTip("Rotate")
+        rotate_action.triggered.connect(self.toolbar_rotate)  # type: ignore
+        toolbar = self.main.addToolBar("rotate")
+        toolbar.addAction(rotate_action)
 
         self.status_bar = QStatusBar()
         self.main.setStatusBar(self.status_bar)

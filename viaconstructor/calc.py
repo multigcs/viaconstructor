@@ -447,7 +447,7 @@ def objects2minmax(objects):
     return (min_x, min_y, max_x, max_y)
 
 
-def move_objects(objects, xoff, yoff):
+def move_objects(objects: dict, xoff: float, yoff: float) -> None:
     """moves an object"""
     for obj in objects.values():
         for segment in obj["segments"]:
@@ -455,7 +455,12 @@ def move_objects(objects, xoff, yoff):
             segment["end"] = (segment["end"][0] + xoff, segment["end"][1] + yoff)
 
 
-def mirror_objects(objects, min_max, vertical=False, horizontal=False):
+def mirror_objects(
+    objects: dict,
+    min_max: list[float],
+    vertical: bool = False,
+    horizontal: bool = False,
+) -> None:
     """mirrors an object"""
     if vertical or horizontal:
         for obj in objects.values():
@@ -483,7 +488,7 @@ def mirror_objects(objects, min_max, vertical=False, horizontal=False):
                 reverse_object(obj)
 
 
-def rotate_objects(objects):
+def rotate_objects(objects: dict, min_max: list[float]) -> None:
     """rotates an object"""
     for obj in objects.values():
         for segment in obj["segments"]:
@@ -491,3 +496,4 @@ def rotate_objects(objects):
             segment["end"] = (segment["end"][1], segment["end"][0])
             segment["bulge"] = -segment["bulge"]
         reverse_object(obj)
+    mirror_objects(objects, min_max, horizontal=True)
