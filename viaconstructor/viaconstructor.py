@@ -152,7 +152,9 @@ class GLWidget(QGLWidget):
         GL.glRotatef(self.rot_z, 0.0, 0.0, 1.0)
 
         GL.glTranslatef(
-            (-size_x / 2.0 - min_max[0]) * scale, (-size_y / 2.0 - min_max[1]) * scale, 0.0
+            (-size_x / 2.0 - min_max[0]) * scale,
+            (-size_y / 2.0 - min_max[1]) * scale,
+            0.0,
         )
 
         GL.glScalef(scale, scale, scale)
