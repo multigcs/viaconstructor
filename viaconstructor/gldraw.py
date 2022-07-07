@@ -104,54 +104,121 @@ def draw_mill_line(
         GL.glEnd()
 
 
+def draw_text(text: str, pos_x: float, pos_y: float, pos_z: float, scale: float=1.0, center_x: bool=False, center_y: bool=False) -> None:
+    test_data = tuple(font.lines_for_text(text))
+    if center_x or center_y:
+        width = 0.0
+        height = 0.0
+        for (x_1, y_1), (x_2, y_2) in test_data:
+            width = max(width, x_1 * scale)
+            width = max(width, x_2 * scale)
+            height = max(height, y_1 * scale)
+            height = max(height, y_2 * scale)
+        if center_x:
+            pos_x -= width / 2.0
+        if center_y:
+            pos_y -= height / 2.0
+    for (x_1, y_1), (x_2, y_2) in test_data:
+        GL.glVertex3f(pos_x + x_1 * scale, pos_y + y_1 * scale, pos_z)
+        GL.glVertex3f(pos_x + x_2 * scale, pos_y + y_2 * scale, pos_z)
+
+
 def draw_grid(project: dict) -> None:
     """draws the grid"""
     min_max = project["minMax"]
+    size = project["setup"]["view"]["grid_size"]
+    mill_depth = project["setup"]["mill"]["depth"]
+    start_x = int(min_max[0] / size) * size - size
+    end_x = int(min_max[2] / size) * size + size
+    start_y = int(min_max[1] / size) * size - size
+    end_y = int(min_max[3] / size) * size + size
+    size_x = (min_max[2] - min_max[0])
+    center_x = min_max[0] + size_x / 2
+    size_y = (min_max[3] - min_max[1])
+    center_y = min_max[1] + size_y / 2
 
-    # Zero-Marker
-    GL.glLineWidth(3)
-    GL.glColor3f(0.0, 0.0, 1.0)
+    if project["setup"]["view"]["grid_show"]:
+        # Grid-X
+        GL.glLineWidth(0.1)
+        GL.glColor3f(0.9, 0.9, 0.9)
+        GL.glBegin(GL.GL_LINES)
+        for p_x in range(start_x, end_x + size, size):
+            GL.glVertex3f(p_x, start_y, mill_depth)
+            GL.glVertex3f(p_x, end_y, mill_depth)
+        if project["setup"]["view"]["ruler_show"] and size >= 5:
+            for p_x in range(start_x, end_x, size):
+                draw_text(f"{p_x}", p_x, start_y, mill_depth, 0.4)
+        GL.glEnd()
+
+        # Grid-Y
+        GL.glLineWidth(0.1)
+        GL.glColor3f(0.9, 0.9, 0.9)
+        GL.glBegin(GL.GL_LINES)
+        for p_y in range(start_y, end_y + size, size):
+            GL.glVertex3f(start_x, p_y, mill_depth)
+            GL.glVertex3f(end_x, p_y, mill_depth)
+        if project["setup"]["view"]["ruler_show"] and size >= 5:
+            for p_y in range(start_y, end_y, size):
+                draw_text(f"{p_y}", start_x, p_y, mill_depth, 0.4)
+        GL.glEnd()
+
+    # Zero-Z
+    GL.glLineWidth(2)
+    GL.glColor3f(1.0, 1.0, 0.0)
     GL.glBegin(GL.GL_LINES)
     GL.glVertex3f(0.0, 0.0, 100.0)
-    GL.glVertex3f(0.0, 0.0, project["setup"]["mill"]["depth"])
-    GL.glEnd()
-
-    GL.glBegin(GL.GL_LINES)
+    GL.glVertex3f(0.0, 0.0, mill_depth)
     GL.glVertex3f(-1, -1, 0.0)
     GL.glVertex3f(1, 1, 0.0)
     GL.glVertex3f(-1, 1, 0.0)
     GL.glVertex3f(1, -1, 0.0)
     GL.glEnd()
 
-    GL.glLineWidth(1)
-    GL.glColor4f(1.0, 1.0, 0.0, 1.0)
+    # Zero-X
+    GL.glColor3f(0.5, 0.0, 0.0)
     GL.glBegin(GL.GL_LINES)
-    for (x_1, y_1), (x_2, y_2) in font.lines_for_text("0,0,0"):
-        GL.glVertex3f(x_1, y_1 - 6.0, 0.0)
-        GL.glVertex3f(x_2, y_2 - 6.0, 0.0)
+    GL.glVertex3f(0.0, start_y, mill_depth)
+    GL.glVertex3f(0.0, end_y, mill_depth)
+    GL.glEnd()
+    # Zero-Y
+    GL.glColor3f(0.0, 0.0, 0.5)
+    GL.glBegin(GL.GL_LINES)
+    GL.glVertex3f(start_x, 0.0, mill_depth)
+    GL.glVertex3f(end_x, 0.0, mill_depth)
     GL.glEnd()
 
-    # Grid
-    size = project["setup"]["view"]["grid_size"]
-    GL.glLineWidth(0.1)
-    GL.glColor3f(0.9, 0.9, 0.9)
-    GL.glBegin(GL.GL_LINES)
-    start_x = int(min_max[0]) - size
-    for p_x in range(start_x, int(min_max[2]) + size, size):
-        GL.glVertex3f(p_x, min_max[1] - size, project["setup"]["mill"]["depth"])
-        GL.glVertex3f(p_x, min_max[3] + size, project["setup"]["mill"]["depth"])
-        for (x_1, y_1), (x_2, y_2) in font.lines_for_text(f"{p_x}mm"):
-            GL.glVertex3f(start_x + x_1 / 4, y_1 / 4, project["setup"]["mill"]["depth"])
-            GL.glVertex3f(start_x + x_2 / 4, y_2 / 4, project["setup"]["mill"]["depth"])
+    if project["setup"]["view"]["ruler_show"]:
+        # MinMax-X
+        GL.glColor3f(1.0, 1.0, 1.0)
+        GL.glBegin(GL.GL_LINES)
+        GL.glVertex3f(min_max[0], start_y - 5, mill_depth)
+        GL.glVertex3f(min_max[0], end_y, mill_depth)
+        GL.glVertex3f(min_max[2], start_y - 5, mill_depth)
+        GL.glVertex3f(min_max[2], end_y, mill_depth)
+        draw_text(f"{round(min_max[0], 6)}", min_max[0], start_y - 5 - 6, mill_depth, 0.5, True)
+        draw_text(f"{round(min_max[2], 6)}", min_max[2], start_y - 5 - 6, mill_depth, 0.5, True)
+        GL.glEnd()
+        # MinMax-Y
+        GL.glColor3f(1.0, 1.0, 1.0)
+        GL.glBegin(GL.GL_LINES)
+        GL.glVertex3f(start_x, min_max[1], mill_depth)
+        GL.glVertex3f(end_x + 5, min_max[1], mill_depth)
+        GL.glVertex3f(start_x, min_max[3], mill_depth)
+        GL.glVertex3f(end_x + 5, min_max[3], mill_depth)
+        draw_text(f"{round(min_max[1], 6)}", end_x + 5, min_max[1], mill_depth, 0.5, False, True)
+        draw_text(f"{round(min_max[3], 6)}", end_x + 5, min_max[3], mill_depth, 0.5, False, True)
+        GL.glEnd()
+        # Size-X
+        GL.glColor3f(1.0, 1.0, 1.0)
+        GL.glBegin(GL.GL_LINES)
+        draw_text(f"{round(size_x, 6)}", center_x, start_y - 5 - 6, mill_depth, 0.5, True)
+        GL.glEnd()
+        # Size-Y
+        GL.glColor3f(1.0, 1.0, 1.0)
+        GL.glBegin(GL.GL_LINES)
+        draw_text(f"{round(size_y, 6)}", end_x + 5, center_y, mill_depth, 0.5, False, True)
+        GL.glEnd()
 
-    for p_y in range(int(min_max[1]) - size, int(min_max[3]) + size, size):
-        GL.glVertex3f(min_max[0] - size, p_y, project["setup"]["mill"]["depth"])
-        GL.glVertex3f(min_max[2] + size, p_y, project["setup"]["mill"]["depth"])
-        for (x_1, y_1), (x_2, y_2) in font.lines_for_text(f"{p_y}mm"):
-            GL.glVertex3f(x_1 / 4, p_y + y_1 / 4, project["setup"]["mill"]["depth"])
-            GL.glVertex3f(x_2 / 4, p_y + y_2 / 4, project["setup"]["mill"]["depth"])
-
-    GL.glEnd()
 
 
 def draw_object_ids(project: dict) -> None:

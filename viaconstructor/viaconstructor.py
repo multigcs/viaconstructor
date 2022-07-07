@@ -139,7 +139,7 @@ class GLWidget(QGLWidget):
             return
         size_x = min_max[2] - min_max[0]
         size_y = min_max[3] - min_max[1]
-        scale = min(1.0 / size_x, 1.0 / size_y) / 1.2
+        scale = min(1.0 / size_x, 1.0 / size_y) / 1.4
 
         GL.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT)
         GL.glMatrixMode(GL.GL_MODELVIEW)

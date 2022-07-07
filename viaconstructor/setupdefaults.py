@@ -164,6 +164,18 @@ setup_defaults: dict = {
             "title": "Path",
             "tooltip": "how to show the gcode path in the 3d-View",
         },
+        "ruler_show": {
+            "default": True,
+            "type": "bool",
+            "title": "Ruler-Show",
+            "tooltip": "showing ruler in 3D preview",
+        },
+        "grid_show": {
+            "default": True,
+            "type": "bool",
+            "title": "Grid-Show",
+            "tooltip": "showing grid in 3D preview",
+        },
         "grid_size": {
             "default": 10,
             "type": "int",
