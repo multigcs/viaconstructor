@@ -139,7 +139,6 @@ def draw_grid(project: dict) -> None:
     for p_x in range(int(min_max[0]) - size, int(min_max[2]) + size, size):
         GL.glVertex3f(p_x, min_max[1] - size, project["setup"]["mill"]["depth"])
         GL.glVertex3f(p_x, min_max[3] + size, project["setup"]["mill"]["depth"])
-
         for (x_1, y_1), (x_2, y_2) in font.lines_for_text(f"{p_x}mm"):
             GL.glVertex3f(p_x + x_1 / 4, y_1 / 4, project["setup"]["mill"]["depth"])
             GL.glVertex3f(p_x + x_2 / 4, y_2 / 4, project["setup"]["mill"]["depth"])

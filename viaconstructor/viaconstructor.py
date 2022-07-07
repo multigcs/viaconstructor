@@ -65,9 +65,9 @@ class GLWidget(QGLWidget):
     """customized GLWidget."""
 
     GL_MULTISAMPLE = 0x809D
-    rot_x = -10.0
+    rot_x = -20.0
     rot_y = -30.0
-    rot_z = -10.0
+    rot_z = 0.0
     rot_x_last = rot_x
     rot_y_last = rot_y
     rot_z_last = rot_z
@@ -139,7 +139,7 @@ class GLWidget(QGLWidget):
             return
         size_x = min_max[2] - min_max[0]
         size_y = min_max[3] - min_max[1]
-        scale = 1 / size_x / 1.5
+        scale = min(1.0 / size_x, 1.0 / size_y) / 1.2
 
         GL.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT)
         GL.glMatrixMode(GL.GL_MODELVIEW)
@@ -152,7 +152,7 @@ class GLWidget(QGLWidget):
         GL.glRotatef(self.rot_z, 0.0, 0.0, 1.0)
 
         GL.glTranslatef(
-            (-size_x / 2 - min_max[0]) * scale, (-size_y / 2 - min_max[1]) * scale, 0.0
+            (-size_x / 2.0 - min_max[0]) * scale, (-size_y / 2.0 - min_max[1]) * scale, 0.0
         )
 
         GL.glScalef(scale, scale, scale)
