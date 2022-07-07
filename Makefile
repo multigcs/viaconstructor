@@ -4,6 +4,9 @@ all: format lint test
 pdoc:
 	pdoc -o docs/pdoc viaconstructor/ dxfpreview/ gcodepreview/
 
+docindex:
+	pyvenv/bin/markdown_py README.md | sed "s|https://raw.githubusercontent.com/multigcs/viaconstructor/main/docs/|./|g" > docs/readme.html
+
 pyvenv-update:
 	pyvenv/bin/python -m pip install -r requirements-dev.txt
 	pyvenv/bin/python -m pip install -r requirements.txt
@@ -34,17 +37,12 @@ pylint: pyvenv
 	pyvenv/bin/python -m pylint viaconstructor/*.py # tests/*.py
 
 test: pyvenv
-	PYTHONPATH=. pyvenv/bin/python -m pytest --cov=. --cov-report html --cov-report term -vv tests/
+	PYTHONPATH=. pyvenv/bin/python -m pytest --cov=. --cov-report html:docs/pytest --cov-report term -vv tests/
 
 clean:
 	rm -rf .coverage
 	rm -rf .mypy_cache
-	rm -rf htmlcov/
-	rm -rf tests/__pycache__
-	rm -rf viaconstructor/__pycache__/
-	rm -rf viaconstructor/htmlcov/
-	rm -rf gcodepreview/__pycache__/
-	rm -rf gcodepreview/htmlcov/
+	rm -rf */__pycache__/
 	rm -rf dist/
 	rm -rf build/
 	rm -rf viaconstructor.egg-info/

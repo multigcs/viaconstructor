@@ -1,9 +1,8 @@
-viaConstructor
+# viaConstructor
 
 !!!!!!! beta - version !!!!!!!
 
-
-Features:
+## Features:
 
     * 3D-Preview
     * Headless-Support to generate gcode on the console
