@@ -171,7 +171,7 @@ def draw_grid(project: dict) -> None:
         GL.glEnd()
 
     # Zero-Z
-    GL.glLineWidth(2)
+    GL.glLineWidth(1)
     GL.glColor3f(1.0, 1.0, 0.0)
     GL.glBegin(GL.GL_LINES)
     GL.glVertex3f(0.0, 0.0, 100.0)
@@ -197,7 +197,7 @@ def draw_grid(project: dict) -> None:
 
     if project["setup"]["view"]["ruler_show"]:
         # MinMax-X
-        GL.glColor3f(1.0, 1.0, 1.0)
+        GL.glColor3f(0.5, 0.0, 0.0)
         GL.glBegin(GL.GL_LINES)
         GL.glVertex3f(min_max[0], start_y - 5, mill_depth)
         GL.glVertex3f(min_max[0], end_y, mill_depth)
@@ -221,7 +221,7 @@ def draw_grid(project: dict) -> None:
         )
         GL.glEnd()
         # MinMax-Y
-        GL.glColor3f(1.0, 1.0, 1.0)
+        GL.glColor3f(0.0, 0.0, 0.5)
         GL.glBegin(GL.GL_LINES)
         GL.glVertex3f(start_x, min_max[1], mill_depth)
         GL.glVertex3f(end_x + 5, min_max[1], mill_depth)
@@ -247,14 +247,14 @@ def draw_grid(project: dict) -> None:
         )
         GL.glEnd()
         # Size-X
-        GL.glColor3f(1.0, 1.0, 1.0)
+        GL.glColor3f(1.0, 0.0, 0.0)
         GL.glBegin(GL.GL_LINES)
         draw_text(
             f"{round(size_x, 6)}", center_x, start_y - 5 - 6, mill_depth, 0.5, True
         )
         GL.glEnd()
         # Size-Y
-        GL.glColor3f(1.0, 1.0, 1.0)
+        GL.glColor3f(0.0, 0.0, 1.0)
         GL.glBegin(GL.GL_LINES)
         draw_text(
             f"{round(size_y, 6)}", end_x + 5, center_y, mill_depth, 0.5, False, True
