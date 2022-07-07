@@ -90,6 +90,20 @@ setup_defaults: dict = {
             "title": "Small-Circles",
             "tooltip": "milling small circles even if the tool is bigger",
         },
+        "zero": {
+            "default": "original",
+            "type": "select",
+            "options": (
+                ("original", "original"),
+                ("bottomLeft", "bottomLeft"),
+                ("center", "center"),
+                ("bottomRight", "bottomRight"),
+                ("topLeft", "topLeft"),
+                ("topRight", "topRight"),
+            ),
+            "title": "Zero-Position",
+            "tooltip": "setting the Zero-Postition of the Workpiece",
+        },
     },
     "tool": {
         "number": {
@@ -115,22 +129,6 @@ setup_defaults: dict = {
             "max": 100000,
             "title": "Speed",
             "tooltip": "setting the Tool-Speed in RPM",
-        },
-    },
-    "workpiece": {
-        "zero": {
-            "default": "original",
-            "type": "select",
-            "options": (
-                ("original", "original"),
-                ("bottomLeft", "bottomLeft"),
-                ("center", "center"),
-                ("bottomRight", "bottomRight"),
-                ("topLeft", "topLeft"),
-                ("topRight", "topRight"),
-            ),
-            "title": "Zero-Position",
-            "tooltip": "setting the Zero-Postition of the Workpiece",
         },
     },
     "view": {
