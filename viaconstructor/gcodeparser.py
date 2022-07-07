@@ -31,6 +31,8 @@ class GcodeParser:
         self.gcode = gcode
         for line in self.gcode:
             line = line.strip()
+            if not line or line[0] == '(':
+                continue
             ldata = {}
             matches = self.REGEX.findall(line)
             if not matches:

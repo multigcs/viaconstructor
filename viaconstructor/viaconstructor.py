@@ -293,7 +293,11 @@ class ViaConstructor:
             self.main, "Save File", self.project["filename_gcode"], "gcode (*.ngc)"
         )
         if name[0]:
-            open(name[0], "w").write("\n".join(self.project["gcode"]))
+            with open(name[0], "w") as fd_gcode:
+                fd_gcode.write("\n".join(self.project["gcode"]))
+                fd_gcode.write("\n")
+                fd_gcode.write(f"(setup={json.dumps(self.project['setup'])})")
+                fd_gcode.write("\n")
             self.status_bar.showMessage(f"save gcode..done ({name[0]})")
         else:
             self.status_bar.showMessage("save gcode..cancel")
