@@ -3,6 +3,7 @@ ezdxf==0.17.2
 cavaliercontours-python==0.0.1
 PyOpenGL==3.1.5
 Pillow==9.0.1
+Hershey-Fonts==2.1.0
 
 # for gcode-preview.py display
 pygame==2.1.2

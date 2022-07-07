@@ -4,3 +4,4 @@ cavaliercontours-python
 PyOpenGL
 Pillow
 pygame
+Hershey-Fonts

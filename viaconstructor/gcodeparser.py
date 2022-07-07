@@ -1,3 +1,6 @@
+"""gcodeparser"""
+
+from typing import Union
 import math
 import re
 from .calc import (
@@ -9,29 +12,22 @@ from .calc import (
 class GcodeParser:
     REGEX = re.compile(r"([a-zA-Z])([+-]?([0-9]+([.][0-9]*)?|[.][0-9]+))")
 
-    def __init__(self, gcode):
+    def __init__(self, gcode: Union[str, list[str]]):
         if isinstance(gcode, str):
             gcode = gcode.split("\n")
 
-        self.state = {
+        self.state: dict = {
             "move_mode": "",
             "offsets": "OFF",
             "metric": "",
             "absolute": True,
             "feedrate": "0",
             "tool": None,
-            "spindle": {
-                "dir": "OFF",
-                "rpm": 0,
-            },
-            "position": {
-                "X": 0,
-                "Y": 0,
-                "Z": 0,
-            },
+            "spindle": {"dir": "OFF", "rpm": 0},
+            "position": {"X": 0, "Y": 0, "Z": 0},
         }
 
-        self.path = []
+        self.path: list[list] = []
         self.gcode = gcode
         for line in self.gcode:
             line = line.strip()
@@ -108,12 +104,12 @@ class GcodeParser:
         for axis in ("X", "Y", "Z"):
             minp[axis] = self.path[0][0][axis]
             maxp[axis] = self.path[0][0][axis]
-        for line in self.path:
+        for segment in self.path:
             for axis in ("X", "Y", "Z"):
-                minp[axis] = min(minp[axis], line[0][axis])
-                maxp[axis] = max(maxp[axis], line[0][axis])
-                minp[axis] = min(minp[axis], line[1][axis])
-                maxp[axis] = max(maxp[axis], line[1][axis])
+                minp[axis] = min(minp[axis], segment[0][axis])
+                maxp[axis] = max(maxp[axis], segment[0][axis])
+                minp[axis] = min(minp[axis], segment[1][axis])
+                maxp[axis] = max(maxp[axis], segment[1][axis])
 
         self.min_max = []
         for axis in ("X", "Y", "Z"):
@@ -125,34 +121,36 @@ class GcodeParser:
         for axis in ("X", "Y", "Z"):
             self.size.append(maxp[axis] - minp[axis])
 
-    def get_minmax(self):
+    def get_minmax(self) -> list[float]:
         return self.min_max
 
-    def get_size(self):
+    def get_size(self) -> list[float]:
         return self.size
 
-    def get_path(self):
+    def get_path(self) -> list[list]:
         return self.path
 
-    def draw(self, draw_function, user_data=()):
+    def draw(self, draw_function, user_data=()) -> None:
         for line in self.path:
             draw_function(line[0], line[1], *user_data)
 
-    def linear_move(self, cords, fast=False):  # pylint: disable=W0613
+    def linear_move(
+        self, cords: dict, fast: bool = False  # pylint: disable=W0613
+    ) -> None:
         for axis in self.state["position"]:
             if axis not in cords:
                 cords[axis] = self.state["position"][axis]
-        self.path.append((self.state["position"], cords))
+        self.path.append([self.state["position"], cords])
         self.state["position"] = cords
 
-    def arc_move_r(self, angle_dir, cords, radius):  # pylint: disable=W0613
+    def arc_move_r(self, angle_dir, cords, radius) -> None:  # pylint: disable=W0613
         for axis in self.state["position"]:
             if axis not in cords:
                 cords[axis] = self.state["position"][axis]
-        self.path.append((self.state["position"], cords))
+        self.path.append([self.state["position"], cords])
         self.state["position"] = cords
 
-    def arc_move_ij(self, angle_dir, cords, i, j):
+    def arc_move_ij(self, angle_dir, cords, i, j) -> None:
         for axis in self.state["position"]:
             if axis not in cords:
                 cords[axis] = self.state["position"][axis]
@@ -183,10 +181,10 @@ class GcodeParser:
                 new_y = center_y + radius * math.cos(angle - math.pi / 2)
                 new_z = start_z + ((angle - start_angle) / diff_angle) * diff_z
                 new_pos = {"X": new_x, "Y": new_y, "Z": new_z}
-                self.path.append((last_pos, new_pos))
+                self.path.append([last_pos, new_pos])
                 last_pos = new_pos
                 angle += 0.2
-            self.path.append((last_pos, cords))
+            self.path.append([last_pos, cords])
         elif start_angle > end_angle:
             angle = start_angle
             while angle > end_angle:
@@ -194,8 +192,8 @@ class GcodeParser:
                 new_y = center_y + radius * math.cos(angle - math.pi / 2)
                 new_z = start_z + ((angle - start_angle) / diff_angle) * diff_z
                 new_pos = {"X": new_x, "Y": new_y, "Z": new_z}
-                self.path.append((last_pos, new_pos))
+                self.path.append([last_pos, new_pos])
                 last_pos = new_pos
                 angle -= 0.2
-            self.path.append((last_pos, cords))
+            self.path.append([last_pos, cords])
         self.state["position"] = cords

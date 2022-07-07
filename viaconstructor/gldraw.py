@@ -1,3 +1,6 @@
+"""OpenGL drawing functions"""
+
+from typing import Sequence
 import math
 from OpenGL import GL
 from OpenGL.GLU import (
@@ -17,11 +20,18 @@ from OpenGL.GLU import (
     gluTessEndPolygon,
     gluDeleteTess,
 )
+from HersheyFonts import HersheyFonts
 from .gcodeparser import GcodeParser
 from .calc import angle_of_line, calc_distance, line_center_3d, object2vertex
 
 
-def draw_circle(center, radius):
+font = HersheyFonts()
+font.load_default_font()
+font.normalize_rendering(6)
+
+
+def draw_circle(center: Sequence[float], radius: float) -> None:
+    """draws an circle"""
     GL.glBegin(GL.GL_TRIANGLE_STRIP)
     GL.glVertex3f(center[0], center[1], center[2])
     angle = 0.0
@@ -35,7 +45,10 @@ def draw_circle(center, radius):
     GL.glEnd()
 
 
-def draw_mill_line(p_from, p_to, width, mode):
+def draw_mill_line(
+    p_from: Sequence[float], p_to: Sequence[float], width: float, mode: str
+) -> None:
+    """draws an milling line including direction and width"""
     line_angle = angle_of_line(p_from, p_to)
     radius = width / 2
 
@@ -91,7 +104,8 @@ def draw_mill_line(p_from, p_to, width, mode):
         GL.glEnd()
 
 
-def draw_grid(project):
+def draw_grid(project: dict) -> None:
+    """draws the grid"""
     min_max = project["minMax"]
 
     # Zero-Marker
@@ -116,11 +130,25 @@ def draw_grid(project):
     GL.glEnd()
 
 
-def draw_object_edges(project):
+def draw_object_ids(project: dict) -> None:
+    """draws the object id's as text"""
+    GL.glLineWidth(2)
+    GL.glColor4f(1.0, 0.0, 0.0, 1.0)
+    for obj_idx, obj in project["objects"].items():
+        p_x = obj["segments"][0]["start"][0]
+        p_y = obj["segments"][0]["start"][1]
+        for (x_1, y_1), (x_2, y_2) in font.lines_for_text(f"#{obj_idx}"):
+            GL.glBegin(GL.GL_LINES)
+            GL.glVertex3f(p_x + x_1, p_y + y_1, 5.0)
+            GL.glVertex3f(p_x + x_2, p_y + y_2, 5.0)
+            GL.glEnd()
+
+
+def draw_object_edges(project: dict) -> None:
+    """draws the edges of an object"""
     GL.glLineWidth(1)
     GL.glColor4f(0.0, 1.0, 0.0, 1.0)
     for obj in project["objects"].values():
-        vertex_data = object2vertex(obj)
         # side
         GL.glBegin(GL.GL_LINES)
         for segment in obj["segments"]:
@@ -130,6 +158,7 @@ def draw_object_edges(project):
             GL.glVertex3f(p_x, p_y, project["setup"]["mill"]["depth"])
         GL.glEnd()
         # top
+        vertex_data = object2vertex(obj)
         closed = obj["closed"]
         if closed:
             GL.glBegin(GL.GL_LINE_LOOP)
@@ -150,7 +179,8 @@ def draw_object_edges(project):
         GL.glEnd()
 
 
-def draw_object_faces(project):
+def draw_object_faces(project: dict) -> None:
+    """draws the top and side faces of an object"""
     # object faces (side)
     GL.glColor4f(0.0, 0.75, 0.3, 0.5)
     for obj in project["objects"].values():
@@ -190,7 +220,8 @@ def draw_object_faces(project):
     gluDeleteTess(tess)
 
 
-def draw_line(p_1, p_2, project):
+def draw_line(p_1: dict, p_2: dict, project: dict) -> None:
+    """callback funktion for GcodeParser to draw the lines"""
     p_from = (p_1["X"], p_1["Y"], p_1["Z"])
     p_to = (p_2["X"], p_2["Y"], p_2["Z"])
     line_width = project["setup"]["tool"]["diameter"]
@@ -198,6 +229,7 @@ def draw_line(p_1, p_2, project):
     draw_mill_line(p_from, p_to, line_width, mode)
 
 
-def draw_gcode_path(project):
+def draw_gcode_path(project: dict) -> None:
+    """draws the gcode path"""
     GL.glLineWidth(2)
     GcodeParser(project["gcode"]).draw(draw_line, (project,))

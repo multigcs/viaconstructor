@@ -85,7 +85,7 @@ wheel==0.37.1
     # via pip-tools
 wrapt==1.14.1
     # via astroid
-
+mypy==0.941
 # The following packages are considered to be unsafe in a requirements file:
 # pip
 # setuptools

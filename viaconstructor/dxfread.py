@@ -5,12 +5,12 @@ import ezdxf
 
 
 class DxfReader:
-    def __init__(self, filename):
+    def __init__(self, filename: str):
         """converting dxf into single segments."""
         doc = ezdxf.readfile(filename)
 
         # dxf to single segments
-        self.segments = []
+        self.segments: list[dict] = []
         model_space = doc.modelspace()
         for element in model_space:
             dxftype = element.dxftype()
@@ -34,8 +34,8 @@ class DxfReader:
                 )
 
             elif dxftype == "SPLINE":
-                last = []
-                for point in element._control_points:
+                last: list[float] = []
+                for point in element._control_points:  # type: ignore
                     if last:
                         self.segments.append(
                             {
@@ -49,7 +49,7 @@ class DxfReader:
                     last = point
 
             elif dxftype == "LWPOLYLINE":
-                with element.points("xyb") as points:
+                with element.points("xyb") as points:  # type: ignore
                     last = []
                     for point in points:
                         if last:
@@ -160,15 +160,15 @@ class DxfReader:
         self.size.append(self.min_max[2] - self.min_max[0])
         self.size.append(self.min_max[3] - self.min_max[1])
 
-    def get_segments(self):
+    def get_segments(self) -> list[dict]:
         return self.segments
 
-    def get_minmax(self):
+    def get_minmax(self) -> list[float]:
         return self.min_max
 
-    def get_size(self):
+    def get_size(self) -> list[float]:
         return self.size
 
-    def draw(self, draw_function, user_data=()):
+    def draw(self, draw_function, user_data=()) -> None:
         for segment in self.segments:
             draw_function(segment["start"], segment["end"], *user_data)

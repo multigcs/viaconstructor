@@ -1,6 +1,9 @@
 
 all: format lint test
 
+pdoc:
+	pdoc -o docs/pdoc viaconstructor/ dxfpreview/ gcodepreview/
+
 pyvenv-update:
 	pyvenv/bin/python -m pip install -r requirements-dev.txt
 	pyvenv/bin/python -m pip install -r requirements.txt
@@ -19,10 +22,13 @@ pip-compile: pyvenv
 format: pyvenv
 	pyvenv/bin/python -m black viaconstructor/*py tests/*py
 
-lint: flake8 pylint
+lint: flake8 pylint mypy
 
 flake8: pyvenv
 	pyvenv/bin/python -m flake8 viaconstructor/*.py tests/*.py
+
+mypy: pyvenv
+	pyvenv/bin/python -m mypy viaconstructor/*.py # tests/*.py
 
 pylint: pyvenv
 	pyvenv/bin/python -m pylint viaconstructor/*.py # tests/*.py
@@ -32,6 +38,7 @@ test: pyvenv
 
 clean:
 	rm -rf .coverage
+	rm -rf .mypy_cache
 	rm -rf htmlcov/
 	rm -rf tests/__pycache__
 	rm -rf viaconstructor/__pycache__/
@@ -55,3 +62,13 @@ run-gcodepreview: pyvenv
 
 install:
 	python3 setup.py install
+
+docker-build:
+	docker build -t viaconstructor .
+
+docker-run:
+	docker rm viaconstructor || true
+	#macOS: -e DISPLAY=docker.for.mac.host.internal:0
+	#Windows: -e DISPLAY=host.docker.internal:0
+	docker run --net=host -e DISPLAY=:0  --privileged --name viaconstructor -t -i viaconstructor
+

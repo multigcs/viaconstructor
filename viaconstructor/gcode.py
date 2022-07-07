@@ -1,3 +1,4 @@
+"""generates gcode"""
 import ezdxf
 from .calc import (
     calc_distance,
@@ -6,8 +7,9 @@ from .calc import (
 )
 
 
-def gcode_begin(project):
-    gcode = []
+def gcode_begin(project: dict) -> list[str]:
+    """gcode-header"""
+    gcode: list[str] = []
 
     gcode.append("(--------------------------------------------------)")
     gcode.append("(Generator: viaConstructor)")
@@ -31,8 +33,9 @@ def gcode_begin(project):
     return gcode
 
 
-def gcode_end(project):
-    gcode = []
+def gcode_end(project: dict) -> list[str]:
+    """gcode-footer"""
+    gcode: list[str] = []
     gcode.append("")
     gcode.append("(- end -)")
     gcode.append(f"G00 Z{round(project['setup']['mill']['fast_move_z'], 6)}")
@@ -43,13 +46,14 @@ def gcode_end(project):
     return gcode
 
 
-def polylines2gcode(project):
+def polylines2gcode(project: dict) -> list[str]:
+    """generates gcode from polilines"""
     # found milling order (nearest obj next)
     milling = {}
     last_pos = (0, 0)
     polylines = project["offsets"]
 
-    gcode = []
+    gcode: list[str] = []
     gcode += gcode_begin(project)
 
     order = 0
@@ -109,12 +113,12 @@ def polylines2gcode(project):
                     x_start.reverse()
                     y_start = list(vertex_data[1])
                     y_start.reverse()
-                    bulge = list(vertex_data[2])
-                    bulge.reverse()
-                    bulge = rotate_list(bulge, 1)
-                    for num, point in enumerate(bulge):
-                        bulge[num] = -bulge[num]
-                    points = vertex2points((x_start, y_start, bulge))
+                    bulges = list(vertex_data[2])
+                    bulges.reverse()
+                    bulges = rotate_list(bulges, 1)
+                    for num, point in enumerate(bulges):
+                        bulges[num] = -bulges[num]
+                    points = vertex2points((x_start, y_start, bulges))
 
                 helix_mode = polyline.mill["helix_mode"]
 

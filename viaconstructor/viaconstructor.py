@@ -6,7 +6,6 @@ import sys
 import argparse
 from copy import deepcopy
 
-from PyQt5.QtCore import Qt  # pylint: disable=E0611
 from PyQt5.QtGui import QIcon  # pylint: disable=E0611
 from PyQt5.QtWidgets import (  # pylint: disable=E0611
     QMainWindow,
@@ -34,7 +33,13 @@ from PyQt5.QtOpenGL import QGLFormat, QGLWidget  # pylint: disable=E0611
 
 from .setupdefaults import setup_defaults
 from .dxfread import DxfReader
-from .gldraw import draw_grid, draw_gcode_path, draw_object_edges, draw_object_faces
+from .gldraw import (
+    draw_grid,
+    draw_gcode_path,
+    draw_object_edges,
+    draw_object_ids,
+    draw_object_faces,
+)
 from .gcode import polylines2gcode
 from .calc import (
     objects2minmax,
@@ -52,7 +57,7 @@ try:
     from OpenGL import GL
 except ImportError:
     QApplication(sys.argv)
-    QMessageBox.critical(None, "OpenGL", "PyOpenGL must be installed.")
+    QMessageBox.critical(None, "OpenGL", "PyOpenGL must be installed.")  # type: ignore
     sys.exit(1)
 
 
@@ -75,19 +80,18 @@ class GLWidget(QGLWidget):
     scale = 1.0
     scale_last = scale
     ortho = False
-    update_drawing = None
     mbutton = None
     mpos = None
 
-    def __init__(self, project, update_drawing):
+    def __init__(self, project: dict, update_drawing):
         """init function."""
         super(GLWidget, self).__init__()
-        self.project = project
+        self.project: dict = project
         self.project["gllist"] = []
         self.startTimer(40)
         self.update_drawing = update_drawing
 
-    def initializeGL(self):  # pylint: disable=C0103
+    def initializeGL(self) -> None:  # pylint: disable=C0103
         """glinit function."""
         GL.glMatrixMode(GL.GL_PROJECTION)
         GL.glLoadIdentity()
@@ -123,12 +127,12 @@ class GLWidget(QGLWidget):
         if self.project["status"] != "INIT":
             self.update_drawing()
 
-    def resizeGL(self, width, hight):  # pylint: disable=C0103
+    def resizeGL(self, width, hight) -> None:  # pylint: disable=C0103
         """glresize function."""
         GL.glViewport(0, 0, width, hight)
         self.initializeGL()
 
-    def paintGL(self):  # pylint: disable=C0103
+    def paintGL(self) -> None:  # pylint: disable=C0103
         """glpaint function."""
         min_max = self.project["minMax"]
         if not min_max:
@@ -154,10 +158,8 @@ class GLWidget(QGLWidget):
         GL.glCallList(self.project["gllist"])
 
         GL.glPopMatrix()
-        self.qglColor(Qt.black)
-        # self.renderText(0, 0.4, 0.0, "Multisampling enabled")
 
-    def toggle_view(self):
+    def toggle_view(self) -> None:
         """toggle view function."""
         self.ortho = not self.ortho
         self.rot_x = 0.0
@@ -166,14 +168,14 @@ class GLWidget(QGLWidget):
         self.trans_z = 0.0
         self.initializeGL()
 
-    def timerEvent(self, event):  # pylint: disable=C0103,W0613
+    def timerEvent(self, event) -> None:  # pylint: disable=C0103,W0613
         """gltimer function."""
         if self.project["status"] == "INIT":
             self.project["status"] = "READY"
             self.update_drawing()
         self.update()
 
-    def mousePressEvent(self, event):  # pylint: disable=C0103
+    def mousePressEvent(self, event) -> None:  # pylint: disable=C0103
         """mouse button pressed."""
         self.mbutton = event.button()
         self.mpos = event.pos()
@@ -185,12 +187,12 @@ class GLWidget(QGLWidget):
         self.trans_z_last = self.trans_z
         self.scale_last = self.scale
 
-    def mouseReleaseEvent(self, event):  # pylint: disable=C0103,W0613
+    def mouseReleaseEvent(self, event) -> None:  # pylint: disable=C0103,W0613
         """mouse button released."""
         self.mbutton = None
         self.mpos = None
 
-    def mouseMoveEvent(self, event):  # pylint: disable=C0103
+    def mouseMoveEvent(self, event) -> None:  # pylint: disable=C0103
         """mouse moved."""
         if self.mbutton == 1:
             moffset = self.mpos - event.pos()
@@ -205,7 +207,7 @@ class GLWidget(QGLWidget):
             self.trans_x = self.trans_x_last + moffset.x() / 500
             self.trans_y = self.trans_y_last - moffset.y() / 500
 
-    def wheelEvent(self, event):  # pylint: disable=C0103,W0613
+    def wheelEvent(self, event) -> None:  # pylint: disable=C0103,W0613
         """mouse wheel moved."""
         if event.angleDelta().y() > 0:
             self.trans_z += 0.1
@@ -213,10 +215,10 @@ class GLWidget(QGLWidget):
             self.trans_z -= 0.1
 
 
-class PyMill:
+class ViaConstructor:
     """viaconstructor main class."""
 
-    project = {
+    project: dict = {
         "setup_defaults": setup_defaults,
         "filename_dxf": "",
         "filename_gcode": "",
@@ -232,15 +234,15 @@ class PyMill:
         "status": "INIT",
     }
 
-    def gcode_reload(self):
+    def gcode_reload(self) -> None:
         """reload gcode."""
         # if self.project["textwidget"].toPlainText():
         #     self.project["gcode"] = self.project["textwidget"].toPlainText().split("\n")
         #     self.update_drawing(draw_only=True)
 
-    def run_calculation(self):
+    def run_calculation(self) -> None:
         """run all calculations."""
-        psetup = self.project["setup"]
+        psetup: dict = self.project["setup"]
         min_max = objects2minmax(self.project["objects"])
         self.project["minMax"] = min_max
         """
@@ -295,9 +297,9 @@ class PyMill:
         self.project["textwidget"].insertPlainText("\n".join(self.project["gcode"]))
         self.project["textwidget"].verticalScrollBar().setValue(0)
         # self.project["textwidget"].setReadOnly(True)
-        self.project["textwidget"].textChanged.connect(self.gcode_reload)
+        self.project["textwidget"].textChanged.connect(self.gcode_reload)  # type: ignore
 
-    def toolbar_save_gcode(self):
+    def toolbar_save_gcode(self) -> None:
         """save gcode."""
         self.status_bar.showMessage("save gcode..")
         file_dialog = QFileDialog(self.main)
@@ -311,11 +313,11 @@ class PyMill:
         else:
             self.status_bar.showMessage("save gcode..cancel")
 
-    def toolbar_centerview(self):
+    def toolbar_centerview(self) -> None:
         """center view."""
         self.project["glwidget"].toggle_view()
 
-    def toolbar_save_setup(self):
+    def toolbar_save_setup(self) -> None:
         """save setup."""
         self.status_bar.showMessage("save setup..")
         open(self.args.setup, "w").write(
@@ -323,7 +325,7 @@ class PyMill:
         )
         self.status_bar.showMessage("save setup..done")
 
-    def update_drawing(self, draw_only=False):
+    def update_drawing(self, draw_only=False) -> None:
         """update drawings."""
         self.status_bar.showMessage("calculate..")
         if not draw_only:
@@ -332,12 +334,13 @@ class PyMill:
         GL.glNewList(self.project["gllist"], GL.GL_COMPILE)
         draw_grid(self.project)
         draw_gcode_path(self.project)
+        draw_object_ids(self.project)
         draw_object_edges(self.project)
         draw_object_faces(self.project)
         GL.glEndList()
         self.status_bar.showMessage("calculate..done")
 
-    def object_changed(self, value):
+    def object_changed(self, value) -> None:
         """object changed."""
         for obj_idx, obj in self.project["objects"].items():
             s_n = 0
@@ -362,7 +365,7 @@ class PyMill:
                         s_n += 1
         self.update_drawing()
 
-    def update_table(self):
+    def update_table(self) -> None:
         """update tabe."""
         table_widget = self.project["tablewidget"]
         table_widget.setRowCount(len(self.project["objects"]))
@@ -379,7 +382,7 @@ class PyMill:
                     s_n += 1
 
         for obj_idx in self.project["objects"]:
-            table_widget.setVerticalHeaderItem(obj_idx, QTableWidgetItem(f"{obj_idx}"))
+            table_widget.setVerticalHeaderItem(obj_idx, QTableWidgetItem(f"#{obj_idx}"))
             s_n = 0
             for sname in self.project["setup_defaults"]:
                 if sname not in {"tool", "mill"}:
@@ -392,7 +395,7 @@ class PyMill:
                             checkbox.setToolTip(
                                 entry.get("tooltip", f"{sname}/{ename}")
                             )
-                            checkbox.stateChanged.connect(self.object_changed)
+                            checkbox.stateChanged.connect(self.object_changed)  # type: ignore
                             table_widget.setCellWidget(obj_idx, s_n, checkbox)
                         elif entry["type"] == "select":
                             combobox = QComboBox()
@@ -402,7 +405,7 @@ class PyMill:
                             combobox.setToolTip(
                                 entry.get("tooltip", f"{sname}/{ename}")
                             )
-                            combobox.currentTextChanged.connect(self.object_changed)
+                            combobox.currentTextChanged.connect(self.object_changed)  # type: ignore
                             table_widget.setCellWidget(obj_idx, s_n, combobox)
                         elif entry["type"] == "float":
                             spinbox = QDoubleSpinBox()
@@ -410,7 +413,7 @@ class PyMill:
                             spinbox.setMaximum(entry["max"])
                             spinbox.setValue(self.project["setup"][sname][ename])
                             spinbox.setToolTip(entry.get("tooltip", f"{sname}/{ename}"))
-                            spinbox.valueChanged.connect(self.object_changed)
+                            spinbox.valueChanged.connect(self.object_changed)  # type: ignore
                             table_widget.setCellWidget(obj_idx, s_n, spinbox)
                         elif entry["type"] == "int":
                             spinbox = QSpinBox()
@@ -418,7 +421,7 @@ class PyMill:
                             spinbox.setMaximum(entry["max"])
                             spinbox.setValue(self.project["setup"][sname][ename])
                             spinbox.setToolTip(entry.get("tooltip", f"{sname}/{ename}"))
-                            spinbox.valueChanged.connect(self.object_changed)
+                            spinbox.valueChanged.connect(self.object_changed)  # type: ignore
                             table_widget.setCellWidget(obj_idx, s_n, spinbox)
                         else:
                             print(f"Unknown setup-type: {entry['type']}")
@@ -427,7 +430,7 @@ class PyMill:
         table_widget.horizontalHeader().setStretchLastSection(True)
         table_widget.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
 
-    def global_changed(self, value):  # pylint: disable=W0613
+    def global_changed(self, value) -> None:  # pylint: disable=W0613
         """global setup changed."""
         for sname in self.project["setup_defaults"]:
             for ename, entry in self.project["setup_defaults"][sname].items():
@@ -461,11 +464,11 @@ class PyMill:
 
         self.update_drawing()
 
-    def toolbar_exit(self):
+    def toolbar_exit(self) -> None:
         """exit button."""
         sys.exit(0)
 
-    def __init__(self):
+    def __init__(self) -> None:
         """viaconstructor main init."""
         # arguments
         parser = argparse.ArgumentParser()
@@ -499,35 +502,6 @@ class PyMill:
         self.project[
             "filename_gcode"
         ] = f"{'.'.join(self.project['filename_dxf'].split('.')[:-1])}.ngc"
-        self.project[
-            "filename_svg"
-        ] = f"{'.'.join(self.project['filename_dxf'].split('.')[:-1])}.svg"
-
-        """
-        width = 800
-        height = 800
-        svg = []
-        for segment in self.project["segments_org"]:
-            print(segment)
-            if segment['type'] in {"ARC", "CIRCLE"}:
-                r = calc_distance((segment['start'][0], segment['start'][1]), (segment['center'][0], segment['center'][1]))
-                points = []
-                points.append(f"M {segment['start'][0] + 200} {height - segment['start'][1] - 200}")
-                points.append(f"A {r} {r} 0 0 0")
-                points.append(f"{segment['end'][0] + 200} {height - segment['end'][1] - 200}")
-                svg.append(f"<path d=\"{' '.join(points)}\" stroke=\"red\" stroke-width=\"1\" fill=\"none\" />")
-            else:
-                points = []
-                points.append(f"M {segment['start'][0] + 200} {height - segment['start'][1] - 200}")
-                points.append(f"L {segment['end'][0] + 200} {height - segment['end'][1] - 200}")
-                svg.append(f"<path d=\"{' '.join(points)}\" stroke=\"red\" stroke-width=\"1\" fill=\"none\" />")
-
-        svg = f'<svg width="{width}" height="{height}" xmlns="http://www.w3.org/2000/svg">{"".join(svg)}</svg>'
-        #print(svg)
-        open(self.project["filename_svg"], "w").write(svg)
-        sys.exit(0)
-        """
-
         self.project["segments"] = deepcopy(self.project["segments_org"])
         self.project["segments"] = clean_segments(self.project["segments"])
         self.project["objects"] = segments2objects(self.project["segments"])
@@ -537,21 +511,20 @@ class PyMill:
             obj["tool"] = deepcopy(self.project["setup"]["tool"])
 
         qapp = QApplication(sys.argv)
+        window = QWidget()
 
         my_format = QGLFormat.defaultFormat()
         my_format.setSampleBuffers(True)
         QGLFormat.setDefaultFormat(my_format)
         if not QGLFormat.hasOpenGL():
             QMessageBox.information(
-                None,
+                window,
                 "OpenGL using samplebuffers",
                 "This system does not support OpenGL.",
             )
             sys.exit(0)
 
         self.project["glwidget"] = GLWidget(self.project, self.update_drawing)
-
-        window = QWidget()
 
         self.main = QMainWindow()
         self.main.setWindowTitle("viaConstructor")
@@ -566,7 +539,7 @@ class PyMill:
         )
         exit_action.setShortcut("Ctrl+Q")
         exit_action.setStatusTip("Exit application")
-        exit_action.triggered.connect(self.toolbar_exit)
+        exit_action.triggered.connect(self.toolbar_exit)  # type: ignore
         toolbar = self.main.addToolBar("Exit")
         toolbar.addAction(exit_action)
 
@@ -577,7 +550,7 @@ class PyMill:
         )
         save_action.setShortcut("Ctrl+S")
         save_action.setStatusTip("Save gcode")
-        save_action.triggered.connect(self.toolbar_save_gcode)
+        save_action.triggered.connect(self.toolbar_save_gcode)  # type: ignore
         toolbar = self.main.addToolBar("Save")
         toolbar.addAction(save_action)
 
@@ -588,7 +561,7 @@ class PyMill:
         )
         ssave_action.setShortcut("Ctrl+W")
         ssave_action.setStatusTip("Save-Setup")
-        ssave_action.triggered.connect(self.toolbar_save_setup)
+        ssave_action.triggered.connect(self.toolbar_save_setup)  # type: ignore
         toolbar = self.main.addToolBar("Save-Setup")
         toolbar.addAction(ssave_action)
 
@@ -599,7 +572,7 @@ class PyMill:
         )
         view_action.setShortcut("Ctrl+0")
         view_action.setStatusTip("center view")
-        view_action.triggered.connect(self.toolbar_centerview)
+        view_action.triggered.connect(self.toolbar_centerview)  # type: ignore
         toolbar = self.main.addToolBar("center view")
         toolbar.addAction(view_action)
 
@@ -648,7 +621,7 @@ class PyMill:
                     checkbox = QCheckBox(entry.get("title", ename))
                     checkbox.setChecked(self.project["setup"][sname][ename])
                     checkbox.setToolTip(entry.get("tooltip", f"{sname}/{ename}"))
-                    checkbox.stateChanged.connect(self.global_changed)
+                    checkbox.stateChanged.connect(self.global_changed)  # type: ignore
                     hlayout.addWidget(checkbox)
                     entry["widget"] = checkbox
                 elif entry["type"] == "select":
@@ -657,7 +630,7 @@ class PyMill:
                         combobox.addItem(option[0])
                     combobox.setCurrentText(self.project["setup"][sname][ename])
                     combobox.setToolTip(entry.get("tooltip", f"{sname}/{ename}"))
-                    combobox.currentTextChanged.connect(self.global_changed)
+                    combobox.currentTextChanged.connect(self.global_changed)  # type: ignore
                     hlayout.addWidget(combobox)
                     entry["widget"] = combobox
                 elif entry["type"] == "float":
@@ -666,7 +639,7 @@ class PyMill:
                     spinbox.setMaximum(entry["max"])
                     spinbox.setValue(self.project["setup"][sname][ename])
                     spinbox.setToolTip(entry.get("tooltip", f"{sname}/{ename}"))
-                    spinbox.valueChanged.connect(self.global_changed)
+                    spinbox.valueChanged.connect(self.global_changed)  # type: ignore
                     hlayout.addWidget(spinbox)
                     entry["widget"] = spinbox
                 elif entry["type"] == "int":
@@ -675,7 +648,7 @@ class PyMill:
                     spinbox.setMaximum(entry["max"])
                     spinbox.setValue(self.project["setup"][sname][ename])
                     spinbox.setToolTip(entry.get("tooltip", f"{sname}/{ename}"))
-                    spinbox.valueChanged.connect(self.global_changed)
+                    spinbox.valueChanged.connect(self.global_changed)  # type: ignore
                     hlayout.addWidget(spinbox)
                     entry["widget"] = spinbox
                 else:
@@ -707,4 +680,4 @@ class PyMill:
 
 
 if __name__ == "__main__":
-    PyMill()
+    ViaConstructor()

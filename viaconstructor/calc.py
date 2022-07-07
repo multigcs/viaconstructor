@@ -1,3 +1,5 @@
+"""viaconstructor calculation functions."""
+
 from copy import deepcopy
 import math
 import cavaliercontours as cavc
@@ -5,11 +7,13 @@ import cavaliercontours as cavc
 
 # ########## Misc Functions ###########
 def rotate_list(rlist, idx):
+    """rotating a list of values."""
     return rlist[idx:] + rlist[:idx]
 
 
 # ########## Point Functions ###########
 def angle_of_line(p_1, p_2):
+    """gets the angle of a single line."""
     d_1 = p_2[0] - p_1[0]
     d_2 = p_2[1] - p_1[1]
     angle = math.atan2(d_2, d_1)
@@ -17,18 +21,22 @@ def angle_of_line(p_1, p_2):
 
 
 def fuzy_match(p_1, p_2):
+    """checks if  two points are matching / rounded."""
     return round(p_1[0], 2) == round(p_2[0], 2) and round(p_1[1], 2) == round(p_2[1], 2)
 
 
 def calc_distance(p_1, p_2):
+    """gets the distance between two points in 2D."""
     return math.hypot(p_1[0] - p_2[0], p_1[1] - p_2[1])
 
 
 def is_between(p_1, p_2, p_3):
+    """checks if a point is between 2 other points."""
     return calc_distance(p_1, p_3) + calc_distance(p_1, p_2) == calc_distance(p_2, p_3)
 
 
 def line_center_3d(p_1, p_2):
+    """gets the center point between 2 points in 3D."""
     center_x = (p_1[0] + p_2[0]) / 2
     center_y = (p_1[1] + p_2[1]) / 2
     center_z = (p_1[2] + p_2[2]) / 2
@@ -36,6 +44,7 @@ def line_center_3d(p_1, p_2):
 
 
 def calc_face(p_1, p_2):
+    """gets the face og a line in 2D."""
     angle = angle_of_line(p_1, p_2)
     center_x = (p_1[0] + p_2[0]) / 2
     center_y = (p_1[1] + p_2[1]) / 2
@@ -45,6 +54,7 @@ def calc_face(p_1, p_2):
 
 
 def angle_2d(p_1, p_2):
+    """gets the angle of a single line (2nd version)."""
     (x_1, y_1) = p_1
     (x_2, y_2) = p_2
     two_pi = math.pi * 2
@@ -62,6 +72,7 @@ def angle_2d(p_1, p_2):
 
 
 def clean_segments(segments):
+    """removing double and overlaying lines."""
     cleaned = {}
     for idx_1, segment1 in enumerate(segments):
         key_1a = f"{segment1['start'][0]}#{segment1['start'][1]}#{segment1['end'][0]}#{segment1['end'][1]}#{round(segment1['bulge'], 6) or 0.0}"
@@ -90,6 +101,7 @@ def clean_segments(segments):
 
 
 def is_inside_polygon(obj, point):
+    """checks if a point is inside an polygon."""
     angle = 0.0
     p_1 = [0, 0]
     p_2 = [0, 0]
@@ -107,6 +119,7 @@ def is_inside_polygon(obj, point):
 
 
 def reverse_object(obj):
+    """reverse the direction of an object."""
     obj["segments"].reverse()
     for segment in obj["segments"]:
         end = segment["end"]
@@ -118,6 +131,7 @@ def reverse_object(obj):
 
 # ########## Objects Functions ###########
 def find_outer_objects(objects, point, exclude=None):
+    """gets a list of closed objects where the point is inside."""
     if not exclude:
         exclude = []
     outer = []
@@ -130,7 +144,7 @@ def find_outer_objects(objects, point, exclude=None):
 
 
 def find_tool_offsets(objects):
-    # check if object is inside an other closed  objects
+    """check if object is inside an other closed  objects."""
     max_outer = 0
     for obj_idx, obj in objects.items():
         outer = find_outer_objects(objects, obj["segments"][0]["start"], [obj_idx])
@@ -148,7 +162,7 @@ def find_tool_offsets(objects):
 
 
 def segments2objects(segments):
-    # merge single segments to objects
+    """merge single segments to objects."""
     objects = {}
     obj_idx = 0
     while True:
@@ -237,6 +251,7 @@ def segments2objects(segments):
 
 # ########## Vertex Functions ###########
 def inside_vertex(vertex_data, point):
+    """checks if a point is inside an polygon in vertex format."""
     angle = 0.0
     p_1 = [0, 0]
     p_2 = [0, 0]
@@ -255,6 +270,7 @@ def inside_vertex(vertex_data, point):
 
 
 def vertex2points(vertex_data, limit=None):
+    """converts an vertex to a list of points"""
     points = []
     for pos, pos_x in enumerate(vertex_data[0]):
         pos_y = vertex_data[1][pos]
@@ -266,6 +282,7 @@ def vertex2points(vertex_data, limit=None):
 
 
 def object2vertex(obj):
+    """converts an object to vertex points"""
     xdata = []
     ydata = []
     bdata = []
@@ -296,6 +313,7 @@ def do_pockets(  # pylint: disable=R0913
     offset_idx,
     vertex_data_org,
 ):
+    """calculates multiple offset lines of an polyline"""
     offsets = polyline.parallel_offset(delta=-tool_radius, check_self_intersect=True)
     for polyline_offset in offsets:
         if polyline_offset:
@@ -327,6 +345,7 @@ def do_pockets(  # pylint: disable=R0913
 
 
 def objects2polyline_offsets(diameter, objects, max_outer, small_circles=False):
+    """calculates the offset line(s) of an object"""
     polyline_offsets = {}
     for obj_idx, obj in objects.items():
 
@@ -410,6 +429,7 @@ def objects2polyline_offsets(diameter, objects, max_outer, small_circles=False):
 
 # analyze size
 def objects2minmax(objects):
+    """find the min/max values of objects"""
     min_x = objects[0]["segments"][0]["start"][0]
     min_y = objects[0]["segments"][0]["start"][1]
     max_x = objects[0]["segments"][0]["start"][0]
@@ -428,6 +448,7 @@ def objects2minmax(objects):
 
 
 def move_objects(objects, xoff, yoff):
+    """moves an object"""
     for obj in objects.values():
         for segment in obj["segments"]:
             segment["start"] = (segment["start"][0] + xoff, segment["start"][1] + yoff)
@@ -435,6 +456,7 @@ def move_objects(objects, xoff, yoff):
 
 
 def mirror_objects(objects, min_max, vertical=False, horizontal=False):
+    """mirrors an object"""
     if vertical or horizontal:
         for obj in objects.values():
             for segment in obj["segments"]:
@@ -462,6 +484,7 @@ def mirror_objects(objects, min_max, vertical=False, horizontal=False):
 
 
 def rotate_objects(objects):
+    """rotates an object"""
     for obj in objects.values():
         for segment in obj["segments"]:
             segment["start"] = (segment["start"][1], segment["start"][0])

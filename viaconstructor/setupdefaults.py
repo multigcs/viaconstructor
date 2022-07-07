@@ -1,4 +1,4 @@
-setup_defaults = {
+setup_defaults: dict = {
     "workpiece": {
         "mirrorV": {
             "default": False,
@@ -122,7 +122,7 @@ setup_defaults = {
             "default": False,
             "type": "bool",
             "per_object": True,
-            "title": "Helix-Mode",
+            "title": "Helix",
             "tooltip": "",
         },
         "reverse": {
