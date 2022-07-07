@@ -336,7 +336,8 @@ class ViaConstructor:
         draw_gcode_path(self.project)
         draw_object_ids(self.project)
         draw_object_edges(self.project)
-        draw_object_faces(self.project)
+        if self.project["setup"]["view"]["polygon_show"]:
+            draw_object_faces(self.project)
         GL.glEndList()
         self.status_bar.showMessage("calculate..done")
 

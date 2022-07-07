@@ -1,65 +1,4 @@
 setup_defaults: dict = {
-    "workpiece": {
-        "mirrorV": {
-            "default": False,
-            "type": "bool",
-            "title": "Mirror-Vertical",
-            "tooltip": "Flipping the Workpiece",
-        },
-        "mirrorH": {
-            "default": False,
-            "type": "bool",
-            "title": "Mirror-Horizontal",
-            "tooltip": "Flipping the Workpiece",
-        },
-        "rotate": {
-            "default": "0",
-            "type": "select",
-            "options": (("0", "0"), ("1", "90"), ("2", "180"), ("3", "270")),
-            "title": "Rotating",
-            "tooltip": "Rotating the Workpiece",
-        },
-        "zero": {
-            "default": "original",
-            "type": "select",
-            "options": (
-                ("original", "original"),
-                ("bottomLeft", "bottomLeft"),
-                ("center", "center"),
-                ("bottomRight", "bottomRight"),
-                ("topLeft", "topLeft"),
-                ("topRight", "topRight"),
-            ),
-            "title": "Zero-Position",
-            "tooltip": "setting the Zero-Postition of the Workpiece",
-        },
-    },
-    "tool": {
-        "number": {
-            "default": 1,
-            "type": "int",
-            "min": 1,
-            "max": 99,
-            "title": "Number",
-            "tooltip": "setting the Tool-Number to load in gcode",
-        },
-        "diameter": {
-            "default": 4.0,
-            "type": "float",
-            "min": 0.0,
-            "max": 999.0,
-            "title": "Diameter",
-            "tooltip": "setting the Tool-Diameter to calculate the Offsets",
-        },
-        "speed": {
-            "default": 10000,
-            "type": "int",
-            "min": 100,
-            "max": 100000,
-            "title": "Speed",
-            "tooltip": "setting the Tool-Speed in RPM",
-        },
-    },
     "mill": {
         "rate_h": {
             "default": 1000,
@@ -152,6 +91,48 @@ setup_defaults: dict = {
             "tooltip": "milling small circles even if the tool is bigger",
         },
     },
+    "tool": {
+        "number": {
+            "default": 1,
+            "type": "int",
+            "min": 1,
+            "max": 99,
+            "title": "Number",
+            "tooltip": "setting the Tool-Number to load in gcode",
+        },
+        "diameter": {
+            "default": 4.0,
+            "type": "float",
+            "min": 0.0,
+            "max": 999.0,
+            "title": "Diameter",
+            "tooltip": "setting the Tool-Diameter to calculate the Offsets",
+        },
+        "speed": {
+            "default": 10000,
+            "type": "int",
+            "min": 100,
+            "max": 100000,
+            "title": "Speed",
+            "tooltip": "setting the Tool-Speed in RPM",
+        },
+    },
+    "workpiece": {
+        "zero": {
+            "default": "original",
+            "type": "select",
+            "options": (
+                ("original", "original"),
+                ("bottomLeft", "bottomLeft"),
+                ("center", "center"),
+                ("bottomRight", "bottomRight"),
+                ("topLeft", "topLeft"),
+                ("topRight", "topRight"),
+            ),
+            "title": "Zero-Position",
+            "tooltip": "setting the Zero-Postition of the Workpiece",
+        },
+    },
     "view": {
         "path": {
             "default": "simple",
@@ -183,6 +164,12 @@ setup_defaults: dict = {
             "max": 1000,
             "title": "Grid-Size",
             "tooltip": "size of the grid",
+        },
+        "polygon_show": {
+            "default": True,
+            "type": "bool",
+            "title": "Show as Polygon",
+            "tooltip": "showing as polygon in 3D preview",
         },
     },
 }
