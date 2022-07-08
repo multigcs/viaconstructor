@@ -90,6 +90,12 @@ setup_defaults: dict = {
             "title": "Small-Circles",
             "tooltip": "milling small circles even if the tool is bigger",
         },
+        "overcut": {
+            "default": False,
+            "type": "bool",
+            "title": "Overcut",
+            "tooltip": "Overcuting edges",
+        },
         "zero": {
             "default": "original",
             "type": "select",

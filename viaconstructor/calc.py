@@ -33,7 +33,9 @@ def calc_distance(p_1, p_2):
 
 def is_between(p_1, p_2, p_3):
     """checks if a point is between 2 other points."""
-    return calc_distance(p_1, p_3) + calc_distance(p_1, p_2) == calc_distance(p_2, p_3)
+    return round(calc_distance(p_1, p_3), 2) + round(
+        calc_distance(p_1, p_2), 2
+    ) == round(calc_distance(p_2, p_3), 2)
 
 
 def line_center_3d(p_1, p_2):
@@ -56,11 +58,9 @@ def calc_face(p_1, p_2):
 
 def angle_2d(p_1, p_2):
     """gets the angle of a single line (2nd version)."""
-    (x_1, y_1) = p_1
-    (x_2, y_2) = p_2
     two_pi = math.pi * 2
-    theta1 = math.atan2(y_1, x_1)
-    theta2 = math.atan2(y_2, x_2)
+    theta1 = math.atan2(p_1[1], p_1[0])
+    theta2 = math.atan2(p_2[1], p_2[0])
     dtheta = theta2 - theta1
     while dtheta > math.pi:
         dtheta -= two_pi
@@ -344,86 +344,209 @@ def do_pockets(  # pylint: disable=R0913
     return offset_idx
 
 
-def objects2polyline_offsets(diameter, objects, max_outer, small_circles=False):
-    """calculates the offset line(s) of an object"""
+def object2polyline_offsets(diameter, obj, obj_idx, max_outer, small_circles=False):
+    """calculates the offset line(s) of one object"""
     polyline_offsets = {}
-    for obj_idx, obj in objects.items():
 
-        if not obj["mill"]["active"]:
-            continue
-
-        tool_offset = obj["tool_offset"]
-        if obj["overwrite_offset"] is not None:
-            tool_radius = obj["overwrite_offset"]
-        else:
-            tool_radius = diameter / 2.0
-
-        obj2 = deepcopy(obj)
-
-        do_reverse = 0
-        if tool_offset == "inside":
-            do_reverse = 1 - do_reverse
-
-        if obj["mill"]["reverse"]:
-            do_reverse = 1 - do_reverse
-            tool_radius = -tool_radius
-
-        if do_reverse:
-            reverse_object(obj2)
-
-        is_circle = bool(obj["segments"][0]["type"] == "CIRCLE")
-
-        vertex_data = object2vertex(obj2)
-        polyline = cavc.Polyline(vertex_data, is_closed=obj["closed"])
-
-        offset_idx = 0
-        if polyline.is_closed() and tool_offset != "none":
-            polyline_offset_list = polyline.parallel_offset(
-                delta=-tool_radius, check_self_intersect=True
-            )
-            if polyline_offset_list:
-                for polyline_offset in polyline_offset_list:
-                    polyline_offset.level = len(obj.get("outer_objects", []))
-                    polyline_offset.tool_offset = tool_offset
-                    polyline_offset.mill = obj["mill"]
-                    polyline_offset.is_pocket = False
-                    polyline_offset.is_circle = is_circle
-                    polyline_offsets[f"{obj_idx}.{offset_idx}"] = polyline_offset
-                    offset_idx += 1
-                    if tool_offset == "inside" and obj["mill"]["pocket"]:
-                        if polyline_offset.is_closed():
-                            offset_idx = do_pockets(
-                                polyline_offset,
-                                obj,
-                                obj_idx,
-                                tool_offset,
-                                tool_radius * 1.2,
-                                polyline_offsets,
-                                offset_idx,
-                                polyline.vertex_data(),
+    def overcut():
+        for offset_idx, polyline in enumerate(list(polyline_offsets.values())):
+            points = vertex2points(polyline.vertex_data())
+            xdata = []
+            ydata = []
+            bdata = []
+            last = points[-1]
+            last_angle = None
+            for point in points:
+                angle = angle_of_line(point, last)
+                if last_angle is not None and last[2] == 0.0:
+                    if obj["mill"]["reverse"]:
+                        if angle > last_angle:
+                            angle = angle + math.pi * 2
+                    else:
+                        if angle > last_angle:
+                            angle = angle - math.pi * 2
+                    adiff = angle - last_angle
+                    if abs(adiff) >= math.pi / 4:
+                        over_x = last[0] - abs(tool_radius * 3) * math.sin(
+                            last_angle + adiff / 2.0 + math.pi
+                        )
+                        over_y = last[1] + abs(tool_radius * 3) * math.cos(
+                            last_angle + adiff / 2.0 + math.pi
+                        )
+                        for segment in obj["segments"]:
+                            is_b = is_between(
+                                (segment["start"][0], segment["start"][1]),
+                                (last[0], last[1]),
+                                (over_x, over_y),
                             )
-            elif is_circle and small_circles:
-                # adding holes that smaler as the tool
-                center_x = obj["segments"][0]["center"][0]
-                center_y = obj["segments"][0]["center"][1]
-                vertex_data = ((center_x,), (center_y,), (0,))
-                polyline_offset = cavc.Polyline(vertex_data, is_closed=False)
+                            if is_b:
+                                dist = calc_distance(
+                                    (segment["start"][0], segment["start"][1]),
+                                    (last[0], last[1]),
+                                )
+                                over_x = last[0] - (dist - abs(tool_radius)) * math.sin(
+                                    last_angle + adiff / 2.0 + math.pi
+                                )
+                                over_y = last[1] + (dist - abs(tool_radius)) * math.cos(
+                                    last_angle + adiff / 2.0 + math.pi
+                                )
+                                xdata.append(over_x)
+                                ydata.append(over_y)
+                                bdata.append(0.0)
+                                xdata.append(last[0])
+                                ydata.append(last[1])
+                                bdata.append(0.0)
+                                break
+                xdata.append(point[0])
+                ydata.append(point[1])
+                bdata.append(point[2])
+                last_angle = angle
+                last = point
+
+            point = points[0]
+            angle = angle_of_line(point, last)
+            if last_angle is not None and last[2] == 0.0:
+                if obj["mill"]["reverse"]:
+                    if angle > last_angle:
+                        angle = angle + math.pi * 2
+                else:
+                    if angle > last_angle:
+                        angle = angle - math.pi * 2
+                adiff = angle - last_angle
+                if abs(adiff) >= math.pi / 4:
+                    over_x = last[0] - abs(tool_radius * 3) * math.sin(
+                        last_angle + adiff / 2.0 + math.pi
+                    )
+                    over_y = last[1] + abs(tool_radius * 3) * math.cos(
+                        last_angle + adiff / 2.0 + math.pi
+                    )
+                    for segment in obj["segments"]:
+                        is_b = is_between(
+                            (segment["start"][0], segment["start"][1]),
+                            (last[0], last[1]),
+                            (over_x, over_y),
+                        )
+                        if is_b:
+                            dist = calc_distance(
+                                (segment["start"][0], segment["start"][1]),
+                                (last[0], last[1]),
+                            )
+                            over_x = last[0] - (dist - abs(tool_radius)) * math.sin(
+                                last_angle + adiff / 2.0 + math.pi
+                            )
+                            over_y = last[1] + (dist - abs(tool_radius)) * math.cos(
+                                last_angle + adiff / 2.0 + math.pi
+                            )
+                            xdata.append(over_x)
+                            ydata.append(over_y)
+                            bdata.append(0.0)
+                            xdata.append(last[0])
+                            ydata.append(last[1])
+                            bdata.append(0.0)
+                            break
+
+            over_polyline = cavc.Polyline((xdata, ydata, bdata), is_closed=True)
+            over_polyline.level = len(obj.get("outer_objects", []))
+            over_polyline.mill = obj.get("mill", {})
+            over_polyline.is_pocket = False
+            over_polyline.tool_offset = tool_offset
+            polyline_offsets[f"{obj_idx}.{offset_idx}"] = over_polyline
+
+    is_inside = bool(obj["tool_offset"] == "inside")
+
+    tool_offset = obj["tool_offset"]
+    if obj["overwrite_offset"] is not None:
+        tool_radius = obj["overwrite_offset"]
+    else:
+        tool_radius = diameter / 2.0
+
+    if obj["mill"]["reverse"]:
+        tool_radius = -tool_radius
+
+    is_circle = bool(obj["segments"][0]["type"] == "CIRCLE")
+
+    vertex_data = object2vertex(obj)
+    polyline = cavc.Polyline(vertex_data, is_closed=obj["closed"])
+
+    offset_idx = 0
+    if polyline.is_closed() and tool_offset != "none":
+        polyline_offset_list = polyline.parallel_offset(
+            delta=-tool_radius, check_self_intersect=True
+        )
+        if polyline_offset_list:
+            for polyline_offset in polyline_offset_list:
                 polyline_offset.level = len(obj.get("outer_objects", []))
                 polyline_offset.tool_offset = tool_offset
                 polyline_offset.mill = obj["mill"]
                 polyline_offset.is_pocket = False
-                polyline_offset.is_circle = True
-                polyline_offsets[f"{obj_idx}.{offset_idx}.x"] = polyline_offset
+                polyline_offset.is_circle = is_circle
+                polyline_offsets[f"{obj_idx}.{offset_idx}"] = polyline_offset
                 offset_idx += 1
-
-        else:
-            polyline.level = max_outer
-            polyline.tool_offset = tool_offset
-            polyline.mill = obj["mill"]
-            polyline.is_pocket = False
-            polyline.is_circle = False
-            polyline_offsets[f"{obj_idx}.{offset_idx}"] = polyline
+                if tool_offset == "inside" and obj["mill"]["pocket"]:
+                    if polyline_offset.is_closed():
+                        offset_idx = do_pockets(
+                            polyline_offset,
+                            obj,
+                            obj_idx,
+                            tool_offset,
+                            tool_radius * 1.2,
+                            polyline_offsets,
+                            offset_idx,
+                            polyline.vertex_data(),
+                        )
+        elif is_circle and small_circles:
+            # adding holes that smaler as the tool
+            center_x = obj["segments"][0]["center"][0]
+            center_y = obj["segments"][0]["center"][1]
+            vertex_data = ((center_x,), (center_y,), (0,))
+            polyline_offset = cavc.Polyline(vertex_data, is_closed=False)
+            polyline_offset.level = len(obj.get("outer_objects", []))
+            polyline_offset.tool_offset = tool_offset
+            polyline_offset.mill = obj["mill"]
+            polyline_offset.is_pocket = False
+            polyline_offset.is_circle = True
+            polyline_offsets[f"{obj_idx}.{offset_idx}.x"] = polyline_offset
             offset_idx += 1
+
+        if obj["mill"]["overcut"] and is_inside:
+            overcut()
+
+    else:
+        polyline.level = max_outer
+        polyline.tool_offset = tool_offset
+        polyline.mill = obj["mill"]
+        polyline.is_pocket = False
+        polyline.is_circle = False
+        polyline_offsets[f"{obj_idx}.{offset_idx}"] = polyline
+        offset_idx += 1
+
+    return polyline_offsets
+
+
+def objects2polyline_offsets(diameter, objects, max_outer, small_circles=False):
+    """calculates the offset line(s) of all objects"""
+    polyline_offsets = {}
+    for obj_idx, obj in objects.items():
+        if not obj["mill"]["active"]:
+            continue
+
+        obj_copy = deepcopy(obj)
+        do_reverse = 0
+        if obj_copy["tool_offset"] == "inside":
+            do_reverse = 1 - do_reverse
+
+        if obj_copy["mill"]["reverse"]:
+            do_reverse = 1 - do_reverse
+
+        if do_reverse:
+            reverse_object(obj_copy)
+
+        polyline_offsets.update(
+            object2polyline_offsets(
+                diameter, obj_copy, obj_idx, max_outer, small_circles
+            )
+        )
+
     return polyline_offsets
 
 

@@ -54,7 +54,7 @@ def test_calc_distance(p1, p2, expected):
     "p1, p2, p3, expected",
     (
         ((200, 200), (100, 100), (300, 300), True),
-        ((200.001, 200), (100, 100), (300, 300), False),
+        ((200.01, 200), (100, 100), (300, 300), False),
     ),
 )
 def test_is_between(p1, p2, p3, expected):
@@ -620,6 +620,7 @@ def test_inside_vertex(vertex_data, point, expected):
                     "back_home": True,
                     "small_circles": True,
                     "zero": "original",
+                    "overcut": False,
                 },
                 "tool": {"number": 1, "diameter": 4.0, "speed": 10000},
             },
@@ -689,6 +690,7 @@ def test_object2vertex(obj, expected, expected_minmax):
                         "back_home": True,
                         "small_circles": True,
                         "zero": "original",
+                        "overcut": False,
                     },
                     "tool": {"number": 1, "diameter": 4.0, "speed": 10000},
                 },
@@ -746,6 +748,7 @@ def test_object2vertex(obj, expected, expected_minmax):
                         "back_home": True,
                         "small_circles": True,
                         "zero": "original",
+                        "overcut": False,
                     },
                     "tool": {"number": 1, "diameter": 4.0, "speed": 10000},
                 },
