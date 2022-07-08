@@ -1,5 +1,9 @@
 
-all: format lint test pdoc docindex
+all: isort black lint pytest pdoc docindex
+
+check: isort_check black_check lint pytest_check
+
+format: isort black
 
 pdoc:
 	rm -rf docs/pdoc
@@ -23,8 +27,17 @@ pip-compile: pyvenv
 	pyvenv/bin/pip-compile requirements-dev.in
 	pyvenv/bin/pip-compile requirements.in
 
-format: pyvenv
-	pyvenv/bin/python -m black viaconstructor/*py tests/*py
+isort: pyvenv
+	pyvenv/bin/python -m isort --profile black */*py
+
+isort_check: pyvenv
+	pyvenv/bin/python -m isort --check --profile black */*py
+
+black: pyvenv
+	pyvenv/bin/python -m black */*py
+
+black_check: pyvenv
+	pyvenv/bin/python -m black --check */*py
 
 lint: flake8 pylint mypy
 
@@ -37,8 +50,11 @@ mypy: pyvenv
 pylint: pyvenv
 	pyvenv/bin/python -m pylint viaconstructor/*.py # tests/*.py
 
-test: pyvenv
+pytest: pyvenv
 	PYTHONPATH=. pyvenv/bin/python -m pytest --cov=. --cov-report html:docs/pytest --cov-report term -vv tests/
+
+pytest_check: pyvenv
+	PYTHONPATH=. pyvenv/bin/python -m pytest -vv tests/
 
 clean:
 	rm -rf .coverage
