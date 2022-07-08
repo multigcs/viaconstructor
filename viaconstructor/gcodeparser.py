@@ -48,7 +48,7 @@ class GcodeParser:
                     self.state["spindle"]["dir"] = "CW"
                     if "S" in ldata:
                         self.state["spindle"]["rpm"] = ldata["S"]
-                elif ldata["M"] == 3:
+                elif ldata["M"] == 4:
                     self.state["spindle"]["dir"] = "CCW"
                     if "S" in ldata:
                         self.state["spindle"]["rpm"] = ldata["S"]
@@ -65,9 +65,9 @@ class GcodeParser:
                 elif ldata["G"] == 40:
                     self.state["offsets"] = "OFF"
                 elif ldata["G"] == 41:
-                    self.state["offsets"] = "R?"
+                    self.state["offsets"] = "LEFT"
                 elif ldata["G"] == 42:
-                    self.state["offsets"] = "L?"
+                    self.state["offsets"] = "RIGHT"
                 elif ldata["G"] == 64:
                     if "P" in ldata:
                         pass
@@ -127,7 +127,15 @@ class GcodeParser:
     def get_size(self) -> list[float]:
         return self.size
 
-    def get_path(self) -> list[list]:
+    def get_state(self) -> dict:
+        return self.state
+
+    def get_path(self, rounding: bool = True) -> list[list]:
+        if rounding:
+            for segment in self.path:
+                for axis in ("X", "Y", "Z"):
+                    segment[0][axis] = round(segment[0][axis], 6)
+                    segment[1][axis] = round(segment[1][axis], 6)
         return self.path
 
     def draw(self, draw_function, user_data=()) -> None:

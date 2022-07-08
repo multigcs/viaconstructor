@@ -51,7 +51,7 @@ pylint: pyvenv
 	pyvenv/bin/python -m pylint viaconstructor/*.py # tests/*.py
 
 pytest: pyvenv
-	PYTHONPATH=. pyvenv/bin/python -m pytest --cov=. --cov-report html:docs/pytest --cov-report term tests/
+	PYTHONPATH=. pyvenv/bin/python -m pytest --cov=viaconstructor --cov-report html:docs/pytest --cov-report term tests/
 
 pytest_check: pyvenv
 	PYTHONPATH=. pyvenv/bin/python -m pytest -vv tests/
