@@ -1,10 +1,12 @@
 """dxfpreview tool."""
 
+import argparse
 import os.path
 import sys
-import argparse
 from os import environ
+
 from PIL import Image, ImageDraw, ImageFont
+
 from viaconstructor.dxfread import DxfReader
 
 
@@ -65,13 +67,9 @@ def main() -> int:
 
     # draw grid
     for pos_x in range(0, int(size[0]), 10):
-        draw_line(
-            (pos_x, 0.0), (pos_x, size[1]), color=(27, 27, 27)
-        )
+        draw_line((pos_x, 0.0), (pos_x, size[1]), color=(27, 27, 27))
     for pos_y in range(0, int(size[1]), 10):
-        draw_line(
-            (0.0, pos_y), (size[0], pos_y), color=(27, 27, 27)
-        )
+        draw_line((0.0, pos_y), (size[0], pos_y), color=(27, 27, 27))
 
     # draw path
     dxf_reader.draw(draw_line)
@@ -89,6 +87,7 @@ def main() -> int:
         environ["PYGAME_HIDE_SUPPORT_PROMPT"] = "1"
         import pygame  # pylint: disable=C0415
         from pygame.locals import QUIT  # pylint: disable=C0415,E0611
+
         pygame.init()  # pylint: disable=E1101
         pygame.display.set_caption(f"dxfpreview ({filename})")
         screen = pygame.display.set_mode((screen_width, screen_height))

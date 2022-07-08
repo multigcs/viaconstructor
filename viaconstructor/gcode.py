@@ -1,10 +1,7 @@
 """generates gcode"""
 import ezdxf
-from .calc import (
-    calc_distance,
-    vertex2points,
-    rotate_list,
-)
+
+from .calc import calc_distance, rotate_list, vertex2points
 
 
 def gcode_begin(project: dict) -> list[str]:

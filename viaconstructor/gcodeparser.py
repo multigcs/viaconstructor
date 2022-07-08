@@ -1,12 +1,10 @@
 """gcodeparser"""
 
-from typing import Union
 import math
 import re
-from .calc import (
-    angle_of_line,
-    calc_distance,
-)
+from typing import Union
+
+from .calc import angle_of_line, calc_distance
 
 
 class GcodeParser:

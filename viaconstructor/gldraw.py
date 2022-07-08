@@ -1,29 +1,30 @@
 """OpenGL drawing functions"""
 
-from typing import Sequence
 import math
+from typing import Sequence
+
+from HersheyFonts import HersheyFonts
 from OpenGL import GL
 from OpenGL.GLU import (
-    gluNewTess,
-    gluTessProperty,
-    GLU_TESS_WINDING_RULE,
-    GLU_TESS_WINDING_ODD,
-    gluTessCallback,
     GLU_TESS_BEGIN,
-    GLU_TESS_VERTEX,
-    GLU_TESS_END,
     GLU_TESS_COMBINE,
-    gluTessBeginPolygon,
+    GLU_TESS_END,
+    GLU_TESS_VERTEX,
+    GLU_TESS_WINDING_ODD,
+    GLU_TESS_WINDING_RULE,
+    gluDeleteTess,
+    gluNewTess,
     gluTessBeginContour,
-    gluTessVertex,
+    gluTessBeginPolygon,
+    gluTessCallback,
     gluTessEndContour,
     gluTessEndPolygon,
-    gluDeleteTess,
+    gluTessProperty,
+    gluTessVertex,
 )
-from HersheyFonts import HersheyFonts
-from .gcodeparser import GcodeParser
-from .calc import angle_of_line, calc_distance, line_center_3d, object2vertex
 
+from .calc import angle_of_line, calc_distance, line_center_3d, object2vertex
+from .gcodeparser import GcodeParser
 
 font = HersheyFonts()
 font.load_default_font()

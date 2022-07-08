@@ -1,7 +1,8 @@
 """viaconstructor calculation functions."""
 
-from copy import deepcopy
 import math
+from copy import deepcopy
+
 import cavaliercontours as cavc
 
 

@@ -1,10 +1,12 @@
 """gcodepreview tool."""
 
+import argparse
 import os.path
 import sys
-import argparse
 from os import environ
+
 from PIL import Image, ImageDraw, ImageFont
+
 from viaconstructor.gcodeparser import GcodeParser
 
 
@@ -94,6 +96,7 @@ def main() -> int:
         environ["PYGAME_HIDE_SUPPORT_PROMPT"] = "1"
         import pygame  # pylint: disable=C0415
         from pygame.locals import QUIT  # pylint: disable=C0415,E0611
+
         pygame.init()  # pylint: disable=E1101
         pygame.display.set_caption(f"gcodepreview ({filename})")
         screen = pygame.display.set_mode((screen_width, screen_height))

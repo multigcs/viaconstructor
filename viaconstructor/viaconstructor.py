@@ -1,56 +1,56 @@
 """viaconstructor tool."""
 
+import argparse
 import json
 import os
 import sys
-import argparse
 from copy import deepcopy
 
 from PyQt5.QtGui import QIcon  # pylint: disable=E0611
+from PyQt5.QtOpenGL import QGLFormat, QGLWidget  # pylint: disable=E0611
 from PyQt5.QtWidgets import (  # pylint: disable=E0611
-    QMainWindow,
-    QStatusBar,
     QAction,
     QApplication,
-    QMessageBox,
-    QTableWidget,
-    QTableWidgetItem,
-    QComboBox,
     QCheckBox,
-    QHeaderView,
-    QWidget,
-    QVBoxLayout,
-    QLabel,
+    QComboBox,
     QDoubleSpinBox,
-    QSpinBox,
+    QFileDialog,
     QGridLayout,
     QHBoxLayout,
-    QTabWidget,
+    QHeaderView,
+    QLabel,
+    QMainWindow,
+    QMessageBox,
     QPlainTextEdit,
-    QFileDialog,
+    QSpinBox,
+    QStatusBar,
+    QTableWidget,
+    QTableWidgetItem,
+    QTabWidget,
+    QVBoxLayout,
+    QWidget,
 )
-from PyQt5.QtOpenGL import QGLFormat, QGLWidget  # pylint: disable=E0611
 
-from .setupdefaults import setup_defaults
-from .dxfread import DxfReader
-from .gldraw import (
-    draw_grid,
-    draw_gcode_path,
-    draw_object_edges,
-    draw_object_ids,
-    draw_object_faces,
-)
-from .gcode import polylines2gcode
 from .calc import (
-    objects2minmax,
-    move_objects,
-    objects2polyline_offsets,
     clean_segments,
-    segments2objects,
     find_tool_offsets,
-    rotate_objects,
     mirror_objects,
+    move_objects,
+    objects2minmax,
+    objects2polyline_offsets,
+    rotate_objects,
+    segments2objects,
 )
+from .dxfread import DxfReader
+from .gcode import polylines2gcode
+from .gldraw import (
+    draw_gcode_path,
+    draw_grid,
+    draw_object_edges,
+    draw_object_faces,
+    draw_object_ids,
+)
+from .setupdefaults import setup_defaults
 
 try:
     from OpenGL import GL
@@ -494,6 +494,104 @@ class ViaConstructor:
         """exit button."""
         sys.exit(0)
 
+    def create_toolbar(self) -> None:
+        """creates the_toolbar."""
+        toolbars = {
+            "Exit": ("exit.png", "Ctrl+Q", "Exit application", self.toolbar_exit, True),
+            "Save": (
+                "filesave.png",
+                "Ctrl+S",
+                "Save gcode",
+                self.toolbar_save_gcode,
+                True,
+            ),
+            "Load-Setup from gCode": (
+                "load-setup.png",
+                "",
+                "Load-Setup from gCode",
+                self.toolbar_load_gcode_setup,
+                os.path.isfile(self.project["filename_gcode"]),
+            ),
+            "Save-Setup": (
+                "save-setup.png",
+                "",
+                "Save-Setup",
+                self.toolbar_save_setup,
+                True,
+            ),
+            "Center-View": (
+                "view-fullscreen.png",
+                "",
+                "Center-View",
+                self.toolbar_centerview,
+                True,
+            ),
+            "Flip-X": ("flip-x.png", "", "Flip-X", self.toolbar_flipx, True),
+            "Flip-Y": ("flip-y.png", "", "Flip-Y", self.toolbar_flipy, True),
+            "Rotate": ("rotate.png", "", "Rotate", self.toolbar_rotate, True),
+        }
+        for title, toolbar in toolbars.items():
+            if toolbar[4]:
+                action = QAction(
+                    QIcon(os.path.join(self.this_dir, "..", "data", toolbar[0])),
+                    title,
+                    self.main,
+                )
+                if toolbar[1]:
+                    action.setShortcut(toolbar[1])
+                action.setStatusTip(toolbar[2])
+                action.triggered.connect(toolbar[3])  # type: ignore
+                self.main.addToolBar(title).addAction(action)
+
+    def create_global_setup(self, tabwidget) -> None:
+        for sname in self.project["setup_defaults"]:
+            vcontainer = QWidget()
+            vlayout = QVBoxLayout(vcontainer)
+            tabwidget.addTab(vcontainer, sname)
+
+            for ename, entry in self.project["setup_defaults"][sname].items():
+                container = QWidget()
+                hlayout = QHBoxLayout(container)
+                label = QLabel(entry.get("title", ename))
+                hlayout.addWidget(label)
+                if entry["type"] == "bool":
+                    checkbox = QCheckBox(entry.get("title", ename))
+                    checkbox.setChecked(self.project["setup"][sname][ename])
+                    checkbox.setToolTip(entry.get("tooltip", f"{sname}/{ename}"))
+                    checkbox.stateChanged.connect(self.global_changed)  # type: ignore
+                    hlayout.addWidget(checkbox)
+                    entry["widget"] = checkbox
+                elif entry["type"] == "select":
+                    combobox = QComboBox()
+                    for option in entry["options"]:
+                        combobox.addItem(option[0])
+                    combobox.setCurrentText(self.project["setup"][sname][ename])
+                    combobox.setToolTip(entry.get("tooltip", f"{sname}/{ename}"))
+                    combobox.currentTextChanged.connect(self.global_changed)  # type: ignore
+                    hlayout.addWidget(combobox)
+                    entry["widget"] = combobox
+                elif entry["type"] == "float":
+                    spinbox = QDoubleSpinBox()
+                    spinbox.setMinimum(entry["min"])
+                    spinbox.setMaximum(entry["max"])
+                    spinbox.setValue(self.project["setup"][sname][ename])
+                    spinbox.setToolTip(entry.get("tooltip", f"{sname}/{ename}"))
+                    spinbox.valueChanged.connect(self.global_changed)  # type: ignore
+                    hlayout.addWidget(spinbox)
+                    entry["widget"] = spinbox
+                elif entry["type"] == "int":
+                    spinbox = QSpinBox()
+                    spinbox.setMinimum(entry["min"])
+                    spinbox.setMaximum(entry["max"])
+                    spinbox.setValue(self.project["setup"][sname][ename])
+                    spinbox.setToolTip(entry.get("tooltip", f"{sname}/{ename}"))
+                    spinbox.valueChanged.connect(self.global_changed)  # type: ignore
+                    hlayout.addWidget(spinbox)
+                    entry["widget"] = spinbox
+                else:
+                    print(f"Unknown setup-type: {entry['type']}")
+                vlayout.addWidget(container)
+
     def __init__(self) -> None:
         """viaconstructor main init."""
         # arguments
@@ -560,90 +658,7 @@ class ViaConstructor:
 
         self.this_dir, self.this_filename = os.path.split(__file__)
 
-        exit_action = QAction(
-            QIcon(os.path.join(self.this_dir, "..", "data", "exit.png")),
-            "Exit",
-            self.main,
-        )
-        exit_action.setShortcut("Ctrl+Q")
-        exit_action.setStatusTip("Exit application")
-        exit_action.triggered.connect(self.toolbar_exit)  # type: ignore
-        toolbar = self.main.addToolBar("Exit")
-        toolbar.addAction(exit_action)
-
-        save_action = QAction(
-            QIcon(os.path.join(self.this_dir, "..", "data", "filesave.png")),
-            "Save",
-            self.main,
-        )
-        save_action.setShortcut("Ctrl+S")
-        save_action.setStatusTip("Save gcode")
-        save_action.triggered.connect(self.toolbar_save_gcode)  # type: ignore
-        toolbar = self.main.addToolBar("Save")
-        toolbar.addAction(save_action)
-
-        if os.path.isfile(self.project["filename_gcode"]):
-            sgload_action = QAction(
-                QIcon(os.path.join(self.this_dir, "..", "data", "load-setup.png")),
-                "Load-Setup from gCode",
-                self.main,
-            )
-            sgload_action.setStatusTip("load setup from gcode file")
-            sgload_action.triggered.connect(self.toolbar_load_gcode_setup)  # type: ignore
-            toolbar = self.main.addToolBar("Load-Setup from gCode")
-            toolbar.addAction(sgload_action)
-
-        ssave_action = QAction(
-            QIcon(os.path.join(self.this_dir, "..", "data", "save-setup.png")),
-            "Save-Setup",
-            self.main,
-        )
-        ssave_action.setShortcut("Ctrl+W")
-        ssave_action.setStatusTip("Save-Setup")
-        ssave_action.triggered.connect(self.toolbar_save_setup)  # type: ignore
-        toolbar = self.main.addToolBar("Save-Setup")
-        toolbar.addAction(ssave_action)
-
-        view_action = QAction(
-            QIcon(os.path.join(self.this_dir, "..", "data", "view-fullscreen.png")),
-            "Center-View",
-            self.main,
-        )
-        view_action.setShortcut("Ctrl+0")
-        view_action.setStatusTip("Center View")
-        view_action.triggered.connect(self.toolbar_centerview)  # type: ignore
-        toolbar = self.main.addToolBar("center view")
-        toolbar.addAction(view_action)
-
-        flipx_action = QAction(
-            QIcon(os.path.join(self.this_dir, "..", "data", "flip-x.png")),
-            "Flip-X",
-            self.main,
-        )
-        flipx_action.setStatusTip("Flip-X")
-        flipx_action.triggered.connect(self.toolbar_flipx)  # type: ignore
-        toolbar = self.main.addToolBar("flip-x")
-        toolbar.addAction(flipx_action)
-
-        flipy_action = QAction(
-            QIcon(os.path.join(self.this_dir, "..", "data", "flip-y.png")),
-            "Flip-Y",
-            self.main,
-        )
-        flipy_action.setStatusTip("Flip-Y")
-        flipy_action.triggered.connect(self.toolbar_flipy)  # type: ignore
-        toolbar = self.main.addToolBar("flip-y")
-        toolbar.addAction(flipy_action)
-
-        rotate_action = QAction(
-            QIcon(os.path.join(self.this_dir, "..", "data", "rotate.png")),
-            "Rotate",
-            self.main,
-        )
-        rotate_action.setStatusTip("Rotate")
-        rotate_action.triggered.connect(self.toolbar_rotate)  # type: ignore
-        toolbar = self.main.addToolBar("rotate")
-        toolbar.addAction(rotate_action)
+        self.create_toolbar()
 
         self.status_bar = QStatusBar()
         self.main.setStatusBar(self.status_bar)
@@ -676,54 +691,7 @@ class ViaConstructor:
         vbox.addWidget(QLabel("Global-Settings:"))
 
         tabwidget = QTabWidget()
-        for sname in self.project["setup_defaults"]:
-            vcontainer = QWidget()
-            vlayout = QVBoxLayout(vcontainer)
-            tabwidget.addTab(vcontainer, sname)
-
-            for ename, entry in self.project["setup_defaults"][sname].items():
-                container = QWidget()
-                hlayout = QHBoxLayout(container)
-                label = QLabel(entry.get("title", ename))
-                hlayout.addWidget(label)
-                if entry["type"] == "bool":
-                    checkbox = QCheckBox(entry.get("title", ename))
-                    checkbox.setChecked(self.project["setup"][sname][ename])
-                    checkbox.setToolTip(entry.get("tooltip", f"{sname}/{ename}"))
-                    checkbox.stateChanged.connect(self.global_changed)  # type: ignore
-                    hlayout.addWidget(checkbox)
-                    entry["widget"] = checkbox
-                elif entry["type"] == "select":
-                    combobox = QComboBox()
-                    for option in entry["options"]:
-                        combobox.addItem(option[0])
-                    combobox.setCurrentText(self.project["setup"][sname][ename])
-                    combobox.setToolTip(entry.get("tooltip", f"{sname}/{ename}"))
-                    combobox.currentTextChanged.connect(self.global_changed)  # type: ignore
-                    hlayout.addWidget(combobox)
-                    entry["widget"] = combobox
-                elif entry["type"] == "float":
-                    spinbox = QDoubleSpinBox()
-                    spinbox.setMinimum(entry["min"])
-                    spinbox.setMaximum(entry["max"])
-                    spinbox.setValue(self.project["setup"][sname][ename])
-                    spinbox.setToolTip(entry.get("tooltip", f"{sname}/{ename}"))
-                    spinbox.valueChanged.connect(self.global_changed)  # type: ignore
-                    hlayout.addWidget(spinbox)
-                    entry["widget"] = spinbox
-                elif entry["type"] == "int":
-                    spinbox = QSpinBox()
-                    spinbox.setMinimum(entry["min"])
-                    spinbox.setMaximum(entry["max"])
-                    spinbox.setValue(self.project["setup"][sname][ename])
-                    spinbox.setToolTip(entry.get("tooltip", f"{sname}/{ename}"))
-                    spinbox.valueChanged.connect(self.global_changed)  # type: ignore
-                    hlayout.addWidget(spinbox)
-                    entry["widget"] = spinbox
-                else:
-                    print(f"Unknown setup-type: {entry['type']}")
-                vlayout.addWidget(container)
-
+        self.create_global_setup(tabwidget)
         vbox.addWidget(tabwidget)
 
         bottom_container = QWidget()
