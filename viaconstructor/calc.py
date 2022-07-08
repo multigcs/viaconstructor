@@ -180,12 +180,13 @@ def segments2objects(segments):
             "inner_objects": [],
         }
 
-        # and add first unused segment from segments
+        # add first unused segment from segments
         for segment in segments:
             if segment["object"] is None:
                 segment["object"] = obj_idx
                 obj["segments"].append(segment)
                 last = segment
+                found = True
                 break
 
         # find matching unused segments
@@ -200,7 +201,6 @@ def segments2objects(segments):
                             segment["object"] = obj_idx
                             obj["segments"].append(segment)
                             last = segment
-                            found = True
                             found_next = True
                             rev += 1
                         elif fuzy_match(last["end"], segment["end"]):
@@ -212,7 +212,6 @@ def segments2objects(segments):
                             segment["object"] = obj_idx
                             obj["segments"].append(segment)
                             last = segment
-                            found = True
                             found_next = True
                             rev += 1
 
