@@ -91,3 +91,4 @@ mypy==0.941
 # setuptools
 markdown==3.3.7
 pdoc==12.0.2
+isort==5.10.1

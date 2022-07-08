@@ -7,3 +7,4 @@ pylint==2.14.4
 mypy==0.941
 markdown==3.3.7
 pdoc==12.0.2
+isort==5.10.1
