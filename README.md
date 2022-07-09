@@ -42,3 +42,8 @@ pip3 install -r requirements.txt
 ![gcodepreview](https://raw.githubusercontent.com/multigcs/viaconstructor/main/docs/gcodepreview.png)
 
 ![dxfpreview](https://raw.githubusercontent.com/multigcs/viaconstructor/main/docs/dxfpreview.png)
+
+
+![helix](https://raw.githubusercontent.com/multigcs/viaconstructor/main/docs/helix-true.png)
+![overcut](https://raw.githubusercontent.com/multigcs/viaconstructor/main/docs/overcut-true.png)
+![pockets](https://raw.githubusercontent.com/multigcs/viaconstructor/main/docs/pockets-true.png)
