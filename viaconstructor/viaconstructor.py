@@ -65,6 +65,9 @@ class GLWidget(QGLWidget):
     """customized GLWidget."""
 
     GL_MULTISAMPLE = 0x809D
+    screen_w = 100
+    screen_h = 100
+    aspect = 1.0
     rot_x = -20.0
     rot_y = -30.0
     rot_z = 0.0
@@ -98,12 +101,12 @@ class GLWidget(QGLWidget):
         GL.glLoadIdentity()
 
         if self.frameGeometry().width() == 0:
-            aspect = 1.0
+            self.aspect = 1.0
         else:
-            aspect = self.frameGeometry().height() / self.frameGeometry().width()
+            self.aspect = self.frameGeometry().height() / self.frameGeometry().width()
 
         hight = 0.2
-        width = hight * aspect
+        width = hight * self.aspect
 
         if self.ortho:
             GL.glOrtho(
@@ -127,6 +130,8 @@ class GLWidget(QGLWidget):
 
     def resizeGL(self, width, hight) -> None:  # pylint: disable=C0103
         """glresize function."""
+        self.screen_w = width
+        self.screen_h = hight
         GL.glViewport(0, 0, width, hight)
         self.initializeGL()
 
@@ -137,7 +142,7 @@ class GLWidget(QGLWidget):
             return
         size_x = min_max[2] - min_max[0]
         size_y = min_max[3] - min_max[1]
-        scale = min(1.0 / size_x, 1.0 / size_y) / 1.4
+        self.scale = min(1.0 / size_x, 1.0 / size_y) / 1.4
 
         GL.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT)
         GL.glMatrixMode(GL.GL_MODELVIEW)
@@ -149,19 +154,27 @@ class GLWidget(QGLWidget):
         GL.glRotatef(self.rot_y, 1.0, 0.0, 0.0)
         GL.glRotatef(self.rot_z, 0.0, 0.0, 1.0)
         GL.glTranslatef(
-            (-size_x / 2.0 - min_max[0]) * scale,
-            (-size_y / 2.0 - min_max[1]) * scale,
+            (-size_x / 2.0 - min_max[0]) * self.scale,
+            (-size_y / 2.0 - min_max[1]) * self.scale,
             0.0,
         )
-        GL.glScalef(scale, scale, scale)
+        GL.glScalef(self.scale, self.scale, self.scale)
         GL.glCallList(self.project["gllist"])
         GL.glPopMatrix()
 
-    def toggle_view(self) -> None:
+    def view_2d(self) -> None:
         """toggle view function."""
         self.ortho = True
         self.rot_x = 0.0
         self.rot_y = 0.0
+        self.rot_z = 0.0
+        self.initializeGL()
+
+    def view_reset(self) -> None:
+        """toggle view function."""
+        self.ortho = False
+        self.rot_x = -20.0
+        self.rot_y = -30.0
         self.rot_z = 0.0
         self.trans_x = 0.0
         self.trans_y = 0.0
@@ -186,7 +199,6 @@ class GLWidget(QGLWidget):
         self.trans_x_last = self.trans_x
         self.trans_y_last = self.trans_y
         self.trans_z_last = self.trans_z
-        self.scale_last = self.scale
 
     def mouseReleaseEvent(self, event) -> None:  # pylint: disable=C0103,W0613
         """mouse button released."""
@@ -197,11 +209,8 @@ class GLWidget(QGLWidget):
         """mouse moved."""
         if self.mbutton == 1:
             moffset = self.mpos - event.pos()
-            self.rot_x = self.rot_x_last + -moffset.x() / 4
-            self.rot_y = self.rot_y_last - moffset.y() / 4
-            if self.ortho:
-                self.ortho = False
-                self.initializeGL()
+            self.trans_x = self.trans_x_last + moffset.x() / self.screen_w
+            self.trans_y = self.trans_y_last - moffset.y() / self.screen_h * self.aspect
         elif self.mbutton == 2:
             moffset = self.mpos - event.pos()
             self.rot_z = self.rot_z_last - moffset.x() / 4
@@ -211,8 +220,11 @@ class GLWidget(QGLWidget):
                 self.initializeGL()
         elif self.mbutton == 4:
             moffset = self.mpos - event.pos()
-            self.trans_x = self.trans_x_last + moffset.x() / 500
-            self.trans_y = self.trans_y_last - moffset.y() / 500
+            self.rot_x = self.rot_x_last + -moffset.x() / 4
+            self.rot_y = self.rot_y_last - moffset.y() / 4
+            if self.ortho:
+                self.ortho = False
+                self.initializeGL()
 
     def wheelEvent(self, event) -> None:  # pylint: disable=C0103,W0613
         """mouse wheel moved."""
@@ -304,9 +316,13 @@ class ViaConstructor:
         self.project["minMax"] = objects2minmax(self.project["objects"])
         self.update_drawing()
 
-    def _toolbar_centerview(self) -> None:
+    def _toolbar_view_2d(self) -> None:
         """center view."""
-        self.project["glwidget"].toggle_view()
+        self.project["glwidget"].view_2d()
+
+    def _toolbar_view_reset(self) -> None:
+        """center view."""
+        self.project["glwidget"].view_reset()
 
     def gcode_save(self, filename: str) -> bool:
         with open(filename, "w") as fd_gcode:
@@ -600,11 +616,19 @@ class ViaConstructor:
                 True,
                 "setup",
             ),
-            "Center-View": (
-                "view-fullscreen.png",
+            "View-Reset": (
+                "view-reset.png",
                 "",
-                "Center-View",
-                self._toolbar_centerview,
+                "View-Reset",
+                self._toolbar_view_reset,
+                True,
+                "view",
+            ),
+            "2D-View": (
+                "view-2d.png",
+                "",
+                "2D-View",
+                self._toolbar_view_2d,
                 True,
                 "view",
             ),
