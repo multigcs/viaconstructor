@@ -1,0 +1,42 @@
+{
+    "overcut": {
+        "title": "Overcut",
+        "text": "Ausfräsen von Ecken die bedingt durch den Fräser-Radius stehen beiben würden.<br /><br />Dies ist Hilfreich bei gestecken Teilen ohne diese nacharbeiten zu müssen.<br />",
+        "images": {
+            "true": "overcut-true.png",
+            "false": "overcut-false.png"
+        }
+    },
+    "helix": {
+        "title": "Helix",
+        "text": "Der Fräser bewegt sich in einer Spirale nach unten.<br />",
+        "images": {
+            "true": "helix-true.png",
+            "false": "helix-false.png"
+        }
+    },
+    "smalcircles": {
+        "title": "Smal-Circles",
+        "text": "Kleine Bohrungen werden mit gefräst auch wenn der Fräser-Durchmesser größer ist.<br />",
+        "images": {
+            "true": "smalcircles-true.png",
+            "false": "smalcircles-false.png"
+        }
+    },
+    "pockets": {
+        "title": "Pockets",
+        "text": "Innenliegende Flächen werden ausgefräst.<br />",
+        "images": {
+            "true": "pockets-true.png",
+            "false": "pockets-false.png"
+        }
+    },
+    "arcr": {
+        "title": "Arc-R",
+        "text": "Ars im G-Code werden durch Angabe des Radius (R) beschrieben anstatt über den Offset (J/I).<br />",
+        "images": {
+            "true": "arcr-true.png",
+            "false": "arcr-false.png"
+        }
+    }
+}

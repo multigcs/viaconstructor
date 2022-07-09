@@ -1,18 +1,22 @@
 
-all: isort black lint pytest pdoc docindex
+all: isort black lint pytest pdoc help_gen docindex
 
 check: isort_check black_check lint pytest_check
 
 format: isort black
 
-pdoc:
+pdoc: pyvenv
 	rm -rf docs/pdoc
 	pyvenv/bin/pdoc -o docs/pdoc viaconstructor/ dxfpreview/ gcodepreview/
 
-docindex:
+help_gen: pyvenv
+	mkdir -p docs/help
+	pyvenv/bin/pdoc help_gen.py
+
+docindex: pyvenv
 	pyvenv/bin/markdown_py README.md | sed "s|https://raw.githubusercontent.com/multigcs/viaconstructor/main/docs/|./|g" > docs/readme.html
 
-pyvenv-update:
+pyvenv-update: pyvenv
 	pyvenv/bin/python -m pip install -r requirements-dev.txt
 	pyvenv/bin/python -m pip install -r requirements.txt
 
@@ -66,6 +70,8 @@ clean:
 
 dist-clean: clean
 	rm -rf pyvenv
+	rm -rf docs/pdoc
+	rm -rf docs/help
 
 run: run-viaconstructor
 
