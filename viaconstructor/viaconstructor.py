@@ -562,23 +562,31 @@ class ViaConstructor:
                 True,
                 "main",
             ),
-            "Save": (
-                "filesave.png",
+            "Save gcode": (
+                "save-gcode.png",
                 "Ctrl+S",
                 "Save gcode",
                 self._toolbar_save_gcode,
                 True,
                 "gcode",
             ),
-            "Load-Setup from gCode": (
+            "Load setup from": (
                 "load-setup.png",
+                "",
+                "Load setup  from",
+                self._toolbar_load_setup_from,
+                True,
+                "setup",
+            ),
+            "Load setup from gCode": (
+                "load-setup-gcode.png",
                 "",
                 "Load-Setup from gCode",
                 self._toolbar_load_gcode_setup,
                 os.path.isfile(self.project["filename_gcode"]),
-                "gcode",
+                "setup",
             ),
-            "Save-Setup": (
+            "Save setup as default": (
                 "save-setup.png",
                 "",
                 "Save-Setup",
@@ -586,19 +594,11 @@ class ViaConstructor:
                 True,
                 "setup",
             ),
-            "Save-Setup as": (
-                "save-setup.png",
+            "Save setup as": (
+                "save-setup-as.png",
                 "",
                 "Save setup  as",
                 self._toolbar_save_setup_as,
-                True,
-                "setup",
-            ),
-            "Load-Setup from": (
-                "save-setup.png",
-                "",
-                "Load setup  from",
-                self._toolbar_load_setup_from,
                 True,
                 "setup",
             ),
