@@ -77,6 +77,7 @@ class GLWidget(QGLWidget):
     trans_x_last = trans_x
     trans_y_last = trans_y
     trans_z_last = trans_z
+    scale_xyz = 1.0
     scale = 1.0
     scale_last = scale
     ortho = False
@@ -143,29 +144,29 @@ class GLWidget(QGLWidget):
         GL.glPushMatrix()
         GL.glEnable(GLWidget.GL_MULTISAMPLE)
         GL.glTranslatef(-self.trans_x, -self.trans_y, self.trans_z - 1.2)
-
+        GL.glScalef(self.scale_xyz, self.scale_xyz, self.scale_xyz)
         GL.glRotatef(self.rot_x, 0.0, 1.0, 0.0)
         GL.glRotatef(self.rot_y, 1.0, 0.0, 0.0)
         GL.glRotatef(self.rot_z, 0.0, 0.0, 1.0)
-
         GL.glTranslatef(
             (-size_x / 2.0 - min_max[0]) * scale,
             (-size_y / 2.0 - min_max[1]) * scale,
             0.0,
         )
-
         GL.glScalef(scale, scale, scale)
         GL.glCallList(self.project["gllist"])
-
         GL.glPopMatrix()
 
     def toggle_view(self) -> None:
         """toggle view function."""
-        self.ortho = not self.ortho
+        self.ortho = True
         self.rot_x = 0.0
         self.rot_y = 0.0
         self.rot_z = 0.0
+        self.trans_x = 0.0
+        self.trans_y = 0.0
         self.trans_z = 0.0
+        self.scale_xyz = 1.0
         self.initializeGL()
 
     def timerEvent(self, event) -> None:  # pylint: disable=C0103,W0613
@@ -216,12 +217,9 @@ class GLWidget(QGLWidget):
     def wheelEvent(self, event) -> None:  # pylint: disable=C0103,W0613
         """mouse wheel moved."""
         if event.angleDelta().y() > 0:
-            self.trans_z += 0.1
+            self.scale_xyz += 0.1
         else:
-            self.trans_z -= 0.1
-        if self.ortho:
-            self.ortho = False
-            self.initializeGL()
+            self.scale_xyz -= 0.1
 
 
 class ViaConstructor:
