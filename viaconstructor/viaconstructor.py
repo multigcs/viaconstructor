@@ -123,9 +123,6 @@ class GLWidget(QGLWidget):
         GL.glEnable(GL.GL_BLEND)
         GL.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA)
 
-        if self.project["status"] != "INIT":
-            self.update_drawing()
-
     def resizeGL(self, width, hight) -> None:  # pylint: disable=C0103
         """glresize function."""
         GL.glViewport(0, 0, width, hight)
