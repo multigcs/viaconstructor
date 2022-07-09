@@ -27,6 +27,7 @@ from PyQt5.QtWidgets import (  # pylint: disable=E0611
     QTableWidget,
     QTableWidgetItem,
     QTabWidget,
+    QToolBar,
     QVBoxLayout,
     QWidget,
 )
@@ -552,13 +553,14 @@ class ViaConstructor:
 
     def create_toolbar(self) -> None:
         """creates the_toolbar."""
-        toolbars = {
+        toolbuttons = {
             "Exit": (
                 "exit.png",
                 "Ctrl+Q",
                 "Exit application",
                 self._toolbar_exit,
                 True,
+                "main",
             ),
             "Save": (
                 "filesave.png",
@@ -566,6 +568,7 @@ class ViaConstructor:
                 "Save gcode",
                 self._toolbar_save_gcode,
                 True,
+                "gcode",
             ),
             "Load-Setup from gCode": (
                 "load-setup.png",
@@ -573,6 +576,7 @@ class ViaConstructor:
                 "Load-Setup from gCode",
                 self._toolbar_load_gcode_setup,
                 os.path.isfile(self.project["filename_gcode"]),
+                "gcode",
             ),
             "Save-Setup": (
                 "save-setup.png",
@@ -580,6 +584,7 @@ class ViaConstructor:
                 "Save-Setup",
                 self._toolbar_save_setup,
                 True,
+                "setup",
             ),
             "Save-Setup as": (
                 "save-setup.png",
@@ -587,6 +592,7 @@ class ViaConstructor:
                 "Save setup  as",
                 self._toolbar_save_setup_as,
                 True,
+                "setup",
             ),
             "Load-Setup from": (
                 "save-setup.png",
@@ -594,6 +600,7 @@ class ViaConstructor:
                 "Load setup  from",
                 self._toolbar_load_setup_from,
                 True,
+                "setup",
             ),
             "Center-View": (
                 "view-fullscreen.png",
@@ -601,23 +608,51 @@ class ViaConstructor:
                 "Center-View",
                 self._toolbar_centerview,
                 True,
+                "view",
             ),
-            "Flip-X": ("flip-x.png", "", "Flip-X", self._toolbar_flipx, True),
-            "Flip-Y": ("flip-y.png", "", "Flip-Y", self._toolbar_flipy, True),
-            "Rotate": ("rotate.png", "", "Rotate", self._toolbar_rotate, True),
+            "Flip-X": (
+                "flip-x.png",
+                "",
+                "Flip-X",
+                self._toolbar_flipx,
+                True,
+                "workpiece",
+            ),
+            "Flip-Y": (
+                "flip-y.png",
+                "",
+                "Flip-Y",
+                self._toolbar_flipy,
+                True,
+                "workpiece",
+            ),
+            "Rotate": (
+                "rotate.png",
+                "",
+                "Rotate",
+                self._toolbar_rotate,
+                True,
+                "workpiece",
+            ),
         }
-        for title, toolbar in toolbars.items():
-            if toolbar[4]:
+        self.toolbar = QToolBar("top toolbar")
+        self.main.addToolBar(self.toolbar)
+        section = ""
+        for title, toolbutton in toolbuttons.items():
+            if toolbutton[5] != section:
+                self.toolbar.addSeparator()
+                section = toolbutton[5]
+            if toolbutton[4]:
                 action = QAction(
-                    QIcon(os.path.join(self.this_dir, "..", "data", toolbar[0])),
+                    QIcon(os.path.join(self.this_dir, "..", "data", toolbutton[0])),
                     title,
                     self.main,
                 )
-                if toolbar[1]:
-                    action.setShortcut(toolbar[1])
-                action.setStatusTip(toolbar[2])
-                action.triggered.connect(toolbar[3])  # type: ignore
-                self.main.addToolBar(title).addAction(action)
+                if toolbutton[1]:
+                    action.setShortcut(toolbutton[1])
+                action.setStatusTip(toolbutton[2])
+                action.triggered.connect(toolbutton[3])  # type: ignore
+                self.toolbar.addAction(action)
 
     def update_global_setup(self) -> None:
         # self.tabwidget
