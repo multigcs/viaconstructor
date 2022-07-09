@@ -348,7 +348,7 @@ def object2polyline_offsets(diameter, obj, obj_idx, max_outer, small_circles=Fal
     """calculates the offset line(s) of one object"""
     polyline_offsets = {}
 
-    def overcut():
+    def overcut(hack: bool = False) -> None:
         for offset_idx, polyline in enumerate(list(polyline_offsets.values())):
             points = vertex2points(polyline.vertex_data())
             xdata = []
@@ -367,12 +367,20 @@ def object2polyline_offsets(diameter, obj, obj_idx, max_outer, small_circles=Fal
                             angle = angle - math.pi * 2
                     adiff = angle - last_angle
                     if abs(adiff) >= math.pi / 4:
-                        over_x = last[0] - abs(tool_radius * 3) * math.sin(
-                            last_angle + adiff / 2.0 + math.pi
-                        )
-                        over_y = last[1] + abs(tool_radius * 3) * math.cos(
-                            last_angle + adiff / 2.0 + math.pi
-                        )
+                        if hack:
+                            over_x = last[0] + abs(tool_radius * 3) * math.sin(
+                                last_angle + adiff / 2.0 + math.pi
+                            )
+                            over_y = last[1] - abs(tool_radius * 3) * math.cos(
+                                last_angle + adiff / 2.0 + math.pi
+                            )
+                        else:
+                            over_x = last[0] - abs(tool_radius * 3) * math.sin(
+                                last_angle + adiff / 2.0 + math.pi
+                            )
+                            over_y = last[1] + abs(tool_radius * 3) * math.cos(
+                                last_angle + adiff / 2.0 + math.pi
+                            )
                         for segment in obj["segments"]:
                             is_b = is_between(
                                 (segment["start"][0], segment["start"][1]),
@@ -384,12 +392,20 @@ def object2polyline_offsets(diameter, obj, obj_idx, max_outer, small_circles=Fal
                                     (segment["start"][0], segment["start"][1]),
                                     (last[0], last[1]),
                                 )
-                                over_x = last[0] - (dist - abs(tool_radius)) * math.sin(
-                                    last_angle + adiff / 2.0 + math.pi
-                                )
-                                over_y = last[1] + (dist - abs(tool_radius)) * math.cos(
-                                    last_angle + adiff / 2.0 + math.pi
-                                )
+                                if hack:
+                                    over_x = last[0] + (
+                                        dist - abs(tool_radius)
+                                    ) * math.sin(last_angle + adiff / 2.0 + math.pi)
+                                    over_y = last[1] - (
+                                        dist - abs(tool_radius)
+                                    ) * math.cos(last_angle + adiff / 2.0 + math.pi)
+                                else:
+                                    over_x = last[0] - (
+                                        dist - abs(tool_radius)
+                                    ) * math.sin(last_angle + adiff / 2.0 + math.pi)
+                                    over_y = last[1] + (
+                                        dist - abs(tool_radius)
+                                    ) * math.cos(last_angle + adiff / 2.0 + math.pi)
                                 xdata.append(over_x)
                                 ydata.append(over_y)
                                 bdata.append(0.0)
@@ -414,12 +430,20 @@ def object2polyline_offsets(diameter, obj, obj_idx, max_outer, small_circles=Fal
                         angle = angle - math.pi * 2
                 adiff = angle - last_angle
                 if abs(adiff) >= math.pi / 4:
-                    over_x = last[0] - abs(tool_radius * 3) * math.sin(
-                        last_angle + adiff / 2.0 + math.pi
-                    )
-                    over_y = last[1] + abs(tool_radius * 3) * math.cos(
-                        last_angle + adiff / 2.0 + math.pi
-                    )
+                    if hack:
+                        over_x = last[0] + abs(tool_radius * 3) * math.sin(
+                            last_angle + adiff / 2.0 + math.pi
+                        )
+                        over_y = last[1] - abs(tool_radius * 3) * math.cos(
+                            last_angle + adiff / 2.0 + math.pi
+                        )
+                    else:
+                        over_x = last[0] - abs(tool_radius * 3) * math.sin(
+                            last_angle + adiff / 2.0 + math.pi
+                        )
+                        over_y = last[1] + abs(tool_radius * 3) * math.cos(
+                            last_angle + adiff / 2.0 + math.pi
+                        )
                     for segment in obj["segments"]:
                         is_b = is_between(
                             (segment["start"][0], segment["start"][1]),
@@ -431,12 +455,20 @@ def object2polyline_offsets(diameter, obj, obj_idx, max_outer, small_circles=Fal
                                 (segment["start"][0], segment["start"][1]),
                                 (last[0], last[1]),
                             )
-                            over_x = last[0] - (dist - abs(tool_radius)) * math.sin(
-                                last_angle + adiff / 2.0 + math.pi
-                            )
-                            over_y = last[1] + (dist - abs(tool_radius)) * math.cos(
-                                last_angle + adiff / 2.0 + math.pi
-                            )
+                            if hack:
+                                over_x = last[0] + (dist - abs(tool_radius)) * math.sin(
+                                    last_angle + adiff / 2.0 + math.pi
+                                )
+                                over_y = last[1] - (dist - abs(tool_radius)) * math.cos(
+                                    last_angle + adiff / 2.0 + math.pi
+                                )
+                            else:
+                                over_x = last[0] - (dist - abs(tool_radius)) * math.sin(
+                                    last_angle + adiff / 2.0 + math.pi
+                                )
+                                over_y = last[1] + (dist - abs(tool_radius)) * math.cos(
+                                    last_angle + adiff / 2.0 + math.pi
+                                )
                             xdata.append(over_x)
                             ydata.append(over_y)
                             bdata.append(0.0)
@@ -508,6 +540,7 @@ def object2polyline_offsets(diameter, obj, obj_idx, max_outer, small_circles=Fal
 
         if obj["mill"]["overcut"]:
             overcut()
+            overcut(True)
 
     else:
         polyline.level = max_outer
