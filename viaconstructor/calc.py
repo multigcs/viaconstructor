@@ -348,7 +348,7 @@ def object2polyline_offsets(diameter, obj, obj_idx, max_outer, small_circles=Fal
     """calculates the offset line(s) of one object"""
     polyline_offsets = {}
 
-    def overcut(hack: bool = False) -> None:
+    def overcut() -> None:
         radius_3 = abs(tool_radius * 3)
         for offset_idx, polyline in enumerate(list(polyline_offsets.values())):
             points = vertex2points(polyline.vertex_data())
@@ -360,16 +360,11 @@ def object2polyline_offsets(diameter, obj, obj_idx, max_outer, small_circles=Fal
             for point in points:
                 angle = angle_of_line(point, last)
                 if last_angle is not None and last[2] == 0.0:
-                    if obj["mill"]["reverse"]:
-                        if angle > last_angle:
-                            angle = angle + math.pi * 2
-                    else:
-                        if angle > last_angle:
-                            angle = angle - math.pi * 2
+                    if angle > last_angle:
+                        angle = angle + math.pi * 2
                     adiff = angle - last_angle
-
-                    if hack:
-                        radius_3 = -radius_3
+                    if adiff < -math.pi * 2:
+                        adiff += math.pi * 2
 
                     if abs(adiff) >= math.pi / 4:
                         over_x = last[0] - radius_3 * math.sin(
@@ -390,8 +385,6 @@ def object2polyline_offsets(diameter, obj, obj_idx, max_outer, small_circles=Fal
                                     (last[0], last[1]),
                                 )
                                 over_dist = dist - abs(tool_radius)
-                                if hack:
-                                    over_dist = -over_dist
                                 over_x = last[0] - (over_dist) * math.sin(
                                     last_angle + adiff / 2.0 + math.pi
                                 )
@@ -414,15 +407,11 @@ def object2polyline_offsets(diameter, obj, obj_idx, max_outer, small_circles=Fal
             point = points[0]
             angle = angle_of_line(point, last)
             if last_angle is not None and last[2] == 0.0:
-                if obj["mill"]["reverse"]:
-                    if angle > last_angle:
-                        angle = angle + math.pi * 2
-                else:
-                    if angle > last_angle:
-                        angle = angle - math.pi * 2
+                if angle > last_angle:
+                    angle = angle + math.pi * 2
                 adiff = angle - last_angle
-                if hack:
-                    radius_3 = -radius_3
+                if adiff < -math.pi * 2:
+                    adiff += math.pi * 2
 
                 if abs(adiff) >= math.pi / 4:
                     over_x = last[0] - radius_3 * math.sin(
@@ -443,8 +432,6 @@ def object2polyline_offsets(diameter, obj, obj_idx, max_outer, small_circles=Fal
                                 (last[0], last[1]),
                             )
                             over_dist = dist - abs(tool_radius)
-                            if hack:
-                                over_dist = -over_dist
                             over_x = last[0] - over_dist * math.sin(
                                 last_angle + adiff / 2.0 + math.pi
                             )
@@ -522,7 +509,6 @@ def object2polyline_offsets(diameter, obj, obj_idx, max_outer, small_circles=Fal
 
         if obj["mill"]["overcut"]:
             overcut()
-            overcut(True)
 
     else:
         polyline.level = max_outer
