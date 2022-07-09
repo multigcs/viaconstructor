@@ -85,7 +85,7 @@ setup_defaults: dict = {
             "tooltip": "move tool back to Zero-Possition after milling",
         },
         "small_circles": {
-            "default": True,
+            "default": False,
             "type": "bool",
             "title": "Small-Circles",
             "tooltip": "milling small circles even if the tool is bigger",
