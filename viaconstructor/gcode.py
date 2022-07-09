@@ -156,8 +156,6 @@ def polylines2gcode(project: dict) -> list[str]:
                     )
                     gcode.append(f"G00 X{points[0][0]} Y{points[0][1]}")
 
-                arc_mode_r = False
-
                 depth = polyline.mill["step"]
 
                 last_depth = 0.0
@@ -202,7 +200,7 @@ def polylines2gcode(project: dict) -> list[str]:
                                 end_angle,  # pylint: disable=W0612
                                 radius,
                             ) = ezdxf.math.bulge_to_arc(last, point, bulge)
-                            if arc_mode_r:
+                            if project["setup"]["gcode"]["arc_r"]:
                                 gcode.append(
                                     f"G03 X{round(point[0], 6)} Y{round(point[1], 6)} Z{round(set_depth, 6)} R{round(radius, 6)}"
                                 )
@@ -219,7 +217,7 @@ def polylines2gcode(project: dict) -> list[str]:
                                 end_angle,
                                 radius,
                             ) = ezdxf.math.bulge_to_arc(last, point, bulge)
-                            if arc_mode_r:
+                            if project["setup"]["gcode"]["arc_r"]:
                                 gcode.append(
                                     f"G02 X{round(point[0], 6)} Y{round(point[1], 6)} Z{round(set_depth, 6)} R{round(radius, 6)}"
                                 )
@@ -256,7 +254,7 @@ def polylines2gcode(project: dict) -> list[str]:
                                 end_angle,
                                 radius,
                             ) = ezdxf.math.bulge_to_arc(last, point, bulge)
-                            if arc_mode_r:
+                            if project["setup"]["gcode"]["arc_r"]:
                                 gcode.append(
                                     f"G03 X{round(point[0], 6)} Y{round(point[1], 6)} Z{round(set_depth, 6)} R{round(radius, 6)}"
                                 )
@@ -273,7 +271,7 @@ def polylines2gcode(project: dict) -> list[str]:
                                 end_angle,
                                 radius,
                             ) = ezdxf.math.bulge_to_arc(last, point, bulge)
-                            if arc_mode_r:
+                            if project["setup"]["gcode"]["arc_r"]:
                                 gcode.append(
                                     f"G02 X{round(point[0], 6)} Y{round(point[1], 6)} Z{round(set_depth, 6)} R{round(radius, 6)}"
                                 )

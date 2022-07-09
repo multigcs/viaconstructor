@@ -155,10 +155,29 @@ class GcodeParser:
         for axis in self.state["position"]:
             if axis not in cords:
                 cords[axis] = self.state["position"][axis]
-        self.path.append([self.state["position"], cords])
-        self.state["position"] = cords
+        last_pos = self.state["position"]
+        diff_x = cords["X"] - last_pos["X"]
+        diff_y = cords["Y"] - last_pos["Y"]
+        arc_r = cords["R"]
+        if diff_x == 0.0 and diff_y == 0.0:
+            return
+        h_x2_div_d = 4.0 * arc_r * arc_r - diff_x * diff_x - diff_y * diff_y
+        if h_x2_div_d < 0:
+            print("### ARC ERROR ###")
+            self.path.append([self.state["position"], cords])
+            self.state["position"] = cords
+            return
+        h_x2_div_d = -math.sqrt(h_x2_div_d) / math.hypot(diff_x, diff_y)
+        if angle_dir == 3:
+            h_x2_div_d = -h_x2_div_d
+        if arc_r < 0:
+            h_x2_div_d = -h_x2_div_d
+            arc_r = -arc_r
+        i = 0.5 * (diff_x - (diff_y * h_x2_div_d))
+        j = 0.5 * (diff_y + (diff_x * h_x2_div_d))
+        self.arc_move_ij(angle_dir, cords, i, j, radius)
 
-    def arc_move_ij(self, angle_dir, cords, i, j) -> None:
+    def arc_move_ij(self, angle_dir, cords, i, j, radius=None) -> None:
         for axis in self.state["position"]:
             if axis not in cords:
                 cords[axis] = self.state["position"][axis]
@@ -166,7 +185,8 @@ class GcodeParser:
         last_pos = self.state["position"]
         center_x = last_pos["X"] + i
         center_y = last_pos["Y"] + j
-        radius = calc_distance((center_x, center_y), (last_pos["X"], last_pos["Y"]))
+        if radius is None:
+            radius = calc_distance((center_x, center_y), (last_pos["X"], last_pos["Y"]))
         start_angle = angle_of_line(
             (center_x, center_y), (last_pos["X"], last_pos["Y"])
         )

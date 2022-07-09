@@ -130,6 +130,7 @@ class fakeOffset:
                         "helix_mode": False,
                     },
                     "view": {"path": "simple"},
+                    "gcode": {"arc_r": False},
                 },
                 "tablewidget": "",
                 "textwidget": "",
