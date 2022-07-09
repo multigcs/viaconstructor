@@ -39,6 +39,7 @@ def gcode_end(project: dict) -> list[str]:
     gcode.append("M05 (Spindle off)")
     if project["setup"]["mill"]["back_home"]:
         gcode.append("G00 X0.0 Y0.0")
+    gcode.append("M02")
     gcode.append("")
     return gcode
 
@@ -183,6 +184,13 @@ def polylines2gcode(project: dict) -> list[str]:
                     last = points[0]
                     for point in points:
                         bulge = last[2]
+
+                        if (
+                            last[0] == point[0]
+                            and last[1] == point[1]
+                            and last[2] == point[2]
+                        ):
+                            continue
 
                         if helix_mode:
                             trav_distance += calc_distance(point, last)

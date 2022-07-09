@@ -314,10 +314,10 @@ class ViaConstructor:
         with open(filename, "w") as fd_gcode:
             fd_gcode.write("\n".join(self.project["gcode"]))
             fd_gcode.write("\n")
-            jsetup = deepcopy(self.project["setup"])
-            if "system" in jsetup:
-                del jsetup["system"]
-            fd_gcode.write(f"(setup={json.dumps(jsetup)})")
+            # jsetup = deepcopy(self.project["setup"])
+            # if "system" in jsetup:
+            #    del jsetup["system"]
+            # fd_gcode.write(f"(setup={json.dumps(jsetup)})")
             fd_gcode.write("\n")
             return True
         return False
