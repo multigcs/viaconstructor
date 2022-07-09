@@ -613,7 +613,7 @@ class ViaConstructor:
             "Flip-X": (
                 "flip-x.png",
                 "",
-                "Flip-X",
+                "Flip-X workpiece",
                 self._toolbar_flipx,
                 True,
                 "workpiece",
@@ -621,7 +621,7 @@ class ViaConstructor:
             "Flip-Y": (
                 "flip-y.png",
                 "",
-                "Flip-Y",
+                "Flip-Y workpiece",
                 self._toolbar_flipy,
                 True,
                 "workpiece",
@@ -629,7 +629,7 @@ class ViaConstructor:
             "Rotate": (
                 "rotate.png",
                 "",
-                "Rotate",
+                "Rotate workpiece",
                 self._toolbar_rotate,
                 True,
                 "workpiece",
