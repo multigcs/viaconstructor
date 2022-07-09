@@ -290,7 +290,38 @@ class ViaConstructor:
         # self.project["textwidget"].setReadOnly(True)
         self.project["textwidget"].textChanged.connect(self.gcode_reload)  # type: ignore
 
-    def toolbar_save_gcode(self) -> None:
+    def _toolbar_flipx(self) -> None:
+        mirror_objects(self.project["objects"], self.project["minMax"], vertical=True)
+        self.project["minMax"] = objects2minmax(self.project["objects"])
+        self.update_drawing()
+
+    def _toolbar_flipy(self) -> None:
+        mirror_objects(self.project["objects"], self.project["minMax"], horizontal=True)
+        self.project["minMax"] = objects2minmax(self.project["objects"])
+        self.update_drawing()
+
+    def _toolbar_rotate(self) -> None:
+        rotate_objects(self.project["objects"], self.project["minMax"])
+        self.project["minMax"] = objects2minmax(self.project["objects"])
+        self.update_drawing()
+
+    def _toolbar_centerview(self) -> None:
+        """center view."""
+        self.project["glwidget"].toggle_view()
+
+    def gcode_save(self, filename: str) -> bool:
+        with open(filename, "w") as fd_gcode:
+            fd_gcode.write("\n".join(self.project["gcode"]))
+            fd_gcode.write("\n")
+            jsetup = deepcopy(self.project["setup"])
+            if "system" in jsetup:
+                del jsetup["system"]
+            fd_gcode.write(f"(setup={json.dumps(jsetup)})")
+            fd_gcode.write("\n")
+            return True
+        return False
+
+    def _toolbar_save_gcode(self) -> None:
         """save gcode."""
         self.status_bar.showMessage("save gcode..")
         file_dialog = QFileDialog(self.main)
@@ -298,45 +329,64 @@ class ViaConstructor:
         name = file_dialog.getSaveFileName(
             self.main, "Save File", self.project["filename_gcode"], "gcode (*.ngc)"
         )
-        if name[0]:
-            with open(name[0], "w") as fd_gcode:
-                fd_gcode.write("\n".join(self.project["gcode"]))
-                fd_gcode.write("\n")
-                jsetup = deepcopy(self.project["setup"])
-                if "system" in jsetup:
-                    del jsetup["system"]
-                fd_gcode.write(f"(setup={json.dumps(jsetup)})")
-                fd_gcode.write("\n")
+        if name[0] and self.gcode_save(name[0]):
             self.status_bar.showMessage(f"save gcode..done ({name[0]})")
         else:
             self.status_bar.showMessage("save gcode..cancel")
 
-    def toolbar_flipx(self) -> None:
-        mirror_objects(self.project["objects"], self.project["minMax"], vertical=True)
-        self.project["minMax"] = objects2minmax(self.project["objects"])
-        self.update_drawing()
+    def setup_load(self, filename: str) -> bool:
+        if os.path.isfile(filename):
+            setup = open(filename, "r").read()
+            if setup:
+                ndata = json.loads(setup)
+                for sname in self.project["setup"]:
+                    self.project["setup"][sname].update(ndata.get(sname, {}))
+                return True
+        return False
 
-    def toolbar_flipy(self) -> None:
-        mirror_objects(self.project["objects"], self.project["minMax"], horizontal=True)
-        self.project["minMax"] = objects2minmax(self.project["objects"])
-        self.update_drawing()
+    def setup_save(self, filename: str) -> bool:
+        with open(filename, "w") as fd_setup:
+            fd_setup.write(json.dumps(self.project["setup"], indent=4, sort_keys=True))
+            return True
+        return False
 
-    def toolbar_rotate(self) -> None:
-        rotate_objects(self.project["objects"], self.project["minMax"])
-        self.project["minMax"] = objects2minmax(self.project["objects"])
-        self.update_drawing()
-
-    def toolbar_centerview(self) -> None:
-        """center view."""
-        self.project["glwidget"].toggle_view()
-
-    def toolbar_save_setup(self) -> None:
+    def _toolbar_save_setup(self) -> None:
         """save setup."""
         self.status_bar.showMessage("save setup..")
-        open(self.args.setup, "w").write(
-            json.dumps(self.project["setup"], indent=4, sort_keys=True)
+        if self.setup_save(self.args.setup):
+            self.status_bar.showMessage("save setup..done")
+        else:
+            self.status_bar.showMessage("save setup..error")
+
+    def _toolbar_load_setup_from(self) -> None:
+        """load setup from."""
+        self.status_bar.showMessage("load setup from..")
+        file_dialog = QFileDialog(self.main)
+        file_dialog.setNameFilters(["setup (*.json)"])
+        name = file_dialog.getOpenFileName(
+            self.main, "Load Setup", self.args.setup, "setup (*.json)"
         )
-        self.status_bar.showMessage("save setup..done")
+        if name[0] and self.setup_load(name[0]):
+            self.update_global_setup()
+            self.update_table()
+            self.global_changed(0)
+            self.update_drawing()
+            self.status_bar.showMessage(f"load setup from..done ({name[0]})")
+        else:
+            self.status_bar.showMessage("load setup from..cancel")
+
+    def _toolbar_save_setup_as(self) -> None:
+        """save setup as."""
+        self.status_bar.showMessage("save setup as..")
+        file_dialog = QFileDialog(self.main)
+        file_dialog.setNameFilters(["setup (*.json)"])
+        name = file_dialog.getSaveFileName(
+            self.main, "Save Setup", self.args.setup, "setup (*.json)"
+        )
+        if name[0] and self.setup_save(name[0]):
+            self.status_bar.showMessage(f"save setup as..done ({name[0]})")
+        else:
+            self.status_bar.showMessage("save setup as..cancel")
 
     def update_drawing(self, draw_only=False) -> None:
         """update drawings."""
@@ -478,7 +528,7 @@ class ViaConstructor:
 
         self.update_drawing()
 
-    def toolbar_load_gcode_setup(self) -> None:
+    def _toolbar_load_gcode_setup(self) -> None:
         if os.path.isfile(self.project["filename_gcode"]):
             self.status_bar.showMessage(
                 f"loading setup from gcode: {self.project['filename_gcode']}"
@@ -496,45 +546,65 @@ class ViaConstructor:
                         return
         self.status_bar.showMessage("loading setup from gcode..failed")
 
-    def toolbar_exit(self) -> None:
+    def _toolbar_exit(self) -> None:
         """exit button."""
         sys.exit(0)
 
     def create_toolbar(self) -> None:
         """creates the_toolbar."""
         toolbars = {
-            "Exit": ("exit.png", "Ctrl+Q", "Exit application", self.toolbar_exit, True),
+            "Exit": (
+                "exit.png",
+                "Ctrl+Q",
+                "Exit application",
+                self._toolbar_exit,
+                True,
+            ),
             "Save": (
                 "filesave.png",
                 "Ctrl+S",
                 "Save gcode",
-                self.toolbar_save_gcode,
+                self._toolbar_save_gcode,
                 True,
             ),
             "Load-Setup from gCode": (
                 "load-setup.png",
                 "",
                 "Load-Setup from gCode",
-                self.toolbar_load_gcode_setup,
+                self._toolbar_load_gcode_setup,
                 os.path.isfile(self.project["filename_gcode"]),
             ),
             "Save-Setup": (
                 "save-setup.png",
                 "",
                 "Save-Setup",
-                self.toolbar_save_setup,
+                self._toolbar_save_setup,
+                True,
+            ),
+            "Save-Setup as": (
+                "save-setup.png",
+                "",
+                "Save setup  as",
+                self._toolbar_save_setup_as,
+                True,
+            ),
+            "Load-Setup from": (
+                "save-setup.png",
+                "",
+                "Load setup  from",
+                self._toolbar_load_setup_from,
                 True,
             ),
             "Center-View": (
                 "view-fullscreen.png",
                 "",
                 "Center-View",
-                self.toolbar_centerview,
+                self._toolbar_centerview,
                 True,
             ),
-            "Flip-X": ("flip-x.png", "", "Flip-X", self.toolbar_flipx, True),
-            "Flip-Y": ("flip-y.png", "", "Flip-Y", self.toolbar_flipy, True),
-            "Rotate": ("rotate.png", "", "Rotate", self.toolbar_rotate, True),
+            "Flip-X": ("flip-x.png", "", "Flip-X", self._toolbar_flipx, True),
+            "Flip-Y": ("flip-y.png", "", "Flip-Y", self._toolbar_flipy, True),
+            "Rotate": ("rotate.png", "", "Rotate", self._toolbar_rotate, True),
         }
         for title, toolbar in toolbars.items():
             if toolbar[4]:
@@ -548,6 +618,21 @@ class ViaConstructor:
                 action.setStatusTip(toolbar[2])
                 action.triggered.connect(toolbar[3])  # type: ignore
                 self.main.addToolBar(title).addAction(action)
+
+    def update_global_setup(self) -> None:
+        # self.tabwidget
+        for sname in self.project["setup_defaults"]:
+            for ename, entry in self.project["setup_defaults"][sname].items():
+                if entry["type"] == "bool":
+                    entry["widget"].setChecked(self.project["setup"][sname][ename])
+                elif entry["type"] == "select":
+                    entry["widget"].setCurrentText(self.project["setup"][sname][ename])
+                elif entry["type"] == "float":
+                    entry["widget"].setValue(self.project["setup"][sname][ename])
+                elif entry["type"] == "int":
+                    entry["widget"].setValue(self.project["setup"][sname][ename])
+                else:
+                    print(f"Unknown setup-type: {entry['type']}")
 
     def create_global_setup(self, tabwidget) -> None:
         for sname in self.project["setup_defaults"]:
@@ -619,11 +704,7 @@ class ViaConstructor:
                 self.project["setup"][sname][oname] = option["default"]
 
         if os.path.isfile(self.args.setup):
-            setup = open(self.args.setup, "r").read()
-            if setup:
-                ndata = json.loads(setup)
-                for sname in self.project["setup"]:
-                    self.project["setup"][sname].update(ndata.get(sname, {}))
+            self.setup_load(self.args.setup)
 
         # load dxf #
         dxf_reader = DxfReader(self.args.filename)
@@ -678,13 +759,13 @@ class ViaConstructor:
 
         ltabwidget = QTabWidget()
         ltabwidget.addTab(self.project["tablewidget"], "Objects")
-        ltabwidget.addTab(self.project["textwidget"], "G-Code")
+        # ltabwidget.addTab(self.project["textwidget"], "G-Code")
 
         left_gridlayout.addWidget(ltabwidget)
 
         tabwidget = QTabWidget()
         tabwidget.addTab(self.project["glwidget"], "3D-View")
-        # tabwidget.addTab(self.project["textwidget"], "G-Code")
+        tabwidget.addTab(self.project["textwidget"], "G-Code")
 
         right_gridlayout = QGridLayout()
         right_gridlayout.addWidget(tabwidget)
@@ -696,9 +777,9 @@ class ViaConstructor:
         vbox.setContentsMargins(0, 0, 0, 0)
         vbox.addWidget(QLabel("Global-Settings:"))
 
-        tabwidget = QTabWidget()
-        self.create_global_setup(tabwidget)
-        vbox.addWidget(tabwidget)
+        self.tabwidget = QTabWidget()
+        self.create_global_setup(self.tabwidget)
+        vbox.addWidget(self.tabwidget)
 
         bottom_container = QWidget()
         bottom_container.setContentsMargins(0, 0, 0, 0)
