@@ -197,10 +197,16 @@ class GLWidget(QGLWidget):
             moffset = self.mpos - event.pos()
             self.rot_x = self.rot_x_last + -moffset.x() / 4
             self.rot_y = self.rot_y_last - moffset.y() / 4
+            if self.ortho:
+                self.ortho = False
+                self.initializeGL()
         elif self.mbutton == 2:
             moffset = self.mpos - event.pos()
             self.rot_z = self.rot_z_last - moffset.x() / 4
             self.trans_z = self.trans_z_last + moffset.y() / 500
+            if self.ortho:
+                self.ortho = False
+                self.initializeGL()
         elif self.mbutton == 4:
             moffset = self.mpos - event.pos()
             self.trans_x = self.trans_x_last + moffset.x() / 500
@@ -212,6 +218,9 @@ class GLWidget(QGLWidget):
             self.trans_z += 0.1
         else:
             self.trans_z -= 0.1
+        if self.ortho:
+            self.ortho = False
+            self.initializeGL()
 
 
 class ViaConstructor:
