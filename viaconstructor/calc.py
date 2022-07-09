@@ -452,8 +452,6 @@ def object2polyline_offsets(diameter, obj, obj_idx, max_outer, small_circles=Fal
             over_polyline.tool_offset = tool_offset
             polyline_offsets[f"{obj_idx}.{offset_idx}"] = over_polyline
 
-    is_inside = bool(obj["tool_offset"] == "inside")
-
     tool_offset = obj["tool_offset"]
     if obj["overwrite_offset"] is not None:
         tool_radius = obj["overwrite_offset"]
@@ -508,7 +506,7 @@ def object2polyline_offsets(diameter, obj, obj_idx, max_outer, small_circles=Fal
             polyline_offsets[f"{obj_idx}.{offset_idx}.x"] = polyline_offset
             offset_idx += 1
 
-        if obj["mill"]["overcut"] and is_inside:
+        if obj["mill"]["overcut"]:
             overcut()
 
     else:
