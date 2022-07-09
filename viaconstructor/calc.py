@@ -574,8 +574,12 @@ def move_objects(objects: dict, xoff: float, yoff: float) -> None:
     """moves an object"""
     for obj in objects.values():
         for segment in obj["segments"]:
-            segment["start"] = (segment["start"][0] + xoff, segment["start"][1] + yoff)
-            segment["end"] = (segment["end"][0] + xoff, segment["end"][1] + yoff)
+            for ptype in ("start", "end", "center"):
+                if ptype in segment:
+                    segment[ptype] = (
+                        segment[ptype][0] + xoff,
+                        segment[ptype][1] + yoff,
+                    )
 
 
 def mirror_objects(
@@ -588,21 +592,15 @@ def mirror_objects(
     if vertical or horizontal:
         for obj in objects.values():
             for segment in obj["segments"]:
-                pos_x = segment["start"][0]
-                pos_y = segment["start"][1]
-                if vertical:
-                    pos_x = min_max[0] - pos_x + min_max[2]
-                if horizontal:
-                    pos_y = min_max[1] - pos_y + min_max[3]
-                segment["start"] = (pos_x, pos_y)
-
-                pos_x = segment["end"][0]
-                pos_y = segment["end"][1]
-                if vertical:
-                    pos_x = min_max[0] - pos_x + min_max[2]
-                if horizontal:
-                    pos_y = min_max[1] - pos_y + min_max[3]
-                segment["end"] = (pos_x, pos_y)
+                for ptype in ("start", "end", "center"):
+                    if ptype in segment:
+                        pos_x = segment[ptype][0]
+                        pos_y = segment[ptype][1]
+                        if vertical:
+                            pos_x = min_max[0] - pos_x + min_max[2]
+                        if horizontal:
+                            pos_y = min_max[1] - pos_y + min_max[3]
+                        segment[ptype] = (pos_x, pos_y)
 
                 if vertical != horizontal:
                     segment["bulge"] = -segment["bulge"]
@@ -615,8 +613,10 @@ def rotate_objects(objects: dict, min_max: list[float]) -> None:
     """rotates an object"""
     for obj in objects.values():
         for segment in obj["segments"]:
-            segment["start"] = (segment["start"][1], segment["start"][0])
-            segment["end"] = (segment["end"][1], segment["end"][0])
+            for ptype in ("start", "end", "center"):
+                if ptype in segment:
+                    segment[ptype] = (segment[ptype][1], segment[ptype][0])
+
             segment["bulge"] = -segment["bulge"]
         reverse_object(obj)
     mirror_objects(objects, min_max, horizontal=True)
