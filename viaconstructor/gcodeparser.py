@@ -97,7 +97,6 @@ class GcodeParser:
                             self.arc_move_ij(
                                 self.state["move_mode"], cords, ldata["I"], ldata["J"]
                             )
-                self.state["position"] = cords
 
         minp = {}
         maxp = {}
