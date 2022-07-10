@@ -6,53 +6,127 @@ import ezdxf
 from .calc import calc_distance, rotate_list, vertex2points
 
 
-def gcode_begin(project: dict) -> list[str]:
+class PostProcessor:
+    def __init__(self):
+        self.gcode: list[str] = []
+        self.x_pos: float = 0.0
+        self.y_pos: float = 0.0
+        self.z_pos: float = 0.0
+        self.rate: int = 0
+
+    def raw(self, data) -> None:
+        self.gcode.append(data)
+
+    def feedrate(self, feedrate) -> None:
+        self.gcode.append(f"F{feedrate}")
+
+    def comment(self, text) -> None:
+        self.gcode.append(f"({text})")
+
+    def move(self, x_pos=None, y_pos=None, z_pos=None) -> None:
+        line = []
+        line.append("G00")
+        if x_pos is not None:
+            line.append(f"X{round(x_pos, 6)}")
+        if y_pos is not None:
+            line.append(f"Y{round(y_pos, 6)}")
+        if z_pos is not None:
+            line.append(f"Z{round(z_pos, 6)}")
+        self.gcode.append(" ".join(line))
+
+    def linear(self, x_pos=None, y_pos=None, z_pos=None) -> None:
+        line = []
+        line.append("G01")
+        if x_pos is not None:
+            line.append(f"X{round(x_pos, 6)}")
+        if y_pos is not None:
+            line.append(f"Y{round(y_pos, 6)}")
+        if z_pos is not None:
+            line.append(f"Z{round(z_pos, 6)}")
+        self.gcode.append(" ".join(line))
+
+    def arc_cw(
+        self, x_pos=None, y_pos=None, z_pos=None, i_pos=None, j_pos=None, r_pos=None
+    ) -> None:
+        line = []
+        line.append("G02")
+        if x_pos is not None:
+            line.append(f"X{round(x_pos, 6)}")
+        if y_pos is not None:
+            line.append(f"Y{round(y_pos, 6)}")
+        if z_pos is not None:
+            line.append(f"Z{round(z_pos, 6)}")
+        if i_pos is not None:
+            line.append(f"I{round(i_pos, 6)}")
+        if j_pos is not None:
+            line.append(f"J{round(j_pos, 6)}")
+        if r_pos is not None:
+            line.append(f"R{round(r_pos, 6)}")
+        self.gcode.append(" ".join(line))
+
+    def arc_ccw(
+        self, x_pos=None, y_pos=None, z_pos=None, i_pos=None, j_pos=None, r_pos=None
+    ) -> None:
+        line = []
+        line.append("G03")
+        if x_pos is not None:
+            line.append(f"X{round(x_pos, 6)}")
+        if y_pos is not None:
+            line.append(f"Y{round(y_pos, 6)}")
+        if z_pos is not None:
+            line.append(f"Z{round(z_pos, 6)}")
+        if i_pos is not None:
+            line.append(f"I{round(i_pos, 6)}")
+        if j_pos is not None:
+            line.append(f"J{round(j_pos, 6)}")
+        if r_pos is not None:
+            line.append(f"R{round(r_pos, 6)}")
+        self.gcode.append(" ".join(line))
+
+    def get(self) -> list[str]:
+        return self.gcode
+
+
+def gcode_begin(project: dict, post: PostProcessor) -> None:
     """gcode-header"""
-    gcode: list[str] = []
-
-    gcode.append("(--------------------------------------------------)")
-    gcode.append("(Generator: viaConstructor)")
-    gcode.append(f"(Filename: {project['filename_dxf']})")
-    gcode.append("(--------------------------------------------------)")
-    gcode.append("")
-
-    gcode.append("G21 (Metric/mm)")
-    gcode.append("G40 (No Offsets)")
-    gcode.append("G90 (Absolute-Mode)")
-    gcode.append(f"F{project['setup']['mill']['rate_v']}")
+    post.comment("--------------------------------------------------")
+    post.comment("Generator: viaConstructor")
+    post.comment(f"Filename: {project['filename_dxf']}")
+    post.comment("--------------------------------------------------")
+    post.raw("")
+    post.raw("G21 (Metric/mm)")
+    post.raw("G40 (No Offsets)")
+    post.raw("G90 (Absolute-Mode)")
+    post.feedrate(project["setup"]["mill"]["rate_v"])
     if project["setup"]["mill"]["G64"] > 0.0:
-        gcode.append(f"G64 P{project['setup']['mill']['G64']}")
-    gcode.append("M05 (Spindle off)")
-    gcode.append(f"M06 T{project['setup']['tool']['number']}")
-    gcode.append(f"M03 S{project['setup']['tool']['speed']} (Spindle on / CW)")
-    gcode.append("G04 P1 (pause in sec)")
-    gcode.append(f"G00 Z{round(project['setup']['mill']['fast_move_z'], 6)}")
-    gcode.append("G00 X0.0 Y0.0")
-    gcode.append("")
-    return gcode
+        post.raw(f"G64 P{project['setup']['mill']['G64']}")
+    post.raw("M05 (Spindle off)")
+    post.raw(f"M06 T{project['setup']['tool']['number']}")
+    post.raw(f"M03 S{project['setup']['tool']['speed']} (Spindle on / CW)")
+    post.raw("G04 P1 (pause in sec)")
+    post.move(z_pos=project["setup"]["mill"]["fast_move_z"])
+    post.move(x_pos=0.0, y_pos=0.0)
+    post.raw("")
 
 
-def gcode_end(project: dict) -> list[str]:
+def gcode_end(project: dict, post: PostProcessor) -> None:
     """gcode-footer"""
-    gcode: list[str] = []
-    gcode.append("")
-    gcode.append("(- end -)")
-    gcode.append(f"G00 Z{round(project['setup']['mill']['fast_move_z'], 6)}")
-    gcode.append("M05 (Spindle off)")
+    post.raw("")
+    post.comment("- end -")
+    post.move(z_pos=project["setup"]["mill"]["fast_move_z"])
+    post.raw("M05 (Spindle off)")
     if project["setup"]["mill"]["back_home"]:
-        gcode.append("G00 X0.0 Y0.0")
-    gcode.append("M02")
-    gcode.append("")
-    return gcode
+        post.move(x_pos=0.0, y_pos=0.0)
+    post.raw("M02")
+    post.raw("")
 
 
 def segment2gcode(
-    project: dict, last: list, point: list, set_depth: float
-) -> list[str]:
-    gcode: list[str] = []
+    project: dict, post: PostProcessor, last: list, point: list, set_depth: float
+) -> None:
     bulge = last[2]
     if last[0] == point[0] and last[1] == point[1] and last[2] == point[2]:
-        return gcode
+        return
 
     if bulge > 0.0:
         (
@@ -62,14 +136,12 @@ def segment2gcode(
             radius,
         ) = ezdxf.math.bulge_to_arc(last, point, bulge)
         if project["setup"]["gcode"]["arc_r"]:
-            gcode.append(
-                f"G03 X{round(point[0], 6)} Y{round(point[1], 6)} Z{round(set_depth, 6)} R{round(radius, 6)}"
-            )
+            post.arc_ccw(x_pos=point[0], y_pos=point[1], z_pos=set_depth, r_pos=radius)
         else:
             i = center[0] - last[0]
             j = center[1] - last[1]
-            gcode.append(
-                f"G03 X{round(point[0], 6)} Y{round(point[1], 6)} Z{round(set_depth, 6)} I{round(i, 6)} J{round(j, 6)}"
+            post.arc_ccw(
+                x_pos=point[0], y_pos=point[1], z_pos=set_depth, i_pos=i, j_pos=j
             )
     elif bulge < 0.0:
         (
@@ -79,21 +151,15 @@ def segment2gcode(
             radius,
         ) = ezdxf.math.bulge_to_arc(last, point, bulge)
         if project["setup"]["gcode"]["arc_r"]:
-            gcode.append(
-                f"G02 X{round(point[0], 6)} Y{round(point[1], 6)} Z{round(set_depth, 6)} R{round(radius, 6)}"
-            )
+            post.arc_cw(x_pos=point[0], y_pos=point[1], z_pos=set_depth, r_pos=radius)
         else:
             i = center[0] - last[0]
             j = center[1] - last[1]
-            gcode.append(
-                f"G02 X{round(point[0], 6)} Y{round(point[1], 6)} Z{round(set_depth, 6)} I{round(i, 6)} J{round(j, 6)}"
+            post.arc_cw(
+                x_pos=point[0], y_pos=point[1], z_pos=set_depth, i_pos=i, j_pos=j
             )
     else:
-        gcode.append(
-            f"G01 X{round(point[0], 6)} Y{round(point[1], 6)} Z{round(set_depth, 6)}"
-        )
-
-    return gcode
+        post.linear(x_pos=point[0], y_pos=point[1], z_pos=set_depth)
 
 
 def get_nearest_free_object(
@@ -139,11 +205,13 @@ def get_nearest_free_object(
 def polylines2gcode(project: dict) -> list[str]:
     """generates gcode from polilines"""
     # found milling order (nearest obj next)
+
+    post = PostProcessor()
+
     milling: dict = {}
     last_pos: list = [0, 0]
     polylines = project["offsets"]
-    gcode: list[str] = []
-    gcode += gcode_begin(project)
+    gcode_begin(project, post)
 
     order = 0
     for level in range(project["maxOuter"], -1, -1):
@@ -187,31 +255,27 @@ def polylines2gcode(project: dict) -> list[str]:
                 if is_closed:
                     obj_distance += calc_distance(point, points[0])
 
-                gcode.append("")
-                gcode.append("(--------------------------------------------------)")
-                gcode.append(f"(Level: {level})")
-                gcode.append(f"(Order: {order})")
-                gcode.append(f"(Object: {nearest_idx})")
-                gcode.append(f"(Distance: {obj_distance}mm)")
-                gcode.append(f"(Closed: {is_closed})")
-                gcode.append(f"(isPocket: {polyline.is_pocket})")
-                gcode.append(
-                    f"(Depth: {polyline.mill['depth']}mm / {polyline.mill['step']}mm)"
+                post.comment("")
+                post.comment("--------------------------------------------------")
+                post.comment(f"Level: {level}")
+                post.comment(f"Order: {order}")
+                post.comment(f"Object: {nearest_idx}")
+                post.comment(f"Distance: {obj_distance}mm")
+                post.comment(f"Closed: {is_closed}")
+                post.comment(f"isPocket: {polyline.is_pocket}")
+                post.comment(
+                    f"Depth: {polyline.mill['depth']}mm / {polyline.mill['step']}mm"
                 )
-                gcode.append(
-                    f"(Tool-Diameter: {project['setup']['tool']['diameter']}mm)"
-                )
+                post.comment(f"Tool-Diameter: {project['setup']['tool']['diameter']}mm")
                 if polyline.tool_offset:
-                    gcode.append(
-                        f"(Tool-Offset: {project['setup']['tool']['diameter'] / 2.0}mm {polyline.tool_offset})"
+                    post.comment(
+                        f"Tool-Offset: {project['setup']['tool']['diameter'] / 2.0}mm {polyline.tool_offset}"
                     )
-                gcode.append("(--------------------------------------------------)")
+                post.comment("--------------------------------------------------")
 
                 if is_closed:
-                    gcode.append(
-                        f"G00 Z{round(project['setup']['mill']['fast_move_z'], 6)}"
-                    )
-                    gcode.append(f"G00 X{points[0][0]} Y{points[0][1]}")
+                    post.move(z_pos=project["setup"]["mill"]["fast_move_z"])
+                    post.move(x_pos=points[0][0], y_pos=points[0][1])
 
                 depth = polyline.mill["step"]
 
@@ -220,21 +284,19 @@ def polylines2gcode(project: dict) -> list[str]:
                     if depth < polyline.mill["depth"]:
                         depth = polyline.mill["depth"]
 
-                    gcode.append(f"(- Depth: {depth}mm -)")
+                    post.comment(f"- Depth: {depth}mm -")
 
                     if not is_closed:
-                        gcode.append(
-                            f"G00 Z{round(project['setup']['mill']['fast_move_z'], 6)}"
-                        )
-                        gcode.append(f"G00 X{points[0][0]} Y{points[0][1]}")
+                        post.move(z_pos=project["setup"]["mill"]["fast_move_z"])
+                        post.move(x_pos=points[0][0], y_pos=points[0][1])
 
-                    gcode.append(f"F{project['setup']['mill']['rate_v']}")
+                    post.feedrate(project["setup"]["mill"]["rate_v"])
 
                     if helix_mode:
-                        gcode.append(f"G01 Z{last_depth}")
+                        post.linear(z_pos=last_depth)
                     else:
-                        gcode.append(f"G01 Z{depth}")
-                    gcode.append(f"F{project['setup']['mill']['rate_h']}")
+                        post.linear(z_pos=depth)
+                    post.feedrate(project["setup"]["mill"]["rate_h"])
 
                     trav_distance = 0
                     last = points[0]
@@ -247,7 +309,7 @@ def polylines2gcode(project: dict) -> list[str]:
                             )
                         else:
                             set_depth = depth
-                        gcode += segment2gcode(project, last, point, set_depth)
+                        segment2gcode(project, post, last, point, set_depth)
                         last = point
 
                     if is_closed:
@@ -261,7 +323,7 @@ def polylines2gcode(project: dict) -> list[str]:
                             )
                         else:
                             set_depth = depth
-                        gcode += segment2gcode(project, last, point, set_depth)
+                        segment2gcode(project, post, last, point, set_depth)
 
                     last_depth = depth
 
@@ -272,9 +334,7 @@ def polylines2gcode(project: dict) -> list[str]:
                         break
                     depth += polyline.mill["step"]
 
-                gcode.append(
-                    f"G00 Z{round(project['setup']['mill']['fast_move_z'], 6)}"
-                )
+                post.move(z_pos=project["setup"]["mill"]["fast_move_z"])
 
                 if is_closed:
                     last_pos = points[0]
@@ -284,5 +344,5 @@ def polylines2gcode(project: dict) -> list[str]:
             else:
                 break
 
-    gcode += gcode_end(project)
-    return gcode
+    gcode_end(project, post)
+    return post.get()
