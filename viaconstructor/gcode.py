@@ -25,63 +25,75 @@ class PostProcessor:
 
     def move(self, x_pos=None, y_pos=None, z_pos=None) -> None:
         line = []
-        line.append("G00")
-        if x_pos is not None:
+        if x_pos is not None and self.x_pos != x_pos:
             line.append(f"X{round(x_pos, 6)}")
-        if y_pos is not None:
+            self.x_pos = x_pos
+        if y_pos is not None and self.y_pos != y_pos:
             line.append(f"Y{round(y_pos, 6)}")
-        if z_pos is not None:
+            self.y_pos = y_pos
+        if z_pos is not None and self.z_pos != z_pos:
             line.append(f"Z{round(z_pos, 6)}")
-        self.gcode.append(" ".join(line))
+            self.z_pos = z_pos
+        if line:
+            self.gcode.append("G00 " + " ".join(line))
 
     def linear(self, x_pos=None, y_pos=None, z_pos=None) -> None:
         line = []
-        line.append("G01")
-        if x_pos is not None:
+        if x_pos is not None and self.x_pos != x_pos:
             line.append(f"X{round(x_pos, 6)}")
-        if y_pos is not None:
+            self.x_pos = x_pos
+        if y_pos is not None and self.y_pos != y_pos:
             line.append(f"Y{round(y_pos, 6)}")
-        if z_pos is not None:
+            self.y_pos = y_pos
+        if z_pos is not None and self.z_pos != z_pos:
             line.append(f"Z{round(z_pos, 6)}")
-        self.gcode.append(" ".join(line))
+            self.z_pos = z_pos
+        if line:
+            self.gcode.append("G01 " + " ".join(line))
 
     def arc_cw(
         self, x_pos=None, y_pos=None, z_pos=None, i_pos=None, j_pos=None, r_pos=None
     ) -> None:
         line = []
-        line.append("G02")
-        if x_pos is not None:
+        if x_pos is not None and self.x_pos != x_pos:
             line.append(f"X{round(x_pos, 6)}")
-        if y_pos is not None:
+            self.x_pos = x_pos
+        if y_pos is not None and self.y_pos != y_pos:
             line.append(f"Y{round(y_pos, 6)}")
-        if z_pos is not None:
+            self.y_pos = y_pos
+        if z_pos is not None and self.z_pos != z_pos:
             line.append(f"Z{round(z_pos, 6)}")
+            self.z_pos = z_pos
         if i_pos is not None:
             line.append(f"I{round(i_pos, 6)}")
         if j_pos is not None:
             line.append(f"J{round(j_pos, 6)}")
         if r_pos is not None:
             line.append(f"R{round(r_pos, 6)}")
-        self.gcode.append(" ".join(line))
+        if line:
+            self.gcode.append("G02 " + " ".join(line))
 
     def arc_ccw(
         self, x_pos=None, y_pos=None, z_pos=None, i_pos=None, j_pos=None, r_pos=None
     ) -> None:
         line = []
-        line.append("G03")
-        if x_pos is not None:
+        if x_pos is not None and self.x_pos != x_pos:
             line.append(f"X{round(x_pos, 6)}")
-        if y_pos is not None:
+            self.x_pos = x_pos
+        if y_pos is not None and self.y_pos != y_pos:
             line.append(f"Y{round(y_pos, 6)}")
-        if z_pos is not None:
+            self.y_pos = y_pos
+        if z_pos is not None and self.z_pos != z_pos:
             line.append(f"Z{round(z_pos, 6)}")
+            self.z_pos = z_pos
         if i_pos is not None:
             line.append(f"I{round(i_pos, 6)}")
         if j_pos is not None:
             line.append(f"J{round(j_pos, 6)}")
         if r_pos is not None:
             line.append(f"R{round(r_pos, 6)}")
-        self.gcode.append(" ".join(line))
+        if line:
+            self.gcode.append("G03 " + " ".join(line))
 
     def get(self) -> list[str]:
         return self.gcode
@@ -255,7 +267,7 @@ def polylines2gcode(project: dict) -> list[str]:
                 if is_closed:
                     obj_distance += calc_distance(point, points[0])
 
-                post.comment("")
+                post.raw("")
                 post.comment("--------------------------------------------------")
                 post.comment(f"Level: {level}")
                 post.comment(f"Order: {order}")
