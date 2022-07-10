@@ -44,13 +44,62 @@ def gcode_end(project: dict) -> list[str]:
     return gcode
 
 
+def segment2gcode(
+    project: dict, last: list, point: list, set_depth: float
+) -> list[str]:
+    gcode: list[str] = []
+    bulge = last[2]
+    if last[0] == point[0] and last[1] == point[1] and last[2] == point[2]:
+        return gcode
+
+    if bulge > 0.0:
+        (
+            center,
+            start_angle,  # pylint: disable=W0612
+            end_angle,  # pylint: disable=W0612
+            radius,
+        ) = ezdxf.math.bulge_to_arc(last, point, bulge)
+        if project["setup"]["gcode"]["arc_r"]:
+            gcode.append(
+                f"G03 X{round(point[0], 6)} Y{round(point[1], 6)} Z{round(set_depth, 6)} R{round(radius, 6)}"
+            )
+        else:
+            i = center[0] - last[0]
+            j = center[1] - last[1]
+            gcode.append(
+                f"G03 X{round(point[0], 6)} Y{round(point[1], 6)} Z{round(set_depth, 6)} I{round(i, 6)} J{round(j, 6)}"
+            )
+    elif bulge < 0.0:
+        (
+            center,
+            start_angle,
+            end_angle,
+            radius,
+        ) = ezdxf.math.bulge_to_arc(last, point, bulge)
+        if project["setup"]["gcode"]["arc_r"]:
+            gcode.append(
+                f"G02 X{round(point[0], 6)} Y{round(point[1], 6)} Z{round(set_depth, 6)} R{round(radius, 6)}"
+            )
+        else:
+            i = center[0] - last[0]
+            j = center[1] - last[1]
+            gcode.append(
+                f"G02 X{round(point[0], 6)} Y{round(point[1], 6)} Z{round(set_depth, 6)} I{round(i, 6)} J{round(j, 6)}"
+            )
+    else:
+        gcode.append(
+            f"G01 X{round(point[0], 6)} Y{round(point[1], 6)} Z{round(set_depth, 6)}"
+        )
+
+    return gcode
+
+
 def polylines2gcode(project: dict) -> list[str]:
     """generates gcode from polilines"""
     # found milling order (nearest obj next)
     milling = {}
     last_pos = (0, 0)
     polylines = project["offsets"]
-
     gcode: list[str] = []
     gcode += gcode_begin(project)
 
@@ -62,7 +111,6 @@ def polylines2gcode(project: dict) -> list[str]:
             nearest_idx = None
             nearest_point = 0
             for offset_num, offset in polylines.items():
-
                 if (
                     offset_num not in milling
                     and offset.level == level
@@ -183,15 +231,6 @@ def polylines2gcode(project: dict) -> list[str]:
                     trav_distance = 0
                     last = points[0]
                     for point in points:
-                        bulge = last[2]
-
-                        if (
-                            last[0] == point[0]
-                            and last[1] == point[1]
-                            and last[2] == point[2]
-                        ):
-                            continue
-
                         if helix_mode:
                             trav_distance += calc_distance(point, last)
                             depth_diff = depth - last_depth
@@ -200,50 +239,10 @@ def polylines2gcode(project: dict) -> list[str]:
                             )
                         else:
                             set_depth = depth
-
-                        if bulge > 0.0:
-                            (
-                                center,
-                                start_angle,  # pylint: disable=W0612
-                                end_angle,  # pylint: disable=W0612
-                                radius,
-                            ) = ezdxf.math.bulge_to_arc(last, point, bulge)
-                            if project["setup"]["gcode"]["arc_r"]:
-                                gcode.append(
-                                    f"G03 X{round(point[0], 6)} Y{round(point[1], 6)} Z{round(set_depth, 6)} R{round(radius, 6)}"
-                                )
-                            else:
-                                i = center[0] - last[0]
-                                j = center[1] - last[1]
-                                gcode.append(
-                                    f"G03 X{round(point[0], 6)} Y{round(point[1], 6)} Z{round(set_depth, 6)} I{round(i, 6)} J{round(j, 6)}"
-                                )
-                        elif bulge < 0.0:
-                            (
-                                center,
-                                start_angle,
-                                end_angle,
-                                radius,
-                            ) = ezdxf.math.bulge_to_arc(last, point, bulge)
-                            if project["setup"]["gcode"]["arc_r"]:
-                                gcode.append(
-                                    f"G02 X{round(point[0], 6)} Y{round(point[1], 6)} Z{round(set_depth, 6)} R{round(radius, 6)}"
-                                )
-                            else:
-                                i = center[0] - last[0]
-                                j = center[1] - last[1]
-                                gcode.append(
-                                    f"G02 X{round(point[0], 6)} Y{round(point[1], 6)} Z{round(set_depth, 6)} I{round(i, 6)} J{round(j, 6)}"
-                                )
-                        else:
-                            gcode.append(
-                                f"G01 X{round(point[0], 6)} Y{round(point[1], 6)} Z{round(set_depth, 6)}"
-                            )
-
+                        gcode += segment2gcode(project, last, point, set_depth)
                         last = point
 
                     if is_closed:
-                        bulge = last[2]
                         point = points[0]
 
                         if helix_mode:
@@ -254,45 +253,7 @@ def polylines2gcode(project: dict) -> list[str]:
                             )
                         else:
                             set_depth = depth
-
-                        if bulge > 0.0:
-                            (
-                                center,
-                                start_angle,
-                                end_angle,
-                                radius,
-                            ) = ezdxf.math.bulge_to_arc(last, point, bulge)
-                            if project["setup"]["gcode"]["arc_r"]:
-                                gcode.append(
-                                    f"G03 X{round(point[0], 6)} Y{round(point[1], 6)} Z{round(set_depth, 6)} R{round(radius, 6)}"
-                                )
-                            else:
-                                i = center[0] - last[0]
-                                j = center[1] - last[1]
-                                gcode.append(
-                                    f"G03 X{round(point[0], 6)} Y{round(point[1], 6)} Z{round(set_depth, 6)} I{round(i, 6)} J{round(j, 6)}"
-                                )
-                        elif bulge < 0.0:
-                            (
-                                center,
-                                start_angle,
-                                end_angle,
-                                radius,
-                            ) = ezdxf.math.bulge_to_arc(last, point, bulge)
-                            if project["setup"]["gcode"]["arc_r"]:
-                                gcode.append(
-                                    f"G02 X{round(point[0], 6)} Y{round(point[1], 6)} Z{round(set_depth, 6)} R{round(radius, 6)}"
-                                )
-                            else:
-                                i = center[0] - last[0]
-                                j = center[1] - last[1]
-                                gcode.append(
-                                    f"G02 X{round(point[0], 6)} Y{round(point[1], 6)} Z{round(set_depth, 6)} I{round(i, 6)} J{round(j, 6)}"
-                                )
-                        else:
-                            gcode.append(
-                                f"G01 X{round(point[0], 6)} Y{round(point[1], 6)} Z{round(set_depth, 6)}"
-                            )
+                        gcode += segment2gcode(project, last, point, set_depth)
 
                     last_depth = depth
 
