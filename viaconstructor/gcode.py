@@ -9,9 +9,9 @@ from .calc import calc_distance, rotate_list, vertex2points
 class PostProcessor:
     def __init__(self):
         self.gcode: list[str] = []
-        self.x_pos: float = 0.0
-        self.y_pos: float = 0.0
-        self.z_pos: float = 0.0
+        self.x_pos: float = None
+        self.y_pos: float = None
+        self.z_pos: float = None
         self.rate: int = 0
 
     def raw(self, data) -> None:
