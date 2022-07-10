@@ -1,4 +1,6 @@
 """generates gcode"""
+from typing import Union
+
 import ezdxf
 
 from .calc import calc_distance, rotate_list, vertex2points
@@ -94,11 +96,54 @@ def segment2gcode(
     return gcode
 
 
+def get_nearest_free_object(
+    polylines, level: int, last_pos: list, milling: dict
+) -> tuple:
+    found: bool = False
+    nearest_dist: Union[None, float] = None
+    nearest_idx: int = 0
+    nearest_point = 0
+    for offset_num, offset in polylines.items():
+        if (
+            offset_num not in milling
+            and offset.level == level
+            and offset.mill["active"]
+        ):
+            if offset.is_closed():
+                vertex_data = offset.vertex_data()
+                for point_num, point in enumerate(vertex2points(vertex_data)):
+                    dist = calc_distance(last_pos, point)
+                    if nearest_dist is None or dist < nearest_dist:
+                        nearest_dist = dist
+                        nearest_idx = offset_num
+                        nearest_point = point_num
+                        found = True
+            else:
+                # on open obejcts, test first and last point
+                vertex_data = offset.vertex_data()
+                points = vertex2points(vertex_data)
+                dist = calc_distance(last_pos, points[0])
+                if nearest_dist is None or dist < nearest_dist:
+                    nearest_dist = dist
+                    nearest_idx = offset_num
+                    nearest_point = 0
+                    found = True
+
+                dist = calc_distance(last_pos, points[-1])
+                if nearest_dist is None or dist < nearest_dist:
+                    nearest_dist = dist
+                    nearest_idx = offset_num
+                    nearest_point = len(points) - 1
+                    found = True
+
+    return (found, nearest_idx, nearest_point)
+
+
 def polylines2gcode(project: dict) -> list[str]:
     """generates gcode from polilines"""
     # found milling order (nearest obj next)
-    milling = {}
-    last_pos = (0, 0)
+    milling: dict = {}
+    last_pos: list = [0, 0]
     polylines = project["offsets"]
     gcode: list[str] = []
     gcode += gcode_begin(project)
@@ -106,42 +151,10 @@ def polylines2gcode(project: dict) -> list[str]:
     order = 0
     for level in range(project["maxOuter"], -1, -1):
         while True:
-            found = False
-            nearest_dist = None
-            nearest_idx = None
-            nearest_point = 0
-            for offset_num, offset in polylines.items():
-                if (
-                    offset_num not in milling
-                    and offset.level == level
-                    and offset.mill["active"]
-                ):
-                    if offset.is_closed():
-                        vertex_data = offset.vertex_data()
-                        for point_num, point in enumerate(vertex2points(vertex_data)):
-                            dist = calc_distance(last_pos, point)
-                            if nearest_dist is None or dist < nearest_dist:
-                                nearest_dist = dist
-                                nearest_idx = offset_num
-                                nearest_point = point_num
-                                found = True
-                    else:
-                        # on open obejcts, test first and last point
-                        vertex_data = offset.vertex_data()
-                        points = vertex2points(vertex_data)
-                        dist = calc_distance(last_pos, points[0])
-                        if nearest_dist is None or dist < nearest_dist:
-                            nearest_dist = dist
-                            nearest_idx = offset_num
-                            nearest_point = 0
-                            found = True
 
-                        dist = calc_distance(last_pos, points[-1])
-                        if nearest_dist is None or dist < nearest_dist:
-                            nearest_dist = dist
-                            nearest_idx = offset_num
-                            nearest_point = len(points) - 1
-                            found = True
+            (found, nearest_idx, nearest_point) = get_nearest_free_object(
+                polylines, level, last_pos, milling
+            )
 
             if found:
                 milling[nearest_idx] = nearest_idx
@@ -196,8 +209,6 @@ def polylines2gcode(project: dict) -> list[str]:
                         f"(Tool-Offset: {project['setup']['tool']['diameter'] / 2.0}mm {polyline.tool_offset})"
                     )
                 gcode.append("(--------------------------------------------------)")
-
-                offset = project["setup"]["tool"]["diameter"] / 2.0
 
                 if is_closed:
                     gcode.append(
