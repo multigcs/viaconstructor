@@ -109,10 +109,11 @@ def get_nearest_free_object(
             and offset.level == level
             and offset.mill["active"]
         ):
+            vertex_data = offset.vertex_data()
             if offset.is_closed():
-                vertex_data = offset.vertex_data()
-                for point_num, point in enumerate(vertex2points(vertex_data)):
-                    dist = calc_distance(last_pos, point)
+                for point_num, pos_x in enumerate(vertex_data[0]):
+                    pos_y = vertex_data[1][point_num]
+                    dist = calc_distance(last_pos, (pos_x, pos_y))
                     if nearest_dist is None or dist < nearest_dist:
                         nearest_dist = dist
                         nearest_idx = offset_num
@@ -120,22 +121,18 @@ def get_nearest_free_object(
                         found = True
             else:
                 # on open obejcts, test first and last point
-                vertex_data = offset.vertex_data()
-                points = vertex2points(vertex_data)
-                dist = calc_distance(last_pos, points[0])
+                dist = calc_distance(last_pos, (vertex_data[0][0], vertex_data[1][0]))
                 if nearest_dist is None or dist < nearest_dist:
                     nearest_dist = dist
                     nearest_idx = offset_num
                     nearest_point = 0
                     found = True
-
-                dist = calc_distance(last_pos, points[-1])
+                dist = calc_distance(last_pos, (vertex_data[0][-1], vertex_data[1][-1]))
                 if nearest_dist is None or dist < nearest_dist:
                     nearest_dist = dist
                     nearest_idx = offset_num
-                    nearest_point = len(points) - 1
+                    nearest_point = len(vertex_data[0]) - 1
                     found = True
-
     return (found, nearest_idx, nearest_point)
 
 
