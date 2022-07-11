@@ -1,0 +1,305 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR ORGANIZATION
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"POT-Creation-Date: 2022-07-11 12:12+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: pygettext.py 1.5\n"
+
+#: viaconstructor/setupdefaults.py:9
+msgid "Feed-Rate(Horizontal)"
+msgstr ""
+
+#: viaconstructor/setupdefaults.py:10
+msgid "the Horizotal Feetrate"
+msgstr ""
+
+#: viaconstructor/setupdefaults.py:17
+msgid "Feed-Rate(Vertical)"
+msgstr ""
+
+#: viaconstructor/setupdefaults.py:18
+msgid "the Vertical Feetrate"
+msgstr ""
+
+#: viaconstructor/setupdefaults.py:25
+msgid "Fast-Move Z"
+msgstr ""
+
+#: viaconstructor/setupdefaults.py:26
+msgid "the Z-Position for fast moves"
+msgstr ""
+
+#: viaconstructor/setupdefaults.py:33
+msgid "G64-Value"
+msgstr ""
+
+#: viaconstructor/setupdefaults.py:34
+msgid "value for the G64 command"
+msgstr ""
+
+#: viaconstructor/setupdefaults.py:42
+msgid "Depth"
+msgstr ""
+
+#: viaconstructor/setupdefaults.py:43
+msgid "the end depth for milling"
+msgstr ""
+
+#: viaconstructor/setupdefaults.py:51
+msgid "Step"
+msgstr ""
+
+#: viaconstructor/setupdefaults.py:52
+msgid "the maximum depth in one move"
+msgstr ""
+
+#: viaconstructor/setupdefaults.py:58
+msgid "Active"
+msgstr ""
+
+#: viaconstructor/setupdefaults.py:59
+msgid "enable/disable this object"
+msgstr "aktivieren/deaktivieren des Objekts"
+
+#: viaconstructor/setupdefaults.py:65 viaconstructor/setupdefaults.py:66
+msgid "Helix"
+msgstr ""
+
+#: viaconstructor/setupdefaults.py:72 viaconstructor/setupdefaults.py:73
+msgid "Reverse"
+msgstr "Umdrehen"
+
+#: viaconstructor/setupdefaults.py:79
+msgid "Pocket"
+msgstr ""
+
+#: viaconstructor/setupdefaults.py:80
+msgid "do pocket operation on this object"
+msgstr "erzeuge pocket operation auf diesem Objekt"
+
+#: viaconstructor/setupdefaults.py:85
+msgid "Back-Home"
+msgstr ""
+
+#: viaconstructor/setupdefaults.py:86
+msgid "move tool back to Zero-Possition after milling"
+msgstr ""
+
+#: viaconstructor/setupdefaults.py:91
+msgid "Small-Circles"
+msgstr ""
+
+#: viaconstructor/setupdefaults.py:92
+msgid "milling small circles even if the tool is bigger"
+msgstr "fräse Kreise auch wenn diese kleiner als der Fräser sind"
+
+#: viaconstructor/setupdefaults.py:97
+msgid "Overcut"
+msgstr ""
+
+#: viaconstructor/setupdefaults.py:98
+msgid "Overcuting edges"
+msgstr ""
+"Ausfräsen von Ecken die bedingt durch den Fräser-Radius stehen bleiben würden"
+
+#: viaconstructor/setupdefaults.py:104
+msgid "original"
+msgstr "Original"
+
+#: viaconstructor/setupdefaults.py:105
+msgid "bottomLeft"
+msgstr "Unten-Links"
+
+#: viaconstructor/setupdefaults.py:106
+msgid "center"
+msgstr "Mittig"
+
+#: viaconstructor/setupdefaults.py:107
+msgid "bottomRight"
+msgstr "Unten-Rechts"
+
+#: viaconstructor/setupdefaults.py:108
+msgid "topLeft"
+msgstr "Oben-Links"
+
+#: viaconstructor/setupdefaults.py:109
+msgid "topRight"
+msgstr "Oben-Rechts"
+
+#: viaconstructor/setupdefaults.py:111
+msgid "Zero-Position"
+msgstr "Null-Position"
+
+#: viaconstructor/setupdefaults.py:112
+msgid "setting the Zero-Postition of the Workpiece"
+msgstr "setzen der Null-Position des Werkstücks"
+
+#: viaconstructor/setupdefaults.py:121
+msgid "Number"
+msgstr "Nummer"
+
+#: viaconstructor/setupdefaults.py:122
+msgid "setting the Tool-Number to load in gcode"
+msgstr "setzen der Werkzeug-Nummer"
+
+#: viaconstructor/setupdefaults.py:129
+msgid "Diameter"
+msgstr "Durchmesser"
+
+#: viaconstructor/setupdefaults.py:130
+msgid "setting the Tool-Diameter to calculate the Offsets"
+msgstr "setzen des Fräser-Durchmesser's"
+
+#: viaconstructor/setupdefaults.py:137
+msgid "Speed"
+msgstr "Geschwindigkeit"
+
+#: viaconstructor/setupdefaults.py:138
+msgid "setting the Tool-Speed in RPM"
+msgstr "setzen der Fräser-Geschwindigkeit (Umdehungen/Minute)"
+
+#: viaconstructor/setupdefaults.py:146
+msgid "minimal"
+msgstr ""
+
+#: viaconstructor/setupdefaults.py:147
+msgid "simple"
+msgstr ""
+
+#: viaconstructor/setupdefaults.py:148
+msgid "full"
+msgstr ""
+
+#: viaconstructor/setupdefaults.py:150
+msgid "Path"
+msgstr ""
+
+#: viaconstructor/setupdefaults.py:151
+msgid "how to show the gcode path in the 3d-View"
+msgstr ""
+
+#: viaconstructor/setupdefaults.py:156
+msgid "Ruler-Show"
+msgstr ""
+
+#: viaconstructor/setupdefaults.py:157
+msgid "showing ruler in 3D preview"
+msgstr ""
+
+#: viaconstructor/setupdefaults.py:162
+msgid "Grid-Show"
+msgstr ""
+
+#: viaconstructor/setupdefaults.py:163
+msgid "showing grid in 3D preview"
+msgstr ""
+
+#: viaconstructor/setupdefaults.py:170
+msgid "Grid-Size"
+msgstr ""
+
+#: viaconstructor/setupdefaults.py:171
+msgid "size of the grid"
+msgstr ""
+
+#: viaconstructor/setupdefaults.py:176
+msgid "Show as Polygon"
+msgstr ""
+
+#: viaconstructor/setupdefaults.py:177
+msgid "showing as polygon in 3D preview"
+msgstr ""
+
+#: viaconstructor/setupdefaults.py:184
+msgid "Arc-R"
+msgstr ""
+
+#: viaconstructor/setupdefaults.py:185
+msgid "using radius for arc output instead of j/i"
+msgstr ""
+
+#: viaconstructor/viaconstructor.py:592
+msgid "Exit"
+msgstr ""
+
+#: viaconstructor/viaconstructor.py:595
+msgid "Exit application"
+msgstr ""
+
+#: viaconstructor/viaconstructor.py:600 viaconstructor/viaconstructor.py:603
+msgid "Save gcode"
+msgstr ""
+
+#: viaconstructor/viaconstructor.py:608 viaconstructor/viaconstructor.py:611
+msgid "Load setup from"
+msgstr ""
+
+#: viaconstructor/viaconstructor.py:616
+msgid "Load setup from gCode"
+msgstr ""
+
+#: viaconstructor/viaconstructor.py:619
+msgid "Load-Setup from gCode"
+msgstr ""
+
+#: viaconstructor/viaconstructor.py:624
+msgid "Save setup as default"
+msgstr ""
+
+#: viaconstructor/viaconstructor.py:627
+msgid "Save-Setup"
+msgstr ""
+
+#: viaconstructor/viaconstructor.py:632
+msgid "Save setup as"
+msgstr ""
+
+#: viaconstructor/viaconstructor.py:635
+msgid "Save setup  as"
+msgstr ""
+
+#: viaconstructor/viaconstructor.py:640 viaconstructor/viaconstructor.py:643
+msgid "View-Reset"
+msgstr ""
+
+#: viaconstructor/viaconstructor.py:648 viaconstructor/viaconstructor.py:651
+msgid "2D-View"
+msgstr ""
+
+#: viaconstructor/viaconstructor.py:656
+msgid "Flip-X"
+msgstr ""
+
+#: viaconstructor/viaconstructor.py:659
+msgid "Flip-X workpiece"
+msgstr ""
+
+#: viaconstructor/viaconstructor.py:664
+msgid "Flip-Y"
+msgstr ""
+
+#: viaconstructor/viaconstructor.py:667
+msgid "Flip-Y workpiece"
+msgstr ""
+
+#: viaconstructor/viaconstructor.py:672
+msgid "Rotate"
+msgstr ""
+
+#: viaconstructor/viaconstructor.py:675
+msgid "Rotate workpiece"
+msgstr ""
+
+#: viaconstructor/viaconstructor.py:856
+msgid "Global-Settings:"
+msgstr "Globale-Einstellungen:"

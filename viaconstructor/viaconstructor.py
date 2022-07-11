@@ -1,6 +1,7 @@
 """viaconstructor tool."""
 
 import argparse
+import gettext
 import json
 import os
 import sys
@@ -59,6 +60,26 @@ except ImportError:
     QApplication(sys.argv)
     QMessageBox.critical(None, "OpenGL", "PyOpenGL must be installed.")  # type: ignore
     sys.exit(1)
+
+
+def no_translation(text):
+    return text
+
+
+# i18n
+_ = no_translation
+lang = os.environ.get("LANGUAGE")
+if lang:
+    this_dir, this_filename = os.path.split(__file__)
+    localedir = os.path.join(this_dir, "..", "locales")
+    try:
+        lang_translations = gettext.translation(
+            "base", localedir=localedir, languages=[lang]
+        )
+        lang_translations.install()
+        _ = lang_translations.gettext
+    except FileNotFoundError:
+        pass
 
 
 class GLWidget(QGLWidget):
@@ -238,7 +259,7 @@ class ViaConstructor:
     """viaconstructor main class."""
 
     project: dict = {
-        "setup_defaults": setup_defaults,
+        "setup_defaults": setup_defaults(_),
         "filename_dxf": "",
         "filename_gcode": "",
         "gcode": [],
@@ -568,90 +589,90 @@ class ViaConstructor:
     def create_toolbar(self) -> None:
         """creates the_toolbar."""
         toolbuttons = {
-            "Exit": (
+            _("Exit"): (
                 "exit.png",
                 "Ctrl+Q",
-                "Exit application",
+                _("Exit application"),
                 self._toolbar_exit,
                 True,
                 "main",
             ),
-            "Save gcode": (
+            _("Save gcode"): (
                 "save-gcode.png",
                 "Ctrl+S",
-                "Save gcode",
+                _("Save gcode"),
                 self._toolbar_save_gcode,
                 True,
                 "gcode",
             ),
-            "Load setup from": (
+            _("Load setup from"): (
                 "load-setup.png",
                 "",
-                "Load setup  from",
+                _("Load setup from"),
                 self._toolbar_load_setup_from,
                 True,
                 "setup",
             ),
-            "Load setup from gCode": (
+            _("Load setup from gCode"): (
                 "load-setup-gcode.png",
                 "",
-                "Load-Setup from gCode",
+                _("Load-Setup from gCode"),
                 self._toolbar_load_gcode_setup,
                 os.path.isfile(self.project["filename_gcode"]),
                 "setup",
             ),
-            "Save setup as default": (
+            _("Save setup as default"): (
                 "save-setup.png",
                 "",
-                "Save-Setup",
+                _("Save-Setup"),
                 self._toolbar_save_setup,
                 True,
                 "setup",
             ),
-            "Save setup as": (
+            _("Save setup as"): (
                 "save-setup-as.png",
                 "",
-                "Save setup  as",
+                _("Save setup  as"),
                 self._toolbar_save_setup_as,
                 True,
                 "setup",
             ),
-            "View-Reset": (
+            _("View-Reset"): (
                 "view-reset.png",
                 "",
-                "View-Reset",
+                _("View-Reset"),
                 self._toolbar_view_reset,
                 True,
                 "view",
             ),
-            "2D-View": (
+            _("2D-View"): (
                 "view-2d.png",
                 "",
-                "2D-View",
+                _("2D-View"),
                 self._toolbar_view_2d,
                 True,
                 "view",
             ),
-            "Flip-X": (
+            _("Flip-X"): (
                 "flip-x.png",
                 "",
-                "Flip-X workpiece",
+                _("Flip-X workpiece"),
                 self._toolbar_flipx,
                 True,
                 "workpiece",
             ),
-            "Flip-Y": (
+            _("Flip-Y"): (
                 "flip-y.png",
                 "",
-                "Flip-Y workpiece",
+                _("Flip-Y workpiece"),
                 self._toolbar_flipy,
                 True,
                 "workpiece",
             ),
-            "Rotate": (
+            _("Rotate"): (
                 "rotate.png",
                 "",
-                "Rotate workpiece",
+                _("Rotate workpiece"),
                 self._toolbar_rotate,
                 True,
                 "workpiece",
@@ -700,10 +721,10 @@ class ViaConstructor:
             for ename, entry in self.project["setup_defaults"][sname].items():
                 container = QWidget()
                 hlayout = QHBoxLayout(container)
-                label = QLabel(entry.get("title", ename))
+                label = QLabel(_(entry.get("title", ename)))
                 hlayout.addWidget(label)
                 if entry["type"] == "bool":
-                    checkbox = QCheckBox(entry.get("title", ename))
+                    checkbox = QCheckBox(_(entry.get("title", ename)))
                     checkbox.setChecked(self.project["setup"][sname][ename])
                     checkbox.setToolTip(entry.get("tooltip", f"{sname}/{ename}"))
                     checkbox.stateChanged.connect(self.global_changed)  # type: ignore
@@ -832,7 +853,7 @@ class ViaConstructor:
 
         vbox = QVBoxLayout(left_widget)
         vbox.setContentsMargins(0, 0, 0, 0)
-        vbox.addWidget(QLabel("Global-Settings:"))
+        vbox.addWidget(QLabel(_("Global-Settings:")))
 
         self.tabwidget = QTabWidget()
         self.create_global_setup(self.tabwidget)

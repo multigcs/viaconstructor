@@ -1,5 +1,5 @@
 
-all: isort black lint pytest pdoc help_gen docindex
+all: isort black lint pytest pdoc help_gen gettext docindex
 
 check: isort_check black_check lint pytest_check
 
@@ -93,3 +93,10 @@ docker-run:
 	#Windows: -e DISPLAY=host.docker.internal:0
 	docker run --net=host -e DISPLAY=:0  --privileged --name viaconstructor -t -i viaconstructor
 
+gettext:
+	/usr/bin/pygettext3 -d base -o locales/base.pot viaconstructor/viaconstructor.py viaconstructor/setupdefaults.py
+	@for lang in de ; do \
+		echo "updating lang $$lang" ; \
+		msgmerge --update locales/$$lang/LC_MESSAGES/base.po locales/base.pot ; \
+		msgfmt -o locales/$$lang/LC_MESSAGES/base.mo locales/$$lang/LC_MESSAGES/base ; \
+	done
