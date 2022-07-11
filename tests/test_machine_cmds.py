@@ -1,6 +1,7 @@
 import pytest
 
-from viaconstructor import gcode
+from viaconstructor import machine_cmd
+from viaconstructor.output_plugins.gcode_linuxcnc import PostProcessorGcodeLinuxCNC
 
 
 class fakeOffset:
@@ -25,7 +26,7 @@ class fakeOffset:
         (
             {
                 "filename_dxf": "/tmp/t.dxf",
-                "filename_gcode": "/tmp/t.ngc",
+                "filename_machine_cmd": "/tmp/t.ngc",
                 "offsets": {
                     "0.0": fakeOffset(
                         [
@@ -130,7 +131,6 @@ class fakeOffset:
                         "helix_mode": False,
                     },
                     "view": {"path": "simple"},
-                    "gcode": {"arc_r": False},
                 },
                 "tablewidget": "",
                 "textwidget": "",
@@ -229,7 +229,7 @@ class fakeOffset:
         ),
     ),
 )
-def test_polylines2gcode(project, expected):
-    result = gcode.polylines2gcode(project)
+def test_polylines2machine_cmd(project, expected):
+    result = machine_cmd.polylines2machine_cmd(project, PostProcessorGcodeLinuxCNC())
     print(result)
     assert result == expected

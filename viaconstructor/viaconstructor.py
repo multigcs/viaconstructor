@@ -44,7 +44,6 @@ from .calc import (
     segments2objects,
 )
 from .dxfread import DxfReader
-from .gcode import polylines2gcode
 from .gldraw import (
     draw_gcode_path,
     draw_grid,
@@ -52,6 +51,8 @@ from .gldraw import (
     draw_object_faces,
     draw_object_ids,
 )
+from .machine_cmd import polylines2machine_cmd
+from .output_plugins.gcode_linuxcnc import PostProcessorGcodeLinuxCNC
 from .setupdefaults import setup_defaults
 
 try:
@@ -261,7 +262,7 @@ class ViaConstructor:
     project: dict = {
         "setup_defaults": setup_defaults(_),
         "filename_dxf": "",
-        "filename_gcode": "",
+        "filename_machine_cmd": "",
         "gcode": [],
         "segments": {},
         "objects": {},
@@ -313,14 +314,18 @@ class ViaConstructor:
             psetup["mill"]["small_circles"],
         )
 
-        # create gcode
-        self.project["gcode"] = polylines2gcode(self.project)
+        # create machine commands
+        self.project["machine_cmd"] = polylines2machine_cmd(
+            self.project, PostProcessorGcodeLinuxCNC()
+        )
 
         self.project["textwidget"].clear()
-        self.project["textwidget"].insertPlainText("\n".join(self.project["gcode"]))
+        self.project["textwidget"].insertPlainText(
+            "\n".join(self.project["machine_cmd"])
+        )
         self.project["textwidget"].verticalScrollBar().setValue(0)
         # self.project["textwidget"].setReadOnly(True)
-        self.project["textwidget"].textChanged.connect(self.gcode_reload)  # type: ignore
+        # self.project["textwidget"].textChanged.connect(self.gcode_reload)  # type: ignore
 
     def _toolbar_flipx(self) -> None:
         mirror_objects(self.project["objects"], self.project["minMax"], vertical=True)
@@ -345,27 +350,30 @@ class ViaConstructor:
         """center view."""
         self.project["glwidget"].view_reset()
 
-    def gcode_save(self, filename: str) -> bool:
-        with open(filename, "w") as fd_gcode:
-            fd_gcode.write("\n".join(self.project["gcode"]))
-            fd_gcode.write("\n")
+    def machine_cmd_save(self, filename: str) -> bool:
+        with open(filename, "w") as fd_machine_cmd:
+            fd_machine_cmd.write("\n".join(self.project["machine_cmd"]))
+            fd_machine_cmd.write("\n")
             # jsetup = deepcopy(self.project["setup"])
             # if "system" in jsetup:
             #    del jsetup["system"]
-            # fd_gcode.write(f"(setup={json.dumps(jsetup)})")
-            fd_gcode.write("\n")
+            # fd_machine_cmd.write(f"(setup={json.dumps(jsetup)})")
+            fd_machine_cmd.write("\n")
             return True
         return False
 
-    def _toolbar_save_gcode(self) -> None:
-        """save gcode."""
-        self.status_bar.showMessage("save gcode..")
+    def _toolbar_save_machine_cmd(self) -> None:
+        """save machine_cmd."""
+        self.status_bar.showMessage("save machine_cmd..")
         file_dialog = QFileDialog(self.main)
         file_dialog.setNameFilters(["gcode (*.ngc)"])
         name = file_dialog.getSaveFileName(
-            self.main, "Save File", self.project["filename_gcode"], "gcode (*.ngc)"
+            self.main,
+            "Save File",
+            self.project["filename_machine_cmd"],
+            "gcode (*.ngc)",
         )
-        if name[0] and self.gcode_save(name[0]):
+        if name[0] and self.machine_cmd_save(name[0]):
             self.status_bar.showMessage(f"save gcode..done ({name[0]})")
         else:
             self.status_bar.showMessage("save gcode..cancel")
@@ -432,7 +440,8 @@ class ViaConstructor:
         self.project["gllist"] = GL.glGenLists(1)
         GL.glNewList(self.project["gllist"], GL.GL_COMPILE)
         draw_grid(self.project)
-        draw_gcode_path(self.project)
+        if not draw_gcode_path(self.project):
+            self.status_bar.showMessage("error while drawing mashine commands")
         draw_object_ids(self.project)
         draw_object_edges(self.project)
         if self.project["setup"]["view"]["polygon_show"]:
@@ -564,13 +573,13 @@ class ViaConstructor:
 
         self.update_drawing()
 
-    def _toolbar_load_gcode_setup(self) -> None:
-        if os.path.isfile(self.project["filename_gcode"]):
+    def _toolbar_load_machine_cmd_setup(self) -> None:
+        if os.path.isfile(self.project["filename_machine_cmd"]):
             self.status_bar.showMessage(
-                f"loading setup from gcode: {self.project['filename_gcode']}"
+                f"loading setup from gcode: {self.project['filename_machine_cmd']}"
             )
-            with open(self.project["filename_gcode"], "r") as fd_gcode:
-                gdata = fd_gcode.read()
+            with open(self.project["filename_machine_cmd"], "r") as fd_machine_cmd:
+                gdata = fd_machine_cmd.read()
                 for g_line in gdata.split("\n"):
                     if g_line.startswith("(setup={"):
                         setup_json = g_line.strip("()").split("=", 1)[1]
@@ -597,13 +606,13 @@ class ViaConstructor:
                 True,
                 "main",
             ),
-            _("Save gcode"): (
+            _("Save Machine-Commands"): (
                 "save-gcode.png",
                 "Ctrl+S",
-                _("Save gcode"),
-                self._toolbar_save_gcode,
+                _("Save machine commands"),
+                self._toolbar_save_machine_cmd,
                 True,
-                "gcode",
+                "machine_cmd",
             ),
             _("Load setup from"): (
                 "load-setup.png",
@@ -613,12 +622,12 @@ class ViaConstructor:
                 True,
                 "setup",
             ),
-            _("Load setup from gCode"): (
+            _("Load setup from machine_cmd"): (
                 "load-setup-gcode.png",
                 "",
-                _("Load-Setup from gCode"),
-                self._toolbar_load_gcode_setup,
-                os.path.isfile(self.project["filename_gcode"]),
+                _("Load-Setup from machine_cmd"),
+                self._toolbar_load_machine_cmd_setup,
+                False,  # os.path.isfile(self.project["filename_machine_cmd"]),
                 "setup",
             ),
             _("Save setup as default"): (
@@ -765,12 +774,12 @@ class ViaConstructor:
         """viaconstructor main init."""
         # arguments
         parser = argparse.ArgumentParser()
-        parser.add_argument("filename", help="gcode file", type=str)
+        parser.add_argument("filename", help="input file", type=str)
         parser.add_argument(
             "-s", "--setup", help="setup file", type=str, default="setup.json"
         )
         parser.add_argument(
-            "-o", "--output", help="save to gcode", type=str, default=None
+            "-o", "--output", help="save to machine_cmd", type=str, default=None
         )
         self.args = parser.parse_args()
 
@@ -789,7 +798,7 @@ class ViaConstructor:
         self.project["segments_org"] = dxf_reader.get_segments()
         self.project["filename_dxf"] = self.args.filename
         self.project[
-            "filename_gcode"
+            "filename_machine_cmd"
         ] = f"{'.'.join(self.project['filename_dxf'].split('.')[:-1])}.ngc"
 
         # prepare #
@@ -873,8 +882,8 @@ class ViaConstructor:
 
         if self.args.output:
             self.update_drawing()
-            print("saving gcode to file:", self.args.output)
-            open(self.args.output, "w").write("\n".join(self.project["gcode"]))
+            print("saving machine_cmd to file:", self.args.output)
+            open(self.args.output, "w").write("\n".join(self.project["machine_cmd"]))
         else:
             self.main.resize(1600, 1200)
             self.main.show()

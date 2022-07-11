@@ -362,7 +362,12 @@ def draw_line(p_1: dict, p_2: dict, project: dict) -> None:
     draw_mill_line(p_from, p_to, line_width, mode)
 
 
-def draw_gcode_path(project: dict) -> None:
+def draw_gcode_path(project: dict) -> bool:
     """draws the gcode path"""
     GL.glLineWidth(2)
-    GcodeParser(project["gcode"]).draw(draw_line, (project,))
+    try:
+        GcodeParser(project["machine_cmd"]).draw(draw_line, (project,))
+    except Exception:  # pylint: disable=W0703:
+        print("ERROR: parsing machine_cmd")
+        return False
+    return True

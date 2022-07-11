@@ -1,4 +1,4 @@
-"""generates gcode"""
+"""generates machine commands"""
 from typing import Union
 
 import ezdxf
@@ -7,140 +7,64 @@ from .calc import calc_distance, rotate_list, vertex2points
 
 
 class PostProcessor:
-    def __init__(self):
-        self.gcode: list[str] = []
-        self.x_pos: float = None
-        self.y_pos: float = None
-        self.z_pos: float = None
-        self.rate: int = 0
-
     def separation(self) -> None:
-        self.gcode.append("")
+        pass
 
     def g64(self, value) -> None:
-        self.gcode.append(f"G64 P{value}")
+        pass
 
     def feedrate(self, feedrate) -> None:
-        self.gcode.append(f"F{feedrate}")
+        pass
 
     def unit(self, unit="mm") -> None:
-        if unit == "mm":
-            self.gcode.append("G21 (Metric/mm)")
-        else:
-            self.gcode.append("G20 (Imperial/inches)")
+        pass
 
     def absolute(self, active=True) -> None:
-        if active:
-            self.gcode.append("G90 (Absolute-Mode)")
-        else:
-            self.gcode.append("G91 (Incremental-Mode)")
+        pass
 
     def offsets(self, offset="none") -> None:
-        if offset == "none":
-            self.gcode.append("G40 (No Offsets)")
-        elif offset == "left":
-            self.gcode.append("G41 (left offsets)")
-        else:
-            self.gcode.append("G42 (right offsets)")
+        pass
 
     def program_end(self) -> None:
-        self.gcode.append("M02")
+        pass
 
     def comment(self, text) -> None:
-        self.gcode.append(f"({text})")
+        pass
 
     def move(self, x_pos=None, y_pos=None, z_pos=None) -> None:
-        line = []
-        if x_pos is not None and self.x_pos != x_pos:
-            line.append(f"X{round(x_pos, 6)}")
-            self.x_pos = x_pos
-        if y_pos is not None and self.y_pos != y_pos:
-            line.append(f"Y{round(y_pos, 6)}")
-            self.y_pos = y_pos
-        if z_pos is not None and self.z_pos != z_pos:
-            line.append(f"Z{round(z_pos, 6)}")
-            self.z_pos = z_pos
-        if line:
-            self.gcode.append("G00 " + " ".join(line))
+        pass
 
     def tool(self, number="1") -> None:
-        self.gcode.append(f"M06 T{number}")
+        pass
 
     def spindel_off(self) -> None:
-        self.gcode.append("M05 (Spindle off)")
+        pass
 
     def spindel_cw(self, speed: int, pause: int = 1) -> None:
-        self.gcode.append(f"M03 S{speed} (Spindle on / CW)")
-        self.gcode.append(f"G04 P{pause} (pause in sec)")
+        pass
 
     def spindel_ccw(self, speed: int, pause: int = 1) -> None:
-        self.gcode.append(f"M04 S{speed} (Spindle on / CCW)")
-        self.gcode.append(f"G04 P{pause} (pause in sec)")
+        pass
 
     def linear(self, x_pos=None, y_pos=None, z_pos=None) -> None:
-        line = []
-        if x_pos is not None and self.x_pos != x_pos:
-            line.append(f"X{round(x_pos, 6)}")
-            self.x_pos = x_pos
-        if y_pos is not None and self.y_pos != y_pos:
-            line.append(f"Y{round(y_pos, 6)}")
-            self.y_pos = y_pos
-        if z_pos is not None and self.z_pos != z_pos:
-            line.append(f"Z{round(z_pos, 6)}")
-            self.z_pos = z_pos
-        if line:
-            self.gcode.append("G01 " + " ".join(line))
+        pass
 
     def arc_cw(
         self, x_pos=None, y_pos=None, z_pos=None, i_pos=None, j_pos=None, r_pos=None
     ) -> None:
-        line = []
-        if x_pos is not None and self.x_pos != x_pos:
-            line.append(f"X{round(x_pos, 6)}")
-            self.x_pos = x_pos
-        if y_pos is not None and self.y_pos != y_pos:
-            line.append(f"Y{round(y_pos, 6)}")
-            self.y_pos = y_pos
-        if z_pos is not None and self.z_pos != z_pos:
-            line.append(f"Z{round(z_pos, 6)}")
-            self.z_pos = z_pos
-        if i_pos is not None:
-            line.append(f"I{round(i_pos, 6)}")
-        if j_pos is not None:
-            line.append(f"J{round(j_pos, 6)}")
-        if r_pos is not None:
-            line.append(f"R{round(r_pos, 6)}")
-        if line:
-            self.gcode.append("G02 " + " ".join(line))
+        pass
 
     def arc_ccw(
         self, x_pos=None, y_pos=None, z_pos=None, i_pos=None, j_pos=None, r_pos=None
     ) -> None:
-        line = []
-        if x_pos is not None and self.x_pos != x_pos:
-            line.append(f"X{round(x_pos, 6)}")
-            self.x_pos = x_pos
-        if y_pos is not None and self.y_pos != y_pos:
-            line.append(f"Y{round(y_pos, 6)}")
-            self.y_pos = y_pos
-        if z_pos is not None and self.z_pos != z_pos:
-            line.append(f"Z{round(z_pos, 6)}")
-            self.z_pos = z_pos
-        if i_pos is not None:
-            line.append(f"I{round(i_pos, 6)}")
-        if j_pos is not None:
-            line.append(f"J{round(j_pos, 6)}")
-        if r_pos is not None:
-            line.append(f"R{round(r_pos, 6)}")
-        if line:
-            self.gcode.append("G03 " + " ".join(line))
+        pass
 
     def get(self) -> list[str]:
-        return self.gcode
+        return []
 
 
-def gcode_begin(project: dict, post: PostProcessor) -> None:
-    """gcode-header"""
+def machine_cmd_begin(project: dict, post: PostProcessor) -> None:
+    """machine_cmd-header"""
     post.comment("--------------------------------------------------")
     post.comment("Generator: viaConstructor")
     post.comment(f"Filename: {project['filename_dxf']}")
@@ -160,8 +84,8 @@ def gcode_begin(project: dict, post: PostProcessor) -> None:
     post.separation()
 
 
-def gcode_end(project: dict, post: PostProcessor) -> None:
-    """gcode-footer"""
+def machine_cmd_end(project: dict, post: PostProcessor) -> None:
+    """machine_cmd-footer"""
     post.separation()
     post.comment("- end -")
     post.move(z_pos=project["setup"]["mill"]["fast_move_z"])
@@ -172,8 +96,8 @@ def gcode_end(project: dict, post: PostProcessor) -> None:
     post.separation()
 
 
-def segment2gcode(
-    project: dict, post: PostProcessor, last: list, point: list, set_depth: float
+def segment2machine_cmd(
+    post: PostProcessor, last: list, point: list, set_depth: float
 ) -> None:
     bulge = last[2]
     if last[0] == point[0] and last[1] == point[1] and last[2] == point[2]:
@@ -184,16 +108,15 @@ def segment2gcode(
             center,
             start_angle,  # pylint: disable=W0612
             end_angle,  # pylint: disable=W0612
-            radius,
+            radius,  # pylint: disable=W0612
         ) = ezdxf.math.bulge_to_arc(last, point, bulge)
-        if project["setup"]["gcode"]["arc_r"]:
-            post.arc_ccw(x_pos=point[0], y_pos=point[1], z_pos=set_depth, r_pos=radius)
-        else:
-            i = center[0] - last[0]
-            j = center[1] - last[1]
-            post.arc_ccw(
-                x_pos=point[0], y_pos=point[1], z_pos=set_depth, i_pos=i, j_pos=j
-            )
+        post.arc_ccw(
+            x_pos=point[0],
+            y_pos=point[1],
+            z_pos=set_depth,
+            i_pos=(center[0] - last[0]),
+            j_pos=(center[1] - last[1]),
+        )
     elif bulge < 0.0:
         (
             center,
@@ -201,14 +124,13 @@ def segment2gcode(
             end_angle,
             radius,
         ) = ezdxf.math.bulge_to_arc(last, point, bulge)
-        if project["setup"]["gcode"]["arc_r"]:
-            post.arc_cw(x_pos=point[0], y_pos=point[1], z_pos=set_depth, r_pos=radius)
-        else:
-            i = center[0] - last[0]
-            j = center[1] - last[1]
-            post.arc_cw(
-                x_pos=point[0], y_pos=point[1], z_pos=set_depth, i_pos=i, j_pos=j
-            )
+        post.arc_cw(
+            x_pos=point[0],
+            y_pos=point[1],
+            z_pos=set_depth,
+            i_pos=(center[0] - last[0]),
+            j_pos=(center[1] - last[1]),
+        )
     else:
         post.linear(x_pos=point[0], y_pos=point[1], z_pos=set_depth)
 
@@ -253,16 +175,13 @@ def get_nearest_free_object(
     return (found, nearest_idx, nearest_point)
 
 
-def polylines2gcode(project: dict) -> list[str]:
-    """generates gcode from polilines"""
-    # found milling order (nearest obj next)
-
-    post = PostProcessor()
+def polylines2machine_cmd(project: dict, post: PostProcessor) -> list[str]:
+    """generates machine_cmd from polilines"""
 
     milling: dict = {}
     last_pos: list = [0, 0]
     polylines = project["offsets"]
-    gcode_begin(project, post)
+    machine_cmd_begin(project, post)
 
     order = 0
     for level in range(project["maxOuter"], -1, -1):
@@ -360,7 +279,7 @@ def polylines2gcode(project: dict) -> list[str]:
                             )
                         else:
                             set_depth = depth
-                        segment2gcode(project, post, last, point, set_depth)
+                        segment2machine_cmd(post, last, point, set_depth)
                         last = point
 
                     if is_closed:
@@ -374,7 +293,7 @@ def polylines2gcode(project: dict) -> list[str]:
                             )
                         else:
                             set_depth = depth
-                        segment2gcode(project, post, last, point, set_depth)
+                        segment2machine_cmd(post, last, point, set_depth)
 
                     last_depth = depth
 
@@ -395,5 +314,5 @@ def polylines2gcode(project: dict) -> list[str]:
             else:
                 break
 
-    gcode_end(project, post)
+    machine_cmd_end(project, post)
     return post.get()

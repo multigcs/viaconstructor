@@ -177,12 +177,4 @@ def setup_defaults(_) -> dict:
                 "tooltip": _("showing as polygon in 3D preview"),
             },
         },
-        "gcode": {
-            "arc_r": {
-                "default": False,
-                "type": "bool",
-                "title": _("Arc-R"),
-                "tooltip": _("using radius for arc output instead of j/i"),
-            },
-        },
     }
