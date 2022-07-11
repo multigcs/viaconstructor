@@ -14,11 +14,37 @@ class PostProcessor:
         self.z_pos: float = None
         self.rate: int = 0
 
-    def raw(self, data) -> None:
-        self.gcode.append(data)
+    def separation(self) -> None:
+        self.gcode.append("")
+
+    def g64(self, value) -> None:
+        self.gcode.append(f"G64 P{value}")
 
     def feedrate(self, feedrate) -> None:
         self.gcode.append(f"F{feedrate}")
+
+    def unit(self, unit="mm") -> None:
+        if unit == "mm":
+            self.gcode.append("G21 (Metric/mm)")
+        else:
+            self.gcode.append("G20 (Imperial/inches)")
+
+    def absolute(self, active=True) -> None:
+        if active:
+            self.gcode.append("G90 (Absolute-Mode)")
+        else:
+            self.gcode.append("G91 (Incremental-Mode)")
+
+    def offsets(self, offset="none") -> None:
+        if offset == "none":
+            self.gcode.append("G40 (No Offsets)")
+        elif offset == "left":
+            self.gcode.append("G41 (left offsets)")
+        else:
+            self.gcode.append("G42 (right offsets)")
+
+    def program_end(self) -> None:
+        self.gcode.append("M02")
 
     def comment(self, text) -> None:
         self.gcode.append(f"({text})")
@@ -36,6 +62,20 @@ class PostProcessor:
             self.z_pos = z_pos
         if line:
             self.gcode.append("G00 " + " ".join(line))
+
+    def tool(self, number="1") -> None:
+        self.gcode.append(f"M06 T{number}")
+
+    def spindel_off(self) -> None:
+        self.gcode.append("M05 (Spindle off)")
+
+    def spindel_cw(self, speed: int, pause: int = 1) -> None:
+        self.gcode.append(f"M03 S{speed} (Spindle on / CW)")
+        self.gcode.append(f"G04 P{pause} (pause in sec)")
+
+    def spindel_ccw(self, speed: int, pause: int = 1) -> None:
+        self.gcode.append(f"M04 S{speed} (Spindle on / CCW)")
+        self.gcode.append(f"G04 P{pause} (pause in sec)")
 
     def linear(self, x_pos=None, y_pos=None, z_pos=None) -> None:
         line = []
@@ -105,32 +145,31 @@ def gcode_begin(project: dict, post: PostProcessor) -> None:
     post.comment("Generator: viaConstructor")
     post.comment(f"Filename: {project['filename_dxf']}")
     post.comment("--------------------------------------------------")
-    post.raw("")
-    post.raw("G21 (Metric/mm)")
-    post.raw("G40 (No Offsets)")
-    post.raw("G90 (Absolute-Mode)")
+    post.separation()
+    post.unit("mm")
+    post.offsets("none")
+    post.absolute(True)
     post.feedrate(project["setup"]["mill"]["rate_v"])
     if project["setup"]["mill"]["G64"] > 0.0:
-        post.raw(f"G64 P{project['setup']['mill']['G64']}")
-    post.raw("M05 (Spindle off)")
-    post.raw(f"M06 T{project['setup']['tool']['number']}")
-    post.raw(f"M03 S{project['setup']['tool']['speed']} (Spindle on / CW)")
-    post.raw("G04 P1 (pause in sec)")
+        post.g64(project["setup"]["mill"]["G64"])
+    post.spindel_off()
+    post.tool(project["setup"]["tool"]["number"])
+    post.spindel_cw(project["setup"]["tool"]["speed"])
     post.move(z_pos=project["setup"]["mill"]["fast_move_z"])
     post.move(x_pos=0.0, y_pos=0.0)
-    post.raw("")
+    post.separation()
 
 
 def gcode_end(project: dict, post: PostProcessor) -> None:
     """gcode-footer"""
-    post.raw("")
+    post.separation()
     post.comment("- end -")
     post.move(z_pos=project["setup"]["mill"]["fast_move_z"])
-    post.raw("M05 (Spindle off)")
+    post.spindel_off()
     if project["setup"]["mill"]["back_home"]:
         post.move(x_pos=0.0, y_pos=0.0)
-    post.raw("M02")
-    post.raw("")
+    post.program_end()
+    post.separation()
 
 
 def segment2gcode(
@@ -267,7 +306,7 @@ def polylines2gcode(project: dict) -> list[str]:
                 if is_closed:
                     obj_distance += calc_distance(point, points[0])
 
-                post.raw("")
+                post.separation()
                 post.comment("--------------------------------------------------")
                 post.comment(f"Level: {level}")
                 post.comment(f"Order: {order}")
