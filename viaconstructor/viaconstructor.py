@@ -822,15 +822,15 @@ class ViaConstructor:
                         cmd = match[0].upper()
                         value = match[1]
                         print(cmd, "=", value)
-                        if cmd == "TG":
-                            obj["mill"]["depth"] = float(value)
-                        elif cmd == "MILL":
+                        if cmd == "MILL":
                             obj["mill"]["active"] = bool(value == "1")
-                        elif cmd == "TZ":
+                        elif cmd in ("MILLDEPTH", "MD"):
+                            obj["mill"]["depth"] = float(value)
+                        elif cmd in ("SLICEDEPTH", "SD"):
                             obj["mill"]["step"] = float(value)
-                        elif cmd == "F":
+                        elif cmd in ("FEEDXY", "FXY"):
                             obj["mill"]["rate_h"] = int(value)
-                        elif cmd == "FZ":
+                        elif cmd in ("FEEDZ", "FZ"):
                             obj["mill"]["rate_v"] = int(value)
 
         qapp = QApplication(sys.argv)
