@@ -498,6 +498,7 @@ def test_find_tool_offsets(objects, expected):
                     "overwrite_offset": None,
                     "outer_objects": [],
                     "inner_objects": [],
+                    "layer": "0",
                 },
                 1: {
                     "segments": [
@@ -539,6 +540,7 @@ def test_find_tool_offsets(objects, expected):
                     "overwrite_offset": None,
                     "outer_objects": [],
                     "inner_objects": [],
+                    "layer": "0",
                 },
             },
         ),

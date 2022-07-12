@@ -4,6 +4,7 @@ import argparse
 import gettext
 import json
 import os
+import re
 import sys
 from copy import deepcopy
 
@@ -61,6 +62,9 @@ except ImportError:
     QApplication(sys.argv)
     QMessageBox.critical(None, "OpenGL", "PyOpenGL must be installed.")  # type: ignore
     sys.exit(1)
+
+
+LAYER_REGEX = re.compile(r"([a-zA-Z]{1,4}):\s*([+-]?([0-9]+([.][0-9]*)?|[.][0-9]+))")
 
 
 def no_translation(text):
@@ -497,10 +501,11 @@ class ViaConstructor:
                 if sname not in {"tool", "mill"}:
                     continue
                 for ename, entry in self.project["setup_defaults"][sname].items():
+                    value = self.project["objects"][obj_idx][sname][ename]
                     if entry.get("per_object"):
                         if entry["type"] == "bool":
                             checkbox = QCheckBox(entry.get("title", ename))
-                            checkbox.setChecked(self.project["setup"][sname][ename])
+                            checkbox.setChecked(value)
                             checkbox.setToolTip(
                                 entry.get("tooltip", f"{sname}/{ename}")
                             )
@@ -510,7 +515,7 @@ class ViaConstructor:
                             combobox = QComboBox()
                             for option in entry["options"]:
                                 combobox.addItem(option[0])
-                            combobox.setCurrentText(self.project["setup"][sname][ename])
+                            combobox.setCurrentText(value)
                             combobox.setToolTip(
                                 entry.get("tooltip", f"{sname}/{ename}")
                             )
@@ -520,7 +525,7 @@ class ViaConstructor:
                             spinbox = QDoubleSpinBox()
                             spinbox.setMinimum(entry["min"])
                             spinbox.setMaximum(entry["max"])
-                            spinbox.setValue(self.project["setup"][sname][ename])
+                            spinbox.setValue(value)
                             spinbox.setToolTip(entry.get("tooltip", f"{sname}/{ename}"))
                             spinbox.valueChanged.connect(self.object_changed)  # type: ignore
                             table_widget.setCellWidget(obj_idx, s_n, spinbox)
@@ -528,7 +533,7 @@ class ViaConstructor:
                             spinbox = QSpinBox()
                             spinbox.setMinimum(entry["min"])
                             spinbox.setMaximum(entry["max"])
-                            spinbox.setValue(self.project["setup"][sname][ename])
+                            spinbox.setValue(value)
                             spinbox.setToolTip(entry.get("tooltip", f"{sname}/{ename}"))
                             spinbox.valueChanged.connect(self.object_changed)  # type: ignore
                             table_widget.setCellWidget(obj_idx, s_n, spinbox)
@@ -809,6 +814,24 @@ class ViaConstructor:
         for obj in self.project["objects"].values():
             obj["mill"] = deepcopy(self.project["setup"]["mill"])
             obj["tool"] = deepcopy(self.project["setup"]["tool"])
+            # experimental: get some milling data from layer name (https://groups.google.com/g/dxf2gcode-users/c/q3hPQkN2OCo)
+            if "layer" in obj and obj["layer"].startswith("MILL: "):
+                matches = LAYER_REGEX.findall(obj["layer"])
+                if matches:
+                    for match in matches:
+                        cmd = match[0].upper()
+                        value = match[1]
+                        print(cmd, "=", value)
+                        if cmd == "TG":
+                            obj["mill"]["depth"] = float(value)
+                        elif cmd == "MILL":
+                            obj["mill"]["active"] = bool(value == "1")
+                        elif cmd == "TZ":
+                            obj["mill"]["step"] = float(value)
+                        elif cmd == "F":
+                            obj["mill"]["rate_h"] = int(value)
+                        elif cmd == "FZ":
+                            obj["mill"]["rate_v"] = int(value)
 
         qapp = QApplication(sys.argv)
         window = QWidget()
