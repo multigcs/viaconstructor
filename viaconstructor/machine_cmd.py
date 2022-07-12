@@ -129,6 +129,22 @@ def segment2machine_cmd(
                 (last[0], last[1]), (point[0], point[1]), tab[0], tab[1]
             )
             if inters:
+                half_angle = start_angle + (end_angle - start_angle) / 4
+                (start, end, bulge) = ezdxf.math.arc_to_bulge(  # pylint: disable=W0612
+                    center,
+                    start_angle,
+                    half_angle,
+                    radius,
+                )
+                post.arc_ccw(
+                    x_pos=end[0],
+                    y_pos=end[1],
+                    z_pos=set_depth,
+                    i_pos=(center[0] - last[0]),
+                    j_pos=(center[1] - last[1]),
+                )
+                last = end
+
                 half_angle = start_angle + (end_angle - start_angle) / 2
                 (start, end, bulge) = ezdxf.math.arc_to_bulge(  # pylint: disable=W0612
                     center,
@@ -144,6 +160,23 @@ def segment2machine_cmd(
                     j_pos=(center[1] - last[1]),
                 )
                 last = end
+
+                half_angle = start_angle + (end_angle - start_angle) / 4 * 3
+                (start, end, bulge) = ezdxf.math.arc_to_bulge(  # pylint: disable=W0612
+                    center,
+                    start_angle,
+                    half_angle,
+                    radius,
+                )
+                post.arc_ccw(
+                    x_pos=end[0],
+                    y_pos=end[1],
+                    z_pos=set_depth,
+                    i_pos=(center[0] - last[0]),
+                    j_pos=(center[1] - last[1]),
+                )
+                last = end
+
                 break
 
         post.arc_ccw(
@@ -167,6 +200,22 @@ def segment2machine_cmd(
                 (last[0], last[1]), (point[0], point[1]), tab[0], tab[1]
             )
             if inters:
+                half_angle = start_angle + (end_angle - start_angle) / 4 * 3
+                (start, end, bulge) = ezdxf.math.arc_to_bulge(  # pylint: disable=W0612
+                    center,
+                    start_angle,
+                    half_angle,
+                    radius,
+                )
+                post.arc_cw(
+                    x_pos=end[0],
+                    y_pos=end[1],
+                    z_pos=set_depth,
+                    i_pos=(center[0] - last[0]),
+                    j_pos=(center[1] - last[1]),
+                )
+                last = end
+
                 half_angle = start_angle + (end_angle - start_angle) / 2
                 (start, end, bulge) = ezdxf.math.arc_to_bulge(  # pylint: disable=W0612
                     center,
@@ -182,6 +231,23 @@ def segment2machine_cmd(
                     j_pos=(center[1] - last[1]),
                 )
                 last = end
+
+                half_angle = start_angle + (end_angle - start_angle) / 4
+                (start, end, bulge) = ezdxf.math.arc_to_bulge(  # pylint: disable=W0612
+                    center,
+                    start_angle,
+                    half_angle,
+                    radius,
+                )
+                post.arc_cw(
+                    x_pos=end[0],
+                    y_pos=end[1],
+                    z_pos=set_depth,
+                    i_pos=(center[0] - last[0]),
+                    j_pos=(center[1] - last[1]),
+                )
+                last = end
+
                 break
 
         post.arc_cw(
