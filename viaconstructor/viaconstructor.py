@@ -825,9 +825,9 @@ class ViaConstructor:
                         if cmd == "MILL":
                             obj["mill"]["active"] = bool(value == "1")
                         elif cmd in ("MILLDEPTH", "MD"):
-                            obj["mill"]["depth"] = float(value)
+                            obj["mill"]["depth"] = -abs(float(value))
                         elif cmd in ("SLICEDEPTH", "SD"):
-                            obj["mill"]["step"] = float(value)
+                            obj["mill"]["step"] = -abs(float(value))
                         elif cmd in ("FEEDXY", "FXY"):
                             obj["mill"]["rate_h"] = int(value)
                         elif cmd in ("FEEDZ", "FZ"):
