@@ -13,6 +13,25 @@ def rotate_list(rlist, idx):
 
 
 # ########## Point Functions ###########
+def lines_intersect(line1_start, line1_end, line2_start, line2_end):
+    x_1, y_1 = line1_start
+    x_2, y_2 = line1_end
+    x_3, y_3 = line2_start
+    x_4, y_4 = line2_end
+    denom = (y_4 - y_3) * (x_2 - x_1) - (x_4 - x_3) * (y_2 - y_1)
+    if denom == 0:
+        return None
+    u_a = ((x_4 - x_3) * (y_1 - y_3) - (y_4 - y_3) * (x_1 - x_3)) / denom
+    if u_a < 0 or u_a > 1:
+        return None
+    u_b = ((x_2 - x_1) * (y_1 - y_3) - (y_2 - y_1) * (x_1 - x_3)) / denom
+    if u_b < 0 or u_b > 1:
+        return None
+    x_inter = x_1 + u_a * (x_2 - x_1)
+    y_inter = y_1 + u_a * (y_2 - y_1)
+    return (x_inter, y_inter)
+
+
 def angle_of_line(p_1, p_2):
     """gets the angle of a single line."""
     d_1 = p_2[0] - p_1[0]

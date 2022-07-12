@@ -1,9 +1,16 @@
 """generates machine commands"""
+import math
 from typing import Union
 
 import ezdxf
 
-from .calc import calc_distance, rotate_list, vertex2points
+from .calc import (
+    angle_of_line,
+    calc_distance,
+    lines_intersect,
+    rotate_list,
+    vertex2points,
+)
 
 
 class PostProcessor:
@@ -97,11 +104,17 @@ def machine_cmd_end(project: dict, post: PostProcessor) -> None:
 
 
 def segment2machine_cmd(
-    post: PostProcessor, last: list, point: list, set_depth: float
+    post: PostProcessor,
+    last: list,
+    point: list,
+    set_depth: float,
+    tabs: dict,
 ) -> None:
     bulge = last[2]
     if last[0] == point[0] and last[1] == point[1] and last[2] == point[2]:
         return
+
+    tabs_depth = tabs.get("depth", 0.0)
 
     if bulge > 0.0:
         (
@@ -110,6 +123,29 @@ def segment2machine_cmd(
             end_angle,  # pylint: disable=W0612
             radius,  # pylint: disable=W0612
         ) = ezdxf.math.bulge_to_arc(last, point, bulge)
+
+        for tab in tabs.get("data", ()):
+            inters = lines_intersect(
+                (last[0], last[1]), (point[0], point[1]), tab[0], tab[1]
+            )
+            if inters:
+                half_angle = start_angle + (end_angle - start_angle) / 2
+                (start, end, bulge) = ezdxf.math.arc_to_bulge(  # pylint: disable=W0612
+                    center,
+                    start_angle,
+                    half_angle,
+                    radius,
+                )
+                post.arc_ccw(
+                    x_pos=end[0],
+                    y_pos=end[1],
+                    z_pos=set_depth + tabs_depth,
+                    i_pos=(center[0] - last[0]),
+                    j_pos=(center[1] - last[1]),
+                )
+                last = end
+                break
+
         post.arc_ccw(
             x_pos=point[0],
             y_pos=point[1],
@@ -117,6 +153,7 @@ def segment2machine_cmd(
             i_pos=(center[0] - last[0]),
             j_pos=(center[1] - last[1]),
         )
+
     elif bulge < 0.0:
         (
             center,
@@ -124,6 +161,29 @@ def segment2machine_cmd(
             end_angle,
             radius,
         ) = ezdxf.math.bulge_to_arc(last, point, bulge)
+
+        for tab in tabs.get("data", ()):
+            inters = lines_intersect(
+                (last[0], last[1]), (point[0], point[1]), tab[0], tab[1]
+            )
+            if inters:
+                half_angle = start_angle + (end_angle - start_angle) / 2
+                (start, end, bulge) = ezdxf.math.arc_to_bulge(  # pylint: disable=W0612
+                    center,
+                    start_angle,
+                    half_angle,
+                    radius,
+                )
+                post.arc_cw(
+                    x_pos=end[0],
+                    y_pos=end[1],
+                    z_pos=set_depth + tabs_depth,
+                    i_pos=(center[0] - last[0]),
+                    j_pos=(center[1] - last[1]),
+                )
+                last = end
+                break
+
         post.arc_cw(
             x_pos=point[0],
             y_pos=point[1],
@@ -132,6 +192,37 @@ def segment2machine_cmd(
             j_pos=(center[1] - last[1]),
         )
     else:
+
+        tab_list = {}
+        for tab in tabs.get("data", ()):
+            inters = lines_intersect(
+                (last[0], last[1]), (point[0], point[1]), tab[0], tab[1]
+            )
+            if inters:
+                dist = calc_distance((last[0], last[1]), inters)
+                tab_list[dist] = inters
+
+        if tab_list:
+            for tab_dist in sorted(tab_list.keys()):
+
+                tab_size = 10
+                angle = (
+                    angle_of_line((last[0], last[1]), tab_list[tab_dist]) + math.pi / 2
+                )
+
+                tab_start_x = last[0] + (tab_dist - (tab_size / 2)) * math.sin(angle)
+                tab_start_y = last[1] - (tab_dist - (tab_size / 2)) * math.cos(angle)
+                tab_end_x = last[0] + (tab_dist + (tab_size / 2)) * math.sin(angle)
+                tab_end_y = last[1] - (tab_dist + (tab_size / 2)) * math.cos(angle)
+
+                post.linear(x_pos=tab_start_x, y_pos=tab_start_y, z_pos=set_depth)
+                post.linear(
+                    x_pos=tab_list[tab_dist][0],
+                    y_pos=tab_list[tab_dist][1],
+                    z_pos=set_depth + tabs_depth,
+                )
+                post.linear(x_pos=tab_end_x, y_pos=tab_end_y, z_pos=set_depth)
+
         post.linear(x_pos=point[0], y_pos=point[1], z_pos=set_depth)
 
 
@@ -177,6 +268,8 @@ def get_nearest_free_object(
 
 def polylines2machine_cmd(project: dict, post: PostProcessor) -> list[str]:
     """generates machine_cmd from polilines"""
+
+    tabs = project.get("tabs", {})
 
     milling: dict = {}
     last_pos: list = [0, 0]
@@ -279,7 +372,7 @@ def polylines2machine_cmd(project: dict, post: PostProcessor) -> list[str]:
                             )
                         else:
                             set_depth = depth
-                        segment2machine_cmd(post, last, point, set_depth)
+                        segment2machine_cmd(post, last, point, set_depth, tabs)
                         last = point
 
                     if is_closed:
@@ -293,7 +386,7 @@ def polylines2machine_cmd(project: dict, post: PostProcessor) -> list[str]:
                             )
                         else:
                             set_depth = depth
-                        segment2machine_cmd(post, last, point, set_depth)
+                        segment2machine_cmd(post, last, point, set_depth, tabs)
 
                     last_depth = depth
 

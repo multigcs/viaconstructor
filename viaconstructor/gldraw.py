@@ -311,6 +311,17 @@ def draw_object_edges(project: dict) -> None:
             GL.glVertex3f(p_x, p_y, project["setup"]["mill"]["depth"])
         GL.glEnd()
 
+    tabs = project.get("tabs", {}).get("data", ())
+    if tabs:
+        tabs_depth = project["setup"]["mill"]["depth"] + project["tabs"]["depth"]
+        GL.glLineWidth(5)
+        GL.glColor4f(1.0, 1.0, 0.0, 1.0)
+        GL.glBegin(GL.GL_LINES)
+        for tab in tabs:
+            GL.glVertex3f(tab[0][0], tab[0][1], tabs_depth)
+            GL.glVertex3f(tab[1][0], tab[1][1], tabs_depth)
+        GL.glEnd()
+
 
 def draw_object_faces(project: dict) -> None:
     """draws the top and side faces of an object"""

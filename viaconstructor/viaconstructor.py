@@ -277,6 +277,16 @@ class ViaConstructor:
         "table": [],
         "glwidget": None,
         "status": "INIT",
+        "tabs": {
+            "depth": 3.0,
+            "data": [
+                ((60 - 9, 80), (60 + 9, 80)),
+                ((60 - 9, 40), (60 + 9, 40)),
+                ((30, 10 - 9), (30, 10 + 9)),
+                ((45, 130 - 9), (45, 130 + 9)),
+            ],
+            # "data": (),
+        },
     }
 
     def gcode_reload(self) -> None:
@@ -814,24 +824,29 @@ class ViaConstructor:
         for obj in self.project["objects"].values():
             obj["mill"] = deepcopy(self.project["setup"]["mill"])
             obj["tool"] = deepcopy(self.project["setup"]["tool"])
+            layer = obj.get("layer")
             # experimental: get some milling data from layer name (https://groups.google.com/g/dxf2gcode-users/c/q3hPQkN2OCo)
-            if "layer" in obj and obj["layer"].startswith("MILL: "):
-                matches = LAYER_REGEX.findall(obj["layer"])
-                if matches:
-                    for match in matches:
-                        cmd = match[0].upper()
-                        value = match[1]
-                        print(cmd, "=", value)
-                        if cmd == "MILL":
-                            obj["mill"]["active"] = bool(value == "1")
-                        elif cmd in ("MILLDEPTH", "MD"):
-                            obj["mill"]["depth"] = -abs(float(value))
-                        elif cmd in ("SLICEDEPTH", "SD"):
-                            obj["mill"]["step"] = -abs(float(value))
-                        elif cmd in ("FEEDXY", "FXY"):
-                            obj["mill"]["rate_h"] = int(value)
-                        elif cmd in ("FEEDZ", "FZ"):
-                            obj["mill"]["rate_v"] = int(value)
+            if layer:
+                if layer.startswith("IGNORE:"):
+                    obj["mill"]["active"] = False
+                elif layer.startswith("BREAKS:"):
+                    obj["mill"]["active"] = False
+                elif layer.startswith("MILL:"):
+                    matches = LAYER_REGEX.findall(obj["layer"])
+                    if matches:
+                        for match in matches:
+                            cmd = match[0].upper()
+                            value = match[1]
+                            if cmd == "MILL":
+                                obj["mill"]["active"] = bool(value == "1")
+                            elif cmd in ("MILLDEPTH", "MD"):
+                                obj["mill"]["depth"] = -abs(float(value))
+                            elif cmd in ("SLICEDEPTH", "SD"):
+                                obj["mill"]["step"] = -abs(float(value))
+                            elif cmd in ("FEEDXY", "FXY"):
+                                obj["mill"]["rate_h"] = int(value)
+                            elif cmd in ("FEEDZ", "FZ"):
+                                obj["mill"]["rate_v"] = int(value)
 
         qapp = QApplication(sys.argv)
         window = QWidget()
