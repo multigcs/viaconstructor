@@ -85,6 +85,9 @@ class DxfReader:
                 if dxftype == "CIRCLE":
                     start_angle = 0.0
                     adiff = 360.0
+                elif element.dxf.end_angle == element.dxf.start_angle:
+                    start_angle = 0.0
+                    adiff = 360.0
                 else:
                     start_angle = element.dxf.start_angle
                     adiff = element.dxf.end_angle - element.dxf.start_angle
@@ -98,7 +101,6 @@ class DxfReader:
                     gstep = 1.0
                 gstep = min(gstep, 45.0)
                 steps = abs(math.ceil(adiff / gstep))
-
                 if steps > 0:
                     astep = adiff / steps
                     angle = start_angle

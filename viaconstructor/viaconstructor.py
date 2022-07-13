@@ -279,13 +279,7 @@ class ViaConstructor:
         "status": "INIT",
         "tabs": {
             "depth": 3.0,
-            "data": [
-                ((60 - 9, 80), (60 + 9, 80)),
-                ((60 - 9, 40), (60 + 9, 40)),
-                ((30, 10 - 9), (30, 10 + 9)),
-                ((45, 130 - 9), (45, 130 + 9)),
-            ],
-            # "data": (),
+            "data": [],
         },
     }
 
@@ -821,6 +815,9 @@ class ViaConstructor:
         self.project["segments"] = clean_segments(self.project["segments"])
         self.project["objects"] = segments2objects(self.project["segments"])
         self.project["maxOuter"] = find_tool_offsets(self.project["objects"])
+
+        self.project["tabs"]["data"] = []
+
         for obj in self.project["objects"].values():
             obj["mill"] = deepcopy(self.project["setup"]["mill"])
             obj["tool"] = deepcopy(self.project["setup"]["tool"])
@@ -831,6 +828,13 @@ class ViaConstructor:
                     obj["mill"]["active"] = False
                 elif layer.startswith("BREAKS:"):
                     obj["mill"]["active"] = False
+                    for segment in obj["segments"]:
+                        self.project["tabs"]["data"].append(
+                            (
+                                (segment["start"][0], segment["start"][1]),
+                                (segment["end"][0], segment["end"][1]),
+                            )
+                        )
                 elif layer.startswith("MILL:"):
                     matches = LAYER_REGEX.findall(obj["layer"])
                     if matches:
