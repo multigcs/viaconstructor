@@ -15,6 +15,14 @@
             "false": "helix-false.png"
         }
     },
+    "tabs": {
+        "title": "Tabs",
+        "text": "Tabs sind kleine brücken die beim fräsen stehen bleiben um Werkstück im Material zu halten.<br />",
+        "images": {
+            "true": "tabs-true.png",
+            "false": "tabs-false.png"
+        }
+    },
     "smalcircles": {
         "title": "Smal-Circles",
         "text": "Kleine Bohrungen werden mit gefräst auch wenn der Fräser-Durchmesser größer ist.<br />",
