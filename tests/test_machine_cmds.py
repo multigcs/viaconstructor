@@ -8,7 +8,7 @@ class fakeOffset:
     def __init__(self, data, closed, level, mill, tool_offset):
         self.level = level
         self.closed = closed
-        self.mill = mill
+        self.setup = {"mill": mill, "tabs": {"active": False}}
         self.data = data
         self.tool_offset = tool_offset
         self.is_pocket = False

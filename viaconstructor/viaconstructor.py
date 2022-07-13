@@ -7,6 +7,7 @@ import os
 import re
 import sys
 from copy import deepcopy
+from pathlib import Path
 
 from PyQt5.QtGui import QIcon  # pylint: disable=E0611
 from PyQt5.QtOpenGL import QGLFormat, QGLWidget  # pylint: disable=E0611
@@ -460,9 +461,11 @@ class ViaConstructor:
     def object_changed(self, value) -> None:
         """object changed."""
         for obj_idx, obj in self.project["objects"].items():
+            if obj.get("layer", "").startswith("BREAKS:"):
+                continue
             s_n = 0
             for sname in self.project["setup_defaults"]:
-                if sname not in {"tool", "mill"}:
+                if sname not in {"tool", "mill", "pockets", "tabs"}:
                     continue
                 for ename, entry in self.project["setup_defaults"][sname].items():
                     if entry.get("per_object"):
@@ -478,7 +481,7 @@ class ViaConstructor:
                         else:
                             print(f"Unknown setup-type: {entry['type']}")
                             value = None
-                        obj[sname][ename] = value
+                        obj["setup"][sname][ename] = value
                         s_n += 1
         self.update_drawing()
 
@@ -488,7 +491,7 @@ class ViaConstructor:
         table_widget.setRowCount(len(self.project["objects"]))
         s_n = 0
         for sname in self.project["setup_defaults"]:
-            if sname not in {"tool", "mill"}:
+            if sname not in {"tool", "mill", "pockets", "tabs"}:
                 continue
             for ename, entry in self.project["setup_defaults"][sname].items():
                 if entry.get("per_object"):
@@ -498,14 +501,16 @@ class ViaConstructor:
                     )
                     s_n += 1
 
-        for obj_idx in self.project["objects"]:
+        for obj_idx, obj in self.project["objects"].items():
+            if obj.get("layer", "").startswith("BREAKS:"):
+                continue
             table_widget.setVerticalHeaderItem(obj_idx, QTableWidgetItem(f"#{obj_idx}"))
             s_n = 0
             for sname in self.project["setup_defaults"]:
-                if sname not in {"tool", "mill"}:
+                if sname not in {"tool", "mill", "pockets", "tabs"}:
                     continue
                 for ename, entry in self.project["setup_defaults"][sname].items():
-                    value = self.project["objects"][obj_idx][sname][ename]
+                    value = obj["setup"][sname][ename]
                     if entry.get("per_object"):
                         if entry["type"] == "bool":
                             checkbox = QCheckBox(entry.get("title", ename))
@@ -571,15 +576,11 @@ class ViaConstructor:
         self.project["objects"] = segments2objects(self.project["segments"])
         self.project["maxOuter"] = find_tool_offsets(self.project["objects"])
         for obj in self.project["objects"].values():
-            obj["mill"] = deepcopy(self.project["setup"]["mill"])
-            obj["tool"] = deepcopy(self.project["setup"]["tool"])
-
-        for obj in self.project["objects"].values():
-            obj["mill"]["step"] = self.project["setup"]["mill"]["step"]
-            obj["mill"]["depth"] = self.project["setup"]["mill"]["depth"]
+            obj["setup"] = {}
+            for sect in ("tool", "mill", "pockets", "tabs"):
+                obj["setup"][sect] = self.project["setup"][sect]
 
         self.update_table()
-
         self.update_drawing()
 
     def _toolbar_load_machine_cmd_setup(self) -> None:
@@ -785,7 +786,11 @@ class ViaConstructor:
         parser = argparse.ArgumentParser()
         parser.add_argument("filename", help="input file", type=str)
         parser.add_argument(
-            "-s", "--setup", help="setup file", type=str, default="setup.json"
+            "-s",
+            "--setup",
+            help="setup file",
+            type=str,
+            default=f"{os.path.join(Path.home(), 'viaconstructor.json')}",
         )
         parser.add_argument(
             "-o", "--output", help="save to machine_cmd", type=str, default=None
@@ -819,15 +824,16 @@ class ViaConstructor:
         self.project["tabs"]["data"] = []
 
         for obj in self.project["objects"].values():
-            obj["mill"] = deepcopy(self.project["setup"]["mill"])
-            obj["tool"] = deepcopy(self.project["setup"]["tool"])
+            obj["setup"] = {}
+            for sect in ("tool", "mill", "pockets", "tabs"):
+                obj["setup"][sect] = deepcopy(self.project["setup"][sect])
             layer = obj.get("layer")
             # experimental: get some milling data from layer name (https://groups.google.com/g/dxf2gcode-users/c/q3hPQkN2OCo)
             if layer:
                 if layer.startswith("IGNORE:"):
-                    obj["mill"]["active"] = False
+                    obj["setup"]["mill"]["active"] = False
                 elif layer.startswith("BREAKS:"):
-                    obj["mill"]["active"] = False
+                    obj["setup"]["mill"]["active"] = False
                     for segment in obj["segments"]:
                         self.project["tabs"]["data"].append(
                             (
@@ -842,15 +848,15 @@ class ViaConstructor:
                             cmd = match[0].upper()
                             value = match[1]
                             if cmd == "MILL":
-                                obj["mill"]["active"] = bool(value == "1")
+                                obj["setup"]["mill"]["active"] = bool(value == "1")
                             elif cmd in ("MILLDEPTH", "MD"):
-                                obj["mill"]["depth"] = -abs(float(value))
+                                obj["setup"]["mill"]["depth"] = -abs(float(value))
                             elif cmd in ("SLICEDEPTH", "SD"):
-                                obj["mill"]["step"] = -abs(float(value))
+                                obj["setup"]["mill"]["step"] = -abs(float(value))
                             elif cmd in ("FEEDXY", "FXY"):
-                                obj["mill"]["rate_h"] = int(value)
+                                obj["setup"]["mill"]["rate_h"] = int(value)
                             elif cmd in ("FEEDZ", "FZ"):
-                                obj["mill"]["rate_v"] = int(value)
+                                obj["setup"]["mill"]["rate_v"] = int(value)
 
         qapp = QApplication(sys.argv)
         window = QWidget()

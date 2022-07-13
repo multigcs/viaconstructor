@@ -346,8 +346,8 @@ def do_pockets(  # pylint: disable=R0913
 
             polyline_offset.level = len(obj.get("outer_objects", []))
             polyline_offset.tool_offset = tool_offset
-            polyline_offset.mill = obj["mill"]
             polyline_offset.layer = obj["layer"]
+            polyline_offset.setup = obj["setup"]
             polyline_offset.is_pocket = True
             polyline_offsets[f"{obj_idx}.{offset_idx}"] = polyline_offset
             offset_idx += 1
@@ -470,7 +470,7 @@ def object2polyline_offsets(diameter, obj, obj_idx, max_outer, small_circles=Fal
 
             over_polyline = cavc.Polyline((xdata, ydata, bdata), is_closed=True)
             over_polyline.level = len(obj.get("outer_objects", []))
-            over_polyline.mill = obj.get("mill", {})
+            over_polyline.setup = obj.get("setup", {})
             over_polyline.layer = obj.get("layer", "")
             over_polyline.is_pocket = False
             over_polyline.tool_offset = tool_offset
@@ -482,7 +482,7 @@ def object2polyline_offsets(diameter, obj, obj_idx, max_outer, small_circles=Fal
     else:
         tool_radius = diameter / 2.0
 
-    if obj["mill"]["reverse"]:
+    if obj["setup"]["mill"]["reverse"]:
         tool_radius = -tool_radius
 
     is_circle = bool(obj["segments"][0]["type"] == "CIRCLE")
@@ -499,13 +499,13 @@ def object2polyline_offsets(diameter, obj, obj_idx, max_outer, small_circles=Fal
             for polyline_offset in polyline_offset_list:
                 polyline_offset.level = len(obj.get("outer_objects", []))
                 polyline_offset.tool_offset = tool_offset
-                polyline_offset.mill = obj["mill"]
+                polyline_offset.setup = obj["setup"]
                 polyline_offset.layer = obj.get("layer", "")
                 polyline_offset.is_pocket = False
                 polyline_offset.is_circle = is_circle
                 polyline_offsets[f"{obj_idx}.{offset_idx}"] = polyline_offset
                 offset_idx += 1
-                if tool_offset == "inside" and obj["mill"]["pocket"]:
+                if tool_offset == "inside" and obj["setup"]["pockets"]["active"]:
                     if polyline_offset.is_closed():
                         offset_idx = do_pockets(
                             polyline_offset,
@@ -525,20 +525,20 @@ def object2polyline_offsets(diameter, obj, obj_idx, max_outer, small_circles=Fal
             polyline_offset = cavc.Polyline(vertex_data, is_closed=False)
             polyline_offset.level = len(obj.get("outer_objects", []))
             polyline_offset.tool_offset = tool_offset
-            polyline_offset.mill = obj["mill"]
+            polyline_offset.setup = obj["setup"]
             polyline_offset.layer = obj.get("layer", "")
             polyline_offset.is_pocket = False
             polyline_offset.is_circle = True
             polyline_offsets[f"{obj_idx}.{offset_idx}.x"] = polyline_offset
             offset_idx += 1
 
-        if obj["mill"]["overcut"]:
+        if obj["setup"]["mill"]["overcut"]:
             overcut()
 
     else:
         polyline.level = max_outer
         polyline.tool_offset = tool_offset
-        polyline.mill = obj["mill"]
+        polyline.setup = obj["setup"]
         polyline.layer = obj.get("layer", "")
         polyline.is_pocket = False
         polyline.is_circle = False
@@ -552,7 +552,7 @@ def objects2polyline_offsets(diameter, objects, max_outer, small_circles=False):
     """calculates the offset line(s) of all objects"""
     polyline_offsets = {}
     for obj_idx, obj in objects.items():
-        if not obj["mill"]["active"]:
+        if not obj["setup"]["mill"]["active"]:
             continue
 
         obj_copy = deepcopy(obj)
@@ -560,7 +560,7 @@ def objects2polyline_offsets(diameter, objects, max_outer, small_circles=False):
         if obj_copy["tool_offset"] == "inside":
             do_reverse = 1 - do_reverse
 
-        if obj_copy["mill"]["reverse"]:
+        if obj_copy["setup"]["mill"]["reverse"]:
             do_reverse = 1 - do_reverse
 
         if do_reverse:

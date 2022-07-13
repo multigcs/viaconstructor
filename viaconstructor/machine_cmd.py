@@ -114,7 +114,8 @@ def segment2machine_cmd(
     if last[0] == point[0] and last[1] == point[1] and last[2] == point[2]:
         return
 
-    tabs_depth = tabs.get("depth", 0.0)
+    tabs_height = tabs.get("height", 1.0)
+    tab_width = tabs.get("width", 10.0)
 
     if bulge > 0.0:
         (
@@ -155,7 +156,7 @@ def segment2machine_cmd(
                 post.arc_ccw(
                     x_pos=end[0],
                     y_pos=end[1],
-                    z_pos=set_depth + tabs_depth,
+                    z_pos=set_depth + tabs_height,
                     i_pos=(center[0] - last[0]),
                     j_pos=(center[1] - last[1]),
                 )
@@ -226,7 +227,7 @@ def segment2machine_cmd(
                 post.arc_cw(
                     x_pos=end[0],
                     y_pos=end[1],
-                    z_pos=set_depth + tabs_depth,
+                    z_pos=set_depth + tabs_height,
                     i_pos=(center[0] - last[0]),
                     j_pos=(center[1] - last[1]),
                 )
@@ -270,22 +271,20 @@ def segment2machine_cmd(
 
         if tab_list:
             for tab_dist in sorted(tab_list.keys()):
-
-                tab_size = 10
                 angle = (
                     angle_of_line((last[0], last[1]), tab_list[tab_dist]) + math.pi / 2
                 )
 
-                tab_start_x = last[0] + (tab_dist - (tab_size / 2)) * math.sin(angle)
-                tab_start_y = last[1] - (tab_dist - (tab_size / 2)) * math.cos(angle)
-                tab_end_x = last[0] + (tab_dist + (tab_size / 2)) * math.sin(angle)
-                tab_end_y = last[1] - (tab_dist + (tab_size / 2)) * math.cos(angle)
+                tab_start_x = last[0] + (tab_dist - (tab_width / 2)) * math.sin(angle)
+                tab_start_y = last[1] - (tab_dist - (tab_width / 2)) * math.cos(angle)
+                tab_end_x = last[0] + (tab_dist + (tab_width / 2)) * math.sin(angle)
+                tab_end_y = last[1] - (tab_dist + (tab_width / 2)) * math.cos(angle)
 
                 post.linear(x_pos=tab_start_x, y_pos=tab_start_y, z_pos=set_depth)
                 post.linear(
                     x_pos=tab_list[tab_dist][0],
                     y_pos=tab_list[tab_dist][1],
-                    z_pos=set_depth + tabs_depth,
+                    z_pos=set_depth + tabs_height,
                 )
                 post.linear(x_pos=tab_end_x, y_pos=tab_end_y, z_pos=set_depth)
 
@@ -303,7 +302,7 @@ def get_nearest_free_object(
         if (
             offset_num not in milling
             and offset.level == level
-            and offset.mill["active"]
+            and offset.setup["mill"]["active"]
         ):
             vertex_data = offset.vertex_data()
             if offset.is_closed():
@@ -334,13 +333,11 @@ def get_nearest_free_object(
 
 def polylines2machine_cmd(project: dict, post: PostProcessor) -> list[str]:
     """generates machine_cmd from polilines"""
-
-    tabs = project.get("tabs", {})
-
     milling: dict = {}
     last_pos: list = [0, 0]
     polylines = project["offsets"]
     machine_cmd_begin(project, post)
+    tabs = project.get("tabs", {})
 
     order = 0
     for level in range(project["maxOuter"], -1, -1):
@@ -356,6 +353,11 @@ def polylines2machine_cmd(project: dict, post: PostProcessor) -> list[str]:
 
                 vertex_data = polyline.vertex_data()
                 is_closed = polyline.is_closed()
+
+                if polyline.setup["tabs"]["active"]:
+                    polyline.setup["tabs"]["data"] = tabs["data"]
+                else:
+                    polyline.setup["tabs"]["data"] = []
 
                 points = vertex2points(vertex_data)
                 if is_closed:
@@ -373,7 +375,7 @@ def polylines2machine_cmd(project: dict, post: PostProcessor) -> list[str]:
                         bulges[num] = -bulges[num]
                     points = vertex2points((x_start, y_start, bulges))
 
-                helix_mode = polyline.mill["helix_mode"]
+                helix_mode = polyline.setup["mill"]["helix_mode"]
 
                 # get object distance
                 obj_distance = 0
@@ -393,7 +395,7 @@ def polylines2machine_cmd(project: dict, post: PostProcessor) -> list[str]:
                 post.comment(f"Closed: {is_closed}")
                 post.comment(f"isPocket: {polyline.is_pocket}")
                 post.comment(
-                    f"Depth: {polyline.mill['depth']}mm / {polyline.mill['step']}mm"
+                    f"Depth: {polyline.setup['mill']['depth']}mm / {polyline.setup['mill']['step']}mm"
                 )
                 post.comment(f"Tool-Diameter: {project['setup']['tool']['diameter']}mm")
                 if polyline.tool_offset:
@@ -406,12 +408,12 @@ def polylines2machine_cmd(project: dict, post: PostProcessor) -> list[str]:
                     post.move(z_pos=project["setup"]["mill"]["fast_move_z"])
                     post.move(x_pos=points[0][0], y_pos=points[0][1])
 
-                depth = polyline.mill["step"]
+                depth = polyline.setup["mill"]["step"]
 
                 last_depth = 0.0
                 while True:
-                    if depth < polyline.mill["depth"]:
-                        depth = polyline.mill["depth"]
+                    if depth < polyline.setup["mill"]["depth"]:
+                        depth = polyline.setup["mill"]["depth"]
 
                     post.comment(f"- Depth: {depth}mm -")
 
@@ -438,7 +440,9 @@ def polylines2machine_cmd(project: dict, post: PostProcessor) -> list[str]:
                             )
                         else:
                             set_depth = depth
-                        segment2machine_cmd(post, last, point, set_depth, tabs)
+                        segment2machine_cmd(
+                            post, last, point, set_depth, polyline.setup["tabs"]
+                        )
                         last = point
 
                     if is_closed:
@@ -452,16 +456,18 @@ def polylines2machine_cmd(project: dict, post: PostProcessor) -> list[str]:
                             )
                         else:
                             set_depth = depth
-                        segment2machine_cmd(post, last, point, set_depth, tabs)
+                        segment2machine_cmd(
+                            post, last, point, set_depth, polyline.setup["tabs"]
+                        )
 
                     last_depth = depth
 
-                    if depth <= polyline.mill["depth"]:
+                    if depth <= polyline.setup["mill"]["depth"]:
                         if helix_mode:
                             helix_mode = False
                             continue
                         break
-                    depth += polyline.mill["step"]
+                    depth += polyline.setup["mill"]["step"]
 
                 post.move(z_pos=project["setup"]["mill"]["fast_move_z"])
 

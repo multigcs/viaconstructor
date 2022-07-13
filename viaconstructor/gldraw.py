@@ -282,6 +282,8 @@ def draw_object_edges(project: dict) -> None:
     GL.glLineWidth(1)
     GL.glColor4f(0.0, 1.0, 0.0, 1.0)
     for obj in project["objects"].values():
+        if obj.get("layer", "").startswith("BREAKS:"):
+            continue
         # side
         GL.glBegin(GL.GL_LINES)
         for segment in obj["segments"]:
@@ -313,7 +315,9 @@ def draw_object_edges(project: dict) -> None:
 
     tabs = project.get("tabs", {}).get("data", ())
     if tabs:
-        tabs_depth = project["setup"]["mill"]["depth"] + project["tabs"]["depth"]
+        tabs_depth = (
+            project["setup"]["mill"]["depth"] + project["setup"]["tabs"]["height"]
+        )
         GL.glLineWidth(5)
         GL.glColor4f(1.0, 1.0, 0.0, 1.0)
         GL.glBegin(GL.GL_LINES)
@@ -328,6 +332,8 @@ def draw_object_faces(project: dict) -> None:
     # object faces (side)
     GL.glColor4f(0.0, 0.75, 0.3, 0.5)
     for obj in project["objects"].values():
+        if obj.get("layer", "").startswith("BREAKS:"):
+            continue
         vertex_data = object2vertex(obj)
         for segment in obj["segments"]:
             p_x = segment["start"][0]

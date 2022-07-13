@@ -72,13 +72,6 @@ def setup_defaults(_) -> dict:
                 "title": _("Reverse"),
                 "tooltip": _("Reverse"),
             },
-            "pocket": {
-                "default": False,
-                "type": "bool",
-                "per_object": True,
-                "title": _("Pocket"),
-                "tooltip": _("do pocket operation on this object"),
-            },
             "back_home": {
                 "default": True,
                 "type": "bool",
@@ -136,6 +129,42 @@ def setup_defaults(_) -> dict:
                 "max": 100000,
                 "title": _("Speed"),
                 "tooltip": _("setting the Tool-Speed in RPM"),
+            },
+        },
+        "pockets": {
+            "active": {
+                "default": False,
+                "type": "bool",
+                "per_object": True,
+                "title": _("Pocket"),
+                "tooltip": _("do pocket operation on this object"),
+            },
+        },
+        "tabs": {
+            "active": {
+                "default": True,
+                "type": "bool",
+                "title": _("active"),
+                "tooltip": _("activate tabs"),
+                "per_object": True,
+            },
+            "width": {
+                "default": 10,
+                "type": "float",
+                "min": 0.1,
+                "max": 20,
+                "title": _("Width"),
+                "tooltip": _("width of the tabs"),
+                "per_object": True,
+            },
+            "height": {
+                "default": 1,
+                "type": "float",
+                "min": 0.1,
+                "max": 10000,
+                "title": _("Height"),
+                "tooltip": _("height of the tabs"),
+                "per_object": True,
             },
         },
         "view": {
