@@ -269,6 +269,8 @@ def draw_object_ids(project: dict) -> None:
     GL.glColor4f(1.0, 0.0, 0.0, 1.0)
     GL.glBegin(GL.GL_LINES)
     for obj_idx, obj in project["objects"].items():
+        if obj.get("layer", "").startswith("BREAKS:"):
+            continue
         p_x = obj["segments"][0]["start"][0]
         p_y = obj["segments"][0]["start"][1]
         for (x_1, y_1), (x_2, y_2) in font.lines_for_text(f"#{obj_idx}"):
@@ -359,6 +361,8 @@ def draw_object_faces(project: dict) -> None:
     )
     gluTessBeginPolygon(tess, 0)
     for obj in project["objects"].values():
+        if obj.get("layer", "").startswith("BREAKS:"):
+            continue
         if obj["closed"]:
             vertex_data = object2vertex(obj)
             gluTessBeginContour(tess)
