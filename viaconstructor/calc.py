@@ -4,6 +4,7 @@ import math
 from copy import deepcopy
 
 import cavaliercontours as cavc
+import ezdxf
 
 
 # ########## Misc Functions ###########
@@ -89,6 +90,23 @@ def angle_2d(p_1, p_2):
 
 
 # ########## Object & Segments Functions ###########
+
+
+def get_half_bulge_point(last: tuple, point: tuple, bulge: float) -> tuple:
+    (
+        center,
+        start_angle,  # pylint: disable=W0612
+        end_angle,  # pylint: disable=W0612
+        radius,  # pylint: disable=W0612
+    ) = ezdxf.math.bulge_to_arc(last, point, bulge)
+    half_angle = start_angle + (end_angle - start_angle) / 2
+    (start, end, bulge) = ezdxf.math.arc_to_bulge(  # pylint: disable=W0612
+        center,
+        start_angle,
+        half_angle,
+        radius,
+    )
+    return (end[0], end[1])
 
 
 def clean_segments(segments):
@@ -324,6 +342,50 @@ def object2vertex(obj):
 
 
 # ########## Polyline Functions ###########
+def found_next_tab_point(mpos, offsets):
+    for offset in offsets.values():
+        vertex_data = offset.vertex_data()
+        if offset.is_closed():
+            last_x = vertex_data[0][-1]
+            last_y = vertex_data[1][-1]
+            last_bulge = vertex_data[2][-1]
+        else:
+            last_x = None
+            last_y = None
+            last_bulge = None
+        for point_num, pos_x in enumerate(vertex_data[0]):
+            pos_y = vertex_data[1][point_num]
+            next_bulge = vertex_data[2][point_num]
+            if last_x is not None:
+                line_start = (last_x, last_y)
+                line_end = (pos_x, pos_y)
+                for check in (
+                    ((mpos[0] - 5, mpos[1] - 5), (mpos[0] + 5, mpos[1] + 5)),
+                    ((mpos[0] + 5, mpos[1] - 5), (mpos[0] - 5, mpos[1] + 5)),
+                    ((mpos[0] - 5, mpos[1]), (mpos[0] + 5, mpos[1])),
+                ):
+                    inter = lines_intersect(check[0], check[1], line_start, line_end)
+                    if inter:
+                        length = calc_distance(line_start, line_end)
+                        if length > offset.setup["tabs"]["width"]:
+                            angle = angle_of_line((last_x, last_y), (pos_x, pos_y))
+                            if last_bulge != 0.0:
+                                inter = get_half_bulge_point(
+                                    (last_x, last_y), (pos_x, pos_y), last_bulge
+                                )
+
+                            start_x = inter[0] + 3 * math.sin(angle)
+                            start_y = inter[1] - 3 * math.cos(angle)
+                            end_x = inter[0] - 3 * math.sin(angle)
+                            end_y = inter[1] + 3 * math.cos(angle)
+                            return (start_x, start_y), (end_x, end_y)
+
+            last_x = pos_x
+            last_y = pos_y
+            last_bulge = next_bulge
+    return ()
+
+
 def do_pockets(  # pylint: disable=R0913
     polyline,
     obj,
@@ -583,6 +645,8 @@ def objects2minmax(objects):
     max_x = objects[0]["segments"][0]["start"][0]
     max_y = objects[0]["segments"][0]["start"][1]
     for obj in objects.values():
+        if obj.get("layer", "").startswith("BREAKS:"):
+            continue
         for segment in obj["segments"]:
             min_x = min(min_x, segment["start"][0])
             min_x = min(min_x, segment["end"][0])

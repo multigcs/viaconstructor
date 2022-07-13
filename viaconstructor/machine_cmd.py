@@ -108,6 +108,7 @@ def segment2machine_cmd(
     last: list,
     point: list,
     set_depth: float,
+    max_depth: float,
     tabs: dict,
 ) -> None:
     bulge = last[2]
@@ -116,6 +117,9 @@ def segment2machine_cmd(
 
     tabs_height = tabs.get("height", 1.0)
     tab_width = tabs.get("width", 10.0)
+    tabs_depth = max_depth + tabs_height
+    tabs_depth = max(tabs_depth, set_depth)
+    tabs_depth = min(tabs_depth, 0.0)
 
     if bulge > 0.0:
         (
@@ -156,7 +160,7 @@ def segment2machine_cmd(
                 post.arc_ccw(
                     x_pos=end[0],
                     y_pos=end[1],
-                    z_pos=set_depth + tabs_height,
+                    z_pos=tabs_depth,
                     i_pos=(center[0] - last[0]),
                     j_pos=(center[1] - last[1]),
                 )
@@ -227,7 +231,7 @@ def segment2machine_cmd(
                 post.arc_cw(
                     x_pos=end[0],
                     y_pos=end[1],
-                    z_pos=set_depth + tabs_height,
+                    z_pos=tabs_depth,
                     i_pos=(center[0] - last[0]),
                     j_pos=(center[1] - last[1]),
                 )
@@ -284,7 +288,7 @@ def segment2machine_cmd(
                 post.linear(
                     x_pos=tab_list[tab_dist][0],
                     y_pos=tab_list[tab_dist][1],
-                    z_pos=set_depth + tabs_height,
+                    z_pos=tabs_depth,
                 )
                 post.linear(x_pos=tab_end_x, y_pos=tab_end_y, z_pos=set_depth)
 
@@ -353,6 +357,7 @@ def polylines2machine_cmd(project: dict, post: PostProcessor) -> list[str]:
 
                 vertex_data = polyline.vertex_data()
                 is_closed = polyline.is_closed()
+                max_depth = polyline.setup["mill"]["depth"]
 
                 if polyline.setup["tabs"]["active"]:
                     polyline.setup["tabs"]["data"] = tabs["data"]
@@ -441,7 +446,12 @@ def polylines2machine_cmd(project: dict, post: PostProcessor) -> list[str]:
                         else:
                             set_depth = depth
                         segment2machine_cmd(
-                            post, last, point, set_depth, polyline.setup["tabs"]
+                            post,
+                            last,
+                            point,
+                            set_depth,
+                            max_depth,
+                            polyline.setup["tabs"],
                         )
                         last = point
 
@@ -457,7 +467,12 @@ def polylines2machine_cmd(project: dict, post: PostProcessor) -> list[str]:
                         else:
                             set_depth = depth
                         segment2machine_cmd(
-                            post, last, point, set_depth, polyline.setup["tabs"]
+                            post,
+                            last,
+                            point,
+                            set_depth,
+                            max_depth,
+                            polyline.setup["tabs"],
                         )
 
                     last_depth = depth

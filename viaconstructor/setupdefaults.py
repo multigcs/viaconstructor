@@ -158,7 +158,7 @@ def setup_defaults(_) -> dict:
                 "per_object": True,
             },
             "height": {
-                "default": 1,
+                "default": 2,
                 "type": "float",
                 "min": 0.1,
                 "max": 10000,

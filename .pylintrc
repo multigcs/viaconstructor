@@ -154,7 +154,7 @@ disable=raw-checker-failed,
         use-symbolic-message-instead,
         W0212,R0912,R0915,C0301,R0902,R1702,R0914,
         R1725,W0105,R1732,W1514,
-        C0114,C0115,C0116,R0913,
+        C0114,C0115,C0116,R0913,C0302,R0801
 
 
 # Enable the message, report, category or checker with the given id(s). You can
