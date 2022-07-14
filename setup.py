@@ -16,7 +16,7 @@ setup(
     version='0.1.0',
     author='Oliver Dippel',
     author_email='o.dippel@gmx.de',
-    packages=['viaconstructor', 'gcodepreview', 'dxfpreview'],
+    packages=['viaconstructor', 'viaconstructor.output_plugins', 'gcodepreview', 'dxfpreview'],
     scripts=['bin/viaconstructor','bin/gcodepreview','bin/dxfpreview'],
     url='http://pypi.python.org/pypi/viaconstructor/',
     license='LICENSE',
@@ -24,6 +24,6 @@ setup(
     long_description=open('README.md').read(),
     install_requires=required,
     include_package_data=True,
-    data_files = [ ('data', ['data/exit.png', 'data/filesave.png', 'data/flip-x.png', 'data/flip-y.png', 'data/load-setup-gcode.png', 'data/load-setup.png', 'data/rotate.png', 'data/save-gcode.png', 'data/save-setup-as.png', 'data/save-setup.png', 'data/view-2d.png', 'data/view-reset.png']) ]
+    data_files = [ ('data', ['data/exit.png', 'data/flip-x.png', 'data/flip-y.png', 'data/load-setup-gcode.png', 'data/load-setup.png', 'data/rotate.png', 'data/save-gcode.png', 'data/save-setup-as.png', 'data/save-setup.png', 'data/view-2d.png', 'data/view-reset.png']) ]
 )
 
