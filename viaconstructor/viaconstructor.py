@@ -3,6 +3,7 @@
 import argparse
 import gettext
 import json
+import math
 import os
 import re
 import sys
@@ -262,8 +263,6 @@ class GLWidget(QGLWidget):
                 self.update_drawing()
                 self.update()
                 self.project["app"].update_tabs()
-                self.project["app"].dxf_reader.save_tabs(self.project["tabs"]["data"])
-
             elif self.mbutton == 2:
                 sel_idx = -1
                 sel_dist = -1
@@ -280,7 +279,6 @@ class GLWidget(QGLWidget):
                     self.update_drawing()
                     self.update()
                     self.project["app"].update_tabs()
-                self.project["app"].dxf_reader.save_tabs(self.project["tabs"]["data"])
 
     def mouseReleaseEvent(self, event) -> None:  # pylint: disable=C0103,W0613
         """mouse button released."""
@@ -369,7 +367,96 @@ class ViaConstructor:
             "data": [],
             "table": None,
         },
+        "tools": [
+            {
+                "name": "Holz-Fräser (klein)",
+                "number": 1,
+                "diameter": 2.5,
+                "lenght": 10.0,
+                "blades": 3,
+            },
+            {
+                "name": "Holz-Fräser (groß)",
+                "number": 3,
+                "diameter": 4.0,
+                "lenght": 12.0,
+                "blades": 2,
+            },
+            {
+                "name": "Alu-Fräser (groß)",
+                "number": 4,
+                "diameter": 6.0,
+                "lenght": 12.0,
+                "blades": 1,
+            },
+        ],
+        "materials": [
+            {
+                "name": "Aluminium(Langsp.)",
+                "vc": 200,
+                "fz4": 0.04,
+                "fz8": 0.05,
+                "fz12": 0.10,
+            },
+            {
+                "name": "Aluminium(Kurzsp.)",
+                "vc": 150,
+                "fz4": 0.04,
+                "fz8": 0.05,
+                "fz12": 0.10,
+            },
+            {
+                "name": "NE-Metalle",
+                "vc": 150,
+                "fz4": 0.04,
+                "fz8": 0.05,
+                "fz12": 0.10,
+            },
+            {
+                "name": "VA-Stahl",
+                "vc": 100,
+                "fz4": 0.05,
+                "fz8": 0.06,
+                "fz12": 0.07,
+            },
+            {
+                "name": "Duroplaste",
+                "vc": 125,
+                "fz4": 0.04,
+                "fz8": 0.08,
+                "fz12": 0.10,
+            },
+            {
+                "name": "Plexiglass",
+                "vc": 250,
+                "fz4": 0.1,
+                "fz8": 0.2,
+                "fz12": 0.3,
+            },
+            {
+                "name": "GFK",
+                "vc": 125,
+                "fz4": 0.04,
+                "fz8": 0.08,
+                "fz12": 0.10,
+            },
+            {
+                "name": "CFK",
+                "vc": 125,
+                "fz4": 0.04,
+                "fz8": 0.08,
+                "fz12": 0.10,
+            },
+            {
+                "name": "Holz",
+                "vc": 2000,
+                "fz4": 0.04,
+                "fz8": 0.08,
+                "fz12": 0.10,
+            },
+        ],
     }
+    save_tabs = "ask"
 
     def gcode_reload(self) -> None:
         """reload gcode."""
@@ -551,13 +638,81 @@ class ViaConstructor:
         self.status_bar.showMessage("calculate..done")
 
     def tab_delete(self, tab_idx) -> None:
-        print("tab_idx", tab_idx)
         del self.project["tabs"]["data"][tab_idx]
         self.update_tabs()
         self.update_drawing()
 
+    def materials_select(self, material_idx) -> None:
+        """calculates the milling feedrate and tool-speed for the selected material
+        see: https://www.precifast.de/schnittgeschwindigkeit-beim-fraesen-berechnen/
+        """
+        limit_feedrate = self.project["setup"]["limits"]["feedrate"]
+        limit_toolspeed = self.project["setup"]["limits"]["tool_speed"]
+        tool_number = self.project["setup"]["tool"]["number"]
+        tool_diameter = self.project["setup"]["tool"]["diameter"]
+        tool_vc = self.project["materials"][material_idx]["vc"]
+        tool_speed = tool_vc * 1000 / (tool_diameter * math.pi)
+        tool_speed = int(min(tool_speed, limit_toolspeed))
+        tool_blades = 2
+        for tool in self.project["tools"]:
+            if tool["number"] == tool_number:
+                tool_blades = tool["blades"]
+                break
+        if tool_diameter <= 4.0:
+            fz_key = "fz4"
+        elif tool_diameter <= 8.0:
+            fz_key = "fz8"
+        else:
+            fz_key = "fz12"
+        material_fz = self.project["materials"][material_idx][fz_key]
+        feedrate = tool_speed * tool_blades * material_fz
+        feedrate = int(min(feedrate, limit_feedrate))
+
+        info_test = []
+        info_test.append("Some Milling and Tool Values will be changed:")
+        info_test.append("")
+        info_test.append(
+            f" Feedrate: {feedrate} {'(!MACHINE-LIMIT)' if feedrate == limit_feedrate else ''}"
+        )
+        info_test.append(
+            f" Tool-Speed: {tool_speed} {'(!MACHINE-LIMIT)' if tool_speed == limit_toolspeed else ''}"
+        )
+        info_test.append("")
+        ret = QMessageBox.question(
+            self.main,
+            "Warning",
+            "\n".join(info_test),
+            QMessageBox.Ok | QMessageBox.Cancel,
+        )
+        if ret != QMessageBox.Ok:
+            return
+
+        self.project["status"] = "CHANGE"
+        self.project["setup"]["mill"]["rate_h"] = int(feedrate)
+        self.project["setup"]["tool"]["speed"] = int(tool_speed)
+        self.update_global_setup()
+        self.update_table()
+        self.update_drawing()
+        self.project["status"] = "READY"
+
+    def tools_select(self, tool_idx) -> None:
+        self.project["status"] = "CHANGE"
+        self.project["setup"]["tool"]["diameter"] = float(
+            self.project["tools"][tool_idx]["diameter"]
+        )
+        self.project["setup"]["tool"]["number"] = int(
+            self.project["tools"][tool_idx]["number"]
+        )
+        self.update_global_setup()
+        self.update_table()
+        self.update_drawing()
+        self.project["status"] = "READY"
+
     def object_changed(self, value) -> None:
         """object changed."""
+        if self.project["status"] == "CHANGE":
+            return
+
         for obj_idx, obj in self.project["objects"].items():
             if obj.get("layer", "").startswith("BREAKS:") or obj.get(
                 "layer", ""
@@ -655,6 +810,56 @@ class ViaConstructor:
         table_widget.horizontalHeader().setStretchLastSection(True)
         table_widget.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
 
+    def update_tools(self) -> None:
+        """update tools table."""
+        tools_widget = self.project["toolswidget"]
+        tools_widget.setRowCount(len(self.project["tools"]))
+        s_n = 0
+        tools_widget.setColumnCount(s_n + 1)
+        tools_widget.setHorizontalHeaderItem(s_n, QTableWidgetItem("Select"))
+        s_n += 1
+        for title in self.project["tools"][0]:
+            tools_widget.setColumnCount(s_n + 1)
+            tools_widget.setHorizontalHeaderItem(s_n, QTableWidgetItem(title))
+            s_n += 1
+        for tool_idx, tool in enumerate(self.project["tools"]):
+            tools_widget.setVerticalHeaderItem(
+                tool_idx, QTableWidgetItem(f"#{tool_idx}")
+            )
+            button = QPushButton(_("Select"))
+            button.setToolTip(_("select this tool"))
+            button.clicked.connect(partial(self.tools_select, tool_idx))  # type: ignore
+            tools_widget.setCellWidget(tool_idx, 0, button)
+            for col_idx, value in enumerate(tool.values()):
+                tools_widget.setItem(
+                    tool_idx, col_idx + 1, QTableWidgetItem(str(value))
+                )
+
+    def update_materials(self) -> None:
+        """update materials table."""
+        materials_widget = self.project["materialswidget"]
+        materials_widget.setRowCount(len(self.project["materials"]))
+        s_n = 0
+        materials_widget.setColumnCount(s_n + 1)
+        materials_widget.setHorizontalHeaderItem(s_n, QTableWidgetItem("Select"))
+        s_n += 1
+        for title in self.project["materials"][0]:
+            materials_widget.setColumnCount(s_n + 1)
+            materials_widget.setHorizontalHeaderItem(s_n, QTableWidgetItem(title))
+            s_n += 1
+        for material_idx, material in enumerate(self.project["materials"]):
+            materials_widget.setVerticalHeaderItem(
+                material_idx, QTableWidgetItem(f"#{material_idx}")
+            )
+            button = QPushButton(_("Select"))
+            button.setToolTip(_("select this material"))
+            button.clicked.connect(partial(self.materials_select, material_idx))  # type: ignore
+            materials_widget.setCellWidget(material_idx, 0, button)
+            for col_idx, value in enumerate(material.values()):
+                materials_widget.setItem(
+                    material_idx, col_idx + 1, QTableWidgetItem(str(value))
+                )
+
     def update_tabs(self) -> None:
         """update tabs table."""
         tabs_widget = self.project["tabswidget"]
@@ -693,11 +898,39 @@ class ViaConstructor:
         tabs_widget.horizontalHeader().setStretchLastSection(True)
         tabs_widget.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
 
+        if self.project["status"] == "INIT":
+            return
+
+        if self.save_tabs == "ask":
+            self.project["glwidget"].mouseReleaseEvent("")
+            info_test = []
+            info_test.append("Should i save tabs in the DXF-File ?")
+            info_test.append("")
+            info_test.append(" this will create a new layer named _TABS")
+            info_test.append(" exsiting layers named")
+            info_test.append(" _TABS* and BREAKS:*")
+            info_test.append(" will be removed !")
+            info_test.append("")
+            ret = QMessageBox.question(
+                self.main,
+                "Warning",
+                "\n".join(info_test),
+                QMessageBox.Yes | QMessageBox.No,
+            )
+            if ret == QMessageBox.Yes:
+                self.save_tabs = "yes"
+            else:
+                self.save_tabs = "no"
+
+        if self.save_tabs == "yes":
+            self.dxf_reader.save_tabs(self.project["tabs"]["data"])
+
     def global_changed(self, value) -> None:  # pylint: disable=W0613
         """global setup changed."""
+        if self.project["status"] == "CHANGE":
+            return
 
         old_setup = deepcopy(self.project["setup"])
-
         for sname in self.project["setup_defaults"]:
             for ename, entry in self.project["setup_defaults"][sname].items():
                 if entry["type"] == "bool":
@@ -874,7 +1107,6 @@ class ViaConstructor:
                 self.toolbar.addAction(action)
 
     def update_global_setup(self) -> None:
-        # self.tabwidget
         for sname in self.project["setup_defaults"]:
             for ename, entry in self.project["setup_defaults"][sname].items():
                 if entry["type"] == "bool":
@@ -1046,14 +1278,20 @@ class ViaConstructor:
         self.project["textwidget"] = QPlainTextEdit()
         self.project["tablewidget"] = QTableWidget()
         self.project["tabswidget"] = QTableWidget()
+        self.project["toolswidget"] = QTableWidget()
+        self.project["materialswidget"] = QTableWidget()
         self.update_table()
         self.update_tabs()
+        self.update_tools()
+        self.update_materials()
         left_gridlayout = QGridLayout()
         left_gridlayout.addWidget(QLabel("Objects-Settings:"))
 
         ltabwidget = QTabWidget()
         ltabwidget.addTab(self.project["tablewidget"], "Objects")
         ltabwidget.addTab(self.project["tabswidget"], "Tabs")
+        ltabwidget.addTab(self.project["toolswidget"], "Tools")
+        ltabwidget.addTab(self.project["materialswidget"], "Materials")
 
         left_gridlayout.addWidget(ltabwidget)
 

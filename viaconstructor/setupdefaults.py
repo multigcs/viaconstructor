@@ -167,6 +167,24 @@ def setup_defaults(_) -> dict:
                 "per_object": True,
             },
         },
+        "limits": {
+            "feedrate": {
+                "default": 1000,
+                "type": "int",
+                "min": 10,
+                "max": 10000,
+                "title": _("Feedrate"),
+                "tooltip": _("maximum feedrate while milling"),
+            },
+            "tool_speed": {
+                "default": 15000,
+                "type": "int",
+                "min": 100,
+                "max": 100000,
+                "title": _("Tool-Speed"),
+                "tooltip": _("maximum tool-speed"),
+            },
+        },
         "view": {
             "path": {
                 "default": "simple",
