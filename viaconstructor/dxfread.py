@@ -8,12 +8,13 @@ import ezdxf
 class DxfReader:
     def __init__(self, filename: str):
         """converting dxf into single segments."""
-        doc = ezdxf.readfile(filename)
+        self.filename = filename
+        self.doc = ezdxf.readfile(self.filename)
 
         # dxf to single segments
         self.segments: list[dict] = []
-        model_space = doc.modelspace()
-        for element in model_space:
+        self.model_space = self.doc.modelspace()
+        for element in self.model_space:
             dxftype = element.dxftype()
             if dxftype == "LINE":
                 self.segments.append(
@@ -180,3 +181,28 @@ class DxfReader:
     def draw(self, draw_function, user_data=()) -> None:
         for segment in self.segments:
             draw_function(segment["start"], segment["end"], *user_data)
+
+    def save_tabs(self, tabs: list) -> None:
+        delete_layers = []
+        for layer in self.doc.layers:
+            if layer.dxf.name.startswith("BREAKS:") or layer.dxf.name.startswith(
+                "_TABS"
+            ):
+                delete_layers.append(layer.dxf.name)
+
+        for layer_name in delete_layers:
+            for element in self.model_space:
+                if element.dxf.layer == layer_name:
+                    element.destroy()
+            self.doc.layers.remove(layer_name)
+
+        tabs_layer = self.doc.layers.add("_TABS")
+        tabs_layer.color = 1
+        for tab in tabs:
+            self.model_space.add_line(tab[0], tab[1], dxfattribs={"layer": "_TABS"})
+        try:
+            self.doc.saveas(self.filename)
+        except Exception as save_error:  # pylint: disable=W0703
+            print(
+                f"ERROR while saving tabs to dxf file ({self.filename}): {save_error}"
+            )

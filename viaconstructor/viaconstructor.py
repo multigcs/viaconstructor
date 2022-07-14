@@ -7,6 +7,7 @@ import os
 import re
 import sys
 from copy import deepcopy
+from functools import partial
 from pathlib import Path
 
 from PyQt5.QtGui import QIcon  # pylint: disable=E0611
@@ -25,6 +26,7 @@ from PyQt5.QtWidgets import (  # pylint: disable=E0611
     QMainWindow,
     QMessageBox,
     QPlainTextEdit,
+    QPushButton,
     QSpinBox,
     QStatusBar,
     QTableWidget,
@@ -36,9 +38,11 @@ from PyQt5.QtWidgets import (  # pylint: disable=E0611
 )
 
 from .calc import (
+    calc_distance,
     clean_segments,
     find_tool_offsets,
     found_next_tab_point,
+    line_center_2d,
     mirror_objects,
     move_objects,
     objects2minmax,
@@ -197,9 +201,9 @@ class GLWidget(QGLWidget):
         GL.glCallList(self.project["gllist"])
 
         if self.selection:
-            depth = self.project["setup"]["mill"]["depth"]
+            depth = self.project["setup"]["mill"]["depth"] - 0.1
             GL.glLineWidth(5)
-            GL.glColor4f(1.0, 1.0, 0.0, 1.0)
+            GL.glColor4f(0.0, 1.0, 1.0, 1.0)
             GL.glBegin(GL.GL_LINES)
             GL.glVertex3f(self.selection[0][0], self.selection[0][1], depth)
             GL.glVertex3f(self.selection[1][0], self.selection[1][1], depth)
@@ -251,17 +255,32 @@ class GLWidget(QGLWidget):
         self.trans_x_last = self.trans_x
         self.trans_y_last = self.trans_y
         self.trans_z_last = self.trans_z
-
         if self.tab_selector:
             if self.mbutton == 1:
                 if self.selection:
                     self.project["tabs"]["data"].append(self.selection)
                 self.update_drawing()
                 self.update()
+                self.project["app"].update_tabs()
+                self.project["app"].dxf_reader.save_tabs(self.project["tabs"]["data"])
+
             elif self.mbutton == 2:
-                self.project["tabs"]["data"] = []
-                self.update_drawing()
-                self.update()
+                sel_idx = -1
+                sel_dist = -1
+                for tab_idx, tab in enumerate(self.project["tabs"]["data"]):
+                    tab_pos = line_center_2d(tab[0], tab[1])
+
+                    dist = calc_distance((self.mouse_pos_x, self.mouse_pos_y), tab_pos)
+                    if sel_dist < 0 or dist < sel_dist:
+                        sel_dist = dist
+                        sel_idx = tab_idx
+
+                if 0.0 < sel_dist < 10.0:
+                    del self.project["tabs"]["data"][sel_idx]
+                    self.update_drawing()
+                    self.update()
+                    self.project["app"].update_tabs()
+                self.project["app"].dxf_reader.save_tabs(self.project["tabs"]["data"])
 
     def mouseReleaseEvent(self, event) -> None:  # pylint: disable=C0103,W0613
         """mouse button released."""
@@ -348,6 +367,7 @@ class ViaConstructor:
         "status": "INIT",
         "tabs": {
             "data": [],
+            "table": None,
         },
     }
 
@@ -493,6 +513,7 @@ class ViaConstructor:
         if name[0] and self.setup_load(name[0]):
             self.update_global_setup()
             self.update_table()
+            self.update_tabs()
             self.global_changed(0)
             self.update_drawing()
             self.status_bar.showMessage(f"load setup from..done ({name[0]})")
@@ -529,10 +550,18 @@ class ViaConstructor:
         GL.glEndList()
         self.status_bar.showMessage("calculate..done")
 
+    def tab_delete(self, tab_idx) -> None:
+        print("tab_idx", tab_idx)
+        del self.project["tabs"]["data"][tab_idx]
+        self.update_tabs()
+        self.update_drawing()
+
     def object_changed(self, value) -> None:
         """object changed."""
         for obj_idx, obj in self.project["objects"].items():
-            if obj.get("layer", "").startswith("BREAKS:"):
+            if obj.get("layer", "").startswith("BREAKS:") or obj.get(
+                "layer", ""
+            ).startswith("_TABS"):
                 continue
             s_n = 0
             for sname in self.project["setup_defaults"]:
@@ -557,7 +586,7 @@ class ViaConstructor:
         self.update_drawing()
 
     def update_table(self) -> None:
-        """update tabe."""
+        """update objects table."""
         table_widget = self.project["tablewidget"]
         table_widget.setRowCount(len(self.project["objects"]))
         s_n = 0
@@ -573,7 +602,9 @@ class ViaConstructor:
                     s_n += 1
 
         for obj_idx, obj in self.project["objects"].items():
-            if obj.get("layer", "").startswith("BREAKS:"):
+            if obj.get("layer", "").startswith("BREAKS:") or obj.get(
+                "layer", ""
+            ).startswith("_TABS"):
                 continue
             table_widget.setVerticalHeaderItem(obj_idx, QTableWidgetItem(f"#{obj_idx}"))
             s_n = 0
@@ -624,8 +655,49 @@ class ViaConstructor:
         table_widget.horizontalHeader().setStretchLastSection(True)
         table_widget.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
 
+    def update_tabs(self) -> None:
+        """update tabs table."""
+        tabs_widget = self.project["tabswidget"]
+        tabs_widget.setRowCount(len(self.project["tabs"]["data"]))
+
+        s_n = 0
+        for title in ("delete", "x", "y"):
+            tabs_widget.setColumnCount(s_n + 1)
+            tabs_widget.setHorizontalHeaderItem(s_n, QTableWidgetItem(title))
+            s_n += 1
+
+        for tab_idx, tab in enumerate(self.project["tabs"]["data"]):
+            tabs_widget.setVerticalHeaderItem(tab_idx, QTableWidgetItem(f"#{tab_idx}"))
+            tab_pos = line_center_2d(tab[0], tab[1])
+            button = QPushButton(_("Delete"))
+            button.setToolTip(_("delete this tab"))
+            button.clicked.connect(partial(self.tab_delete, tab_idx))  # type: ignore
+            tabs_widget.setCellWidget(tab_idx, 0, button)
+
+            spinbox = QDoubleSpinBox()
+            spinbox.setMinimum(-9999)
+            spinbox.setMaximum(9999)
+            spinbox.setValue(tab_pos[0])
+            spinbox.setToolTip("tab position x")
+            spinbox.valueChanged.connect(self.tab_delete)  # type: ignore
+            tabs_widget.setCellWidget(tab_idx, 1, spinbox)
+
+            spinbox = QDoubleSpinBox()
+            spinbox.setMinimum(-9999)
+            spinbox.setMaximum(9999)
+            spinbox.setValue(tab_pos[1])
+            spinbox.setToolTip("tab position y")
+            spinbox.valueChanged.connect(self.object_changed)  # type: ignore
+            tabs_widget.setCellWidget(tab_idx, 2, spinbox)
+
+        tabs_widget.horizontalHeader().setStretchLastSection(True)
+        tabs_widget.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+
     def global_changed(self, value) -> None:  # pylint: disable=W0613
         """global setup changed."""
+
+        old_setup = deepcopy(self.project["setup"])
+
         for sname in self.project["setup_defaults"]:
             for ename, entry in self.project["setup_defaults"][sname].items():
                 if entry["type"] == "bool":
@@ -644,14 +716,20 @@ class ViaConstructor:
 
         self.project["segments"] = deepcopy(self.project["segments_org"])
         self.project["segments"] = clean_segments(self.project["segments"])
-        self.project["objects"] = segments2objects(self.project["segments"])
         self.project["maxOuter"] = find_tool_offsets(self.project["objects"])
+
         for obj in self.project["objects"].values():
-            obj["setup"] = {}
             for sect in ("tool", "mill", "pockets", "tabs"):
-                obj["setup"][sect] = self.project["setup"][sect]
+                for key, global_value in self.project["setup"][sect].items():
+                    # change object value only if the value changed and the value diffs again the last value in global
+                    if (
+                        global_value != old_setup[sect][key]
+                        and obj["setup"][sect][key] == old_setup[sect][key]
+                    ):
+                        obj["setup"][sect][key] = self.project["setup"][sect][key]
 
         self.update_table()
+        self.update_tabs()
         self.update_drawing()
 
     def _toolbar_load_machine_cmd_setup(self) -> None:
@@ -887,8 +965,8 @@ class ViaConstructor:
             self.setup_load(self.args.setup)
 
         # load dxf #
-        dxf_reader = DxfReader(self.args.filename)
-        self.project["segments_org"] = dxf_reader.get_segments()
+        self.dxf_reader = DxfReader(self.args.filename)
+        self.project["segments_org"] = self.dxf_reader.get_segments()
         self.project["filename_dxf"] = self.args.filename
         self.project[
             "filename_machine_cmd"
@@ -910,7 +988,7 @@ class ViaConstructor:
             if layer:
                 if layer.startswith("IGNORE:"):
                     obj["setup"]["mill"]["active"] = False
-                elif layer.startswith("BREAKS:"):
+                elif layer.startswith("BREAKS:") or layer.startswith("_TABS"):
                     obj["setup"]["mill"]["active"] = False
                     for segment in obj["segments"]:
                         self.project["tabs"]["data"].append(
@@ -938,6 +1016,7 @@ class ViaConstructor:
 
         qapp = QApplication(sys.argv)
         window = QWidget()
+        self.project["app"] = self
 
         my_format = QGLFormat.defaultFormat()
         my_format.setSampleBuffers(True)
@@ -966,13 +1045,15 @@ class ViaConstructor:
 
         self.project["textwidget"] = QPlainTextEdit()
         self.project["tablewidget"] = QTableWidget()
+        self.project["tabswidget"] = QTableWidget()
         self.update_table()
+        self.update_tabs()
         left_gridlayout = QGridLayout()
         left_gridlayout.addWidget(QLabel("Objects-Settings:"))
 
         ltabwidget = QTabWidget()
         ltabwidget.addTab(self.project["tablewidget"], "Objects")
-        # ltabwidget.addTab(self.project["textwidget"], "G-Code")
+        ltabwidget.addTab(self.project["tabswidget"], "Tabs")
 
         left_gridlayout.addWidget(ltabwidget)
 

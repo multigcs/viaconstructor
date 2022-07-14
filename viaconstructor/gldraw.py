@@ -269,7 +269,9 @@ def draw_object_ids(project: dict) -> None:
     GL.glColor4f(1.0, 0.0, 0.0, 1.0)
     GL.glBegin(GL.GL_LINES)
     for obj_idx, obj in project["objects"].items():
-        if obj.get("layer", "").startswith("BREAKS:"):
+        if obj.get("layer", "").startswith("BREAKS:") or obj.get(
+            "layer", ""
+        ).startswith("_TABS"):
             continue
         p_x = obj["segments"][0]["start"][0]
         p_y = obj["segments"][0]["start"][1]
@@ -284,7 +286,9 @@ def draw_object_edges(project: dict) -> None:
     GL.glLineWidth(1)
     GL.glColor4f(0.0, 1.0, 0.0, 1.0)
     for obj in project["objects"].values():
-        if obj.get("layer", "").startswith("BREAKS:"):
+        if obj.get("layer", "").startswith("BREAKS:") or obj.get(
+            "layer", ""
+        ).startswith("_TABS"):
             continue
         # side
         GL.glBegin(GL.GL_LINES)
@@ -334,7 +338,9 @@ def draw_object_faces(project: dict) -> None:
     # object faces (side)
     GL.glColor4f(0.0, 0.75, 0.3, 0.5)
     for obj in project["objects"].values():
-        if obj.get("layer", "").startswith("BREAKS:"):
+        if obj.get("layer", "").startswith("BREAKS:") or obj.get(
+            "layer", ""
+        ).startswith("_TABS"):
             continue
         vertex_data = object2vertex(obj)
         for segment in obj["segments"]:
@@ -361,7 +367,9 @@ def draw_object_faces(project: dict) -> None:
     )
     gluTessBeginPolygon(tess, 0)
     for obj in project["objects"].values():
-        if obj.get("layer", "").startswith("BREAKS:"):
+        if obj.get("layer", "").startswith("BREAKS:") or obj.get(
+            "layer", ""
+        ).startswith("_TABS"):
             continue
         if obj["closed"]:
             vertex_data = object2vertex(obj)

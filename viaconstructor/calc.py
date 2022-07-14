@@ -58,6 +58,13 @@ def is_between(p_1, p_2, p_3):
     ) == round(calc_distance(p_2, p_3), 2)
 
 
+def line_center_2d(p_1, p_2):
+    """gets the center point between 2 points in 2D."""
+    center_x = (p_1[0] + p_2[0]) / 2
+    center_y = (p_1[1] + p_2[1]) / 2
+    return (center_x, center_y)
+
+
 def line_center_3d(p_1, p_2):
     """gets the center point between 2 points in 3D."""
     center_x = (p_1[0] + p_2[0]) / 2
@@ -645,7 +652,9 @@ def objects2minmax(objects):
     max_x = objects[0]["segments"][0]["start"][0]
     max_y = objects[0]["segments"][0]["start"][1]
     for obj in objects.values():
-        if obj.get("layer", "").startswith("BREAKS:"):
+        if obj.get("layer", "").startswith("BREAKS:") or obj.get(
+            "layer", ""
+        ).startswith("_TABS"):
             continue
         for segment in obj["segments"]:
             min_x = min(min_x, segment["start"][0])
