@@ -6,6 +6,40 @@ import ezdxf
 
 
 class DxfReader:
+    def __init__(self, filename: str):
+        """converting dxf into single segments."""
+        self.filename = filename
+        self.doc = ezdxf.readfile(self.filename)
+
+        # dxf to single segments
+        self.segments: list[dict] = []
+        self.model_space = self.doc.modelspace()
+        for element in self.model_space:
+            dxftype = element.dxftype()
+            if dxftype in ("INSERT", "LWPOLYLINE", "POLYLINE", "MLINE"):
+                for v_element in element.virtual_entities():  # type: ignore
+                    self.add_entity(v_element)
+            else:
+                self.add_entity(element)
+
+        self.min_max = [0.0, 0.0, 10.0, 10.0]
+        for seg_idx, segment in enumerate(self.segments):
+            for point in ("start", "end"):
+                if seg_idx == 0:
+                    self.min_max[0] = segment[point][0]
+                    self.min_max[1] = segment[point][1]
+                    self.min_max[2] = segment[point][0]
+                    self.min_max[3] = segment[point][1]
+                else:
+                    self.min_max[0] = min(self.min_max[0], segment[point][0])
+                    self.min_max[1] = min(self.min_max[1], segment[point][1])
+                    self.min_max[2] = max(self.min_max[2], segment[point][0])
+                    self.min_max[3] = max(self.min_max[3], segment[point][1])
+
+        self.size = []
+        self.size.append(self.min_max[2] - self.min_max[0])
+        self.size.append(self.min_max[3] - self.min_max[1])
+
     def add_entity(self, element, offset: tuple = (0, 0)):
         dxftype = element.dxftype()
         if dxftype == "LINE":
@@ -41,36 +75,6 @@ class DxfReader:
                         }
                     )
                 last = point
-
-        elif dxftype == "LWPOLYLINE":
-            with element.points("xyb") as points:  # type: ignore
-                last = []
-                for point in points:
-                    if last:
-                        self.segments.append(
-                            {
-                                "type": "LINE",
-                                "object": None,
-                                "layer": element.dxf.layer,
-                                "start": (last[0] + offset[0], last[1] + offset[1]),
-                                "end": (point[0] + offset[0], point[1] + offset[1]),
-                                "bulge": last[2],
-                            }
-                        )
-                    else:
-                        first = point
-                    last = point
-                if element.dxf.flags == 1:
-                    self.segments.append(
-                        {
-                            "type": "LINE",
-                            "object": None,
-                            "layer": element.dxf.layer,
-                            "start": (last[0] + offset[0], last[1] + offset[1]),
-                            "end": (first[0] + offset[0], first[1] + offset[1]),
-                            "bulge": last[2],
-                        }
-                    )
 
         elif dxftype in {"ARC", "CIRCLE"}:
             if dxftype == "CIRCLE":
@@ -146,40 +150,6 @@ class DxfReader:
                 print(f"  element.{attrib} = {getattr(element, attrib)}")
             for attrib in element.dxf.__dict__:
                 print(f"  element.dxf.{attrib} = {getattr(element.dxf, attrib)}")
-
-    def __init__(self, filename: str):
-        """converting dxf into single segments."""
-        self.filename = filename
-        self.doc = ezdxf.readfile(self.filename)
-
-        # dxf to single segments
-        self.segments: list[dict] = []
-        self.model_space = self.doc.modelspace()
-        for element in self.model_space:
-            dxftype = element.dxftype()
-            if dxftype == "INSERT":
-                for v_element in element.virtual_entities():  # type: ignore
-                    self.add_entity(v_element)
-            else:
-                self.add_entity(element)
-
-        self.min_max = [0.0, 0.0, 10.0, 10.0]
-        for seg_idx, segment in enumerate(self.segments):
-            for point in ("start", "end"):
-                if seg_idx == 0:
-                    self.min_max[0] = segment[point][0]
-                    self.min_max[1] = segment[point][1]
-                    self.min_max[2] = segment[point][0]
-                    self.min_max[3] = segment[point][1]
-                else:
-                    self.min_max[0] = min(self.min_max[0], segment[point][0])
-                    self.min_max[1] = min(self.min_max[1], segment[point][1])
-                    self.min_max[2] = max(self.min_max[2], segment[point][0])
-                    self.min_max[3] = max(self.min_max[3], segment[point][1])
-
-        self.size = []
-        self.size.append(self.min_max[2] - self.min_max[0])
-        self.size.append(self.min_max[3] - self.min_max[1])
 
     def get_segments(self) -> list[dict]:
         return self.segments
