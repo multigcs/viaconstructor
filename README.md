@@ -1,5 +1,7 @@
 # viaConstructor
 
+OpenSource CAM-Tool to generate gCode from DXF-Files
+
 !!!!!!! beta - version !!!!!!!
 
 ## Features:
