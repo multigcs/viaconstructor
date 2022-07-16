@@ -11,7 +11,11 @@ from copy import deepcopy
 from functools import partial
 from pathlib import Path
 
-from PyQt5.QtGui import QIcon  # pylint: disable=E0611
+from PyQt5.QtGui import (  # pylint: disable=E0611
+    QIcon,
+    QStandardItem,
+    QStandardItemModel,
+)
 from PyQt5.QtOpenGL import QGLFormat, QGLWidget  # pylint: disable=E0611
 from PyQt5.QtWidgets import (  # pylint: disable=E0611
     QAction,
@@ -22,7 +26,6 @@ from PyQt5.QtWidgets import (  # pylint: disable=E0611
     QFileDialog,
     QGridLayout,
     QHBoxLayout,
-    QHeaderView,
     QLabel,
     QMainWindow,
     QMessageBox,
@@ -34,6 +37,7 @@ from PyQt5.QtWidgets import (  # pylint: disable=E0611
     QTableWidgetItem,
     QTabWidget,
     QToolBar,
+    QTreeView,
     QVBoxLayout,
     QWidget,
 )
@@ -622,77 +626,72 @@ class ViaConstructor:
         elif section == "tool" and name == "materialtable":
             self.materials_select(row_idx)
 
-    def object_changed(self, value) -> None:
+    def object_changed(self, obj_idx, sname, ename, value) -> None:
         """object changed."""
         if self.project["status"] == "CHANGE":
             return
 
-        for obj_idx, obj in self.project["objects"].items():
-            if obj.get("layer", "").startswith("BREAKS:") or obj.get(
-                "layer", ""
-            ).startswith("_TABS"):
-                continue
-            s_n = 0
-            for sname in self.project["setup_defaults"]:
-                if sname not in {"tool", "mill", "pockets", "tabs"}:
-                    continue
-                for ename, entry in self.project["setup_defaults"][sname].items():
-                    if entry.get("per_object"):
-                        widget = self.project["tablewidget"].cellWidget(obj_idx, s_n)
-                        if entry["type"] == "bool":
-                            value = widget.isChecked()
-                        elif entry["type"] == "select":
-                            value = widget.currentText()
-                        elif entry["type"] == "float":
-                            value = widget.value()
-                        elif entry["type"] == "int":
-                            value = widget.value()
-                        elif entry["type"] == "table":
-                            pass
-                        else:
-                            print(f"Unknown setup-type: {entry['type']}")
-                            value = None
-                        obj["setup"][sname][ename] = value
-                        s_n += 1
+        entry_type = self.project["setup_defaults"][sname][ename]["type"]
+        if entry_type == "bool":
+            value = bool(value == 2)
+        elif entry_type == "select":
+            value = str(value)
+        elif entry_type == "float":
+            value = float(value)
+        elif entry_type == "int":
+            value = int(value)
+        elif entry_type == "table":
+            pass
+        else:
+            print(f"Unknown setup-type: {entry_type}")
+            value = None
+        self.project["objects"][obj_idx]["setup"][sname][ename] = value
+
         self.update_drawing()
 
     def update_table(self) -> None:
         """update objects table."""
-        table_widget = self.project["tablewidget"]
-        table_widget.setRowCount(len(self.project["objects"]))
-        s_n = 0
-        for sname in self.project["setup_defaults"]:
-            if sname not in {"tool", "mill", "pockets", "tabs"}:
-                continue
-            for ename, entry in self.project["setup_defaults"][sname].items():
-                if entry.get("per_object"):
-                    table_widget.setColumnCount(s_n + 1)
-                    table_widget.setHorizontalHeaderItem(
-                        s_n, QTableWidgetItem(entry.get("title", ename))
-                    )
-                    s_n += 1
+
+        self.project["objmodel"].clear()
+        self.project["objmodel"].setHorizontalHeaderLabels(["Object", "Value"])
+        # self.project["objwidget"].header().setDefaultSectionSize(180)
+        self.project["objwidget"].setModel(self.project["objmodel"])
+        root = self.project["objmodel"].invisibleRootItem()
 
         for obj_idx, obj in self.project["objects"].items():
             if obj.get("layer", "").startswith("BREAKS:") or obj.get(
                 "layer", ""
             ).startswith("_TABS"):
                 continue
-            table_widget.setVerticalHeaderItem(obj_idx, QTableWidgetItem(f"#{obj_idx}"))
-            s_n = 0
-            for sname in self.project["setup_defaults"]:
-                if sname not in {"tool", "mill", "pockets", "tabs"}:
-                    continue
+            root.appendRow(
+                [
+                    QStandardItem(f"#{obj_idx}"),
+                ]
+            )
+            obj_root = root.child(root.rowCount() - 1)
+            for sname in ("mill", "pockets", "tabs"):
+                obj_root.appendRow(
+                    [
+                        QStandardItem(sname),
+                    ]
+                )
+                section_root = obj_root.child(obj_root.rowCount() - 1)
                 for ename, entry in self.project["setup_defaults"][sname].items():
                     value = obj["setup"][sname][ename]
                     if entry.get("per_object"):
+                        title_cell = QStandardItem(ename)
+                        value_cell = QStandardItem("")
+                        section_root.appendRow([title_cell, value_cell])
                         if entry["type"] == "bool":
                             checkbox = QCheckBox(entry.get("title", ename))
                             checkbox.setChecked(value)
                             checkbox.setToolTip(
                                 entry.get("tooltip", f"{sname}/{ename}")
                             )
-                            checkbox.stateChanged.connect(self.object_changed)  # type: ignore
-                            table_widget.setCellWidget(obj_idx, s_n, checkbox)
+                            checkbox.stateChanged.connect(partial(self.object_changed, obj_idx, sname, ename))  # type: ignore
+                            self.project["objwidget"].setIndexWidget(
+                                value_cell.index(), checkbox
+                            )
                         elif entry["type"] == "select":
                             combobox = QComboBox()
                             for option in entry["options"]:
@@ -701,32 +700,35 @@ class ViaConstructor:
                             combobox.setToolTip(
                                 entry.get("tooltip", f"{sname}/{ename}")
                             )
-                            combobox.currentTextChanged.connect(self.object_changed)  # type: ignore
-                            table_widget.setCellWidget(obj_idx, s_n, combobox)
+                            combobox.currentTextChanged.connect(partial(self.object_changed, obj_idx, sname, ename))  # type: ignore
+                            self.project["objwidget"].setIndexWidget(
+                                value_cell.index(), combobox
+                            )
                         elif entry["type"] == "float":
                             spinbox = QDoubleSpinBox()
                             spinbox.setMinimum(entry["min"])
                             spinbox.setMaximum(entry["max"])
                             spinbox.setValue(value)
                             spinbox.setToolTip(entry.get("tooltip", f"{sname}/{ename}"))
-                            spinbox.valueChanged.connect(self.object_changed)  # type: ignore
-                            table_widget.setCellWidget(obj_idx, s_n, spinbox)
+                            spinbox.valueChanged.connect(partial(self.object_changed, obj_idx, sname, ename))  # type: ignore
+                            self.project["objwidget"].setIndexWidget(
+                                value_cell.index(), spinbox
+                            )
                         elif entry["type"] == "int":
                             spinbox = QSpinBox()
                             spinbox.setMinimum(entry["min"])
                             spinbox.setMaximum(entry["max"])
                             spinbox.setValue(value)
                             spinbox.setToolTip(entry.get("tooltip", f"{sname}/{ename}"))
-                            spinbox.valueChanged.connect(self.object_changed)  # type: ignore
-                            table_widget.setCellWidget(obj_idx, s_n, spinbox)
+                            spinbox.valueChanged.connect(partial(self.object_changed, obj_idx, sname, ename))  # type: ignore
+                            self.project["objwidget"].setIndexWidget(
+                                value_cell.index(), spinbox
+                            )
                         elif entry["type"] == "table":
                             pass
                         else:
                             print(f"Unknown setup-type: {entry['type']}")
-                        s_n += 1
-
-        table_widget.horizontalHeader().setStretchLastSection(True)
-        table_widget.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+        # self.project["objwidget"].expandAll()
 
     def update_tabs(self) -> None:
         """update tabs table."""
@@ -1146,13 +1148,14 @@ class ViaConstructor:
         self.status_bar.showMessage("startup")
 
         self.project["textwidget"] = QPlainTextEdit()
-        self.project["tablewidget"] = QTableWidget()
+        self.project["objwidget"] = QTreeView()
+        self.project["objmodel"] = QStandardItemModel()
         self.update_table()
         left_gridlayout = QGridLayout()
         left_gridlayout.addWidget(QLabel("Objects-Settings:"))
 
         ltabwidget = QTabWidget()
-        ltabwidget.addTab(self.project["tablewidget"], "Objects")
+        ltabwidget.addTab(self.project["objwidget"], "Objects")
 
         left_gridlayout.addWidget(ltabwidget)
 
