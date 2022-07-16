@@ -367,94 +367,6 @@ class ViaConstructor:
             "data": [],
             "table": None,
         },
-        "tools": [
-            {
-                "name": "Holz-Fräser (klein)",
-                "number": 1,
-                "diameter": 2.5,
-                "lenght": 10.0,
-                "blades": 3,
-            },
-            {
-                "name": "Holz-Fräser (groß)",
-                "number": 3,
-                "diameter": 4.0,
-                "lenght": 12.0,
-                "blades": 2,
-            },
-            {
-                "name": "Alu-Fräser (groß)",
-                "number": 4,
-                "diameter": 6.0,
-                "lenght": 12.0,
-                "blades": 1,
-            },
-        ],
-        "materials": [
-            {
-                "name": "Aluminium(Langsp.)",
-                "vc": 200,
-                "fz4": 0.04,
-                "fz8": 0.05,
-                "fz12": 0.10,
-            },
-            {
-                "name": "Aluminium(Kurzsp.)",
-                "vc": 150,
-                "fz4": 0.04,
-                "fz8": 0.05,
-                "fz12": 0.10,
-            },
-            {
-                "name": "NE-Metalle",
-                "vc": 150,
-                "fz4": 0.04,
-                "fz8": 0.05,
-                "fz12": 0.10,
-            },
-            {
-                "name": "VA-Stahl",
-                "vc": 100,
-                "fz4": 0.05,
-                "fz8": 0.06,
-                "fz12": 0.07,
-            },
-            {
-                "name": "Duroplaste",
-                "vc": 125,
-                "fz4": 0.04,
-                "fz8": 0.08,
-                "fz12": 0.10,
-            },
-            {
-                "name": "Plexiglass",
-                "vc": 250,
-                "fz4": 0.1,
-                "fz8": 0.2,
-                "fz12": 0.3,
-            },
-            {
-                "name": "GFK",
-                "vc": 125,
-                "fz4": 0.04,
-                "fz8": 0.08,
-                "fz12": 0.10,
-            },
-            {
-                "name": "CFK",
-                "vc": 125,
-                "fz4": 0.04,
-                "fz8": 0.08,
-                "fz12": 0.10,
-            },
-            {
-                "name": "Holz",
-                "vc": 2000,
-                "fz4": 0.04,
-                "fz8": 0.08,
-                "fz12": 0.10,
-            },
-        ],
     }
     save_tabs = "ask"
 
@@ -600,7 +512,6 @@ class ViaConstructor:
         if name[0] and self.setup_load(name[0]):
             self.update_global_setup()
             self.update_table()
-            self.update_tabs()
             self.global_changed(0)
             self.update_drawing()
             self.status_bar.showMessage(f"load setup from..done ({name[0]})")
@@ -637,11 +548,6 @@ class ViaConstructor:
         GL.glEndList()
         self.status_bar.showMessage("calculate..done")
 
-    def tab_delete(self, tab_idx) -> None:
-        del self.project["tabs"]["data"][tab_idx]
-        self.update_tabs()
-        self.update_drawing()
-
     def materials_select(self, material_idx) -> None:
         """calculates the milling feedrate and tool-speed for the selected material
         see: https://www.precifast.de/schnittgeschwindigkeit-beim-fraesen-berechnen/
@@ -650,11 +556,11 @@ class ViaConstructor:
         limit_toolspeed = self.project["setup"]["limits"]["tool_speed"]
         tool_number = self.project["setup"]["tool"]["number"]
         tool_diameter = self.project["setup"]["tool"]["diameter"]
-        tool_vc = self.project["materials"][material_idx]["vc"]
+        tool_vc = self.project["setup"]["tool"]["materialtable"][material_idx]["vc"]
         tool_speed = tool_vc * 1000 / (tool_diameter * math.pi)
         tool_speed = int(min(tool_speed, limit_toolspeed))
         tool_blades = 2
-        for tool in self.project["tools"]:
+        for tool in self.project["setup"]["tool"]["tooltable"]:
             if tool["number"] == tool_number:
                 tool_blades = tool["blades"]
                 break
@@ -664,7 +570,9 @@ class ViaConstructor:
             fz_key = "fz8"
         else:
             fz_key = "fz12"
-        material_fz = self.project["materials"][material_idx][fz_key]
+        material_fz = self.project["setup"]["tool"]["materialtable"][material_idx][
+            fz_key
+        ]
         feedrate = tool_speed * tool_blades * material_fz
         feedrate = int(min(feedrate, limit_feedrate))
 
@@ -698,15 +606,21 @@ class ViaConstructor:
     def tools_select(self, tool_idx) -> None:
         self.project["status"] = "CHANGE"
         self.project["setup"]["tool"]["diameter"] = float(
-            self.project["tools"][tool_idx]["diameter"]
+            self.project["setup"]["tool"]["tooltable"][tool_idx]["diameter"]
         )
         self.project["setup"]["tool"]["number"] = int(
-            self.project["tools"][tool_idx]["number"]
+            self.project["setup"]["tool"]["tooltable"][tool_idx]["number"]
         )
         self.update_global_setup()
         self.update_table()
         self.update_drawing()
         self.project["status"] = "READY"
+
+    def table_select(self, section, name, row_idx) -> None:
+        if section == "tool" and name == "tooltable":
+            self.tools_select(row_idx)
+        elif section == "tool" and name == "materialtable":
+            self.materials_select(row_idx)
 
     def object_changed(self, value) -> None:
         """object changed."""
@@ -733,6 +647,8 @@ class ViaConstructor:
                             value = widget.value()
                         elif entry["type"] == "int":
                             value = widget.value()
+                        elif entry["type"] == "table":
+                            pass
                         else:
                             print(f"Unknown setup-type: {entry['type']}")
                             value = None
@@ -803,6 +719,8 @@ class ViaConstructor:
                             spinbox.setToolTip(entry.get("tooltip", f"{sname}/{ename}"))
                             spinbox.valueChanged.connect(self.object_changed)  # type: ignore
                             table_widget.setCellWidget(obj_idx, s_n, spinbox)
+                        elif entry["type"] == "table":
+                            pass
                         else:
                             print(f"Unknown setup-type: {entry['type']}")
                         s_n += 1
@@ -810,97 +728,8 @@ class ViaConstructor:
         table_widget.horizontalHeader().setStretchLastSection(True)
         table_widget.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
 
-    def update_tools(self) -> None:
-        """update tools table."""
-        tools_widget = self.project["toolswidget"]
-        tools_widget.setRowCount(len(self.project["tools"]))
-        s_n = 0
-        tools_widget.setColumnCount(s_n + 1)
-        tools_widget.setHorizontalHeaderItem(s_n, QTableWidgetItem("Select"))
-        s_n += 1
-        for title in self.project["tools"][0]:
-            tools_widget.setColumnCount(s_n + 1)
-            tools_widget.setHorizontalHeaderItem(s_n, QTableWidgetItem(title))
-            s_n += 1
-        for tool_idx, tool in enumerate(self.project["tools"]):
-            tools_widget.setVerticalHeaderItem(
-                tool_idx, QTableWidgetItem(f"#{tool_idx}")
-            )
-            button = QPushButton(_("Select"))
-            button.setToolTip(_("select this tool"))
-            button.clicked.connect(partial(self.tools_select, tool_idx))  # type: ignore
-            tools_widget.setCellWidget(tool_idx, 0, button)
-            for col_idx, value in enumerate(tool.values()):
-                tools_widget.setItem(
-                    tool_idx, col_idx + 1, QTableWidgetItem(str(value))
-                )
-
-    def update_materials(self) -> None:
-        """update materials table."""
-        materials_widget = self.project["materialswidget"]
-        materials_widget.setRowCount(len(self.project["materials"]))
-        s_n = 0
-        materials_widget.setColumnCount(s_n + 1)
-        materials_widget.setHorizontalHeaderItem(s_n, QTableWidgetItem("Select"))
-        s_n += 1
-        for title in self.project["materials"][0]:
-            materials_widget.setColumnCount(s_n + 1)
-            materials_widget.setHorizontalHeaderItem(s_n, QTableWidgetItem(title))
-            s_n += 1
-        for material_idx, material in enumerate(self.project["materials"]):
-            materials_widget.setVerticalHeaderItem(
-                material_idx, QTableWidgetItem(f"#{material_idx}")
-            )
-            button = QPushButton(_("Select"))
-            button.setToolTip(_("select this material"))
-            button.clicked.connect(partial(self.materials_select, material_idx))  # type: ignore
-            materials_widget.setCellWidget(material_idx, 0, button)
-            for col_idx, value in enumerate(material.values()):
-                materials_widget.setItem(
-                    material_idx, col_idx + 1, QTableWidgetItem(str(value))
-                )
-
     def update_tabs(self) -> None:
         """update tabs table."""
-        tabs_widget = self.project["tabswidget"]
-        tabs_widget.setRowCount(len(self.project["tabs"]["data"]))
-
-        s_n = 0
-        for title in ("delete", "x", "y"):
-            tabs_widget.setColumnCount(s_n + 1)
-            tabs_widget.setHorizontalHeaderItem(s_n, QTableWidgetItem(title))
-            s_n += 1
-
-        for tab_idx, tab in enumerate(self.project["tabs"]["data"]):
-            tabs_widget.setVerticalHeaderItem(tab_idx, QTableWidgetItem(f"#{tab_idx}"))
-            tab_pos = line_center_2d(tab[0], tab[1])
-            button = QPushButton(_("Delete"))
-            button.setToolTip(_("delete this tab"))
-            button.clicked.connect(partial(self.tab_delete, tab_idx))  # type: ignore
-            tabs_widget.setCellWidget(tab_idx, 0, button)
-
-            spinbox = QDoubleSpinBox()
-            spinbox.setMinimum(-9999)
-            spinbox.setMaximum(9999)
-            spinbox.setValue(tab_pos[0])
-            spinbox.setToolTip("tab position x")
-            spinbox.valueChanged.connect(self.tab_delete)  # type: ignore
-            tabs_widget.setCellWidget(tab_idx, 1, spinbox)
-
-            spinbox = QDoubleSpinBox()
-            spinbox.setMinimum(-9999)
-            spinbox.setMaximum(9999)
-            spinbox.setValue(tab_pos[1])
-            spinbox.setToolTip("tab position y")
-            spinbox.valueChanged.connect(self.object_changed)  # type: ignore
-            tabs_widget.setCellWidget(tab_idx, 2, spinbox)
-
-        tabs_widget.horizontalHeader().setStretchLastSection(True)
-        tabs_widget.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
-
-        if self.project["status"] == "INIT":
-            return
-
         if self.save_tabs == "ask":
             self.project["glwidget"].mouseReleaseEvent("")
             info_test = []
@@ -927,6 +756,7 @@ class ViaConstructor:
 
     def global_changed(self, value) -> None:  # pylint: disable=W0613
         """global setup changed."""
+
         if self.project["status"] == "CHANGE":
             return
 
@@ -941,6 +771,24 @@ class ViaConstructor:
                     self.project["setup"][sname][ename] = entry["widget"].value()
                 elif entry["type"] == "int":
                     self.project["setup"][sname][ename] = entry["widget"].value()
+                elif entry["type"] == "table":
+                    for row_idx in range(entry["widget"].rowCount()):
+                        col_idx = 0
+                        for key, col_type in entry["columns"].items():
+                            value = entry["widget"].item(row_idx, col_idx + 1).text()
+                            if col_type == "str":
+                                self.project["setup"][sname][ename][row_idx][key] = str(
+                                    value
+                                )
+                            elif col_type == "int":
+                                self.project["setup"][sname][ename][row_idx][key] = int(
+                                    value
+                                )
+                            elif col_type == "float":
+                                self.project["setup"][sname][ename][row_idx][
+                                    key
+                                ] = float(value)
+                            col_idx += 1
                 else:
                     print(f"Unknown setup-type: {entry['type']}")
 
@@ -962,7 +810,6 @@ class ViaConstructor:
                         obj["setup"][sect][key] = self.project["setup"][sect][key]
 
         self.update_table()
-        self.update_tabs()
         self.update_drawing()
 
     def _toolbar_load_machine_cmd_setup(self) -> None:
@@ -1117,6 +964,8 @@ class ViaConstructor:
                     entry["widget"].setValue(self.project["setup"][sname][ename])
                 elif entry["type"] == "int":
                     entry["widget"].setValue(self.project["setup"][sname][ename])
+                elif entry["type"] == "table":
+                    pass
                 else:
                     print(f"Unknown setup-type: {entry['type']}")
 
@@ -1125,12 +974,12 @@ class ViaConstructor:
             vcontainer = QWidget()
             vlayout = QVBoxLayout(vcontainer)
             tabwidget.addTab(vcontainer, sname)
-
             for ename, entry in self.project["setup_defaults"][sname].items():
                 container = QWidget()
                 hlayout = QHBoxLayout(container)
                 label = QLabel(_(entry.get("title", ename)))
                 hlayout.addWidget(label)
+                vlayout.addWidget(container)
                 if entry["type"] == "bool":
                     checkbox = QCheckBox(_(entry.get("title", ename)))
                     checkbox.setChecked(self.project["setup"][sname][ename])
@@ -1165,9 +1014,30 @@ class ViaConstructor:
                     spinbox.valueChanged.connect(self.global_changed)  # type: ignore
                     hlayout.addWidget(spinbox)
                     entry["widget"] = spinbox
+                elif entry["type"] == "table":
+                    table = QTableWidget()
+                    label.setToolTip(entry.get("tooltip", f"{sname}/{ename}"))
+                    table.setRowCount(len(self.project["setup"][sname][ename]))
+                    table.setColumnCount(len(entry["columns"]) + 1)
+                    table.setHorizontalHeaderItem(0, QTableWidgetItem("Select"))
+                    for col_idx, title in enumerate(entry["columns"]):
+                        table.setHorizontalHeaderItem(
+                            col_idx + 1, QTableWidgetItem(title)
+                        )
+                    for row_idx, row in enumerate(self.project["setup"][sname][ename]):
+                        button = QPushButton(_("Select"))
+                        button.setToolTip(_("select this row"))
+                        button.clicked.connect(partial(self.table_select, sname, ename, row_idx))  # type: ignore
+                        table.setCellWidget(row_idx, 0, button)
+                        for col_idx, key in enumerate(entry["columns"]):
+                            table.setItem(
+                                row_idx, col_idx + 1, QTableWidgetItem(str(row[key]))
+                            )
+                    table.itemChanged.connect(self.global_changed)  # type: ignore
+                    vlayout.addWidget(table)
+                    entry["widget"] = table
                 else:
                     print(f"Unknown setup-type: {entry['type']}")
-                vlayout.addWidget(container)
 
     def __init__(self) -> None:
         """viaconstructor main init."""
@@ -1277,21 +1147,12 @@ class ViaConstructor:
 
         self.project["textwidget"] = QPlainTextEdit()
         self.project["tablewidget"] = QTableWidget()
-        self.project["tabswidget"] = QTableWidget()
-        self.project["toolswidget"] = QTableWidget()
-        self.project["materialswidget"] = QTableWidget()
         self.update_table()
-        self.update_tabs()
-        self.update_tools()
-        self.update_materials()
         left_gridlayout = QGridLayout()
         left_gridlayout.addWidget(QLabel("Objects-Settings:"))
 
         ltabwidget = QTabWidget()
         ltabwidget.addTab(self.project["tablewidget"], "Objects")
-        ltabwidget.addTab(self.project["tabswidget"], "Tabs")
-        ltabwidget.addTab(self.project["toolswidget"], "Tools")
-        ltabwidget.addTab(self.project["materialswidget"], "Materials")
 
         left_gridlayout.addWidget(ltabwidget)
 
