@@ -132,6 +132,7 @@ def setup_defaults(_) -> dict:
             },
             "tooltable": {
                 "type": "table",
+                "selectable": True,
                 "default": [
                     {
                         "name": "Holz-Fräser (klein)",
@@ -167,6 +168,7 @@ def setup_defaults(_) -> dict:
             },
             "materialtable": {
                 "type": "table",
+                "selectable": True,
                 "default": [
                     {
                         "name": "Aluminium(Langsp.)",

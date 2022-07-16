@@ -1020,28 +1020,37 @@ class ViaConstructor:
                     table = QTableWidget()
                     label.setToolTip(entry.get("tooltip", f"{sname}/{ename}"))
                     table.setRowCount(len(self.project["setup"][sname][ename]))
-                    table.setColumnCount(len(entry["columns"]) + 1)
-                    table.setHorizontalHeaderItem(0, QTableWidgetItem("Select"))
+                    idxf_offset = 0
+                    table.setColumnCount(len(entry["columns"]))
+                    if entry["selectable"]:
+                        table.setColumnCount(len(entry["columns"]) + 1)
+                        table.setHorizontalHeaderItem(0, QTableWidgetItem("Select"))
+                        idxf_offset = 1
                     for col_idx, title in enumerate(entry["columns"]):
                         table.setHorizontalHeaderItem(
-                            col_idx + 1, QTableWidgetItem(title)
+                            col_idx + idxf_offset, QTableWidgetItem(title)
                         )
                     for row_idx, row in enumerate(self.project["setup"][sname][ename]):
-                        button = QPushButton()
-                        button.setIcon(
-                            QIcon(
-                                os.path.join(self.this_dir, "..", "data", "select.png")
+                        if entry["selectable"]:
+                            button = QPushButton()
+                            button.setIcon(
+                                QIcon(
+                                    os.path.join(
+                                        self.this_dir, "..", "data", "select.png"
+                                    )
+                                )
                             )
-                        )
-                        button.setToolTip(_("select this row"))
-                        button.clicked.connect(partial(self.table_select, sname, ename, row_idx))  # type: ignore
-                        table.setCellWidget(row_idx, 0, button)
-                        table.resizeColumnToContents(0)
+                            button.setToolTip(_("select this row"))
+                            button.clicked.connect(partial(self.table_select, sname, ename, row_idx))  # type: ignore
+                            table.setCellWidget(row_idx, 0, button)
+                            table.resizeColumnToContents(0)
                         for col_idx, key in enumerate(entry["columns"]):
                             table.setItem(
-                                row_idx, col_idx + 1, QTableWidgetItem(str(row[key]))
+                                row_idx,
+                                col_idx + idxf_offset,
+                                QTableWidgetItem(str(row[key])),
                             )
-                            table.resizeColumnToContents(col_idx + 1)
+                            table.resizeColumnToContents(col_idx + idxf_offset)
                     table.itemChanged.connect(self.global_changed)  # type: ignore
                     vlayout.addWidget(table)
                     entry["widget"] = table
