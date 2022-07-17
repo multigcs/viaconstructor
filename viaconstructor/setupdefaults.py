@@ -90,6 +90,12 @@ def setup_defaults(_) -> dict:
                 "title": _("Overcut"),
                 "tooltip": _("Overcuting edges"),
             },
+            "laser": {
+                "default": False,
+                "type": "bool",
+                "title": _("Laser-Mode"),
+                "tooltip": _("Laser-Mode"),
+            },
             "zero": {
                 "default": "original",
                 "type": "select",

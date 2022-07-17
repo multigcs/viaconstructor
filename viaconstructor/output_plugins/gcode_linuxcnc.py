@@ -66,11 +66,13 @@ class PostProcessorGcodeLinuxCNC(PostProcessor):
 
     def spindel_cw(self, speed: int, pause: int = 1) -> None:
         self.gcode.append(f"M03 S{speed} (Spindle on / CW)")
-        self.gcode.append(f"G04 P{pause} (pause in sec)")
+        if pause:
+            self.gcode.append(f"G04 P{pause} (pause in sec)")
 
     def spindel_ccw(self, speed: int, pause: int = 1) -> None:
         self.gcode.append(f"M04 S{speed} (Spindle on / CCW)")
-        self.gcode.append(f"G04 P{pause} (pause in sec)")
+        if pause:
+            self.gcode.append(f"G04 P{pause} (pause in sec)")
 
     def linear(self, x_pos=None, y_pos=None, z_pos=None) -> None:
         line = []
