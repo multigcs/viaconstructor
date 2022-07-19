@@ -20,12 +20,18 @@ OpenSource CAM-Tool to generate gCode from DXF-Files
 
 ## quikstart
 
+### install with pip
+```
+pip3 install viaconstructor
+```
+
 ### get code
 ```
 git clone git@github.com:multigcs/viaconstructor.git
 cd viaconstructor
 pip3 install -r requirements.txt
 ```
+
 ### start viaconstructor
 ```
 ./bin/viaconstructor tests/data/simple.dxf
