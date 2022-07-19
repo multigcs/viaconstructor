@@ -5,7 +5,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
-"POT-Creation-Date: 2022-07-19 21:16+0200\n"
+"POT-Creation-Date: 2022-07-20 00:43+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -361,10 +361,10 @@ msgstr ""
 msgid "Tab-Selector"
 msgstr ""
 
-#: viaconstructor/viaconstructor.py:1046
+#: viaconstructor/viaconstructor.py:1051
 msgid "select this row"
 msgstr ""
 
-#: viaconstructor/viaconstructor.py:1198
+#: viaconstructor/viaconstructor.py:1203
 msgid "Global-Settings:"
 msgstr "Globale-Einstellungen:"

@@ -5,15 +5,10 @@
 import os
 from setuptools import setup
 
-required=[]
-with open('requirements-install.txt') as f:
-    for line in f.read().splitlines():
-        if line.strip() and "#" not in line:
-            required.append(line)
 
 setup(
     name='viaconstructor',
-    version='0.1.0',
+    version='0.1.2',
     author='Oliver Dippel',
     author_email='o.dippel@gmx.de',
     packages=['viaconstructor', 'viaconstructor.output_plugins', 'gcodepreview', 'dxfpreview'],
@@ -22,7 +17,7 @@ setup(
     license='LICENSE',
     description='python based cam-tool to convert dxf into gcode',
     long_description=open('README.md').read(),
-    install_requires=required,
+    install_requires=["PyQt5", "ezdxf", "cavaliercontours-python", "PyOpenGL", "Pillow", "pygame", "Hershey-Fonts", "svgpathtools"],
     include_package_data=True,
     data_files = [ ('data', ['data/exit.png', 'data/select.png', 'data/flip-x.png', 'data/flip-y.png', 'data/load-setup-gcode.png', 'data/load-setup.png', 'data/rotate.png', 'data/save-gcode.png', 'data/save-setup-as.png', 'data/save-setup.png', 'data/view-2d.png', 'data/view-reset.png']) ]
 )

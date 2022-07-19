@@ -942,13 +942,18 @@ class ViaConstructor:
         self.toolbar = QToolBar("top toolbar")
         self.main.addToolBar(self.toolbar)
         section = ""
+
         for title, toolbutton in toolbuttons.items():
+            icon = os.path.join(self.this_dir, "..", "data", toolbutton[0])
+            if not os.path.isfile(icon):
+                icon = os.path.join("/usr", "local", "data", toolbutton[0])
+
             if toolbutton[5] != section:
                 self.toolbar.addSeparator()
                 section = toolbutton[5]
             if toolbutton[4]:
                 action = QAction(
-                    QIcon(os.path.join(self.this_dir, "..", "data", toolbutton[0])),
+                    QIcon(icon),
                     title,
                     self.main,
                 )
