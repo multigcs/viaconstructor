@@ -8,6 +8,7 @@ from os import environ
 from PIL import Image, ImageDraw, ImageFont
 
 from viaconstructor.dxfread import DxfReader
+from viaconstructor.svgread import SvgReader
 
 
 def main() -> int:
@@ -47,7 +48,10 @@ def main() -> int:
     if not os.path.isfile(filename):
         print("file not found:", filename)
         sys.exit(1)
-    dxf_reader = DxfReader(filename)
+    if filename.lower().endswith(".svg"):
+        dxf_reader = SvgReader(filename)
+    else:
+        dxf_reader = DxfReader(filename)
     minmax = dxf_reader.get_minmax()
 
     size = dxf_reader.get_size()

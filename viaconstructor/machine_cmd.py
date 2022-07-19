@@ -75,7 +75,7 @@ def machine_cmd_begin(project: dict, post: PostProcessor) -> None:
     post.comment("--------------------------------------------------")
 
     post.comment("Generator: viaConstructor")
-    post.comment(f"Filename: {project['filename_dxf']}")
+    post.comment(f"Filename: {project['filename_draw']}")
     if project["setup"]["mill"]["laser"]:
         post.comment("Laser-Mode: active")
     post.comment("--------------------------------------------------")

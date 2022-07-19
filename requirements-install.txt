@@ -5,3 +5,4 @@ PyOpenGL
 Pillow
 pygame
 Hershey-Fonts
+svgpathtools

@@ -25,7 +25,7 @@ class fakeOffset:
     (
         (
             {
-                "filename_dxf": "/tmp/t.dxf",
+                "filename_draw": "/tmp/t.dxf",
                 "filename_machine_cmd": "/tmp/t.ngc",
                 "offsets": {
                     "0.0": fakeOffset(

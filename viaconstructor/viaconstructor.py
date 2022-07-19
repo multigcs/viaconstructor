@@ -10,6 +10,7 @@ import sys
 from copy import deepcopy
 from functools import partial
 from pathlib import Path
+from typing import Union
 
 from PyQt5.QtGui import (  # pylint: disable=E0611
     QIcon,
@@ -66,6 +67,7 @@ from .gldraw import (
 from .machine_cmd import polylines2machine_cmd
 from .output_plugins.gcode_linuxcnc import PostProcessorGcodeLinuxCNC
 from .setupdefaults import setup_defaults
+from .svgread import SvgReader
 
 try:
     from OpenGL import GL
@@ -355,7 +357,7 @@ class ViaConstructor:
 
     project: dict = {
         "setup_defaults": setup_defaults(_),
-        "filename_dxf": "",
+        "filename_draw": "",
         "filename_machine_cmd": "",
         "gcode": [],
         "segments": {},
@@ -373,6 +375,7 @@ class ViaConstructor:
         },
     }
     save_tabs = "ask"
+    draw_reader: Union[DxfReader, SvgReader]
 
     def gcode_reload(self) -> None:
         """reload gcode."""
@@ -754,7 +757,7 @@ class ViaConstructor:
                 self.save_tabs = "no"
 
         if self.save_tabs == "yes":
-            self.dxf_reader.save_tabs(self.project["tabs"]["data"])
+            self.draw_reader.save_tabs(self.project["tabs"]["data"])
 
     def global_changed(self, value) -> None:  # pylint: disable=W0613
         """global setup changed."""
@@ -1084,13 +1087,18 @@ class ViaConstructor:
         if os.path.isfile(self.args.setup):
             self.setup_load(self.args.setup)
 
-        # load dxf #
-        self.dxf_reader = DxfReader(self.args.filename)
-        self.project["segments_org"] = self.dxf_reader.get_segments()
-        self.project["filename_dxf"] = self.args.filename
+        # load drawing #
+        if self.args.filename.lower().endswith(".svg"):
+            self.draw_reader = SvgReader(self.args.filename)
+            self.save_tabs = "no"
+        else:
+            self.draw_reader = DxfReader(self.args.filename)
+
+        self.project["segments_org"] = self.draw_reader.get_segments()
+        self.project["filename_draw"] = self.args.filename
         self.project[
             "filename_machine_cmd"
-        ] = f"{'.'.join(self.project['filename_dxf'].split('.')[:-1])}.ngc"
+        ] = f"{'.'.join(self.project['filename_draw'].split('.')[:-1])}.ngc"
 
         # prepare #
         self.project["segments"] = deepcopy(self.project["segments_org"])
@@ -1152,7 +1160,7 @@ class ViaConstructor:
         self.project["glwidget"] = GLWidget(self.project, self.update_drawing)
 
         self.main = QMainWindow()
-        self.main.setWindowTitle("viaConstructor")
+        self.main.setWindowTitle(f"viaConstructor: {self.project['filename_draw']}")
         self.main.setCentralWidget(window)
 
         self.this_dir, self.this_filename = os.path.split(__file__)

@@ -28,3 +28,4 @@ typing-extensions==4.3.0
     # via ezdxf
 Hershey-Fonts==2.1.0
     # via -r requirements.in
+svgpathtools==1.5.1
