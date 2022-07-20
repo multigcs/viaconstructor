@@ -116,8 +116,72 @@ def get_half_bulge_point(last: tuple, point: tuple, bulge: float) -> tuple:
     return (end[0], end[1])
 
 
+import multiprocessing
+import time
+
+
+def multicheck(input_list):
+    #print("##multicheck", input_list[0])
+    cleaned = {}
+    idx_1, segments = input_list
+    segment1 = segments[idx_1]
+    key_1a = f"{segment1['start'][0]}#{segment1['start'][1]}#{segment1['end'][0]}#{segment1['end'][1]}#{round(segment1['bulge'], 6) or 0.0}"
+    key_1b = f"{segment1['end'][0]}#{segment1['end'][1]}#{segment1['start'][0]}#{segment1['start'][1]}#{round(-segment1['bulge'] ,6) or 0.0}"
+    matched = False
+    if segment1["bulge"] == 0.0:
+        for idx_2, segment2 in enumerate(segments):
+            if idx_1 == idx_2:
+                continue
+            key_2a = f"{segment2['start'][0]}#{segment2['start'][1]}#{segment2['end'][0]}#{segment2['end'][1]}#{round(segment1['bulge'], 6) or 0.0}"
+            key_2b = f"{segment2['end'][0]}#{segment2['end'][1]}#{segment2['start'][0]}#{segment2['start'][1]}#{round(-segment1['bulge'] ,6) or 0.0}"
+            if {key_1a, key_1b}.intersection({key_2a, key_2b}):
+                break
+            if segment2["bulge"] == 0.0 and idx_1 != idx_2:
+                if is_between(
+                    segment1["start"], segment2["start"], segment2["end"]
+                ) and is_between(
+                    segment1["end"], segment2["start"], segment2["end"]
+                ):
+                    matched = True
+                    break
+
+    if matched:
+        return {}
+    return segment1
+
+    
+
+
 def clean_segments(segments):
     """removing double and overlaying lines."""
+
+    start = time.time()
+
+    segment_list = []
+    for idx_1, segment1 in enumerate(segments):
+        segment_list.append((idx_1, segments))
+
+
+    pool = multiprocessing.Pool()
+    pool = multiprocessing.Pool(processes=4)
+    outputs = pool.map(multicheck, segment_list)
+    #print(outputs)
+
+
+    cleaned = []
+    for line in outputs:
+        if line:
+            #print("##", line)
+            cleaned.append(line)
+
+    print(time.time() - start)
+
+    return cleaned
+
+    """
+    """
+
+
     cleaned = {}
     for idx_1, segment1 in enumerate(segments):
         key_1a = f"{segment1['start'][0]}#{segment1['start'][1]}#{segment1['end'][0]}#{segment1['end'][1]}#{round(segment1['bulge'], 6) or 0.0}"
@@ -142,6 +206,9 @@ def clean_segments(segments):
         if not matched:
             if key_1a not in cleaned and key_1b not in cleaned:
                 cleaned[key_1a] = segment1
+
+    print(time.time() - start)
+
     return list(cleaned.values())
 
 
