@@ -1,0 +1,298 @@
+"""gcodeparser"""
+
+import math
+import re
+from typing import Union
+
+from .calc import angle_of_line, calc_distance
+
+
+class XncParser:
+    REGEX = re.compile(r"([a-zA-Z])([+-]?([0-9]+([.][0-9]*)?|[.][0-9]+))")
+
+    def __init__(self, gcode: Union[str, list[str]]):
+        if isinstance(gcode, str):
+            gcode = gcode.split("\n")
+
+        self.state: dict = {
+            "header": "",
+            "move_mode": "0",
+            "offsets": "OFF",
+            "metric": "",
+            "absolute": True,
+            "feedrate": "0",
+            "tool": None,
+            "spindle": {"dir": "OFF", "rpm": 0},
+            "position": {"X": 0, "Y": 0, "Z": 1},
+            "tools": {},
+            "tool": "",
+        }
+
+        self.path: list[list] = []
+        self.gcode = gcode
+        for line in self.gcode:
+            line = line.strip()
+            if not line or line[0] == "(":
+                continue
+
+            if line == "%":
+                self.state["header"] = False
+                print("end header")
+                continue
+
+            ldata = {}
+            matches = self.REGEX.findall(line)
+            if not matches:
+                continue
+            first = matches[0][0].upper()
+            for match in matches:
+                cmd = match[0].upper()
+                ldata[cmd] = float(match[1])
+            if first == "T":
+
+                if ldata["T"] > 0:
+                    if "C" in ldata:
+                        print("set tool", ldata["T"], "diameter:", ldata["C"])
+                        self.state["tools"][ldata["T"]] = ldata["C"]
+                    else:
+                        print("use tool", ldata["T"])
+                        self.state["tool"] = ldata["T"]
+
+
+            elif first == "M":
+
+
+                if ldata["M"] == 48:
+                    self.state["header"] = True
+
+
+                elif ldata["M"] == 15:
+                    print("tool down")
+                    cords["Z"] = -1
+                elif ldata["M"] == 16:
+                    print("tool up")
+                    cords["Z"] = 1
+
+                elif ldata["M"] == 30:
+                    print("end")
+
+
+
+                elif ldata["M"] == 6:
+                    self.state["tool"] = int(ldata["T"])
+                elif ldata["M"] == 5:
+                    self.state["spindle"]["dir"] = "OFF"
+                elif ldata["M"] == 3:
+                    self.state["spindle"]["dir"] = "CW"
+                    if "S" in ldata:
+                        self.state["spindle"]["rpm"] = ldata["S"]
+                elif ldata["M"] == 4:
+                    self.state["spindle"]["dir"] = "CCW"
+                    if "S" in ldata:
+                        self.state["spindle"]["rpm"] = ldata["S"]
+                else:
+                    print("??? ", ldata["M"])
+            elif first == "G":
+                if ldata["G"] < 4:
+                    self.state["move_mode"] = int(ldata["G"])
+                    print("mode", self.state["move_mode"])
+
+                elif ldata["G"] == 4:
+                    if "P" in ldata:
+                        pass
+
+                elif ldata["G"] == 5:
+                    self.state["move_mode"] = int(ldata["G"]) # drill mode
+
+
+                elif ldata["G"] == 20:
+                    self.state["metric"] = "INCH"
+                elif ldata["G"] == 21:
+                    self.state["metric"] = "MM"
+                elif ldata["G"] == 40:
+                    self.state["offsets"] = "OFF"
+                elif ldata["G"] == 41:
+                    self.state["offsets"] = "LEFT"
+                elif ldata["G"] == 42:
+                    self.state["offsets"] = "RIGHT"
+                elif ldata["G"] == 64:
+                    if "P" in ldata:
+                        pass
+                elif ldata["G"] == 90:
+                    self.state["absolute"] = True
+                elif ldata["G"] == 91:
+                    self.state["absolute"] = False
+                else:
+                    print("##### UNSUPPORTED GCODE #####", f"G{ldata['G']}", line)
+
+            if "F" in ldata:
+                self.state["feedrate"] = ldata["F"]
+            cords = {}
+            for axis in ("X", "Y", "Z", "R"):
+                if axis in ldata:
+                    cords[axis] = ldata[axis]
+            if cords:
+                if self.state["move_mode"] == 0:
+                    self.linear_move(cords, True)
+
+                elif self.state["move_mode"] == 1:
+                    self.linear_move(cords, False)
+
+
+                elif self.state["move_mode"] == 5:
+
+                    diameter = self.state["tools"][self.state["tool"]]
+
+                    print("drill at", cords, " diameter:", self.state["tools"][self.state["tool"]])
+
+                    cords["Z"] = 1
+                    cords["X"] -= diameter / 2
+                    print("start", cords)
+                    self.linear_move(cords.copy(), True)
+
+                    cords["Z"] = -1
+                    print("down", cords)
+                    self.linear_move(cords.copy(), True)
+
+
+                    cords["X"] += diameter
+                    print("arc1", cords)
+                    self.arc_move_ij(2, cords.copy(), diameter / 2, 0)
+
+
+                    cords["X"] -= diameter
+                    print("arc2", cords)
+                    self.arc_move_ij(2, cords.copy(), -diameter / 2, 0)
+
+
+                    cords["Z"] = 1
+                    self.linear_move(cords.copy(), True)
+                    
+
+
+        minp = {}
+        maxp = {}
+        for axis in ("X", "Y", "Z"):
+            minp[axis] = self.path[0][0][axis]
+            maxp[axis] = self.path[0][0][axis]
+        for segment in self.path:
+            for axis in ("X", "Y", "Z"):
+                minp[axis] = min(minp[axis], segment[0][axis])
+                maxp[axis] = max(maxp[axis], segment[0][axis])
+                minp[axis] = min(minp[axis], segment[1][axis])
+                maxp[axis] = max(maxp[axis], segment[1][axis])
+
+        self.min_max = []
+        for axis in ("X", "Y", "Z"):
+            self.min_max.append(minp[axis])
+        for axis in ("X", "Y", "Z"):
+            self.min_max.append(maxp[axis])
+
+        self.size = []
+        for axis in ("X", "Y", "Z"):
+            self.size.append(maxp[axis] - minp[axis])
+
+    def get_minmax(self) -> list[float]:
+        return self.min_max
+
+    def get_size(self) -> list[float]:
+        return self.size
+
+    def get_state(self) -> dict:
+        return self.state
+
+    def get_path(self, rounding: bool = True) -> list[list]:
+        if rounding:
+            for segment in self.path:
+                for axis in ("X", "Y", "Z"):
+                    segment[0][axis] = round(segment[0][axis], 6)
+                    segment[1][axis] = round(segment[1][axis], 6)
+        return self.path
+
+    def draw(self, draw_function, user_data=()) -> None:
+        for line in self.path:
+            draw_function(line[0], line[1], *user_data)
+
+    def linear_move(
+        self, cords: dict, fast: bool = False  # pylint: disable=W0613
+    ) -> None:
+        for axis in self.state["position"]:
+            if axis not in cords:
+                cords[axis] = self.state["position"][axis]
+        self.path.append([self.state["position"], cords])
+        self.state["position"] = cords
+
+    def arc_move_r(self, angle_dir, cords, radius) -> None:  # pylint: disable=W0613
+        for axis in self.state["position"]:
+            if axis not in cords:
+                cords[axis] = self.state["position"][axis]
+        last_pos = self.state["position"]
+        diff_x = cords["X"] - last_pos["X"]
+        diff_y = cords["Y"] - last_pos["Y"]
+        arc_r = radius
+        if diff_x == 0.0 and diff_y == 0.0:
+            return
+        h_x2_div_d = 4.0 * arc_r * arc_r - diff_x * diff_x - diff_y * diff_y
+        if h_x2_div_d < 0:
+            print("### ARC ERROR ###")
+            self.path.append([self.state["position"], cords])
+            self.state["position"] = cords
+            return
+        h_x2_div_d = -math.sqrt(h_x2_div_d) / math.hypot(diff_x, diff_y)
+        if angle_dir == 3:
+            h_x2_div_d = -h_x2_div_d
+        if arc_r < 0:
+            h_x2_div_d = -h_x2_div_d
+            arc_r = -arc_r
+        i = 0.5 * (diff_x - (diff_y * h_x2_div_d))
+        j = 0.5 * (diff_y + (diff_x * h_x2_div_d))
+        self.arc_move_ij(angle_dir, cords, i, j, radius)
+
+    def arc_move_ij(self, angle_dir, cords, i, j, radius=None) -> None:
+        for axis in self.state["position"]:
+            if axis not in cords:
+                cords[axis] = self.state["position"][axis]
+
+        last_pos = self.state["position"]
+        center_x = last_pos["X"] + i
+        center_y = last_pos["Y"] + j
+        if radius is None:
+            radius = calc_distance((center_x, center_y), (last_pos["X"], last_pos["Y"]))
+        start_angle = angle_of_line(
+            (center_x, center_y), (last_pos["X"], last_pos["Y"])
+        )
+        end_angle = angle_of_line((center_x, center_y), (cords["X"], cords["Y"]))
+
+        if angle_dir == 2:
+            if start_angle < end_angle:
+                end_angle = end_angle - math.pi * 2
+        elif angle_dir == 3:
+            if start_angle > end_angle:
+                end_angle = end_angle + math.pi * 2
+
+        start_z = last_pos["Z"]
+        diff_z = cords["Z"] - last_pos["Z"]
+        diff_angle = end_angle - start_angle
+        if start_angle < end_angle:
+            angle = start_angle
+            while angle < end_angle:
+                new_x = center_x - radius * math.sin(angle - math.pi / 2)
+                new_y = center_y + radius * math.cos(angle - math.pi / 2)
+                new_z = start_z + ((angle - start_angle) / diff_angle) * diff_z
+                new_pos = {"X": new_x, "Y": new_y, "Z": new_z}
+                self.path.append([last_pos, new_pos])
+                last_pos = new_pos
+                angle += 0.2
+            self.path.append([last_pos, cords])
+        elif start_angle > end_angle:
+            angle = start_angle
+            while angle > end_angle:
+                new_x = center_x - radius * math.sin(angle - math.pi / 2)
+                new_y = center_y + radius * math.cos(angle - math.pi / 2)
+                new_z = start_z + ((angle - start_angle) / diff_angle) * diff_z
+                new_pos = {"X": new_x, "Y": new_y, "Z": new_z}
+                self.path.append([last_pos, new_pos])
+                last_pos = new_pos
+                angle -= 0.2
+            self.path.append([last_pos, cords])
+        self.state["position"] = cords

@@ -163,7 +163,7 @@ def clean_segments(segments):
 
 
     pool = multiprocessing.Pool()
-    pool = multiprocessing.Pool(processes=4)
+    pool = multiprocessing.Pool(processes=8)
     outputs = pool.map(multicheck, segment_list)
     #print(outputs)
 
