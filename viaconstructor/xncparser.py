@@ -21,7 +21,6 @@ class XncParser:
             "metric": "",
             "absolute": True,
             "feedrate": "0",
-            "tool": None,
             "spindle": {"dir": "OFF", "rpm": 0},
             "position": {"X": 0, "Y": 0, "Z": 1},
             "tools": {},
@@ -65,10 +64,10 @@ class XncParser:
 
                 elif ldata["M"] == 15:
                     print("tool down")
-                    cords["Z"] = -1
+                    # cords["Z"] = -1
                 elif ldata["M"] == 16:
                     print("tool up")
-                    cords["Z"] = 1
+                    # cords["Z"] = 1
 
                 elif ldata["M"] == 30:
                     print("end")

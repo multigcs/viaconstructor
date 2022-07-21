@@ -1,7 +1,6 @@
 """hpglparser"""
 
 import math
-import re
 from typing import Union
 
 from .calc import angle_of_line, calc_distance
@@ -27,7 +26,6 @@ class HpglParser:
         last_x = 0
         last_y = 0
         draw = False
-        pen = "0"
         absolute = True
         hpgl = "\n".join(hpgl)
         hpgl = hpgl.replace(";", "\n")
@@ -45,15 +43,12 @@ class HpglParser:
                 line = line[2:]
 
             elif line.startswith("IN"):
-                print("init")
                 line = ""
 
             elif line.startswith("CO"):
-                print("comment")
                 line = ""
 
             elif line.startswith("SP"):
-                pen = line[2:]
                 line = ""
 
             elif line.startswith("PA"):
