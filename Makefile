@@ -100,3 +100,8 @@ gettext:
 		msgmerge --update locales/$$lang/LC_MESSAGES/base.po locales/base.pot ; \
 		msgfmt -o locales/$$lang/LC_MESSAGES/base.mo locales/$$lang/LC_MESSAGES/base ; \
 	done
+
+dist:
+	rm -rf dist/*
+	python3 setup.py sdist
+	twine upload dist/viaconstructor*

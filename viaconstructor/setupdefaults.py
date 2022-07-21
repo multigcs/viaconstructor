@@ -1,22 +1,6 @@
 def setup_defaults(_) -> dict:
     return {
         "mill": {
-            "rate_h": {
-                "default": 1000,
-                "type": "int",
-                "min": 1,
-                "max": 10000,
-                "title": _("Feed-Rate(Horizontal)"),
-                "tooltip": _("the Horizotal Feetrate"),
-            },
-            "rate_v": {
-                "default": 100,
-                "type": "int",
-                "min": 1,
-                "max": 10000,
-                "title": _("Feed-Rate(Vertical)"),
-                "tooltip": _("the Vertical Feetrate"),
-            },
             "fast_move_z": {
                 "default": 5.0,
                 "type": "float",
@@ -26,7 +10,7 @@ def setup_defaults(_) -> dict:
                 "tooltip": _("the Z-Position for fast moves"),
             },
             "G64": {
-                "default": 0.050000,
+                "default": 0.020000,
                 "type": "float",
                 "min": 0.0,
                 "max": 0.1,
@@ -90,12 +74,6 @@ def setup_defaults(_) -> dict:
                 "title": _("Overcut"),
                 "tooltip": _("Overcuting edges"),
             },
-            "laser": {
-                "default": False,
-                "type": "bool",
-                "title": _("Laser-Mode"),
-                "tooltip": _("Laser-Mode"),
-            },
             "zero": {
                 "default": "original",
                 "type": "select",
@@ -112,6 +90,22 @@ def setup_defaults(_) -> dict:
             },
         },
         "tool": {
+            "rate_h": {
+                "default": 1000,
+                "type": "int",
+                "min": 1,
+                "max": 10000,
+                "title": _("Feed-Rate(Horizontal)"),
+                "tooltip": _("the Horizotal Feetrate"),
+            },
+            "rate_v": {
+                "default": 100,
+                "type": "int",
+                "min": 1,
+                "max": 10000,
+                "title": _("Feed-Rate(Vertical)"),
+                "tooltip": _("the Vertical Feetrate"),
+            },
             "number": {
                 "default": 1,
                 "type": "int",
@@ -275,7 +269,7 @@ def setup_defaults(_) -> dict:
                 "per_object": True,
             },
         },
-        "limits": {
+        "maschine": {
             "feedrate": {
                 "default": 1000,
                 "type": "int",
@@ -291,6 +285,22 @@ def setup_defaults(_) -> dict:
                 "max": 100000,
                 "title": _("Tool-Speed"),
                 "tooltip": _("maximum tool-speed"),
+            },
+            "plugin": {
+                "default": "simple",
+                "type": "select",
+                "options": (
+                    ("gcode_linuxcnc", _("gcode_linuxcnc")),
+                    ("hpgl", _("hpgl")),
+                ),
+                "title": _("Plugin"),
+                "tooltip": _("output plugin selection"),
+            },
+            "laser": {
+                "default": False,
+                "type": "bool",
+                "title": _("Laser-Mode"),
+                "tooltip": _("Laser-Mode"),
             },
         },
         "view": {

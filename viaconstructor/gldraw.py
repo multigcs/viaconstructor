@@ -25,6 +25,7 @@ from OpenGL.GLU import (
 
 from .calc import angle_of_line, calc_distance, line_center_3d, object2vertex
 from .gcodeparser import GcodeParser
+from .hpglparser import HpglParser
 
 font = HersheyFonts()
 font.load_default_font()
@@ -395,8 +396,11 @@ def draw_gcode_path(project: dict) -> bool:
     """draws the gcode path"""
     GL.glLineWidth(2)
     try:
-        GcodeParser(project["machine_cmd"]).draw(draw_line, (project,))
-    except Exception:  # pylint: disable=W0703:
-        print("ERROR: parsing machine_cmd")
+        if project["suffix"] in {"ngc", "gcode"}:
+            GcodeParser(project["machine_cmd"]).draw(draw_line, (project,))
+        elif project["suffix"] in {"hpgl", "hpg"}:
+            HpglParser(project["machine_cmd"]).draw(draw_line, (project,))
+    except Exception as error_string:  # pylint: disable=W0703:
+        print(f"ERROR: parsing machine_cmd: {error_string}")
         return False
     return True

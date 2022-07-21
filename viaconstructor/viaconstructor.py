@@ -66,6 +66,7 @@ from .gldraw import (
 )
 from .machine_cmd import polylines2machine_cmd
 from .output_plugins.gcode_linuxcnc import PostProcessorGcodeLinuxCNC
+from .output_plugins.hpgl import PostProcessorHpgl
 from .setupdefaults import setup_defaults
 from .svgread import SvgReader
 
@@ -359,6 +360,8 @@ class ViaConstructor:
         "setup_defaults": setup_defaults(_),
         "filename_draw": "",
         "filename_machine_cmd": "",
+        "suffix": "ngc",
+        "axis": ["X", "Y", "Z"],
         "gcode": [],
         "segments": {},
         "objects": {},
@@ -417,8 +420,18 @@ class ViaConstructor:
         )
 
         # create machine commands
+        output_plugin = PostProcessorGcodeLinuxCNC
+        self.project["suffix"] = "ngc"
+        if self.project["setup"]["maschine"]["plugin"] == "gcode_linuxcnc":
+            output_plugin = PostProcessorGcodeLinuxCNC
+            self.project["suffix"] = output_plugin.suffix()
+            self.project["axis"] = output_plugin.axis()
+        elif self.project["setup"]["maschine"]["plugin"] == "hpgl":
+            output_plugin = PostProcessorHpgl
+            self.project["suffix"] = output_plugin.suffix()
+            self.project["axis"] = output_plugin.axis()
         self.project["machine_cmd"] = polylines2machine_cmd(
-            self.project, PostProcessorGcodeLinuxCNC()
+            self.project, output_plugin()
         )
 
         self.project["textwidget"].clear()
@@ -472,12 +485,17 @@ class ViaConstructor:
         """save machine_cmd."""
         self.status_bar.showMessage("save machine_cmd..")
         file_dialog = QFileDialog(self.main)
-        file_dialog.setNameFilters(["gcode (*.ngc)"])
+        file_dialog.setNameFilters(
+            [f"self.project['suffix'] (*.{self.project['suffix']})"]
+        )
+        self.project[
+            "filename_machine_cmd"
+        ] = f"{'.'.join(self.project['filename_draw'].split('.')[:-1])}.{self.project['suffix']}"
         name = file_dialog.getSaveFileName(
             self.main,
             "Save File",
             self.project["filename_machine_cmd"],
-            "gcode (*.ngc)",
+            f"{self.project['suffix']} (*.{self.project['suffix']})",
         )
         if name[0] and self.machine_cmd_save(name[0]):
             self.status_bar.showMessage(f"save gcode..done ({name[0]})")
@@ -559,13 +577,13 @@ class ViaConstructor:
         """calculates the milling feedrate and tool-speed for the selected material
         see: https://www.precifast.de/schnittgeschwindigkeit-beim-fraesen-berechnen/
         """
-        limit_feedrate = self.project["setup"]["limits"]["feedrate"]
-        limit_toolspeed = self.project["setup"]["limits"]["tool_speed"]
+        maschine_feedrate = self.project["setup"]["maschine"]["feedrate"]
+        maschine_toolspeed = self.project["setup"]["maschine"]["tool_speed"]
         tool_number = self.project["setup"]["tool"]["number"]
         tool_diameter = self.project["setup"]["tool"]["diameter"]
         tool_vc = self.project["setup"]["tool"]["materialtable"][material_idx]["vc"]
         tool_speed = tool_vc * 1000 / (tool_diameter * math.pi)
-        tool_speed = int(min(tool_speed, limit_toolspeed))
+        tool_speed = int(min(tool_speed, maschine_toolspeed))
         tool_blades = 2
         for tool in self.project["setup"]["tool"]["tooltable"]:
             if tool["number"] == tool_number:
@@ -581,16 +599,16 @@ class ViaConstructor:
             fz_key
         ]
         feedrate = tool_speed * tool_blades * material_fz
-        feedrate = int(min(feedrate, limit_feedrate))
+        feedrate = int(min(feedrate, maschine_feedrate))
 
         info_test = []
         info_test.append("Some Milling and Tool Values will be changed:")
         info_test.append("")
         info_test.append(
-            f" Feedrate: {feedrate} {'(!MACHINE-LIMIT)' if feedrate == limit_feedrate else ''}"
+            f" Feedrate: {feedrate} {'(!MACHINE-LIMIT)' if feedrate == maschine_feedrate else ''}"
         )
         info_test.append(
-            f" Tool-Speed: {tool_speed} {'(!MACHINE-LIMIT)' if tool_speed == limit_toolspeed else ''}"
+            f" Tool-Speed: {tool_speed} {'(!MACHINE-LIMIT)' if tool_speed == maschine_toolspeed else ''}"
         )
         info_test.append("")
         ret = QMessageBox.question(
@@ -603,7 +621,7 @@ class ViaConstructor:
             return
 
         self.project["status"] = "CHANGE"
-        self.project["setup"]["mill"]["rate_h"] = int(feedrate)
+        self.project["setup"]["tool"]["rate_h"] = int(feedrate)
         self.project["setup"]["tool"]["speed"] = int(tool_speed)
         self.update_global_setup()
         self.update_table()
@@ -818,6 +836,9 @@ class ViaConstructor:
         self.update_drawing()
 
     def _toolbar_load_machine_cmd_setup(self) -> None:
+        self.project[
+            "filename_machine_cmd"
+        ] = f"{'.'.join(self.project['filename_draw'].split('.')[:-1])}.{self.project['suffix']}"
         if os.path.isfile(self.project["filename_machine_cmd"]):
             self.status_bar.showMessage(
                 f"loading setup from gcode: {self.project['filename_machine_cmd']}"
@@ -1103,7 +1124,7 @@ class ViaConstructor:
         self.project["filename_draw"] = self.args.filename
         self.project[
             "filename_machine_cmd"
-        ] = f"{'.'.join(self.project['filename_draw'].split('.')[:-1])}.ngc"
+        ] = f"{'.'.join(self.project['filename_draw'].split('.')[:-1])}.{self.project['suffix']}"
 
         # prepare #
         self.project["segments"] = deepcopy(self.project["segments_org"])
@@ -1143,9 +1164,9 @@ class ViaConstructor:
                             elif cmd in ("SLICEDEPTH", "SD"):
                                 obj["setup"]["mill"]["step"] = -abs(float(value))
                             elif cmd in ("FEEDXY", "FXY"):
-                                obj["setup"]["mill"]["rate_h"] = int(value)
+                                obj["setup"]["tool"]["rate_h"] = int(value)
                             elif cmd in ("FEEDZ", "FZ"):
-                                obj["setup"]["mill"]["rate_v"] = int(value)
+                                obj["setup"]["tool"]["rate_v"] = int(value)
 
         qapp = QApplication(sys.argv)
         window = QWidget()

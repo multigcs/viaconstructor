@@ -135,3 +135,10 @@ class PostProcessorGcodeLinuxCNC(PostProcessor):
     def get(self) -> list[str]:
         return self.gcode
 
+    @staticmethod
+    def suffix() -> str:
+        return "ngc"
+
+    @staticmethod
+    def axis() -> str:
+        return ["X", "Y", "Z"]

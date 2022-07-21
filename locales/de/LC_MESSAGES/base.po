@@ -5,7 +5,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
-"POT-Creation-Date: 2022-07-20 00:43+0200\n"
+"POT-Creation-Date: 2022-07-22 00:01+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -16,355 +16,371 @@ msgstr ""
 "Generated-By: pygettext.py 1.5\n"
 
 #: viaconstructor/setupdefaults.py:9
-msgid "Feed-Rate(Horizontal)"
-msgstr ""
-
-#: viaconstructor/setupdefaults.py:10
-msgid "the Horizotal Feetrate"
-msgstr ""
-
-#: viaconstructor/setupdefaults.py:17
-msgid "Feed-Rate(Vertical)"
-msgstr ""
-
-#: viaconstructor/setupdefaults.py:18
-msgid "the Vertical Feetrate"
-msgstr ""
-
-#: viaconstructor/setupdefaults.py:25
 msgid "Fast-Move Z"
 msgstr ""
 
-#: viaconstructor/setupdefaults.py:26
+#: viaconstructor/setupdefaults.py:10
 msgid "the Z-Position for fast moves"
 msgstr ""
 
-#: viaconstructor/setupdefaults.py:33
+#: viaconstructor/setupdefaults.py:17
 msgid "G64-Value"
 msgstr ""
 
-#: viaconstructor/setupdefaults.py:34
+#: viaconstructor/setupdefaults.py:18
 msgid "value for the G64 command"
 msgstr ""
 
-#: viaconstructor/setupdefaults.py:42
+#: viaconstructor/setupdefaults.py:26
 msgid "Depth"
 msgstr ""
 
-#: viaconstructor/setupdefaults.py:43
+#: viaconstructor/setupdefaults.py:27
 msgid "the end depth for milling"
 msgstr ""
 
-#: viaconstructor/setupdefaults.py:51
+#: viaconstructor/setupdefaults.py:35
 msgid "Step"
 msgstr ""
 
-#: viaconstructor/setupdefaults.py:52
+#: viaconstructor/setupdefaults.py:36
 msgid "the maximum depth in one move"
 msgstr ""
 
-#: viaconstructor/setupdefaults.py:58
+#: viaconstructor/setupdefaults.py:42
 msgid "Active"
 msgstr ""
 
-#: viaconstructor/setupdefaults.py:59
+#: viaconstructor/setupdefaults.py:43
 msgid "enable/disable this object"
 msgstr "aktivieren/deaktivieren des Objekts"
 
-#: viaconstructor/setupdefaults.py:65 viaconstructor/setupdefaults.py:66
+#: viaconstructor/setupdefaults.py:49 viaconstructor/setupdefaults.py:50
 msgid "Helix"
 msgstr ""
 
-#: viaconstructor/setupdefaults.py:72 viaconstructor/setupdefaults.py:73
+#: viaconstructor/setupdefaults.py:56 viaconstructor/setupdefaults.py:57
 msgid "Reverse"
 msgstr "Umdrehen"
 
-#: viaconstructor/setupdefaults.py:78
+#: viaconstructor/setupdefaults.py:62
 msgid "Back-Home"
 msgstr ""
 
-#: viaconstructor/setupdefaults.py:79
+#: viaconstructor/setupdefaults.py:63
 msgid "move tool back to Zero-Possition after milling"
 msgstr ""
 
-#: viaconstructor/setupdefaults.py:84
+#: viaconstructor/setupdefaults.py:68
 msgid "Small-Circles"
 msgstr ""
 
-#: viaconstructor/setupdefaults.py:85
+#: viaconstructor/setupdefaults.py:69
 msgid "milling small circles even if the tool is bigger"
 msgstr "fräse Kreise auch wenn diese kleiner als der Fräser sind"
 
-#: viaconstructor/setupdefaults.py:90
+#: viaconstructor/setupdefaults.py:74
 msgid "Overcut"
 msgstr ""
 
-#: viaconstructor/setupdefaults.py:91
+#: viaconstructor/setupdefaults.py:75
 msgid "Overcuting edges"
 msgstr ""
 "Ausfräsen von Ecken die bedingt durch den Fräser-Radius stehen bleiben würden"
 
-#: viaconstructor/setupdefaults.py:96 viaconstructor/setupdefaults.py:97
-msgid "Laser-Mode"
-msgstr ""
-
-#: viaconstructor/setupdefaults.py:103
+#: viaconstructor/setupdefaults.py:81
 msgid "original"
 msgstr "Original"
 
-#: viaconstructor/setupdefaults.py:104
+#: viaconstructor/setupdefaults.py:82
 msgid "bottomLeft"
 msgstr "Unten-Links"
 
-#: viaconstructor/setupdefaults.py:105
+#: viaconstructor/setupdefaults.py:83
 msgid "center"
 msgstr "Mittig"
 
-#: viaconstructor/setupdefaults.py:106
+#: viaconstructor/setupdefaults.py:84
 msgid "bottomRight"
 msgstr "Unten-Rechts"
 
-#: viaconstructor/setupdefaults.py:107
+#: viaconstructor/setupdefaults.py:85
 msgid "topLeft"
 msgstr "Oben-Links"
 
-#: viaconstructor/setupdefaults.py:108
+#: viaconstructor/setupdefaults.py:86
 msgid "topRight"
 msgstr "Oben-Rechts"
 
-#: viaconstructor/setupdefaults.py:110
+#: viaconstructor/setupdefaults.py:88
 msgid "Zero-Position"
 msgstr "Null-Position"
 
-#: viaconstructor/setupdefaults.py:111
+#: viaconstructor/setupdefaults.py:89
 msgid "setting the Zero-Postition of the Workpiece"
 msgstr "setzen der Null-Position des Werkstücks"
 
-#: viaconstructor/setupdefaults.py:120
+#: viaconstructor/setupdefaults.py:98
+msgid "Feed-Rate(Horizontal)"
+msgstr ""
+
+#: viaconstructor/setupdefaults.py:99
+msgid "the Horizotal Feetrate"
+msgstr ""
+
+#: viaconstructor/setupdefaults.py:106
+msgid "Feed-Rate(Vertical)"
+msgstr ""
+
+#: viaconstructor/setupdefaults.py:107
+msgid "the Vertical Feetrate"
+msgstr ""
+
+#: viaconstructor/setupdefaults.py:114
 msgid "Number"
 msgstr "Nummer"
 
-#: viaconstructor/setupdefaults.py:121
+#: viaconstructor/setupdefaults.py:115
 msgid "setting the Tool-Number to load in gcode"
 msgstr "setzen der Werkzeug-Nummer"
 
-#: viaconstructor/setupdefaults.py:128
+#: viaconstructor/setupdefaults.py:122
 msgid "Diameter"
 msgstr "Durchmesser"
 
-#: viaconstructor/setupdefaults.py:129
+#: viaconstructor/setupdefaults.py:123
 msgid "setting the Tool-Diameter to calculate the Offsets"
 msgstr "setzen des Fräser-Durchmesser's"
 
-#: viaconstructor/setupdefaults.py:136
+#: viaconstructor/setupdefaults.py:130
 msgid "Speed"
 msgstr "Geschwindigkeit"
 
-#: viaconstructor/setupdefaults.py:137
+#: viaconstructor/setupdefaults.py:131
 msgid "setting the Tool-Speed in RPM"
 msgstr "setzen der Fräser-Geschwindigkeit (Umdehungen/Minute)"
 
-#: viaconstructor/setupdefaults.py:172
+#: viaconstructor/setupdefaults.py:166
 msgid "Tools"
 msgstr ""
 
-#: viaconstructor/setupdefaults.py:173
+#: viaconstructor/setupdefaults.py:167
 msgid "tooltable"
 msgstr ""
 
-#: viaconstructor/setupdefaults.py:238
+#: viaconstructor/setupdefaults.py:232
 msgid "Materials"
 msgstr ""
 
-#: viaconstructor/setupdefaults.py:239
+#: viaconstructor/setupdefaults.py:233
 msgid "materialtable"
 msgstr ""
 
-#: viaconstructor/setupdefaults.py:247
+#: viaconstructor/setupdefaults.py:241
 msgid "Pocket"
 msgstr ""
 
-#: viaconstructor/setupdefaults.py:248
+#: viaconstructor/setupdefaults.py:242
 msgid "do pocket operation on this object"
 msgstr "erzeuge pocket operation auf diesem Objekt"
 
-#: viaconstructor/setupdefaults.py:255
+#: viaconstructor/setupdefaults.py:249
 msgid "active"
 msgstr ""
 
-#: viaconstructor/setupdefaults.py:256
+#: viaconstructor/setupdefaults.py:250
 msgid "activate tabs"
 msgstr ""
 
-#: viaconstructor/setupdefaults.py:264
+#: viaconstructor/setupdefaults.py:258
 msgid "Width"
 msgstr ""
 
-#: viaconstructor/setupdefaults.py:265
+#: viaconstructor/setupdefaults.py:259
 msgid "width of the tabs"
 msgstr ""
 
-#: viaconstructor/setupdefaults.py:273
+#: viaconstructor/setupdefaults.py:267
 msgid "Height"
 msgstr ""
 
-#: viaconstructor/setupdefaults.py:274
+#: viaconstructor/setupdefaults.py:268
 msgid "height of the tabs"
 msgstr ""
 
-#: viaconstructor/setupdefaults.py:284
+#: viaconstructor/setupdefaults.py:278
 msgid "Feedrate"
 msgstr ""
 
-#: viaconstructor/setupdefaults.py:285
+#: viaconstructor/setupdefaults.py:279
 msgid "maximum feedrate while milling"
 msgstr ""
 
-#: viaconstructor/setupdefaults.py:292
+#: viaconstructor/setupdefaults.py:286
 #, fuzzy
 msgid "Tool-Speed"
 msgstr "Geschwindigkeit"
 
-#: viaconstructor/setupdefaults.py:293
+#: viaconstructor/setupdefaults.py:287
 msgid "maximum tool-speed"
 msgstr ""
 
-#: viaconstructor/setupdefaults.py:301
-msgid "minimal"
+#: viaconstructor/setupdefaults.py:293
+msgid "gcode_linuxcnc"
 msgstr ""
 
-#: viaconstructor/setupdefaults.py:302
-msgid "simple"
+#: viaconstructor/setupdefaults.py:294
+msgid "hpgl"
 msgstr ""
 
-#: viaconstructor/setupdefaults.py:303
-msgid "full"
+#: viaconstructor/setupdefaults.py:296
+msgid "Plugin"
 msgstr ""
 
-#: viaconstructor/setupdefaults.py:305
-msgid "Path"
+#: viaconstructor/setupdefaults.py:297
+msgid "output plugin selection"
 msgstr ""
 
-#: viaconstructor/setupdefaults.py:306
-msgid "how to show the gcode path in the 3d-View"
+#: viaconstructor/setupdefaults.py:302 viaconstructor/setupdefaults.py:303
+msgid "Laser-Mode"
 msgstr ""
 
 #: viaconstructor/setupdefaults.py:311
-msgid "Ruler-Show"
+msgid "minimal"
 msgstr ""
 
 #: viaconstructor/setupdefaults.py:312
+msgid "simple"
+msgstr ""
+
+#: viaconstructor/setupdefaults.py:313
+msgid "full"
+msgstr ""
+
+#: viaconstructor/setupdefaults.py:315
+msgid "Path"
+msgstr ""
+
+#: viaconstructor/setupdefaults.py:316
+msgid "how to show the gcode path in the 3d-View"
+msgstr ""
+
+#: viaconstructor/setupdefaults.py:321
+msgid "Ruler-Show"
+msgstr ""
+
+#: viaconstructor/setupdefaults.py:322
 msgid "showing ruler in 3D preview"
 msgstr ""
 
-#: viaconstructor/setupdefaults.py:317
+#: viaconstructor/setupdefaults.py:327
 msgid "Grid-Show"
 msgstr ""
 
-#: viaconstructor/setupdefaults.py:318
+#: viaconstructor/setupdefaults.py:328
 msgid "showing grid in 3D preview"
 msgstr ""
 
-#: viaconstructor/setupdefaults.py:325
+#: viaconstructor/setupdefaults.py:335
 msgid "Grid-Size"
 msgstr ""
 
-#: viaconstructor/setupdefaults.py:326
+#: viaconstructor/setupdefaults.py:336
 msgid "size of the grid"
 msgstr ""
 
-#: viaconstructor/setupdefaults.py:331
+#: viaconstructor/setupdefaults.py:341
 msgid "Show as Polygon"
 msgstr ""
 
-#: viaconstructor/setupdefaults.py:332
+#: viaconstructor/setupdefaults.py:342
 msgid "showing as polygon in 3D preview"
 msgstr ""
 
-#: viaconstructor/viaconstructor.py:845
+#: viaconstructor/viaconstructor.py:866
 msgid "Exit"
 msgstr ""
 
-#: viaconstructor/viaconstructor.py:848
+#: viaconstructor/viaconstructor.py:869
 msgid "Exit application"
 msgstr ""
 
-#: viaconstructor/viaconstructor.py:853
+#: viaconstructor/viaconstructor.py:874
 msgid "Save Machine-Commands"
 msgstr ""
 
-#: viaconstructor/viaconstructor.py:856
+#: viaconstructor/viaconstructor.py:877
 msgid "Save machine commands"
 msgstr ""
 
-#: viaconstructor/viaconstructor.py:861 viaconstructor/viaconstructor.py:864
+#: viaconstructor/viaconstructor.py:882 viaconstructor/viaconstructor.py:885
 msgid "Load setup from"
 msgstr ""
 
-#: viaconstructor/viaconstructor.py:869
+#: viaconstructor/viaconstructor.py:890
 msgid "Load setup from machine_cmd"
 msgstr ""
 
-#: viaconstructor/viaconstructor.py:872
+#: viaconstructor/viaconstructor.py:893
 msgid "Load-Setup from machine_cmd"
 msgstr ""
 
-#: viaconstructor/viaconstructor.py:877
+#: viaconstructor/viaconstructor.py:898
 msgid "Save setup as default"
 msgstr ""
 
-#: viaconstructor/viaconstructor.py:880
+#: viaconstructor/viaconstructor.py:901
 msgid "Save-Setup"
 msgstr ""
 
-#: viaconstructor/viaconstructor.py:885
+#: viaconstructor/viaconstructor.py:906
 msgid "Save setup as"
 msgstr ""
 
-#: viaconstructor/viaconstructor.py:888
+#: viaconstructor/viaconstructor.py:909
 msgid "Save setup  as"
 msgstr ""
 
-#: viaconstructor/viaconstructor.py:893 viaconstructor/viaconstructor.py:896
+#: viaconstructor/viaconstructor.py:914 viaconstructor/viaconstructor.py:917
 msgid "View-Reset"
 msgstr ""
 
-#: viaconstructor/viaconstructor.py:901 viaconstructor/viaconstructor.py:904
+#: viaconstructor/viaconstructor.py:922 viaconstructor/viaconstructor.py:925
 msgid "2D-View"
 msgstr ""
 
-#: viaconstructor/viaconstructor.py:909
+#: viaconstructor/viaconstructor.py:930
 msgid "Flip-X"
 msgstr ""
 
-#: viaconstructor/viaconstructor.py:912
+#: viaconstructor/viaconstructor.py:933
 msgid "Flip-X workpiece"
 msgstr ""
 
-#: viaconstructor/viaconstructor.py:917
+#: viaconstructor/viaconstructor.py:938
 msgid "Flip-Y"
 msgstr ""
 
-#: viaconstructor/viaconstructor.py:920
+#: viaconstructor/viaconstructor.py:941
 msgid "Flip-Y workpiece"
 msgstr ""
 
-#: viaconstructor/viaconstructor.py:925
+#: viaconstructor/viaconstructor.py:946
 msgid "Rotate"
 msgstr ""
 
-#: viaconstructor/viaconstructor.py:928
+#: viaconstructor/viaconstructor.py:949
 msgid "Rotate workpiece"
 msgstr ""
 
-#: viaconstructor/viaconstructor.py:933 viaconstructor/viaconstructor.py:936
+#: viaconstructor/viaconstructor.py:954 viaconstructor/viaconstructor.py:957
 msgid "Tab-Selector"
 msgstr ""
 
-#: viaconstructor/viaconstructor.py:1051
+#: viaconstructor/viaconstructor.py:1072
 msgid "select this row"
 msgstr ""
 
-#: viaconstructor/viaconstructor.py:1203
+#: viaconstructor/viaconstructor.py:1224
 msgid "Global-Settings:"
 msgstr "Globale-Einstellungen:"

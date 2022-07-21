@@ -27,6 +27,7 @@ class fakeOffset:
             {
                 "filename_draw": "/tmp/t.dxf",
                 "filename_machine_cmd": "/tmp/t.ngc",
+                "axis": ["X", "Y", "Z"],
                 "offsets": {
                     "0.0": fakeOffset(
                         [
@@ -116,7 +117,13 @@ class fakeOffset:
                         "rotate": "0",
                         "zero": "bottomLeft",
                     },
-                    "tool": {"diameter": 4.0, "number": 1, "speed": 10000},
+                    "tool": {
+                        "diameter": 4.0,
+                        "number": 1,
+                        "speed": 10000,
+                        "rate_h": 10000,
+                        "rate_v": 1000,
+                    },
                     "mill": {
                         "G64": 0.05,
                         "active": True,
@@ -126,12 +133,12 @@ class fakeOffset:
                         "pocket": False,
                         "reverse": False,
                         "step": -4.0,
-                        "rate_h": 10000,
-                        "rate_v": 1000,
                         "helix_mode": False,
-                        "laser": False,
                     },
                     "view": {"path": "simple"},
+                    "maschine": {
+                        "laser": False,
+                    },
                 },
                 "tablewidget": "",
                 "textwidget": "",
