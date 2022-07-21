@@ -66,6 +66,7 @@ from .gldraw import (
 )
 from .machine_cmd import polylines2machine_cmd
 from .output_plugins.gcode_linuxcnc import PostProcessorGcodeLinuxCNC
+from .output_plugins.hpgl import PostProcessorHpgl
 from .setupdefaults import setup_defaults
 from .svgread import SvgReader
 
@@ -418,7 +419,8 @@ class ViaConstructor:
 
         # create machine commands
         self.project["machine_cmd"] = polylines2machine_cmd(
-            self.project, PostProcessorGcodeLinuxCNC()
+            #self.project, PostProcessorGcodeLinuxCNC()
+            self.project, PostProcessorHpgl()
         )
 
         self.project["textwidget"].clear()
