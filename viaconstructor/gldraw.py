@@ -396,8 +396,10 @@ def draw_gcode_path(project: dict) -> bool:
     """draws the gcode path"""
     GL.glLineWidth(2)
     try:
-        #HpglParser(project["machine_cmd"]).draw(draw_line, (project,))
-        GcodeParser(project["machine_cmd"]).draw(draw_line, (project,))
+        if project["suffix"] in {"ngc", "gcode"}:
+            GcodeParser(project["machine_cmd"]).draw(draw_line, (project,))
+        elif project["suffix"] in {"hpgl", "hpg"}:
+            HpglParser(project["machine_cmd"]).draw(draw_line, (project,))
     except Exception as error_string:  # pylint: disable=W0703:
         print(f"ERROR: parsing machine_cmd: {error_string}")
         return False

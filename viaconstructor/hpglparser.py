@@ -8,7 +8,6 @@ from .calc import angle_of_line, calc_distance
 
 
 class HpglParser:
-
     def __init__(self, hpgl: Union[str, list[str]]):
         if isinstance(hpgl, str):
             hpgl = hpgl.split("\n")
@@ -25,7 +24,6 @@ class HpglParser:
         }
         self.path: list[list] = []
 
-
         last_x = 0
         last_y = 0
         draw = False
@@ -38,10 +36,12 @@ class HpglParser:
             print(line)
             if line.startswith("PU"):
                 draw = False
+                self.linear_move({"Z": 1.0}, True)
                 line = line[2:]
-                
+
             elif line.startswith("PD"):
                 draw = True
+                self.linear_move({"Z": -1.0}, False)
                 line = line[2:]
 
             elif line.startswith("IN"):
@@ -74,18 +74,16 @@ class HpglParser:
                         if not absolute:
                             x += last_x
                             y += last_y
-                        
+
                         if draw:
+                            self.linear_move({"X": x, "Y": y}, False)
+                        else:
                             self.linear_move({"X": x, "Y": y}, True)
 
                         last_x = x
                         last_y = y
 
-
                     is_x = not is_x
-
-
-
 
         minp = {}
         maxp = {}

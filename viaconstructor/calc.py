@@ -121,7 +121,7 @@ import time
 
 
 def multicheck(input_list):
-    #print("##multicheck", input_list[0])
+    # print("##multicheck", input_list[0])
     cleaned = {}
     idx_1, segments = input_list
     segment1 = segments[idx_1]
@@ -139,17 +139,13 @@ def multicheck(input_list):
             if segment2["bulge"] == 0.0 and idx_1 != idx_2:
                 if is_between(
                     segment1["start"], segment2["start"], segment2["end"]
-                ) and is_between(
-                    segment1["end"], segment2["start"], segment2["end"]
-                ):
+                ) and is_between(segment1["end"], segment2["start"], segment2["end"]):
                     matched = True
                     break
 
     if matched:
         return {}
     return segment1
-
-    
 
 
 def clean_segments(segments):
@@ -161,17 +157,15 @@ def clean_segments(segments):
     for idx_1, segment1 in enumerate(segments):
         segment_list.append((idx_1, segments))
 
-
     pool = multiprocessing.Pool()
     pool = multiprocessing.Pool(processes=8)
     outputs = pool.map(multicheck, segment_list)
-    #print(outputs)
-
+    # print(outputs)
 
     cleaned = []
     for line in outputs:
         if line:
-            #print("##", line)
+            # print("##", line)
             cleaned.append(line)
 
     print(time.time() - start)
@@ -180,7 +174,6 @@ def clean_segments(segments):
 
     """
     """
-
 
     cleaned = {}
     for idx_1, segment1 in enumerate(segments):

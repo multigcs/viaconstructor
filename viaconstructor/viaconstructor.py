@@ -482,7 +482,9 @@ class ViaConstructor:
         """save machine_cmd."""
         self.status_bar.showMessage("save machine_cmd..")
         file_dialog = QFileDialog(self.main)
-        file_dialog.setNameFilters([f"self.project['suffix'] (*.{self.project['suffix']})"])
+        file_dialog.setNameFilters(
+            [f"self.project['suffix'] (*.{self.project['suffix']})"]
+        )
         self.project[
             "filename_machine_cmd"
         ] = f"{'.'.join(self.project['filename_draw'].split('.')[:-1])}.{self.project['suffix']}"

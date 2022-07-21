@@ -58,13 +58,10 @@ class XncParser:
                         print("use tool", ldata["T"])
                         self.state["tool"] = ldata["T"]
 
-
             elif first == "M":
-
 
                 if ldata["M"] == 48:
                     self.state["header"] = True
-
 
                 elif ldata["M"] == 15:
                     print("tool down")
@@ -75,8 +72,6 @@ class XncParser:
 
                 elif ldata["M"] == 30:
                     print("end")
-
-
 
                 elif ldata["M"] == 6:
                     self.state["tool"] = int(ldata["T"])
@@ -102,8 +97,7 @@ class XncParser:
                         pass
 
                 elif ldata["G"] == 5:
-                    self.state["move_mode"] = int(ldata["G"]) # drill mode
-
+                    self.state["move_mode"] = int(ldata["G"])  # drill mode
 
                 elif ldata["G"] == 20:
                     self.state["metric"] = "INCH"
@@ -138,12 +132,16 @@ class XncParser:
                 elif self.state["move_mode"] == 1:
                     self.linear_move(cords, False)
 
-
                 elif self.state["move_mode"] == 5:
 
                     diameter = self.state["tools"][self.state["tool"]]
 
-                    print("drill at", cords, " diameter:", self.state["tools"][self.state["tool"]])
+                    print(
+                        "drill at",
+                        cords,
+                        " diameter:",
+                        self.state["tools"][self.state["tool"]],
+                    )
 
                     cords["Z"] = 1
                     cords["X"] -= diameter / 2
@@ -154,21 +152,16 @@ class XncParser:
                     print("down", cords)
                     self.linear_move(cords.copy(), True)
 
-
                     cords["X"] += diameter
                     print("arc1", cords)
                     self.arc_move_ij(2, cords.copy(), diameter / 2, 0)
-
 
                     cords["X"] -= diameter
                     print("arc2", cords)
                     self.arc_move_ij(2, cords.copy(), -diameter / 2, 0)
 
-
                     cords["Z"] = 1
                     self.linear_move(cords.copy(), True)
-                    
-
 
         minp = {}
         maxp = {}
