@@ -360,6 +360,7 @@ class ViaConstructor:
         "setup_defaults": setup_defaults(_),
         "filename_draw": "",
         "filename_machine_cmd": "",
+        "suffix": "ngc",
         "gcode": [],
         "segments": {},
         "objects": {},
@@ -419,10 +420,13 @@ class ViaConstructor:
 
         # create machine commands
         output_plugin = PostProcessorGcodeLinuxCNC
+        self.project["suffix"] = "ngc"
         if self.project["setup"]["output"]["plugin"] == "gcode_linuxcnc":
             output_plugin = PostProcessorGcodeLinuxCNC
+            self.project["suffix"] = output_plugin.suffix()
         elif self.project["setup"]["output"]["plugin"] == "hpgl":
             output_plugin = PostProcessorHpgl
+            self.project["suffix"] = output_plugin.suffix()
         self.project["machine_cmd"] = polylines2machine_cmd(
             self.project, output_plugin()
         )
@@ -478,12 +482,15 @@ class ViaConstructor:
         """save machine_cmd."""
         self.status_bar.showMessage("save machine_cmd..")
         file_dialog = QFileDialog(self.main)
-        file_dialog.setNameFilters(["gcode (*.ngc)"])
+        file_dialog.setNameFilters([f"self.project['suffix'] (*.{self.project['suffix']})"])
+        self.project[
+            "filename_machine_cmd"
+        ] = f"{'.'.join(self.project['filename_draw'].split('.')[:-1])}.{self.project['suffix']}"
         name = file_dialog.getSaveFileName(
             self.main,
             "Save File",
             self.project["filename_machine_cmd"],
-            "gcode (*.ngc)",
+            f"{self.project['suffix']} (*.{self.project['suffix']})",
         )
         if name[0] and self.machine_cmd_save(name[0]):
             self.status_bar.showMessage(f"save gcode..done ({name[0]})")
@@ -824,6 +831,9 @@ class ViaConstructor:
         self.update_drawing()
 
     def _toolbar_load_machine_cmd_setup(self) -> None:
+        self.project[
+            "filename_machine_cmd"
+        ] = f"{'.'.join(self.project['filename_draw'].split('.')[:-1])}.{self.project['suffix']}"
         if os.path.isfile(self.project["filename_machine_cmd"]):
             self.status_bar.showMessage(
                 f"loading setup from gcode: {self.project['filename_machine_cmd']}"
@@ -1109,7 +1119,7 @@ class ViaConstructor:
         self.project["filename_draw"] = self.args.filename
         self.project[
             "filename_machine_cmd"
-        ] = f"{'.'.join(self.project['filename_draw'].split('.')[:-1])}.ngc"
+        ] = f"{'.'.join(self.project['filename_draw'].split('.')[:-1])}.{self.project['suffix']}"
 
         # prepare #
         self.project["segments"] = deepcopy(self.project["segments_org"])

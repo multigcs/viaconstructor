@@ -87,3 +87,7 @@ class PostProcessorHpgl(PostProcessor):
     def get(self) -> list[str]:
         return self.hpgl
 
+    @staticmethod
+    def suffix() -> str:
+        return "hpgl"
+
