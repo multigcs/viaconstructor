@@ -418,9 +418,13 @@ class ViaConstructor:
         )
 
         # create machine commands
+        output_plugin = PostProcessorGcodeLinuxCNC
+        if self.project["setup"]["output"]["plugin"] == "gcode_linuxcnc":
+            output_plugin = PostProcessorGcodeLinuxCNC
+        elif self.project["setup"]["output"]["plugin"] == "hpgl":
+            output_plugin = PostProcessorHpgl
         self.project["machine_cmd"] = polylines2machine_cmd(
-            #self.project, PostProcessorGcodeLinuxCNC()
-            self.project, PostProcessorHpgl()
+            self.project, output_plugin()
         )
 
         self.project["textwidget"].clear()

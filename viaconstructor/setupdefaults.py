@@ -293,6 +293,18 @@ def setup_defaults(_) -> dict:
                 "tooltip": _("maximum tool-speed"),
             },
         },
+        "output": {
+            "plugin": {
+                "default": "simple",
+                "type": "select",
+                "options": (
+                    ("gcode_linuxcnc", _("gcode_linuxcnc")),
+                    ("hpgl", _("hpgl")),
+                ),
+                "title": _("Plugin"),
+                "tooltip": _("output plugin selection"),
+            },
+        },
         "view": {
             "path": {
                 "default": "simple",
