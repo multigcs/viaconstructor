@@ -10,6 +10,8 @@ from .calc import angle_of_line, calc_distance
 class HpglParser:
 
     def __init__(self, hpgl: Union[str, list[str]]):
+        if isinstance(hpgl, str):
+            hpgl = hpgl.split("\n")
 
         self.state: dict = {
             "move_mode": "",
@@ -22,6 +24,7 @@ class HpglParser:
             "position": {"X": 0, "Y": 0, "Z": 0},
         }
         self.path: list[list] = []
+
 
         last_x = 0
         last_y = 0

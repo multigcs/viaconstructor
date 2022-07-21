@@ -53,7 +53,7 @@ def main() -> int:
         print("file not found:", filename)
         sys.exit(1)
     hpgl = open(filename, "r").read()
-    hpgl_parser = HpglParser(hpgl.split("\n"))
+    hpgl_parser = HpglParser(hpgl)
     minmax = hpgl_parser.get_minmax()
     size = hpgl_parser.get_size()
 
