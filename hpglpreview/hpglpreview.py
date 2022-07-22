@@ -7,7 +7,7 @@ from os import environ
 
 from PIL import Image, ImageDraw, ImageFont
 
-from viaconstructor.hpglparser import HpglParser
+from viaconstructor.preview_plugins.hpgl import HpglParser
 
 
 def main() -> int:

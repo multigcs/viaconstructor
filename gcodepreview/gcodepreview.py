@@ -7,7 +7,7 @@ from os import environ
 
 from PIL import Image, ImageDraw, ImageFont
 
-from viaconstructor.gcodeparser import GcodeParser
+from viaconstructor.preview_plugins.gcode import GcodeParser
 
 
 def main() -> int:

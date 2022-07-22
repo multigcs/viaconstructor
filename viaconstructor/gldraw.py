@@ -24,8 +24,8 @@ from OpenGL.GLU import (
 )
 
 from .calc import angle_of_line, calc_distance, line_center_3d, object2vertex
-from .gcodeparser import GcodeParser
-from .hpglparser import HpglParser
+from .preview_plugins.gcode import GcodeParser
+from .preview_plugins.hpgl import HpglParser
 
 font = HersheyFonts()
 font.load_default_font()
