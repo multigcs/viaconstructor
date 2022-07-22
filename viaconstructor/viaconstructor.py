@@ -687,7 +687,9 @@ class ViaConstructor:
                 continue
             root.appendRow(
                 [
-                    QStandardItem(f"#{obj_idx} {'closed' if obj['closed'] else 'open'}"),
+                    QStandardItem(
+                        f"#{obj_idx} {'closed' if obj['closed'] else 'open'}"
+                    ),
                 ]
             )
             obj_root = root.child(root.rowCount() - 1)

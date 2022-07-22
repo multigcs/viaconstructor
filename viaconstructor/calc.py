@@ -116,7 +116,7 @@ def get_half_bulge_point(last: tuple, point: tuple, bulge: float) -> tuple:
     return (end[0], end[1])
 
 
-def clean_segments(segments):
+def clean_segments(segments: list) -> list:
     """removing double and overlaying lines."""
     cleaned = {}
     for segment1 in segments:
@@ -124,8 +124,8 @@ def clean_segments(segments):
         min_y = round(min(segment1["start"][1], segment1["end"][1]), 4)
         max_x = round(max(segment1["start"][0], segment1["end"][0]), 4)
         max_y = round(max(segment1["start"][1], segment1["end"][1]), 4)
-        bulge = round(segment1['bulge'], 4) or 0.0
-        key = f"{min_x},{min_y},{max_x},{max_y},{bulge},{segment1['layer']}"
+        bulge = round(segment1["bulge"], 4) or 0.0
+        key = f"{min_x},{min_y},{max_x},{max_y},{bulge},{segment1.get('layer', '')}"
         cleaned[key] = segment1
     return list(cleaned.values())
 
@@ -319,9 +319,9 @@ def object2vertex(obj):
     bdata = []
     segment = {}
 
-    #last_x = None
-    #last_y = None
-    #last_bulge = None
+    # last_x = None
+    # last_y = None
+    # last_bulge = None
 
     for segment in obj["segments"]:
         pos_x = segment["start"][0]
@@ -335,9 +335,9 @@ def object2vertex(obj):
         ydata.append(pos_y)
         bdata.append(bulge)
 
-        #last_x = pos_x
-        #last_y = pos_y
-        #last_bulge = bulge
+        # last_x = pos_x
+        # last_y = pos_y
+        # last_bulge = bulge
 
     if segment and not obj["closed"]:
         xdata.append(segment["end"][0])
