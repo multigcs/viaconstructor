@@ -4,6 +4,8 @@ import math
 
 import ezdxf
 
+from .calc import calc_distance
+
 
 class DxfReader:
     def __init__(self, filename: str):
@@ -43,37 +45,44 @@ class DxfReader:
     def add_entity(self, element, offset: tuple = (0, 0)):
         dxftype = element.dxftype()
         if dxftype == "LINE":
-            self.segments.append(
-                {
-                    "type": dxftype,
-                    "object": None,
-                    "layer": element.dxf.layer,
-                    "start": (
-                        element.dxf.start.x + offset[0],
-                        element.dxf.start.y + offset[1],
-                    ),
-                    "end": (
-                        element.dxf.end.x + offset[0],
-                        element.dxf.end.y + offset[1],
-                    ),
-                    "bulge": 0.0,
-                }
+            dist = calc_distance(
+                (element.dxf.start.x, element.dxf.start.y),
+                (element.dxf.end.x, element.dxf.end.y),
             )
+            if dist > 0.0:
+                self.segments.append(
+                    {
+                        "type": dxftype,
+                        "object": None,
+                        "layer": element.dxf.layer,
+                        "start": (
+                            element.dxf.start.x + offset[0],
+                            element.dxf.start.y + offset[1],
+                        ),
+                        "end": (
+                            element.dxf.end.x + offset[0],
+                            element.dxf.end.y + offset[1],
+                        ),
+                        "bulge": 0.0,
+                    }
+                )
 
         elif dxftype == "SPLINE":
             last: list[float] = []
             for point in element._control_points:  # type: ignore
                 if last:
-                    self.segments.append(
-                        {
-                            "type": "LINE",
-                            "object": None,
-                            "layer": element.dxf.layer,
-                            "start": (last[0] + offset[0], last[1] + offset[1]),
-                            "end": (point[0] + offset[0], point[1] + offset[1]),
-                            "bulge": 0.0,
-                        }
-                    )
+                    dist = calc_distance((last[0], last[1]), (point[0], point[1]))
+                    if dist > 0.0:
+                        self.segments.append(
+                            {
+                                "type": "LINE",
+                                "object": None,
+                                "layer": element.dxf.layer,
+                                "start": (last[0] + offset[0], last[1] + offset[1]),
+                                "end": (point[0] + offset[0], point[1] + offset[1]),
+                                "bulge": 0.0,
+                            }
+                        )
                 last = point
 
         elif dxftype in {"ARC", "CIRCLE"}:
@@ -106,6 +115,33 @@ class DxfReader:
                         (angle + astep) / 180 * math.pi,
                         element.dxf.radius,
                     )
+                    dist = calc_distance((start.x, start.y), (end.x, end.y))
+                    if dist > 0.0:
+                        self.segments.append(
+                            {
+                                "type": dxftype,
+                                "object": None,
+                                "layer": element.dxf.layer,
+                                "start": (start.x + offset[0], start.y + offset[1]),
+                                "end": (end.x + offset[0], end.y + offset[1]),
+                                "bulge": bulge,
+                                "center": (
+                                    element.dxf.center[0] + offset[0],
+                                    element.dxf.center[1] + offset[1],
+                                ),
+                            }
+                        )
+                    angle += astep
+
+            else:
+                (start, end, bulge) = ezdxf.math.arc_to_bulge(
+                    element.dxf.center,
+                    element.dxf.start_angle / 180 * math.pi,
+                    element.dxf.end_angle / 180 * math.pi,
+                    element.dxf.radius,
+                )
+                dist = calc_distance((start.x, start.y), (end.x, end.y))
+                if dist > 0.0:
                     self.segments.append(
                         {
                             "type": dxftype,
@@ -120,29 +156,6 @@ class DxfReader:
                             ),
                         }
                     )
-                    angle += astep
-
-            else:
-                (start, end, bulge) = ezdxf.math.arc_to_bulge(
-                    element.dxf.center,
-                    element.dxf.start_angle / 180 * math.pi,
-                    element.dxf.end_angle / 180 * math.pi,
-                    element.dxf.radius,
-                )
-                self.segments.append(
-                    {
-                        "type": dxftype,
-                        "object": None,
-                        "layer": element.dxf.layer,
-                        "start": (start.x + offset[0], start.y + offset[1]),
-                        "end": (end.x + offset[0], end.y + offset[1]),
-                        "bulge": bulge,
-                        "center": (
-                            element.dxf.center[0] + offset[0],
-                            element.dxf.center[1] + offset[1],
-                        ),
-                    }
-                )
 
         else:
             print("UNSUPPORTED TYPE: ", dxftype)
