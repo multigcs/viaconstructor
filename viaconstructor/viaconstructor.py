@@ -64,6 +64,7 @@ from .gldraw import (
     draw_object_faces,
     draw_object_ids,
 )
+from .hpglread import HpglReader
 from .machine_cmd import polylines2machine_cmd
 from .output_plugins.gcode_linuxcnc import PostProcessorGcodeLinuxCNC
 from .output_plugins.hpgl import PostProcessorHpgl
@@ -378,7 +379,7 @@ class ViaConstructor:
         },
     }
     save_tabs = "ask"
-    draw_reader: Union[DxfReader, SvgReader]
+    draw_reader: Union[DxfReader, SvgReader, HpglReader]
 
     def gcode_reload(self) -> None:
         """reload gcode."""
@@ -1119,9 +1120,11 @@ class ViaConstructor:
             self.save_tabs = "no"
         elif self.args.filename.lower().endswith(".dxf"):
             self.draw_reader = DxfReader(self.args.filename)
+        elif self.args.filename.lower().endswith(".hpgl"):
+            self.draw_reader = HpglReader(self.args.filename)
         else:
             print(f"ERROR: Unknown file suffix: {self.args.filename}")
-            exit(1)
+            sys.exit(1)
 
         self.project["segments_org"] = self.draw_reader.get_segments()
         self.project["filename_draw"] = self.args.filename

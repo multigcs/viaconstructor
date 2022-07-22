@@ -66,6 +66,8 @@ class HpglParser:
                             (start_angle + angle_set) * math.pi / 180 + math.pi / 2
                         )
                         self.linear_move({"X": new_x, "Y": new_y}, False)
+                        last_x = new_x
+                        last_y = new_y
                 else:
                     for angle_set in range(int(abs(angle)), -1, -1):
                         new_x = center_x - radius * math.sin(
@@ -75,9 +77,9 @@ class HpglParser:
                             (start_angle + angle_set) * math.pi / 180 + math.pi / 2
                         )
                         self.linear_move({"X": new_x, "Y": new_y}, False)
+                        last_x = new_x
+                        last_y = new_y
 
-                last_x = new_x
-                last_y = new_y
                 line = ""
             elif line.startswith("PA"):
                 absolute = True
