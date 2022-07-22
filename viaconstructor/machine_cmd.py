@@ -433,15 +433,24 @@ def polylines2machine_cmd(project: dict, post: PostProcessor) -> list[str]:
                     if depth < polyline.setup["mill"]["depth"]:
                         depth = polyline.setup["mill"]["depth"]
 
-                    if not project["setup"]["maschine"]["laser"]:
+                    if (
+                        not project["setup"]["maschine"]["laser"]
+                        and "Z" in project["axis"]
+                    ):
                         post.comment(f"- Depth: {depth}mm -")
 
                     if not is_closed:
-                        if not project["setup"]["maschine"]["laser"]:
+                        if (
+                            not project["setup"]["maschine"]["laser"]
+                            and "Z" in project["axis"]
+                        ):
                             post.move(z_pos=project["setup"]["mill"]["fast_move_z"])
                         post.move(x_pos=points[0][0], y_pos=points[0][1])
 
-                    if not project["setup"]["maschine"]["laser"]:
+                    if (
+                        not project["setup"]["maschine"]["laser"]
+                        and "Z" in project["axis"]
+                    ):
                         post.feedrate(project["setup"]["tool"]["rate_v"])
                         if helix_mode:
                             post.linear(z_pos=last_depth)

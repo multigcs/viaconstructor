@@ -139,7 +139,7 @@ class GcodeParser:
 
     def draw(self, draw_function, user_data=()) -> None:
         for line in self.path:
-            draw_function(line[0], line[1], *user_data)
+            draw_function(line[0], line[1], line[2], *user_data)
 
     def linear_move(
         self, cords: dict, fast: bool = False  # pylint: disable=W0613
@@ -147,7 +147,7 @@ class GcodeParser:
         for axis in self.state["position"]:
             if axis not in cords:
                 cords[axis] = self.state["position"][axis]
-        self.path.append([self.state["position"], cords])
+        self.path.append([self.state["position"], cords, "fast" if fast else ""])
         self.state["position"] = cords
 
     def arc_move_r(self, angle_dir, cords, radius) -> None:  # pylint: disable=W0613
@@ -163,7 +163,7 @@ class GcodeParser:
         h_x2_div_d = 4.0 * arc_r * arc_r - diff_x * diff_x - diff_y * diff_y
         if h_x2_div_d < 0:
             print("### ARC ERROR ###")
-            self.path.append([self.state["position"], cords])
+            self.path.append([self.state["position"], cords, ""])
             self.state["position"] = cords
             return
         h_x2_div_d = -math.sqrt(h_x2_div_d) / math.hypot(diff_x, diff_y)
@@ -208,10 +208,10 @@ class GcodeParser:
                 new_y = center_y + radius * math.cos(angle - math.pi / 2)
                 new_z = start_z + ((angle - start_angle) / diff_angle) * diff_z
                 new_pos = {"X": new_x, "Y": new_y, "Z": new_z}
-                self.path.append([last_pos, new_pos])
+                self.path.append([last_pos, new_pos, ""])
                 last_pos = new_pos
                 angle += 0.2
-            self.path.append([last_pos, cords])
+            self.path.append([last_pos, cords, ""])
         elif start_angle > end_angle:
             angle = start_angle
             while angle > end_angle:
@@ -219,8 +219,8 @@ class GcodeParser:
                 new_y = center_y + radius * math.cos(angle - math.pi / 2)
                 new_z = start_z + ((angle - start_angle) / diff_angle) * diff_z
                 new_pos = {"X": new_x, "Y": new_y, "Z": new_z}
-                self.path.append([last_pos, new_pos])
+                self.path.append([last_pos, new_pos, ""])
                 last_pos = new_pos
                 angle -= 0.2
-            self.path.append([last_pos, cords])
+            self.path.append([last_pos, cords, ""])
         self.state["position"] = cords

@@ -48,7 +48,11 @@ def draw_circle(center: Sequence[float], radius: float) -> None:
 
 
 def draw_mill_line(
-    p_from: Sequence[float], p_to: Sequence[float], width: float, mode: str
+    p_from: Sequence[float],
+    p_to: Sequence[float],
+    width: float,
+    mode: str,
+    options: str,
 ) -> None:
     """draws an milling line including direction and width"""
     line_angle = angle_of_line(p_from, p_to)
@@ -77,7 +81,10 @@ def draw_mill_line(
         GL.glEnd()
 
     # center line
-    GL.glColor3f(1.0, 1.0, 1.0)
+    if options == "fast":
+        GL.glColor3f(0.91, 0.91, 0.91)
+    else:
+        GL.glColor3f(0.11, 0.63, 0.36)
     GL.glBegin(GL.GL_LINES)
     GL.glVertex3fv(p_from)
     GL.glVertex3fv(p_to)
@@ -88,7 +95,7 @@ def draw_mill_line(
         if lenght < 3:
             return
         # direction arrow
-        GL.glColor3f(1.0, 0.0, 0.0)
+        GL.glColor3f(0.62, 0.73, 0.82)
         center = p_from
         if lenght > 5.0:
             center = line_center_3d(p_from, p_to)
@@ -267,7 +274,7 @@ def draw_grid(project: dict) -> None:
 def draw_object_ids(project: dict) -> None:
     """draws the object id's as text"""
     GL.glLineWidth(2)
-    GL.glColor4f(1.0, 0.0, 0.0, 1.0)
+    GL.glColor3f(0.63, 0.36, 0.11)
     GL.glBegin(GL.GL_LINES)
     for obj_idx, obj in project["objects"].items():
         if obj.get("layer", "").startswith("BREAKS:") or obj.get(
@@ -285,7 +292,7 @@ def draw_object_ids(project: dict) -> None:
 def draw_object_edges(project: dict) -> None:
     """draws the edges of an object"""
     GL.glLineWidth(1)
-    GL.glColor4f(0.0, 1.0, 0.0, 1.0)
+    GL.glColor4f(1.0, 1.0, 1.0, 1.0)
     for obj in project["objects"].values():
         if obj.get("layer", "").startswith("BREAKS:") or obj.get(
             "layer", ""
@@ -337,7 +344,7 @@ def draw_object_edges(project: dict) -> None:
 def draw_object_faces(project: dict) -> None:
     """draws the top and side faces of an object"""
     # object faces (side)
-    GL.glColor4f(0.0, 0.75, 0.3, 0.5)
+    GL.glColor4f(0.11, 0.39, 0.63, 0.5)
     for obj in project["objects"].values():
         if obj.get("layer", "").startswith("BREAKS:") or obj.get(
             "layer", ""
@@ -357,7 +364,7 @@ def draw_object_faces(project: dict) -> None:
             GL.glEnd()
 
     # object faces (top)
-    GL.glColor4f(0.0, 0.75, 0.3, 0.5)
+    GL.glColor4f(0.11, 0.39, 0.63, 0.5)
     tess = gluNewTess()
     gluTessProperty(tess, GLU_TESS_WINDING_RULE, GLU_TESS_WINDING_ODD)
     gluTessCallback(tess, GLU_TESS_BEGIN, GL.glBegin)
@@ -383,13 +390,13 @@ def draw_object_faces(project: dict) -> None:
     gluDeleteTess(tess)
 
 
-def draw_line(p_1: dict, p_2: dict, project: dict) -> None:
+def draw_line(p_1: dict, p_2: dict, options: str, project: dict) -> None:
     """callback funktion for GcodeParser to draw the lines"""
     p_from = (p_1["X"], p_1["Y"], p_1["Z"])
     p_to = (p_2["X"], p_2["Y"], p_2["Z"])
     line_width = project["setup"]["tool"]["diameter"]
     mode = project["setup"]["view"]["path"]
-    draw_mill_line(p_from, p_to, line_width, mode)
+    draw_mill_line(p_from, p_to, line_width, mode, options)
 
 
 def draw_gcode_path(project: dict) -> bool:
