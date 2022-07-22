@@ -1117,8 +1117,11 @@ class ViaConstructor:
         if self.args.filename.lower().endswith(".svg"):
             self.draw_reader = SvgReader(self.args.filename)
             self.save_tabs = "no"
-        else:
+        elif self.args.filename.lower().endswith(".dxf"):
             self.draw_reader = DxfReader(self.args.filename)
+        else:
+            print(f"ERROR: Unknown file suffix: {self.args.filename}")
+            exit(1)
 
         self.project["segments_org"] = self.draw_reader.get_segments()
         self.project["filename_draw"] = self.args.filename
