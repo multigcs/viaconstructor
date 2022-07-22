@@ -1,6 +1,6 @@
 import pytest
 
-from viaconstructor import gcodeparser
+from viaconstructor.preview_plugins import gcode as gcodeparser
 
 
 @pytest.mark.parametrize(

@@ -1,8 +1,9 @@
+from ..machine_cmd import PostProcessor  # pylint: disable=E0402
 
-from ..machine_cmd import PostProcessor
 
 class PostProcessorHpgl(PostProcessor):
     draw = False
+
     def __init__(self):
         self.hpgl: list[str] = []
         self.x_pos: float = None
@@ -57,7 +58,13 @@ class PostProcessorHpgl(PostProcessor):
             self.hpgl.append(f"P{'D' if self.draw else 'U'}{self.x_pos},{self.y_pos}")
 
     def arc_cw(
-        self, x_pos=None, y_pos=None, z_pos=None, i_pos=None, j_pos=None, r_pos=None
+        self,
+        x_pos=None,
+        y_pos=None,
+        z_pos=None,
+        i_pos=None,  # pylint: disable=W0613
+        j_pos=None,  # pylint: disable=W0613
+        r_pos=None,  # pylint: disable=W0613
     ) -> None:
         if x_pos:
             self.x_pos = x_pos
@@ -73,7 +80,13 @@ class PostProcessorHpgl(PostProcessor):
             self.hpgl.append(f"P{'D' if self.draw else 'U'}{self.x_pos},{self.y_pos}")
 
     def arc_ccw(
-        self, x_pos=None, y_pos=None, z_pos=None, i_pos=None, j_pos=None, r_pos=None
+        self,
+        x_pos=None,
+        y_pos=None,
+        z_pos=None,
+        i_pos=None,  # pylint: disable=W0613
+        j_pos=None,  # pylint: disable=W0613
+        r_pos=None,  # pylint: disable=W0613
     ) -> None:
         if x_pos:
             self.x_pos = x_pos

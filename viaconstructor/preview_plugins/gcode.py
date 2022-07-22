@@ -4,7 +4,7 @@ import math
 import re
 from typing import Union
 
-from ..calc import angle_of_line, calc_distance
+from ..calc import angle_of_line, calc_distance  # pylint: disable=E0402
 
 
 class GcodeParser:

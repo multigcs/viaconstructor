@@ -1,5 +1,5 @@
+from ..machine_cmd import PostProcessor  # pylint: disable=E0402
 
-from ..machine_cmd import PostProcessor
 
 class PostProcessorGcodeLinuxCNC(PostProcessor):
     def __init__(self):

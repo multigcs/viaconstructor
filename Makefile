@@ -32,27 +32,27 @@ pip-compile: pyvenv
 	pyvenv/bin/pip-compile requirements.in
 
 isort: pyvenv
-	pyvenv/bin/python -m isort --profile black */*py
+	pyvenv/bin/python -m isort --profile black */*py viaconstructor/*/*.py
 
 isort_check: pyvenv
-	pyvenv/bin/python -m isort --check --profile black */*py
+	pyvenv/bin/python -m isort --check --profile black */*py viaconstructor/*/*.py
 
 black: pyvenv
-	pyvenv/bin/python -m black */*py
+	pyvenv/bin/python -m black */*py viaconstructor/*/*.py
 
 black_check: pyvenv
-	pyvenv/bin/python -m black --check */*py
+	pyvenv/bin/python -m black --check */*py viaconstructor/*/*.py
 
 lint: flake8 pylint mypy
 
 flake8: pyvenv
-	pyvenv/bin/python -m flake8 viaconstructor/*.py tests/*.py
+	pyvenv/bin/python -m flake8 viaconstructor/*.py viaconstructor/*/*.py tests/*.py
 
 mypy: pyvenv
-	pyvenv/bin/python -m mypy viaconstructor/*.py # tests/*.py
+	pyvenv/bin/python -m mypy viaconstructor/*.py
 
 pylint: pyvenv
-	pyvenv/bin/python -m pylint viaconstructor/*.py # tests/*.py
+	pyvenv/bin/python -m pylint viaconstructor/*.py viaconstructor/*/*.py
 
 pytest: pyvenv
 	PYTHONPATH=. pyvenv/bin/python -m pytest --cov=viaconstructor --cov-report html:docs/pytest --cov-report term tests/
