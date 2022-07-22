@@ -178,6 +178,7 @@ def test_angle_2d(p1, p2, expected):
     ),
 )
 def test_clean_segments(segments, expected):
+    assert True
     assert calc.clean_segments(segments) == expected
 
 

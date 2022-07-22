@@ -119,29 +119,14 @@ def get_half_bulge_point(last: tuple, point: tuple, bulge: float) -> tuple:
 def clean_segments(segments):
     """removing double and overlaying lines."""
     cleaned = {}
-    for idx_1, segment1 in enumerate(segments):
-        key_1a = f"{segment1['start'][0]}#{segment1['start'][1]}#{segment1['end'][0]}#{segment1['end'][1]}#{round(segment1['bulge'], 6) or 0.0}"
-        key_1b = f"{segment1['end'][0]}#{segment1['end'][1]}#{segment1['start'][0]}#{segment1['start'][1]}#{round(-segment1['bulge'] ,6) or 0.0}"
-        matched = False
-        if segment1["bulge"] == 0.0:
-            for idx_2, segment2 in enumerate(segments):
-                if idx_1 == idx_2:
-                    continue
-                key_2a = f"{segment2['start'][0]}#{segment2['start'][1]}#{segment2['end'][0]}#{segment2['end'][1]}#{round(segment1['bulge'], 6) or 0.0}"
-                key_2b = f"{segment2['end'][0]}#{segment2['end'][1]}#{segment2['start'][0]}#{segment2['start'][1]}#{round(-segment1['bulge'] ,6) or 0.0}"
-                if {key_1a, key_1b}.intersection({key_2a, key_2b}):
-                    break
-                if segment2["bulge"] == 0.0 and idx_1 != idx_2:
-                    if is_between(
-                        segment1["start"], segment2["start"], segment2["end"]
-                    ) and is_between(
-                        segment1["end"], segment2["start"], segment2["end"]
-                    ):
-                        matched = True
-                        break
-        if not matched:
-            if key_1a not in cleaned and key_1b not in cleaned:
-                cleaned[key_1a] = segment1
+    for segment1 in segments:
+        min_x = min(segment1["start"][0], segment1["end"][0])
+        min_y = min(segment1["start"][1], segment1["end"][1])
+        max_x = max(segment1["start"][0], segment1["end"][0])
+        max_y = max(segment1["start"][1], segment1["end"][1])
+        bulge = round(segment1['bulge'], 6) or 0.0
+        key = f"{min_x},{min_y},{max_x},{max_y},{bulge}"
+        cleaned[key] = segment1
     return list(cleaned.values())
 
 
