@@ -391,7 +391,7 @@ def draw_object_faces(project: dict) -> None:
 
 
 def draw_line(p_1: dict, p_2: dict, options: str, project: dict) -> None:
-    """callback funktion for GcodeParser to draw the lines"""
+    """callback function for Parser to draw the lines"""
     p_from = (p_1["X"], p_1["Y"], p_1["Z"])
     p_to = (p_2["X"], p_2["Y"], p_2["Z"])
     line_width = project["setup"]["tool"]["diameter"]
@@ -399,8 +399,8 @@ def draw_line(p_1: dict, p_2: dict, options: str, project: dict) -> None:
     draw_mill_line(p_from, p_to, line_width, mode, options)
 
 
-def draw_gcode_path(project: dict) -> bool:
-    """draws the gcode path"""
+def draw_maschinecode_path(project: dict) -> bool:
+    """draws the maschinecode path"""
     GL.glLineWidth(2)
     try:
         if project["suffix"] in {"ngc", "gcode"}:

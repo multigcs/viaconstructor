@@ -133,7 +133,7 @@ class PostProcessorGcodeLinuxCNC(PostProcessor):
             self.gcode.append("G03 " + " ".join(line))
 
     def get(self) -> list[str]:
-        return self.gcode
+        return "\n".join(self.gcode)
 
     @staticmethod
     def suffix() -> str:

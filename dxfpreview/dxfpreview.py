@@ -8,6 +8,7 @@ from os import environ
 from PIL import Image, ImageDraw, ImageFont
 
 from viaconstructor.dxfread import DxfReader
+from viaconstructor.hpglread import HpglReader
 from viaconstructor.svgread import SvgReader
 
 
@@ -49,12 +50,14 @@ def main() -> int:
         print("file not found:", filename)
         sys.exit(1)
     if filename.lower().endswith(".svg"):
-        dxf_reader = SvgReader(filename)
+        reader = SvgReader(filename)
+    elif filename.lower().endswith(".hpgl"):
+        reader = HpglReader(filename)
     else:
-        dxf_reader = DxfReader(filename)
-    minmax = dxf_reader.get_minmax()
+        reader = DxfReader(filename)
+    minmax = reader.get_minmax()
 
-    size = dxf_reader.get_size()
+    size = reader.get_size()
 
     # calc scale
     scale_x = (screen_width - 10) / size[0]
@@ -76,7 +79,7 @@ def main() -> int:
         draw_line((0.0, pos_y), (size[0], pos_y), color=(27, 27, 27))
 
     # draw path
-    dxf_reader.draw(draw_line)
+    reader.draw(draw_line)
 
     # draw info
     if screen_width >= 320 or screen_height >= 240:

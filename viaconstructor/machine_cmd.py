@@ -32,6 +32,9 @@ class PostProcessor:
     def offsets(self, offset="none") -> None:
         pass
 
+    def program_start(self) -> None:
+        pass
+
     def program_end(self) -> None:
         pass
 
@@ -73,17 +76,17 @@ class PostProcessor:
 def machine_cmd_begin(project: dict, post: PostProcessor) -> None:
     """machine_cmd-header"""
     post.comment("--------------------------------------------------")
-
     post.comment("Generator: viaConstructor")
     post.comment(f"Filename: {project['filename_draw']}")
     if project["setup"]["maschine"]["laser"]:
         post.comment("Laser-Mode: active")
     post.comment("--------------------------------------------------")
     post.separation()
+    post.program_start()
     post.unit("mm")
     post.offsets("none")
     post.absolute(True)
-    if not project["setup"]["maschine"]["laser"]:
+    if not project["setup"]["maschine"]["laser"] and "Z" in project["axis"]:
         post.feedrate(project["setup"]["tool"]["rate_v"])
         if project["setup"]["mill"]["G64"] > 0.0:
             post.g64(project["setup"]["mill"]["G64"])
@@ -91,7 +94,6 @@ def machine_cmd_begin(project: dict, post: PostProcessor) -> None:
         post.tool(project["setup"]["tool"]["number"])
         post.spindel_cw(project["setup"]["tool"]["speed"])
         post.move(z_pos=project["setup"]["mill"]["fast_move_z"])
-        # post.move(x_pos=0.0, y_pos=0.0)
     else:
         post.spindel_off()
         post.feedrate(project["setup"]["tool"]["rate_h"])
@@ -103,7 +105,7 @@ def machine_cmd_end(project: dict, post: PostProcessor) -> None:
     """machine_cmd-footer"""
     post.separation()
     post.comment("- end -")
-    if not project["setup"]["maschine"]["laser"]:
+    if not project["setup"]["maschine"]["laser"] and "Z" in project["axis"]:
         post.move(z_pos=project["setup"]["mill"]["fast_move_z"])
         post.spindel_off()
     if project["setup"]["mill"]["back_home"]:
@@ -408,9 +410,10 @@ def polylines2machine_cmd(project: dict, post: PostProcessor) -> list[str]:
                 post.comment(f"Distance: {obj_distance}mm")
                 post.comment(f"Closed: {is_closed}")
                 post.comment(f"isPocket: {polyline.is_pocket}")
-                post.comment(
-                    f"Depth: {polyline.setup['mill']['depth']}mm / {polyline.setup['mill']['step']}mm"
-                )
+                if not project["setup"]["maschine"]["laser"] and "Z" in project["axis"]:
+                    post.comment(
+                        f"Depth: {polyline.setup['mill']['depth']}mm / {polyline.setup['mill']['step']}mm"
+                    )
                 post.comment(f"Tool-Diameter: {project['setup']['tool']['diameter']}mm")
                 if polyline.tool_offset:
                     post.comment(
@@ -419,7 +422,10 @@ def polylines2machine_cmd(project: dict, post: PostProcessor) -> list[str]:
                 post.comment("--------------------------------------------------")
 
                 if is_closed:
-                    if not project["setup"]["maschine"]["laser"]:
+                    if (
+                        not project["setup"]["maschine"]["laser"]
+                        and "Z" in project["axis"]
+                    ):
                         post.move(z_pos=project["setup"]["mill"]["fast_move_z"])
                     post.move(x_pos=points[0][0], y_pos=points[0][1])
 

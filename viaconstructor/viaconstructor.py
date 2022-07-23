@@ -58,8 +58,8 @@ from .calc import (
 )
 from .dxfread import DxfReader
 from .gldraw import (
-    draw_gcode_path,
     draw_grid,
+    draw_maschinecode_path,
     draw_object_edges,
     draw_object_faces,
     draw_object_ids,
@@ -363,7 +363,7 @@ class ViaConstructor:
         "filename_machine_cmd": "",
         "suffix": "ngc",
         "axis": ["X", "Y", "Z"],
-        "gcode": [],
+        "machine_cmd": "",
         "segments": {},
         "objects": {},
         "offsets": {},
@@ -380,12 +380,6 @@ class ViaConstructor:
     }
     save_tabs = "ask"
     draw_reader: Union[DxfReader, SvgReader, HpglReader]
-
-    def gcode_reload(self) -> None:
-        """reload gcode."""
-        # if self.project["textwidget"].toPlainText():
-        #     self.project["gcode"] = self.project["textwidget"].toPlainText().split("\n")
-        #     self.update_drawing(draw_only=True)
 
     def run_calculation(self) -> None:
         """run all calculations."""
@@ -421,8 +415,6 @@ class ViaConstructor:
         )
 
         # create machine commands
-        output_plugin = PostProcessorGcodeLinuxCNC
-        self.project["suffix"] = "ngc"
         if self.project["setup"]["maschine"]["plugin"] == "gcode_linuxcnc":
             output_plugin = PostProcessorGcodeLinuxCNC
             self.project["suffix"] = output_plugin.suffix()
@@ -431,17 +423,18 @@ class ViaConstructor:
             output_plugin = PostProcessorHpgl
             self.project["suffix"] = output_plugin.suffix()
             self.project["axis"] = output_plugin.axis()
+        else:
+            print(
+                f"ERROR: Unknown maschine output plugin: {self.project['setup']['maschine']['plugin']}"
+            )
+            sys.exit(1)
         self.project["machine_cmd"] = polylines2machine_cmd(
             self.project, output_plugin()
         )
 
         self.project["textwidget"].clear()
-        self.project["textwidget"].insertPlainText(
-            "\n".join(self.project["machine_cmd"])
-        )
+        self.project["textwidget"].insertPlainText(self.project["machine_cmd"])
         self.project["textwidget"].verticalScrollBar().setValue(0)
-        # self.project["textwidget"].setReadOnly(True)
-        # self.project["textwidget"].textChanged.connect(self.gcode_reload)  # type: ignore
 
     def _toolbar_flipx(self) -> None:
         mirror_objects(self.project["objects"], self.project["minMax"], vertical=True)
@@ -472,8 +465,7 @@ class ViaConstructor:
 
     def machine_cmd_save(self, filename: str) -> bool:
         with open(filename, "w") as fd_machine_cmd:
-            fd_machine_cmd.write("\n".join(self.project["machine_cmd"]))
-            fd_machine_cmd.write("\n")
+            fd_machine_cmd.write(self.project["machine_cmd"])
             # jsetup = deepcopy(self.project["setup"])
             # if "system" in jsetup:
             #    del jsetup["system"]
@@ -499,9 +491,9 @@ class ViaConstructor:
             f"{self.project['suffix']} (*.{self.project['suffix']})",
         )
         if name[0] and self.machine_cmd_save(name[0]):
-            self.status_bar.showMessage(f"save gcode..done ({name[0]})")
+            self.status_bar.showMessage(f"save maschine-code..done ({name[0]})")
         else:
-            self.status_bar.showMessage("save gcode..cancel")
+            self.status_bar.showMessage("save maschine-code..cancel")
 
     def setup_load(self, filename: str) -> bool:
         if os.path.isfile(filename):
@@ -565,8 +557,8 @@ class ViaConstructor:
         self.project["gllist"] = GL.glGenLists(1)
         GL.glNewList(self.project["gllist"], GL.GL_COMPILE)
         draw_grid(self.project)
-        if not draw_gcode_path(self.project):
-            self.status_bar.showMessage("error while drawing mashine commands")
+        if not draw_maschinecode_path(self.project):
+            self.status_bar.showMessage("error while drawing maschine commands")
         draw_object_ids(self.project)
         draw_object_edges(self.project)
         if self.project["setup"]["view"]["polygon_show"]:
@@ -844,7 +836,7 @@ class ViaConstructor:
         ] = f"{'.'.join(self.project['filename_draw'].split('.')[:-1])}.{self.project['suffix']}"
         if os.path.isfile(self.project["filename_machine_cmd"]):
             self.status_bar.showMessage(
-                f"loading setup from gcode: {self.project['filename_machine_cmd']}"
+                f"loading setup from maschinecode: {self.project['filename_machine_cmd']}"
             )
             with open(self.project["filename_machine_cmd"], "r") as fd_machine_cmd:
                 gdata = fd_machine_cmd.read()
@@ -855,9 +847,11 @@ class ViaConstructor:
                         for sname in self.project["setup"]:
                             self.project["setup"][sname].update(ndata.get(sname, {}))
                         self.update_drawing()
-                        self.status_bar.showMessage("loading setup from gcode..done")
+                        self.status_bar.showMessage(
+                            "loading setup from maschinecode..done"
+                        )
                         return
-        self.status_bar.showMessage("loading setup from gcode..failed")
+        self.status_bar.showMessage("loading setup from maschinecode..failed")
 
     def _toolbar_exit(self) -> None:
         """exit button."""
@@ -1250,7 +1244,7 @@ class ViaConstructor:
         if self.args.output:
             self.update_drawing()
             print("saving machine_cmd to file:", self.args.output)
-            open(self.args.output, "w").write("\n".join(self.project["machine_cmd"]))
+            open(self.args.output, "w").write(self.project["machine_cmd"])
         else:
             self.main.resize(1600, 1200)
             self.main.show()

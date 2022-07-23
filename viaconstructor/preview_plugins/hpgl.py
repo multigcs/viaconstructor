@@ -93,9 +93,9 @@ class HpglParser:
                 is_x = True
                 for cord in line.split(","):
                     if is_x:
-                        new_x = float(cord)
+                        new_x = float(cord) / 40.0
                     else:
-                        new_y = float(cord)
+                        new_y = float(cord) / 40.0
                         if not absolute:
                             new_x += last_x
                             new_y += last_y
