@@ -10,6 +10,7 @@ from PIL import Image, ImageDraw, ImageFont
 from viaconstructor.dxfread import DxfReader
 from viaconstructor.hpglread import HpglReader
 from viaconstructor.svgread import SvgReader
+from viaconstructor.xncread import XncReader
 
 
 def main() -> int:
@@ -53,6 +54,8 @@ def main() -> int:
         reader = SvgReader(filename)
     elif filename.lower().endswith(".hpgl"):
         reader = HpglReader(filename)
+    elif filename.lower().endswith(".xnc"):
+        reader = XncReader(filename)
     else:
         reader = DxfReader(filename)
     minmax = reader.get_minmax()

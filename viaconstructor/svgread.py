@@ -128,7 +128,6 @@ class SvgReader:
                     }
                 )
                 angle += astep
-
         else:
             (start, end, bulge) = ezdxf.math.arc_to_bulge(
                 center,

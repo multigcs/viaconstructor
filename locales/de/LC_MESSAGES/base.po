@@ -5,7 +5,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
-"POT-Creation-Date: 2022-07-23 18:52+0200\n"
+"POT-Creation-Date: 2022-07-23 19:32+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -297,90 +297,90 @@ msgstr ""
 msgid "showing as polygon in 3D preview"
 msgstr ""
 
-#: viaconstructor/viaconstructor.py:863
+#: viaconstructor/viaconstructor.py:864
 msgid "Exit"
 msgstr ""
 
-#: viaconstructor/viaconstructor.py:866
+#: viaconstructor/viaconstructor.py:867
 msgid "Exit application"
 msgstr ""
 
-#: viaconstructor/viaconstructor.py:871
+#: viaconstructor/viaconstructor.py:872
 msgid "Save Machine-Commands"
 msgstr ""
 
-#: viaconstructor/viaconstructor.py:874
+#: viaconstructor/viaconstructor.py:875
 msgid "Save machine commands"
 msgstr ""
 
-#: viaconstructor/viaconstructor.py:879 viaconstructor/viaconstructor.py:882
+#: viaconstructor/viaconstructor.py:880 viaconstructor/viaconstructor.py:883
 msgid "Load setup from"
 msgstr ""
 
-#: viaconstructor/viaconstructor.py:887
+#: viaconstructor/viaconstructor.py:888
 msgid "Load setup from machine_cmd"
 msgstr ""
 
-#: viaconstructor/viaconstructor.py:890
+#: viaconstructor/viaconstructor.py:891
 msgid "Load-Setup from machine_cmd"
 msgstr ""
 
-#: viaconstructor/viaconstructor.py:895
+#: viaconstructor/viaconstructor.py:896
 msgid "Save setup as default"
 msgstr ""
 
-#: viaconstructor/viaconstructor.py:898
+#: viaconstructor/viaconstructor.py:899
 msgid "Save-Setup"
 msgstr ""
 
-#: viaconstructor/viaconstructor.py:903
+#: viaconstructor/viaconstructor.py:904
 msgid "Save setup as"
 msgstr ""
 
-#: viaconstructor/viaconstructor.py:906
+#: viaconstructor/viaconstructor.py:907
 msgid "Save setup  as"
 msgstr ""
 
-#: viaconstructor/viaconstructor.py:911 viaconstructor/viaconstructor.py:914
+#: viaconstructor/viaconstructor.py:912 viaconstructor/viaconstructor.py:915
 msgid "View-Reset"
 msgstr ""
 
-#: viaconstructor/viaconstructor.py:919 viaconstructor/viaconstructor.py:922
+#: viaconstructor/viaconstructor.py:920 viaconstructor/viaconstructor.py:923
 msgid "2D-View"
 msgstr ""
 
-#: viaconstructor/viaconstructor.py:927
+#: viaconstructor/viaconstructor.py:928
 msgid "Flip-X"
 msgstr ""
 
-#: viaconstructor/viaconstructor.py:930
+#: viaconstructor/viaconstructor.py:931
 msgid "Flip-X workpiece"
 msgstr ""
 
-#: viaconstructor/viaconstructor.py:935
+#: viaconstructor/viaconstructor.py:936
 msgid "Flip-Y"
 msgstr ""
 
-#: viaconstructor/viaconstructor.py:938
+#: viaconstructor/viaconstructor.py:939
 msgid "Flip-Y workpiece"
 msgstr ""
 
-#: viaconstructor/viaconstructor.py:943
+#: viaconstructor/viaconstructor.py:944
 msgid "Rotate"
 msgstr ""
 
-#: viaconstructor/viaconstructor.py:946
+#: viaconstructor/viaconstructor.py:947
 msgid "Rotate workpiece"
 msgstr ""
 
-#: viaconstructor/viaconstructor.py:951 viaconstructor/viaconstructor.py:954
+#: viaconstructor/viaconstructor.py:952 viaconstructor/viaconstructor.py:955
 msgid "Tab-Selector"
 msgstr ""
 
-#: viaconstructor/viaconstructor.py:1069
+#: viaconstructor/viaconstructor.py:1070
 msgid "select this row"
 msgstr ""
 
-#: viaconstructor/viaconstructor.py:1226
+#: viaconstructor/viaconstructor.py:1229
 msgid "Global-Settings:"
 msgstr "Globale-Einstellungen:"

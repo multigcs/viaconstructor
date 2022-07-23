@@ -70,6 +70,7 @@ from .output_plugins.gcode_linuxcnc import PostProcessorGcodeLinuxCNC
 from .output_plugins.hpgl import PostProcessorHpgl
 from .setupdefaults import setup_defaults
 from .svgread import SvgReader
+from .xncread import XncReader
 
 try:
     from OpenGL import GL
@@ -379,7 +380,7 @@ class ViaConstructor:
         },
     }
     save_tabs = "ask"
-    draw_reader: Union[DxfReader, SvgReader, HpglReader]
+    draw_reader: Union[DxfReader, SvgReader, HpglReader, XncReader]
 
     def run_calculation(self) -> None:
         """run all calculations."""
@@ -1116,6 +1117,8 @@ class ViaConstructor:
             self.save_tabs = "no"
         elif self.args.filename.lower().endswith(".dxf"):
             self.draw_reader = DxfReader(self.args.filename)
+        elif self.args.filename.lower().endswith(".xnc"):
+            self.draw_reader = XncReader(self.args.filename)
         elif self.args.filename.lower().endswith(".hpgl"):
             self.draw_reader = HpglReader(self.args.filename)
         else:
