@@ -5,7 +5,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
-"POT-Creation-Date: 2022-07-23 18:52+0200\n"
+"POT-Creation-Date: 2022-07-24 17:00+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -208,92 +208,108 @@ msgstr ""
 msgid "height of the tabs"
 msgstr ""
 
+#: viaconstructor/setupdefaults.py:275
+msgid "rectangle"
+msgstr ""
+
+#: viaconstructor/setupdefaults.py:276
+msgid "triangle"
+msgstr ""
+
 #: viaconstructor/setupdefaults.py:278
-msgid "Feedrate"
+msgid "Type"
 msgstr ""
 
 #: viaconstructor/setupdefaults.py:279
+msgid "type of the tab"
+msgstr ""
+
+#: viaconstructor/setupdefaults.py:288
+msgid "Feedrate"
+msgstr ""
+
+#: viaconstructor/setupdefaults.py:289
 msgid "maximum feedrate while milling"
 msgstr ""
 
-#: viaconstructor/setupdefaults.py:286
+#: viaconstructor/setupdefaults.py:296
 #, fuzzy
 msgid "Tool-Speed"
 msgstr "Geschwindigkeit"
 
-#: viaconstructor/setupdefaults.py:287
+#: viaconstructor/setupdefaults.py:297
 msgid "maximum tool-speed"
 msgstr ""
 
-#: viaconstructor/setupdefaults.py:293
+#: viaconstructor/setupdefaults.py:303
 msgid "gcode_linuxcnc"
 msgstr ""
 
-#: viaconstructor/setupdefaults.py:294
+#: viaconstructor/setupdefaults.py:304
 msgid "hpgl"
 msgstr ""
 
-#: viaconstructor/setupdefaults.py:296
+#: viaconstructor/setupdefaults.py:306
 msgid "Plugin"
 msgstr ""
 
-#: viaconstructor/setupdefaults.py:297
+#: viaconstructor/setupdefaults.py:307
 msgid "output plugin selection"
 msgstr ""
 
-#: viaconstructor/setupdefaults.py:302 viaconstructor/setupdefaults.py:303
+#: viaconstructor/setupdefaults.py:312 viaconstructor/setupdefaults.py:313
 msgid "Laser-Mode"
 msgstr ""
 
-#: viaconstructor/setupdefaults.py:311
+#: viaconstructor/setupdefaults.py:321
 msgid "minimal"
 msgstr ""
 
-#: viaconstructor/setupdefaults.py:312
+#: viaconstructor/setupdefaults.py:322
 msgid "simple"
 msgstr ""
 
-#: viaconstructor/setupdefaults.py:313
+#: viaconstructor/setupdefaults.py:323
 msgid "full"
 msgstr ""
 
-#: viaconstructor/setupdefaults.py:315
+#: viaconstructor/setupdefaults.py:325
 msgid "Path"
 msgstr ""
 
-#: viaconstructor/setupdefaults.py:316
+#: viaconstructor/setupdefaults.py:326
 msgid "how to show the gcode path in the 3d-View"
 msgstr ""
 
-#: viaconstructor/setupdefaults.py:321
+#: viaconstructor/setupdefaults.py:331
 msgid "Ruler-Show"
 msgstr ""
 
-#: viaconstructor/setupdefaults.py:322
+#: viaconstructor/setupdefaults.py:332
 msgid "showing ruler in 3D preview"
 msgstr ""
 
-#: viaconstructor/setupdefaults.py:327
+#: viaconstructor/setupdefaults.py:337
 msgid "Grid-Show"
 msgstr ""
 
-#: viaconstructor/setupdefaults.py:328
+#: viaconstructor/setupdefaults.py:338
 msgid "showing grid in 3D preview"
 msgstr ""
 
-#: viaconstructor/setupdefaults.py:335
+#: viaconstructor/setupdefaults.py:345
 msgid "Grid-Size"
 msgstr ""
 
-#: viaconstructor/setupdefaults.py:336
+#: viaconstructor/setupdefaults.py:346
 msgid "size of the grid"
 msgstr ""
 
-#: viaconstructor/setupdefaults.py:341
+#: viaconstructor/setupdefaults.py:351
 msgid "Show as Polygon"
 msgstr ""
 
-#: viaconstructor/setupdefaults.py:342
+#: viaconstructor/setupdefaults.py:352
 msgid "showing as polygon in 3D preview"
 msgstr ""
 

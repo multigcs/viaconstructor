@@ -1213,7 +1213,7 @@ class ViaConstructor:
 
         tabwidget = QTabWidget()
         tabwidget.addTab(self.project["glwidget"], "3D-View")
-        tabwidget.addTab(self.project["textwidget"], "G-Code")
+        tabwidget.addTab(self.project["textwidget"], "Maschine-Output")
 
         right_gridlayout = QGridLayout()
         right_gridlayout.addWidget(tabwidget)

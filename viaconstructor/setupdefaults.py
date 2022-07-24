@@ -268,6 +268,16 @@ def setup_defaults(_) -> dict:
                 "tooltip": _("height of the tabs"),
                 "per_object": True,
             },
+            "type": {
+                "default": "rectangle",
+                "type": "select",
+                "options": (
+                    ("rectangle", _("rectangle")),
+                    ("triangle", _("triangle")),
+                ),
+                "title": _("Type"),
+                "tooltip": _("type of the tab"),
+            },
         },
         "maschine": {
             "feedrate": {
