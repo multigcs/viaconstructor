@@ -1,5 +1,6 @@
 """dxf reading."""
 
+import argparse
 import math
 
 import ezdxf
@@ -7,7 +8,9 @@ import svgpathtools
 
 
 class SvgReader:
-    def __init__(self, filename: str):
+    def __init__(
+        self, filename: str, args: argparse.Namespace = None
+    ):  # pylint: disable=W0613
         """converting svg into single segments."""
         self.filename = filename
         self.segments: list[dict] = []

@@ -1,5 +1,6 @@
 """dxf reading."""
 
+import argparse
 import math
 
 import ezdxf
@@ -8,7 +9,9 @@ from ..calc import calc_distance  # pylint: disable=E0402
 
 
 class DxfReader:
-    def __init__(self, filename: str):
+    def __init__(
+        self, filename: str, args: argparse.Namespace = None
+    ):  # pylint: disable=W0613
         """converting dxf into single segments."""
         self.filename = filename
         self.doc = ezdxf.readfile(self.filename)

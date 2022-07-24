@@ -1099,6 +1099,9 @@ class ViaConstructor:
         parser.add_argument(
             "-o", "--output", help="save to machine_cmd", type=str, default=None
         )
+        parser.add_argument(
+            "-z", "--zslice", help="slice at postion z (stl)", type=str, default=None
+        )
         self.args = parser.parse_args()
 
         # load setup
@@ -1113,14 +1116,14 @@ class ViaConstructor:
 
         # load drawing #
         if self.args.filename.lower().endswith(".svg"):
-            self.draw_reader = SvgReader(self.args.filename)
+            self.draw_reader = SvgReader(self.args.filename, self.args)
             self.save_tabs = "no"
         elif self.args.filename.lower().endswith(".dxf"):
-            self.draw_reader = DxfReader(self.args.filename)
+            self.draw_reader = DxfReader(self.args.filename, self.args)
         elif self.args.filename.lower().endswith(".hpgl"):
-            self.draw_reader = HpglReader(self.args.filename)
+            self.draw_reader = HpglReader(self.args.filename, self.args)
         elif self.args.filename.lower().endswith(".stl"):
-            self.draw_reader = StlReader(self.args.filename)
+            self.draw_reader = StlReader(self.args.filename, self.args)
         else:
             print(f"ERROR: Unknown file suffix: {self.args.filename}")
             sys.exit(1)

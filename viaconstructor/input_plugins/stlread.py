@@ -1,5 +1,7 @@
 """dxf reading."""
 
+import argparse
+
 import meshcut
 import numpy as np
 import stl
@@ -8,17 +10,41 @@ from ..calc import calc_distance  # pylint: disable=E0402
 
 
 class StlReader:
-    def __init__(self, filename: str):
+    def __init__(self, filename: str, args: argparse.Namespace = None):
         """slicing and converting stl into single segments."""
         self.filename = filename
         self.segments: list[dict] = []
 
         meshdata = stl.mesh.Mesh.from_file(self.filename)
         verts = meshdata.vectors.reshape(-1, 3)
+        min_z = verts[0][2]
+        max_z = min_z
+        for vert in verts:
+            value_z = vert[2]
+            min_z = min(min_z, value_z)
+            max_z = max(max_z, value_z)
         faces = np.arange(len(verts)).reshape(-1, 3)
         verts, faces = meshcut.merge_close_vertices(verts, faces)
         mesh = meshcut.TriangleMesh(verts, faces)
-        plane = meshcut.Plane((0, 0, 1), (0, 0, 1))
+
+        print(f"STL: INFO: z_min={min_z}, z_max={max_z}")
+
+        slice_z = 0.5
+        if args.zslice:
+            if args.zslice.endswith("%"):
+                diff_z = max_z - min_z
+                percent = float(args.zslice[:-1])
+                slice_z = min_z + (diff_z * percent / 100.0)
+            else:
+                slice_z = float(args.zslice)
+
+        if slice_z > max_z:
+            slice_z = max_z
+        elif slice_z < min_z:
+            slice_z = min_z
+
+        print(f"STL: INFO: slicing stl at z={slice_z}")
+        plane = meshcut.Plane((0, 0, slice_z), (0, 0, 1))
         objects = meshcut.cross_section_mesh(mesh, plane)
 
         for obj in objects:

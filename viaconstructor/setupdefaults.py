@@ -297,7 +297,7 @@ def setup_defaults(_) -> dict:
                 "tooltip": _("maximum tool-speed"),
             },
             "plugin": {
-                "default": "simple",
+                "default": "gcode_linuxcnc",
                 "type": "select",
                 "options": (
                     ("gcode_linuxcnc", _("gcode_linuxcnc")),

@@ -1,12 +1,15 @@
 """dxf reading."""
 
+import argparse
 import math
 
 from ..calc import angle_of_line, calc_distance  # pylint: disable=E0402
 
 
 class HpglReader:
-    def __init__(self, filename: str):
+    def __init__(
+        self, filename: str, args: argparse.Namespace = None
+    ):  # pylint: disable=W0613
         """converting hpgl into single segments."""
         self.filename = filename
         self.segments: list[dict] = []
