@@ -4,7 +4,7 @@ import math
 
 import ezdxf
 
-from .calc import calc_distance
+from ..calc import calc_distance  # pylint: disable=E0402
 
 
 class DxfReader:
@@ -201,3 +201,7 @@ class DxfReader:
             print(
                 f"ERROR while saving tabs to dxf file ({self.filename}): {save_error}"
             )
+
+    @staticmethod
+    def suffix() -> list[str]:
+        return ["dxf"]

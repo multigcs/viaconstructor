@@ -178,3 +178,7 @@ class SvgReader:
 
     def save_tabs(self, tabs: list) -> None:
         pass
+
+    @staticmethod
+    def suffix() -> list[str]:
+        return ["svg"]

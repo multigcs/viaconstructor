@@ -6,3 +6,4 @@ Pillow
 pygame
 Hershey-Fonts
 svgpathtools
+meshcut

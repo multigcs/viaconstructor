@@ -7,9 +7,10 @@ from os import environ
 
 from PIL import Image, ImageDraw, ImageFont
 
-from viaconstructor.dxfread import DxfReader
-from viaconstructor.hpglread import HpglReader
-from viaconstructor.svgread import SvgReader
+from viaconstructor.input_plugins.dxfread import DxfReader
+from viaconstructor.input_plugins.hpglread import HpglReader
+from viaconstructor.input_plugins.stlread import StlReader
+from viaconstructor.input_plugins.svgread import SvgReader
 
 
 def main() -> int:
@@ -53,6 +54,8 @@ def main() -> int:
         reader = SvgReader(filename)
     elif filename.lower().endswith(".hpgl"):
         reader = HpglReader(filename)
+    elif filename.lower().endswith(".stl"):
+        reader = StlReader(filename)
     else:
         reader = DxfReader(filename)
     minmax = reader.get_minmax()

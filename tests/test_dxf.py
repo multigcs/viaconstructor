@@ -1,6 +1,6 @@
 import pytest
 
-from viaconstructor import dxfread
+from viaconstructor.input_plugins import dxfread
 
 
 @pytest.mark.parametrize(

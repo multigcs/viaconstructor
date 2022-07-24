@@ -56,7 +56,6 @@ from .calc import (
     rotate_objects,
     segments2objects,
 )
-from .dxfread import DxfReader
 from .gldraw import (
     draw_grid,
     draw_maschinecode_path,
@@ -64,12 +63,14 @@ from .gldraw import (
     draw_object_faces,
     draw_object_ids,
 )
-from .hpglread import HpglReader
+from .input_plugins.dxfread import DxfReader
+from .input_plugins.hpglread import HpglReader
+from .input_plugins.stlread import StlReader
+from .input_plugins.svgread import SvgReader
 from .machine_cmd import polylines2machine_cmd
 from .output_plugins.gcode_linuxcnc import PostProcessorGcodeLinuxCNC
 from .output_plugins.hpgl import PostProcessorHpgl
 from .setupdefaults import setup_defaults
-from .svgread import SvgReader
 
 try:
     from OpenGL import GL
@@ -379,7 +380,7 @@ class ViaConstructor:
         },
     }
     save_tabs = "ask"
-    draw_reader: Union[DxfReader, SvgReader, HpglReader]
+    draw_reader: Union[DxfReader, SvgReader, HpglReader, StlReader]
 
     def run_calculation(self) -> None:
         """run all calculations."""
@@ -1118,6 +1119,8 @@ class ViaConstructor:
             self.draw_reader = DxfReader(self.args.filename)
         elif self.args.filename.lower().endswith(".hpgl"):
             self.draw_reader = HpglReader(self.args.filename)
+        elif self.args.filename.lower().endswith(".stl"):
+            self.draw_reader = StlReader(self.args.filename)
         else:
             print(f"ERROR: Unknown file suffix: {self.args.filename}")
             sys.exit(1)

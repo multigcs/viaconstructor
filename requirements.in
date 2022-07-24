@@ -8,3 +8,4 @@ svgpathtools==1.5.1
 
 # for gcode-preview.py display
 pygame==2.1.2
+meshcut==0.3.0

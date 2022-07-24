@@ -2,7 +2,7 @@
 
 import math
 
-from .calc import angle_of_line, calc_distance
+from ..calc import angle_of_line, calc_distance  # pylint: disable=E0402
 
 
 class HpglReader:
@@ -182,3 +182,7 @@ class HpglReader:
 
     def save_tabs(self, tabs: list) -> None:
         pass
+
+    @staticmethod
+    def suffix() -> list[str]:
+        return ["hpgl"]
