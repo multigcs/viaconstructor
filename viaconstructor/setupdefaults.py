@@ -351,5 +351,11 @@ def setup_defaults(_) -> dict:
                 "title": _("Show as Polygon"),
                 "tooltip": _("showing as polygon in 3D preview"),
             },
+            "3d_show": {
+                "default": False,
+                "type": "bool",
+                "title": _("Show inputfile in 3d"),
+                "tooltip": _("Show inputfile in 3d if possible"),
+            },
         },
     }

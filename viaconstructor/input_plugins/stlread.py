@@ -5,6 +5,7 @@ import argparse
 import meshcut
 import numpy as np
 import stl
+from OpenGL import GL
 
 from ..calc import calc_distance  # pylint: disable=E0402
 
@@ -16,17 +17,17 @@ class StlReader:
         self.segments: list[dict] = []
 
         meshdata = stl.mesh.Mesh.from_file(self.filename)
-        verts = meshdata.vectors.reshape(-1, 3)
-        min_z = verts[0][2]
+        self.verts_3d = meshdata.vectors.reshape(-1, 3)
+        min_z = self.verts_3d[0][2]
         max_z = min_z
-        for vert in verts:
+        for vert in self.verts_3d:
             value_z = vert[2]
             min_z = min(min_z, value_z)
             max_z = max(max_z, value_z)
-        faces = np.arange(len(verts)).reshape(-1, 3)
-        verts, faces = meshcut.merge_close_vertices(verts, faces)
+        self.faces_3d = np.arange(len(self.verts_3d)).reshape(-1, 3)
+        verts, faces = meshcut.merge_close_vertices(self.verts_3d, self.faces_3d)
         mesh = meshcut.TriangleMesh(verts, faces)
-        diff_z = max_z - min_z
+        self.diff_z = max_z - min_z
 
         print(f"STL: INFO: z_min={min_z}, z_max={max_z}")
 
@@ -34,12 +35,12 @@ class StlReader:
         if args.zslice:
             if args.zslice.endswith("%"):
                 percent = float(args.zslice[:-1])
-                slice_z = min_z + (diff_z * percent / 100.0)
+                slice_z = min_z + (self.diff_z * percent / 100.0)
             else:
                 slice_z = float(args.zslice)
 
         if slice_z is None:
-            slice_z = min_z + (diff_z / 2.0)
+            slice_z = min_z + (self.diff_z / 2.0)
 
         if slice_z > max_z:
             slice_z = max_z
@@ -105,6 +106,18 @@ class StlReader:
     def draw(self, draw_function, user_data=()) -> None:
         for segment in self.segments:
             draw_function(segment["start"], segment["end"], *user_data)
+
+    def draw_3d(self):
+        GL.glColor4f(1.0, 1.0, 1.0, 0.3)
+        GL.glBegin(GL.GL_TRIANGLES)
+        for face in self.faces_3d:
+            coords = self.verts_3d[face[0]].tolist()
+            GL.glVertex3f(coords[0], coords[1], coords[2] - self.diff_z)
+            coords = self.verts_3d[face[1]].tolist()
+            GL.glVertex3f(coords[0], coords[1], coords[2] - self.diff_z)
+            coords = self.verts_3d[face[2]].tolist()
+            GL.glVertex3f(coords[0], coords[1], coords[2] - self.diff_z)
+        GL.glEnd()
 
     def save_tabs(self, tabs: list) -> None:
         pass

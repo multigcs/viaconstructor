@@ -558,6 +558,9 @@ class ViaConstructor:
         self.project["gllist"] = GL.glGenLists(1)
         GL.glNewList(self.project["gllist"], GL.GL_COMPILE)
         draw_grid(self.project)
+        if self.project["setup"]["view"]["3d_show"]:
+            if hasattr(self.draw_reader, "draw_3d"):
+                self.draw_reader.draw_3d()
         if not draw_maschinecode_path(self.project):
             self.status_bar.showMessage("error while drawing maschine commands")
         draw_object_ids(self.project)
