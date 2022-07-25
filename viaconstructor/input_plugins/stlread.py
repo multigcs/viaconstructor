@@ -26,17 +26,20 @@ class StlReader:
         faces = np.arange(len(verts)).reshape(-1, 3)
         verts, faces = meshcut.merge_close_vertices(verts, faces)
         mesh = meshcut.TriangleMesh(verts, faces)
+        diff_z = max_z - min_z
 
         print(f"STL: INFO: z_min={min_z}, z_max={max_z}")
 
-        slice_z = 0.5
+        slice_z = None
         if args.zslice:
             if args.zslice.endswith("%"):
-                diff_z = max_z - min_z
                 percent = float(args.zslice[:-1])
                 slice_z = min_z + (diff_z * percent / 100.0)
             else:
                 slice_z = float(args.zslice)
+
+        if slice_z is None:
+            slice_z = min_z + (diff_z / 2.0)
 
         if slice_z > max_z:
             slice_z = max_z

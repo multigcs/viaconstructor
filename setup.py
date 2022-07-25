@@ -8,12 +8,12 @@ from setuptools import setup
 
 setup(
     name='viaconstructor',
-    version='0.1.4',
+    version='0.1.6',
     author='Oliver Dippel',
     author_email='o.dippel@gmx.de',
-    packages=['viaconstructor', 'viaconstructor.output_plugins', 'gcodepreview', 'dxfpreview'],
+    packages=['viaconstructor', 'viaconstructor.input_plugins', 'viaconstructor.output_plugins', 'viaconstructor.preview_plugins', 'gcodepreview', 'dxfpreview'],
     scripts=['bin/viaconstructor','bin/gcodepreview','bin/dxfpreview'],
-    url='http://pypi.python.org/pypi/viaconstructor/',
+    url='https://github.com/multigcs/viaconstructor',
     license='LICENSE',
     description='python based cam-tool to convert dxf into gcode',
     long_description=open('README.md').read(),
