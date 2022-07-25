@@ -6,6 +6,10 @@ from copy import deepcopy
 import cavaliercontours as cavc
 import ezdxf
 
+# import trimesh
+# import pocketing
+# from shapely import geometry
+
 
 # ########## Misc Functions ###########
 def rotate_list(rlist, idx):
@@ -312,6 +316,20 @@ def vertex2points(vertex_data, limit=None):
     return points
 
 
+def points2vertex(points):
+    """converts a list of points to vertex"""
+    xdata = []
+    ydata = []
+    bdata = []
+    for point in points:
+        pos_x = point[0]
+        pos_y = point[1]
+        xdata.append(pos_x)
+        ydata.append(pos_y)
+        bdata.append(0)
+    return (xdata, ydata, bdata)
+
+
 def object2vertex(obj):
     """converts an object to vertex points"""
     xdata = []
@@ -389,6 +407,46 @@ def found_next_tab_point(mpos, offsets):
             last_y = pos_y
             last_bulge = next_bulge
     return ()
+
+
+"""
+def do_pockets_trochoidal(  # pylint: disable=R0913
+    polyline,
+    obj,
+    obj_idx,
+    tool_offset,
+    tool_radius,
+    polyline_offsets,
+    offset_idx,
+    vertex_data_org,
+):
+    plist = []
+    vertex_data = polyline.vertex_data()
+    for idx, pos_x in enumerate(vertex_data[0]):
+        pos_y = vertex_data[1][idx]
+        plist.append([pos_x, pos_y])
+
+    poly = geometry.Polygon(plist)
+
+    #toolpaths = pocketing.contour.contour_parallel(poly, tool_radius)
+    toolpaths = [pocketing.trochoidal.toolpath(poly, step=(tool_radius * 0.75))]
+
+    for part in toolpaths:
+        points = []
+        for point in part:
+            points.append(point.tolist())
+        vertex_data = points2vertex(points)
+        polyline_offset = cavc.Polyline(vertex_data, is_closed=obj["closed"])
+        polyline_offset.level = len(obj.get("outer_objects", []))
+        polyline_offset.tool_offset = tool_offset
+        polyline_offset.layer = obj["layer"]
+        polyline_offset.setup = obj["setup"]
+        polyline_offset.is_pocket = True
+        polyline_offsets[f"{obj_idx}.{offset_idx}"] = polyline_offset
+        offset_idx += 1
+
+    return offset_idx
+"""
 
 
 def do_pockets(  # pylint: disable=R0913
