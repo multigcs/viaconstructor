@@ -205,6 +205,32 @@ class DxfReader:
                 f"ERROR while saving tabs to dxf file ({self.filename}): {save_error}"
             )
 
+    def save_starts(self, objects: list) -> None:
+        delete_layers = []
+        for layer in self.doc.layers:
+            if layer.dxf.name.startswith("_STARTS"):
+                delete_layers.append(layer.dxf.name)
+
+        for layer_name in delete_layers:
+            for element in self.model_space:
+                if element.dxf.layer == layer_name:
+                    element.destroy()
+            self.doc.layers.remove(layer_name)
+
+        tabs_layer = self.doc.layers.add("_STARTS")
+        tabs_layer.color = 1
+        for obj in objects.values():
+            start = obj.get("start")
+            if start:
+                self.model_space.add_line(start, start, dxfattribs={"layer": "_STARTS"})
+
+        try:
+            self.doc.saveas(self.filename)
+        except Exception as save_error:  # pylint: disable=W0703
+            print(
+                f"ERROR while saving tabs to dxf file ({self.filename}): {save_error}"
+            )
+
     @staticmethod
     def suffix() -> list[str]:
         return ["dxf"]

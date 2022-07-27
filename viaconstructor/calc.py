@@ -365,6 +365,33 @@ def object2vertex(obj):
 
 
 # ########## Polyline Functions ###########
+def found_next_segment_point(mpos, objects):
+    nearest = ()
+    min_dist = None
+    for obj_idx, obj in objects.items():
+        for segment in obj["segments"]:
+            pos_x = segment["start"][0]
+            pos_y = segment["start"][1]
+            dist = calc_distance(mpos, (pos_x, pos_y))
+            if min_dist is None or dist < min_dist:
+                min_dist = dist
+                nearest = (pos_x, pos_y, obj_idx)
+    return nearest
+
+
+def found_next_offset_point(mpos, offset):
+    nearest = ()
+    min_dist = None
+    vertex_data = offset.vertex_data()
+    for point_num, pos_x in enumerate(vertex_data[0]):
+        pos_y = vertex_data[1][point_num]
+        dist = calc_distance(mpos, (pos_x, pos_y))
+        if min_dist is None or dist < min_dist:
+            min_dist = dist
+            nearest = (pos_x, pos_y, point_num)
+    return nearest
+
+
 def found_next_tab_point(mpos, offsets):
     for offset in offsets.values():
         vertex_data = offset.vertex_data()
@@ -441,6 +468,7 @@ def do_pockets_trochoidal(  # pylint: disable=R0913
         polyline_offset.tool_offset = tool_offset
         polyline_offset.layer = obj["layer"]
         polyline_offset.setup = obj["setup"]
+        polyline_offset.start = obj.get("start", ())
         polyline_offset.is_pocket = True
         polyline_offsets[f"{obj_idx}.{offset_idx}"] = polyline_offset
         offset_idx += 1
@@ -473,6 +501,7 @@ def do_pockets(  # pylint: disable=R0913
             polyline_offset.tool_offset = tool_offset
             polyline_offset.layer = obj["layer"]
             polyline_offset.setup = obj["setup"]
+            polyline_offset.start = obj.get("start", ())
             polyline_offset.is_pocket = True
             polyline_offsets[f"{obj_idx}.{offset_idx}"] = polyline_offset
             offset_idx += 1
@@ -595,6 +624,7 @@ def object2polyline_offsets(diameter, obj, obj_idx, max_outer, small_circles=Fal
 
             over_polyline = cavc.Polyline((xdata, ydata, bdata), is_closed=True)
             over_polyline.level = len(obj.get("outer_objects", []))
+            over_polyline.start = obj.get("start", ())
             over_polyline.setup = obj.get("setup", {})
             over_polyline.layer = obj.get("layer", "")
             over_polyline.is_pocket = False
@@ -623,6 +653,7 @@ def object2polyline_offsets(diameter, obj, obj_idx, max_outer, small_circles=Fal
         if polyline_offset_list:
             for polyline_offset in polyline_offset_list:
                 polyline_offset.level = len(obj.get("outer_objects", []))
+                polyline_offset.start = obj.get("start", ())
                 polyline_offset.tool_offset = tool_offset
                 polyline_offset.setup = obj["setup"]
                 polyline_offset.layer = obj.get("layer", "")
@@ -649,6 +680,7 @@ def object2polyline_offsets(diameter, obj, obj_idx, max_outer, small_circles=Fal
             vertex_data = ((center_x,), (center_y,), (0,))
             polyline_offset = cavc.Polyline(vertex_data, is_closed=False)
             polyline_offset.level = len(obj.get("outer_objects", []))
+            polyline_offset.start = obj.get("start", ())
             polyline_offset.tool_offset = tool_offset
             polyline_offset.setup = obj["setup"]
             polyline_offset.layer = obj.get("layer", "")
@@ -662,8 +694,9 @@ def object2polyline_offsets(diameter, obj, obj_idx, max_outer, small_circles=Fal
 
     else:
         polyline.level = max_outer
-        polyline.tool_offset = tool_offset
         polyline.setup = obj["setup"]
+        polyline.tool_offset = tool_offset
+        polyline.start = obj.get("start", ())
         polyline.layer = obj.get("layer", "")
         polyline.is_pocket = False
         polyline.is_circle = False

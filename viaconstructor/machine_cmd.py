@@ -7,6 +7,7 @@ import ezdxf
 from .calc import (
     angle_of_line,
     calc_distance,
+    found_next_offset_point,
     lines_intersect,
     rotate_list,
     vertex2points,
@@ -411,18 +412,34 @@ def get_nearest_free_object(
             and offset.level == level
             and offset.setup["mill"]["active"]
         ):
-            vertex_data = offset.vertex_data()
             if offset.is_closed():
-                for point_num, pos_x in enumerate(vertex_data[0]):
-                    pos_y = vertex_data[1][point_num]
-                    dist = calc_distance(last_pos, (pos_x, pos_y))
-                    if nearest_dist is None or dist < nearest_dist:
-                        nearest_dist = dist
-                        nearest_idx = offset_num
-                        nearest_point = point_num
-                        found = True
+                vertex_data = offset.vertex_data()
+                if offset.start:
+                    point_num = found_next_offset_point(
+                        (offset.start[0], offset.start[1]), offset
+                    )
+                    if point_num:
+                        point_num = point_num[2]
+                        pos_x = vertex_data[0][point_num]
+                        pos_y = vertex_data[1][point_num]
+                        dist = calc_distance(last_pos, (pos_x, pos_y))
+                        if nearest_dist is None or dist < nearest_dist:
+                            nearest_dist = dist
+                            nearest_idx = offset_num
+                            nearest_point = point_num
+                            found = True
+                else:
+                    for point_num, pos_x in enumerate(vertex_data[0]):
+                        pos_y = vertex_data[1][point_num]
+                        dist = calc_distance(last_pos, (pos_x, pos_y))
+                        if nearest_dist is None or dist < nearest_dist:
+                            nearest_dist = dist
+                            nearest_idx = offset_num
+                            nearest_point = point_num
+                            found = True
             else:
                 # on open obejcts, test first and last point
+                vertex_data = offset.vertex_data()
                 dist = calc_distance(last_pos, (vertex_data[0][0], vertex_data[1][0]))
                 if nearest_dist is None or dist < nearest_dist:
                     nearest_dist = dist

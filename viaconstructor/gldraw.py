@@ -291,13 +291,13 @@ def draw_object_ids(project: dict) -> None:
 
 def draw_object_edges(project: dict) -> None:
     """draws the edges of an object"""
-    GL.glLineWidth(1)
-    GL.glColor4f(1.0, 1.0, 1.0, 1.0)
     for obj in project["objects"].values():
         if obj.get("layer", "").startswith("BREAKS:") or obj.get(
             "layer", ""
         ).startswith("_TABS"):
             continue
+        GL.glLineWidth(1)
+        GL.glColor4f(1.0, 1.0, 1.0, 1.0)
         # side
         GL.glBegin(GL.GL_LINES)
         for segment in obj["segments"]:
@@ -326,7 +326,19 @@ def draw_object_edges(project: dict) -> None:
             p_y = vertex_data[1][pos]
             GL.glVertex3f(p_x, p_y, project["setup"]["mill"]["depth"])
         GL.glEnd()
-
+        # start points
+        start = obj.get("start", ())
+        if start:
+            depth = 0.1
+            GL.glLineWidth(5)
+            GL.glColor4f(1.0, 1.0, 0.0, 1.0)
+            GL.glBegin(GL.GL_LINES)
+            GL.glVertex3f(start[0] - 1, start[1] - 1, depth)
+            GL.glVertex3f(start[0] + 1, start[1] + 1, depth)
+            GL.glVertex3f(start[0] - 1, start[1] + 1, depth)
+            GL.glVertex3f(start[0] + 1, start[1] - 1, depth)
+            GL.glEnd()
+    # tabs
     tabs = project.get("tabs", {}).get("data", ())
     if tabs:
         tabs_depth = (

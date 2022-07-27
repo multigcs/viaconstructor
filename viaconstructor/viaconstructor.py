@@ -47,6 +47,7 @@ from .calc import (
     calc_distance,
     clean_segments,
     find_tool_offsets,
+    found_next_segment_point,
     found_next_tab_point,
     line_center_2d,
     mirror_objects,
@@ -131,6 +132,7 @@ class GLWidget(QGLWidget):
     mouse_pos_x = 0
     mouse_pos_y = 0
     tab_selector = False
+    start_selector = False
     selection = ()
     size_x = 0
     size_y = 0
@@ -211,18 +213,40 @@ class GLWidget(QGLWidget):
         GL.glCallList(self.project["gllist"])
 
         if self.selection:
-            depth = self.project["setup"]["mill"]["depth"] - 0.1
-            GL.glLineWidth(5)
-            GL.glColor4f(0.0, 1.0, 1.0, 1.0)
-            GL.glBegin(GL.GL_LINES)
-            GL.glVertex3f(self.selection[0][0], self.selection[0][1], depth)
-            GL.glVertex3f(self.selection[1][0], self.selection[1][1], depth)
-            GL.glEnd()
+            if self.start_selector:
+                # depth = self.project["setup"]["mill"]["depth"] - 0.1
+                depth = 0.1
+                GL.glLineWidth(5)
+                GL.glColor4f(0.0, 1.0, 1.0, 1.0)
+                GL.glBegin(GL.GL_LINES)
+                GL.glVertex3f(self.selection[0] - 1, self.selection[1] - 1, depth)
+                GL.glVertex3f(self.selection[0] + 1, self.selection[1] + 1, depth)
+                GL.glVertex3f(self.selection[0] - 1, self.selection[1] + 1, depth)
+                GL.glVertex3f(self.selection[0] + 1, self.selection[1] - 1, depth)
+                GL.glEnd()
+            else:
+                depth = self.project["setup"]["mill"]["depth"] - 0.1
+                GL.glLineWidth(5)
+                GL.glColor4f(0.0, 1.0, 1.0, 1.0)
+                GL.glBegin(GL.GL_LINES)
+                GL.glVertex3f(self.selection[0][0], self.selection[0][1], depth)
+                GL.glVertex3f(self.selection[1][0], self.selection[1][1], depth)
+                GL.glEnd()
+
         GL.glPopMatrix()
 
     def toggle_tab_selector(self) -> None:
+        self.selection = ()
         self.tab_selector = not self.tab_selector
+        self.start_selector = False
         if self.tab_selector:
+            self.view_2d()
+
+    def toggle_start_selector(self) -> None:
+        self.selection = ()
+        self.start_selector = not self.start_selector
+        self.tab_selector = False
+        if self.start_selector:
             self.view_2d()
 
     def view_2d(self) -> None:
@@ -236,6 +260,8 @@ class GLWidget(QGLWidget):
     def view_reset(self) -> None:
         """toggle view function."""
         if self.tab_selector:
+            return
+        if self.start_selector:
             return
         self.ortho = False
         self.rot_x = -20.0
@@ -252,7 +278,6 @@ class GLWidget(QGLWidget):
         if self.project["status"] == "INIT":
             self.project["status"] = "READY"
             self.update_drawing()
-
         self.update()
 
     def mousePressEvent(self, event) -> None:  # pylint: disable=C0103
@@ -265,29 +290,45 @@ class GLWidget(QGLWidget):
         self.trans_x_last = self.trans_x
         self.trans_y_last = self.trans_y
         self.trans_z_last = self.trans_z
-        if self.tab_selector:
+        if self.tab_selector or self.start_selector and self.selection:
             if self.mbutton == 1:
                 if self.selection:
-                    self.project["tabs"]["data"].append(self.selection)
+                    if self.tab_selector:
+                        self.project["tabs"]["data"].append(self.selection)
+                        self.project["app"].update_tabs()
+                    elif self.start_selector:
+                        obj_idx = self.selection[2]
+                        self.project["objects"][obj_idx]["start"] = (
+                            self.selection[0],
+                            self.selection[1],
+                        )
+                        self.project["app"].update_starts()
                 self.update_drawing()
                 self.update()
-                self.project["app"].update_tabs()
             elif self.mbutton == 2:
-                sel_idx = -1
-                sel_dist = -1
-                for tab_idx, tab in enumerate(self.project["tabs"]["data"]):
-                    tab_pos = line_center_2d(tab[0], tab[1])
+                if self.tab_selector:
+                    sel_idx = -1
+                    sel_dist = -1
+                    for tab_idx, tab in enumerate(self.project["tabs"]["data"]):
+                        tab_pos = line_center_2d(tab[0], tab[1])
+                        dist = calc_distance(
+                            (self.mouse_pos_x, self.mouse_pos_y), tab_pos
+                        )
+                        if sel_dist < 0 or dist < sel_dist:
+                            sel_dist = dist
+                            sel_idx = tab_idx
 
-                    dist = calc_distance((self.mouse_pos_x, self.mouse_pos_y), tab_pos)
-                    if sel_dist < 0 or dist < sel_dist:
-                        sel_dist = dist
-                        sel_idx = tab_idx
-
-                if 0.0 < sel_dist < 10.0:
-                    del self.project["tabs"]["data"][sel_idx]
+                    if 0.0 < sel_dist < 10.0:
+                        del self.project["tabs"]["data"][sel_idx]
+                        self.update_drawing()
+                        self.update()
+                        self.project["app"].update_tabs()
+                elif self.start_selector:
+                    obj_idx = self.selection[2]
+                    self.project["objects"][obj_idx]["start"] = ()
                     self.update_drawing()
                     self.update()
-                    self.project["app"].update_tabs()
+                    self.project["app"].update_starts()
 
     def mouseReleaseEvent(self, event) -> None:  # pylint: disable=C0103,W0613
         """mouse button released."""
@@ -325,14 +366,14 @@ class GLWidget(QGLWidget):
             moffset = self.mpos - event.pos()
             self.trans_x = self.trans_x_last + moffset.x() / self.screen_w
             self.trans_y = self.trans_y_last - moffset.y() / self.screen_h * self.aspect
-        elif self.mbutton == 2 and not self.tab_selector:
+        elif self.mbutton == 2 and not self.tab_selector and not self.start_selector:
             moffset = self.mpos - event.pos()
             self.rot_z = self.rot_z_last - moffset.x() / 4
             self.trans_z = self.trans_z_last + moffset.y() / 500
             if self.ortho:
                 self.ortho = False
                 self.initializeGL()
-        elif self.mbutton == 4 and not self.tab_selector:
+        elif self.mbutton == 4 and not self.tab_selector and not self.start_selector:
             moffset = self.mpos - event.pos()
             self.rot_x = self.rot_x_last + -moffset.x() / 4
             self.rot_y = self.rot_y_last - moffset.y() / 4
@@ -345,6 +386,13 @@ class GLWidget(QGLWidget):
             )
             self.selection = found_next_tab_point(
                 (self.mouse_pos_x, self.mouse_pos_y), self.project["offsets"]
+            )
+        elif self.start_selector:
+            (self.mouse_pos_x, self.mouse_pos_y) = self.mouse_pos_to_real_pos(
+                event.pos()
+            )
+            self.selection = found_next_segment_point(
+                (self.mouse_pos_x, self.mouse_pos_y), self.project["objects"]
             )
 
     def wheelEvent(self, event) -> None:  # pylint: disable=C0103,W0613
@@ -380,6 +428,7 @@ class ViaConstructor:
         },
     }
     save_tabs = "ask"
+    save_starts = "no"
     draw_reader: Union[DxfReader, SvgReader, HpglReader, StlReader]
 
     def run_calculation(self) -> None:
@@ -457,8 +506,12 @@ class ViaConstructor:
         self.project["glwidget"].view_2d()
 
     def _toolbar_toggle_tab_selector(self) -> None:
-        """center view."""
+        """tab selector."""
         self.project["glwidget"].toggle_tab_selector()
+
+    def _toolbar_toggle_start_selector(self) -> None:
+        """start selector."""
+        self.project["glwidget"].toggle_start_selector()
 
     def _toolbar_view_reset(self) -> None:
         """center view."""
@@ -750,6 +803,31 @@ class ViaConstructor:
                             print(f"Unknown setup-type: {entry['type']}")
         # self.project["objwidget"].expandAll()
 
+    def update_starts(self) -> None:
+        """update starts."""
+        if self.save_starts == "ask":
+            self.project["glwidget"].mouseReleaseEvent("")
+            info_test = []
+            info_test.append("Should i save starts in the DXF-File ?")
+            info_test.append("")
+            info_test.append(" this will create a new layer named _STARTS")
+            info_test.append(" exsiting layers named")
+            info_test.append(" _STARTS*")
+            info_test.append(" will be removed !")
+            info_test.append("")
+            ret = QMessageBox.question(
+                self.main,
+                "Warning",
+                "\n".join(info_test),
+                QMessageBox.Yes | QMessageBox.No,
+            )
+            if ret == QMessageBox.Yes:
+                self.save_starts = "yes"
+            else:
+                self.save_starts = "no"
+        if self.save_starts == "yes":
+            self.draw_reader.save_starts(self.project["objects"])
+
     def update_tabs(self) -> None:
         """update tabs table."""
         if self.save_tabs == "ask":
@@ -772,7 +850,6 @@ class ViaConstructor:
                 self.save_tabs = "yes"
             else:
                 self.save_tabs = "no"
-
         if self.save_tabs == "yes":
             self.draw_reader.save_tabs(self.project["tabs"]["data"])
 
@@ -959,6 +1036,14 @@ class ViaConstructor:
                 self._toolbar_toggle_tab_selector,
                 True,
                 "tabs",
+            ),
+            _("Start-Selector"): (
+                "tab-selector.png",
+                "",
+                _("Start-Selector"),
+                self._toolbar_toggle_start_selector,
+                True,
+                "start",
             ),
         }
         self.toolbar = QToolBar("top toolbar")

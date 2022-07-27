@@ -12,6 +12,7 @@ class fakeOffset:
         self.data = data
         self.tool_offset = tool_offset
         self.is_pocket = False
+        self.start = ()
 
     def is_closed(self):
         return self.closed
