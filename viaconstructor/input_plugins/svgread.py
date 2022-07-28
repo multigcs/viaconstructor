@@ -179,6 +179,9 @@ class SvgReader:
         for segment in self.segments:
             draw_function(segment["start"], segment["end"], *user_data)
 
+    def draw_3d(self):
+        pass
+
     def save_tabs(self, tabs: list) -> None:
         pass
 

@@ -155,7 +155,7 @@ class PostProcessorHpgl(PostProcessor):
             self.last_x = self.x_pos
             self.last_y = self.y_pos
 
-    def get(self) -> list[str]:
+    def get(self) -> str:
         output = ""
         last_word = ""
         for cmd in self.hpgl:
@@ -176,5 +176,5 @@ class PostProcessorHpgl(PostProcessor):
         return "hpgl"
 
     @staticmethod
-    def axis() -> str:
+    def axis() -> list[str]:
         return ["X", "Y"]

@@ -465,12 +465,13 @@ class ViaConstructor:
         )
 
         # create machine commands
+        output_plugin: Union[PostProcessorHpgl, PostProcessorGcodeLinuxCNC]
         if self.project["setup"]["maschine"]["plugin"] == "gcode_linuxcnc":
-            output_plugin = PostProcessorGcodeLinuxCNC
+            output_plugin = PostProcessorGcodeLinuxCNC()
             self.project["suffix"] = output_plugin.suffix()
             self.project["axis"] = output_plugin.axis()
         elif self.project["setup"]["maschine"]["plugin"] == "hpgl":
-            output_plugin = PostProcessorHpgl
+            output_plugin = PostProcessorHpgl()
             self.project["suffix"] = output_plugin.suffix()
             self.project["axis"] = output_plugin.axis()
         else:
@@ -478,9 +479,7 @@ class ViaConstructor:
                 f"ERROR: Unknown maschine output plugin: {self.project['setup']['maschine']['plugin']}"
             )
             sys.exit(1)
-        self.project["machine_cmd"] = polylines2machine_cmd(
-            self.project, output_plugin()
-        )
+        self.project["machine_cmd"] = polylines2machine_cmd(self.project, output_plugin)
 
         self.project["textwidget"].clear()
         self.project["textwidget"].insertPlainText(self.project["machine_cmd"])
@@ -825,8 +824,8 @@ class ViaConstructor:
                 self.save_starts = "yes"
             else:
                 self.save_starts = "no"
-        if self.save_starts == "yes":
-            self.draw_reader.save_starts(self.project["objects"])
+        # if self.save_starts == "yes":
+        #    self.draw_reader.save_starts(self.project["objects"])
 
     def update_tabs(self) -> None:
         """update tabs table."""

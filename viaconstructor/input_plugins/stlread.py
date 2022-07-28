@@ -32,12 +32,12 @@ class StlReader:
         print(f"STL: INFO: z_min={min_z}, z_max={max_z}")
 
         slice_z = None
-        if args.zslice:
-            if args.zslice.endswith("%"):
-                percent = float(args.zslice[:-1])
+        if args.zslice:  # type: ignore
+            if args.zslice.endswith("%"):  # type: ignore
+                percent = float(args.zslice[:-1])  # type: ignore
                 slice_z = min_z + (self.diff_z * percent / 100.0)
             else:
-                slice_z = float(args.zslice)
+                slice_z = float(args.zslice)  # type: ignore
 
         if slice_z is None:
             slice_z = min_z + (self.diff_z / 2.0)

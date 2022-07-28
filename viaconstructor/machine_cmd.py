@@ -70,8 +70,8 @@ class PostProcessor:
     ) -> None:
         pass
 
-    def get(self) -> list[str]:
-        return []
+    def get(self) -> str:
+        return ""
 
 
 def machine_cmd_begin(project: dict, post: PostProcessor) -> None:
@@ -455,7 +455,7 @@ def get_nearest_free_object(
     return (found, nearest_idx, nearest_point)
 
 
-def polylines2machine_cmd(project: dict, post: PostProcessor) -> list[str]:
+def polylines2machine_cmd(project: dict, post: PostProcessor) -> str:
     """generates machine_cmd from polilines"""
     milling: dict = {}
     last_pos: list = [0, 0]

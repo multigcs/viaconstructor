@@ -180,6 +180,9 @@ class DxfReader:
         for segment in self.segments:
             draw_function(segment["start"], segment["end"], *user_data)
 
+    def draw_3d(self):
+        pass
+
     def save_tabs(self, tabs: list) -> None:
         delete_layers = []
         for layer in self.doc.layers:
@@ -205,7 +208,7 @@ class DxfReader:
                 f"ERROR while saving tabs to dxf file ({self.filename}): {save_error}"
             )
 
-    def save_starts(self, objects: list) -> None:
+    def save_starts(self, objects: dict) -> None:
         delete_layers = []
         for layer in self.doc.layers:
             if layer.dxf.name.startswith("_STARTS"):

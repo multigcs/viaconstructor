@@ -132,7 +132,7 @@ class PostProcessorGcodeLinuxCNC(PostProcessor):
         if line:
             self.gcode.append("G03 " + " ".join(line))
 
-    def get(self) -> list[str]:
+    def get(self) -> str:
         return "\n".join(self.gcode)
 
     @staticmethod
@@ -140,5 +140,5 @@ class PostProcessorGcodeLinuxCNC(PostProcessor):
         return "ngc"
 
     @staticmethod
-    def axis() -> str:
+    def axis() -> list[str]:
         return ["X", "Y", "Z"]
