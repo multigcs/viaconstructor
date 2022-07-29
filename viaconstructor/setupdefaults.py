@@ -312,6 +312,12 @@ def setup_defaults(_) -> dict:
                 "title": _("Laser-Mode"),
                 "tooltip": _("Laser-Mode"),
             },
+            "postcommand": {
+                "default": "",
+                "type": "str",
+                "title": _("Post-Command"),
+                "tooltip": _("Post-Command to do things after save like upload to cnc"),
+            },
         },
         "view": {
             "path": {

@@ -28,6 +28,7 @@ from PyQt5.QtWidgets import (  # pylint: disable=E0611
     QGridLayout,
     QHBoxLayout,
     QLabel,
+    QLineEdit,
     QMainWindow,
     QMessageBox,
     QPlainTextEdit,
@@ -586,11 +587,11 @@ class ViaConstructor:
     def machine_cmd_save(self, filename: str) -> bool:
         with open(filename, "w") as fd_machine_cmd:
             fd_machine_cmd.write(self.project["machine_cmd"])
-            # jsetup = deepcopy(self.project["setup"])
-            # if "system" in jsetup:
-            #    del jsetup["system"]
-            # fd_machine_cmd.write(f"(setup={json.dumps(jsetup)})")
             fd_machine_cmd.write("\n")
+            if self.project["setup"]["maschine"]["postcommand"]:
+                cmd = f"{self.project['setup']['maschine']['postcommand']} '{filename}'"
+                print(f"executing postcommand: {cmd}")
+                os.system(f"{cmd} &")
             return True
         return False
 
@@ -778,6 +779,8 @@ class ViaConstructor:
             value = float(value)
         elif entry_type == "int":
             value = int(value)
+        elif entry_type == "str":
+            value = str(value)
         elif entry_type == "table":
             pass
         else:
@@ -864,6 +867,16 @@ class ViaConstructor:
                             self.project["objwidget"].setIndexWidget(
                                 value_cell.index(), spinbox
                             )
+                        elif entry["type"] == "str":
+                            lineedit = QLineEdit()
+                            lineedit.setText(value)
+                            lineedit.setToolTip(
+                                entry.get("tooltip", f"{sname}/{ename}")
+                            )
+                            lineedit.textChanged.connect(partial(self.object_changed, obj_idx, sname, ename))  # type: ignore
+                            self.project["objwidget"].setIndexWidget(
+                                value_cell.index(), lineedit
+                            )
                         elif entry["type"] == "table":
                             pass
                         else:
@@ -937,6 +950,8 @@ class ViaConstructor:
                     self.project["setup"][sname][ename] = entry["widget"].value()
                 elif entry["type"] == "int":
                     self.project["setup"][sname][ename] = entry["widget"].value()
+                elif entry["type"] == "str":
+                    self.project["setup"][sname][ename] = entry["widget"].text()
                 elif entry["type"] == "table":
                     for row_idx in range(entry["widget"].rowCount()):
                         col_idx = 0
@@ -1156,6 +1171,8 @@ class ViaConstructor:
                     entry["widget"].setValue(self.project["setup"][sname][ename])
                 elif entry["type"] == "int":
                     entry["widget"].setValue(self.project["setup"][sname][ename])
+                elif entry["type"] == "str":
+                    entry["widget"].setText(self.project["setup"][sname][ename])
                 elif entry["type"] == "table":
                     pass
                 else:
@@ -1206,6 +1223,13 @@ class ViaConstructor:
                     spinbox.valueChanged.connect(self.global_changed)  # type: ignore
                     hlayout.addWidget(spinbox)
                     entry["widget"] = spinbox
+                elif entry["type"] == "str":
+                    lineedit = QLineEdit()
+                    lineedit.setText(self.project["setup"][sname][ename])
+                    lineedit.setToolTip(entry.get("tooltip", f"{sname}/{ename}"))
+                    lineedit.textChanged.connect(self.global_changed)  # type: ignore
+                    hlayout.addWidget(lineedit)
+                    entry["widget"] = lineedit
                 elif entry["type"] == "table":
                     table = QTableWidget()
                     label.setToolTip(entry.get("tooltip", f"{sname}/{ename}"))
