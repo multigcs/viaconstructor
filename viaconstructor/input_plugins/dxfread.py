@@ -9,6 +9,9 @@ from ..calc import calc_distance  # pylint: disable=E0402
 
 
 class DxfReader:
+
+    VTYPES = ("INSERT", "LWPOLYLINE", "POLYLINE", "MLINE")
+
     def __init__(
         self, filename: str, args: argparse.Namespace = None
     ):  # pylint: disable=W0613
@@ -21,7 +24,7 @@ class DxfReader:
         self.model_space = self.doc.modelspace()
         for element in self.model_space:
             dxftype = element.dxftype()
-            if dxftype in ("INSERT", "LWPOLYLINE", "POLYLINE", "MLINE"):
+            if dxftype in self.VTYPES:
                 for v_element in element.virtual_entities():  # type: ignore
                     self.add_entity(v_element)
             else:
@@ -47,7 +50,12 @@ class DxfReader:
 
     def add_entity(self, element, offset: tuple = (0, 0)):
         dxftype = element.dxftype()
-        if dxftype == "LINE":
+
+        if dxftype in self.VTYPES:
+            for v_element in element.virtual_entities():  # type: ignore
+                self.add_entity(v_element)
+
+        elif dxftype == "LINE":
             dist = calc_distance(
                 (element.dxf.start.x, element.dxf.start.y),
                 (element.dxf.end.x, element.dxf.end.y),
