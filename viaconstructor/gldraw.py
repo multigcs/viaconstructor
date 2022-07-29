@@ -313,17 +313,16 @@ def draw_object_edges(project: dict) -> None:
             GL.glBegin(GL.GL_LINE_LOOP)
         else:
             GL.glBegin(GL.GL_LINE_STRIP)
-        for pos, p_x in enumerate(vertex_data[0]):
-            p_y = vertex_data[1][pos]
+        for p_x, p_y in zip(vertex_data[0], vertex_data[1]):
             GL.glVertex3f(p_x, p_y, 0.0)
         GL.glEnd()
+
         # bottom
         if closed:
             GL.glBegin(GL.GL_LINE_LOOP)
         else:
             GL.glBegin(GL.GL_LINE_STRIP)
-        for pos, p_x in enumerate(vertex_data[0]):
-            p_y = vertex_data[1][pos]
+        for p_x, p_y in zip(vertex_data[0], vertex_data[1]):
             GL.glVertex3f(p_x, p_y, project["setup"]["mill"]["depth"])
         GL.glEnd()
         # start points

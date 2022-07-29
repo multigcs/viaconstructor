@@ -24,6 +24,7 @@ class DxfReader:
         self.model_space = self.doc.modelspace()
         for element in self.model_space:
             dxftype = element.dxftype()
+
             if dxftype in self.VTYPES:
                 for v_element in element.virtual_entities():  # type: ignore
                     self.add_entity(v_element)
@@ -108,6 +109,15 @@ class DxfReader:
                 adiff = element.dxf.end_angle - element.dxf.start_angle
             if adiff < 0.0:
                 adiff += 360.0
+
+            # fixing 132_2000.dxf
+            if (
+                element.dxf.extrusion
+                and len(element.dxf.extrusion) == 3
+                and element.dxf.extrusion[2] == -1.0
+            ):
+                element.dxf.center = (-element.dxf.center[0], element.dxf.center[1])
+
             # split arcs in maximum 20mm long segments and minimum 45°
             num_parts = (element.dxf.radius * 2 * math.pi) / 20.0
             if num_parts > 0:

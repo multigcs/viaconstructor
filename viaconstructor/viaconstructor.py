@@ -500,7 +500,6 @@ class ViaConstructor:
         psetup: dict = self.project["setup"]
         min_max = objects2minmax(self.project["objects"])
         self.project["minMax"] = min_max
-
         if psetup["mill"]["zero"] == "bottomLeft":
             move_objects(self.project["objects"], -min_max[0], -min_max[1])
         elif psetup["mill"]["zero"] == "bottomRight":
@@ -517,7 +516,6 @@ class ViaConstructor:
                 -min_max[0] - xdiff / 2.0,
                 -min_max[1] - ydiff / 2.0,
             )
-
         self.project["minMax"] = objects2minmax(self.project["objects"])
 
         # create toolpath from objects
@@ -543,8 +541,8 @@ class ViaConstructor:
                 f"ERROR: Unknown maschine output plugin: {self.project['setup']['maschine']['plugin']}"
             )
             sys.exit(1)
-        self.project["machine_cmd"] = polylines2machine_cmd(self.project, output_plugin)
 
+        self.project["machine_cmd"] = polylines2machine_cmd(self.project, output_plugin)
         self.project["textwidget"].clear()
         self.project["textwidget"].insertPlainText(self.project["machine_cmd"])
         self.project["textwidget"].verticalScrollBar().setValue(0)
@@ -684,7 +682,10 @@ class ViaConstructor:
         if not self.project["glwidget"].repair_selector:
             if not draw_maschinecode_path(self.project):
                 self.status_bar.showMessage("error while drawing maschine commands")
-        draw_object_ids(self.project)
+
+        if self.project["setup"]["view"]["object_ids"]:
+            draw_object_ids(self.project)
+
         draw_object_edges(self.project)
         if self.project["setup"]["view"]["polygon_show"]:
             draw_object_faces(self.project)
@@ -1272,14 +1273,11 @@ class ViaConstructor:
                     print(f"Unknown setup-type: {entry['type']}")
 
     def prepare_segments(self) -> None:
-
         segments = deepcopy(self.project["segments_org"])
         self.project["segments"] = clean_segments(segments)
-
         self.project["objects"] = segments2objects(self.project["segments"])
         self.project["maxOuter"] = find_tool_offsets(self.project["objects"])
         self.project["tabs"]["data"] = []
-
         for obj in self.project["objects"].values():
             obj["setup"] = {}
             for sect in ("tool", "mill", "pockets", "tabs"):
@@ -1368,6 +1366,7 @@ class ViaConstructor:
         # prepare #
         self.prepare_segments()
 
+        # gui #
         qapp = QApplication(sys.argv)
         window = QWidget()
         self.project["app"] = self

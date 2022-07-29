@@ -429,14 +429,15 @@ def get_nearest_free_object(
                             nearest_point = point_num
                             found = True
                 else:
-                    for point_num, pos_x in enumerate(vertex_data[0]):
-                        pos_y = vertex_data[1][point_num]
+                    point_num = 0
+                    for pos_x, pos_y in zip(vertex_data[0], vertex_data[1]):
                         dist = calc_distance(last_pos, (pos_x, pos_y))
                         if nearest_dist is None or dist < nearest_dist:
                             nearest_dist = dist
                             nearest_idx = offset_num
                             nearest_point = point_num
                             found = True
+                        point_num += 1
             else:
                 # on open obejcts, test first and last point
                 vertex_data = offset.vertex_data()

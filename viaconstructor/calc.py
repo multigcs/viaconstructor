@@ -10,6 +10,8 @@ import ezdxf
 # import pocketing
 # from shapely import geometry
 
+TWO_PI = math.pi * 2
+
 
 # ########## Misc Functions ###########
 def rotate_list(rlist, idx):
@@ -39,15 +41,12 @@ def lines_intersect(line1_start, line1_end, line2_start, line2_end):
 
 def angle_of_line(p_1, p_2):
     """gets the angle of a single line."""
-    d_1 = p_2[0] - p_1[0]
-    d_2 = p_2[1] - p_1[1]
-    angle = math.atan2(d_2, d_1)
-    return angle
+    return math.atan2(p_2[1] - p_1[1], p_2[0] - p_1[0])
 
 
 def fuzy_match(p_1, p_2):
     """checks if  two points are matching / rounded."""
-    return round(p_1[0], 2) == round(p_2[0], 2) and round(p_1[1], 2) == round(p_2[1], 2)
+    return calc_distance(p_1, p_2) < 0.01
 
 
 def calc_distance(p_1, p_2):
@@ -79,24 +78,23 @@ def line_center_3d(p_1, p_2):
 
 def calc_face(p_1, p_2):
     """gets the face og a line in 2D."""
-    angle = angle_of_line(p_1, p_2)
+    angle = angle_of_line(p_1, p_2) + math.pi
     center_x = (p_1[0] + p_2[0]) / 2
     center_y = (p_1[1] + p_2[1]) / 2
-    bcenter_x = center_x - 1.5 * math.sin(angle + math.pi)
-    bcenter_y = center_y + 1.5 * math.cos(angle + math.pi)
+    bcenter_x = center_x - 0.5 * math.sin(angle)
+    bcenter_y = center_y + 0.5 * math.cos(angle)
     return (bcenter_x, bcenter_y)
 
 
 def angle_2d(p_1, p_2):
     """gets the angle of a single line (2nd version)."""
-    two_pi = math.pi * 2
     theta1 = math.atan2(p_1[1], p_1[0])
     theta2 = math.atan2(p_2[1], p_2[0])
     dtheta = theta2 - theta1
     while dtheta > math.pi:
-        dtheta -= two_pi
+        dtheta -= TWO_PI
     while dtheta < -math.pi:
-        dtheta += two_pi
+        dtheta += TWO_PI
     return dtheta
 
 
@@ -140,14 +138,10 @@ def is_inside_polygon(obj, point):
     p_1 = [0, 0]
     p_2 = [0, 0]
     for segment in obj["segments"]:
-        start_x = segment["start"][0]
-        start_y = segment["start"][1]
-        end_x = segment["end"][0]
-        end_y = segment["end"][1]
-        p_1[0] = start_x - point[0]
-        p_1[1] = start_y - point[1]
-        p_2[0] = end_x - point[0]
-        p_2[1] = end_y - point[1]
+        p_1[0] = segment["start"][0] - point[0]
+        p_1[1] = segment["start"][1] - point[1]
+        p_2[0] = segment["end"][0] - point[0]
+        p_2[1] = segment["end"][1] - point[1]
         angle += angle_2d(p_1, p_2)
     return bool(abs(angle) >= math.pi)
 
@@ -185,9 +179,6 @@ def find_tool_offsets(objects):
         obj["outer_objects"] = outer
         if obj["closed"]:
             obj["tool_offset"] = "outside" if len(outer) % 2 == 0 else "inside"
-            # if obj["tool_offset"] == "inside":
-            #    reverse_object(obj)
-
         if max_outer < len(outer):
             max_outer = len(outer)
         for outer_idx in outer:
@@ -197,6 +188,7 @@ def find_tool_offsets(objects):
 
 def segments2objects(segments):
     """merge single segments to objects."""
+    test_segments = deepcopy(segments)
     objects = {}
     obj_idx = 0
     while True:
@@ -215,13 +207,14 @@ def segments2objects(segments):
         }
 
         # add first unused segment from segments
-        for segment in segments:
+        for seg_idx, segment in enumerate(test_segments):
             if segment["object"] is None:
                 segment["object"] = obj_idx
                 obj["segments"].append(segment)
                 obj["layer"] = segment["layer"]
                 last = segment
                 found = True
+                test_segments.pop(seg_idx)
                 break
 
         # find matching unused segments
@@ -229,7 +222,7 @@ def segments2objects(segments):
             rev = 0
             while True:
                 found_next = False
-                for segment in segments:
+                for seg_idx, segment in enumerate(test_segments):
                     if segment["object"] is None and obj["layer"] == segment["layer"]:
                         # add matching segment
                         if fuzy_match(last["end"], segment["start"]):
@@ -238,7 +231,9 @@ def segments2objects(segments):
                             last = segment
                             found_next = True
                             rev += 1
-                        elif fuzy_match(last["end"], segment["end"]):
+                            test_segments.pop(seg_idx)
+                            break
+                        if fuzy_match(last["end"], segment["end"]):
                             # reverse segment direction
                             end = segment["end"]
                             segment["end"] = segment["start"]
@@ -249,6 +244,8 @@ def segments2objects(segments):
                             last = segment
                             found_next = True
                             rev += 1
+                            test_segments.pop(seg_idx)
+                            break
 
                 if not found_next:
                     obj["closed"] = fuzy_match(
@@ -280,7 +277,6 @@ def segments2objects(segments):
 
         if not found:
             break
-
     return objects
 
 
@@ -292,8 +288,7 @@ def inside_vertex(vertex_data, point):
     p_2 = [0, 0]
     start_x = vertex_data[0][-1]
     start_y = vertex_data[1][-1]
-    for pos, end_x in enumerate(vertex_data[0]):
-        end_y = vertex_data[1][pos]
+    for end_x, end_y in zip(vertex_data[0], vertex_data[1]):
         p_1[0] = start_x - point[0]
         p_1[1] = start_y - point[1]
         p_2[0] = end_x - point[0]
@@ -304,15 +299,11 @@ def inside_vertex(vertex_data, point):
     return bool(abs(angle) >= math.pi)
 
 
-def vertex2points(vertex_data, limit=None):
+def vertex2points(vertex_data):
     """converts an vertex to a list of points"""
     points = []
-    for pos, pos_x in enumerate(vertex_data[0]):
-        pos_y = vertex_data[1][pos]
-        bulge = vertex_data[2][pos]
+    for pos_x, pos_y, bulge in zip(vertex_data[0], vertex_data[1], vertex_data[2]):
         points.append((pos_x, pos_y, bulge))
-        if limit and pos >= limit - 1:
-            break
     return points
 
 
@@ -336,26 +327,15 @@ def object2vertex(obj):
     ydata = []
     bdata = []
     segment = {}
-
-    # last_x = None
-    # last_y = None
-    # last_bulge = None
-
     for segment in obj["segments"]:
         pos_x = segment["start"][0]
         pos_y = segment["start"][1]
-
         bulge = segment.get("bulge")
         bulge = min(bulge, 1.0)
         bulge = max(bulge, -1.0)
-
         xdata.append(pos_x)
         ydata.append(pos_y)
         bdata.append(bulge)
-
-        # last_x = pos_x
-        # last_y = pos_y
-        # last_bulge = bulge
 
     if segment and not obj["closed"]:
         xdata.append(segment["end"][0])
@@ -408,12 +388,13 @@ def found_next_offset_point(mpos, offset):
     nearest = ()
     min_dist = None
     vertex_data = offset.vertex_data()
-    for point_num, pos_x in enumerate(vertex_data[0]):
-        pos_y = vertex_data[1][point_num]
+    point_num = 0
+    for pos_x, pos_y in zip(vertex_data[0], vertex_data[1]):
         dist = calc_distance(mpos, (pos_x, pos_y))
         if min_dist is None or dist < min_dist:
             min_dist = dist
             nearest = (pos_x, pos_y, point_num)
+        point_num += 1
     return nearest
 
 
@@ -428,9 +409,9 @@ def found_next_tab_point(mpos, offsets):
             last_x = None
             last_y = None
             last_bulge = None
-        for point_num, pos_x in enumerate(vertex_data[0]):
-            pos_y = vertex_data[1][point_num]
-            next_bulge = vertex_data[2][point_num]
+        for pos_x, pos_y, next_bulge in zip(
+            vertex_data[0], vertex_data[1], vertex_data[2]
+        ):
             if last_x is not None:
                 line_start = (last_x, last_y)
                 line_end = (pos_x, pos_y)
@@ -474,8 +455,7 @@ def do_pockets_trochoidal(  # pylint: disable=R0913
 ):
     plist = []
     vertex_data = polyline.vertex_data()
-    for idx, pos_x in enumerate(vertex_data[0]):
-        pos_y = vertex_data[1][idx]
+    for pos_x, pos_y in zip(vertex_data[0], vertex_data[1]):
         plist.append([pos_x, pos_y])
 
     poly = geometry.Polygon(plist)
@@ -550,6 +530,7 @@ def object2polyline_offsets(diameter, obj, obj_idx, max_outer, small_circles=Fal
     polyline_offsets = {}
 
     def overcut() -> None:
+        quarter_pi = math.pi / 4
         radius_3 = abs(tool_radius * 3)
         for offset_idx, polyline in enumerate(list(polyline_offsets.values())):
             points = vertex2points(polyline.vertex_data())
@@ -562,18 +543,15 @@ def object2polyline_offsets(diameter, obj, obj_idx, max_outer, small_circles=Fal
                 angle = angle_of_line(point, last)
                 if last_angle is not None and last[2] == 0.0:
                     if angle > last_angle:
-                        angle = angle + math.pi * 2
+                        angle = angle + TWO_PI
                     adiff = angle - last_angle
-                    if adiff < -math.pi * 2:
-                        adiff += math.pi * 2
+                    if adiff < -TWO_PI:
+                        adiff += TWO_PI
 
-                    if abs(adiff) >= math.pi / 4:
-                        over_x = last[0] - radius_3 * math.sin(
-                            last_angle + adiff / 2.0 + math.pi
-                        )
-                        over_y = last[1] + radius_3 * math.cos(
-                            last_angle + adiff / 2.0 + math.pi
-                        )
+                    if abs(adiff) >= quarter_pi:
+                        c_angle = last_angle + adiff / 2.0 + math.pi
+                        over_x = last[0] - radius_3 * math.sin(c_angle)
+                        over_y = last[1] + radius_3 * math.cos(c_angle)
                         for segment in obj["segments"]:
                             is_b = is_between(
                                 (segment["start"][0], segment["start"][1]),
@@ -586,12 +564,8 @@ def object2polyline_offsets(diameter, obj, obj_idx, max_outer, small_circles=Fal
                                     (last[0], last[1]),
                                 )
                                 over_dist = dist - abs(tool_radius)
-                                over_x = last[0] - (over_dist) * math.sin(
-                                    last_angle + adiff / 2.0 + math.pi
-                                )
-                                over_y = last[1] + (over_dist) * math.cos(
-                                    last_angle + adiff / 2.0 + math.pi
-                                )
+                                over_x = last[0] - (over_dist) * math.sin(c_angle)
+                                over_y = last[1] + (over_dist) * math.cos(c_angle)
                                 xdata.append(over_x)
                                 ydata.append(over_y)
                                 bdata.append(0.0)
@@ -609,18 +583,15 @@ def object2polyline_offsets(diameter, obj, obj_idx, max_outer, small_circles=Fal
             angle = angle_of_line(point, last)
             if last_angle is not None and last[2] == 0.0:
                 if angle > last_angle:
-                    angle = angle + math.pi * 2
+                    angle = angle + TWO_PI
                 adiff = angle - last_angle
-                if adiff < -math.pi * 2:
-                    adiff += math.pi * 2
+                if adiff < -TWO_PI:
+                    adiff += TWO_PI
 
-                if abs(adiff) >= math.pi / 4:
-                    over_x = last[0] - radius_3 * math.sin(
-                        last_angle + adiff / 2.0 + math.pi
-                    )
-                    over_y = last[1] + radius_3 * math.cos(
-                        last_angle + adiff / 2.0 + math.pi
-                    )
+                if abs(adiff) >= quarter_pi:
+                    c_angle = last_angle + adiff / 2.0 + math.pi
+                    over_x = last[0] - radius_3 * math.sin(c_angle)
+                    over_y = last[1] + radius_3 * math.cos(c_angle)
                     for segment in obj["segments"]:
                         is_b = is_between(
                             (segment["start"][0], segment["start"][1]),
@@ -633,12 +604,8 @@ def object2polyline_offsets(diameter, obj, obj_idx, max_outer, small_circles=Fal
                                 (last[0], last[1]),
                             )
                             over_dist = dist - abs(tool_radius)
-                            over_x = last[0] - over_dist * math.sin(
-                                last_angle + adiff / 2.0 + math.pi
-                            )
-                            over_y = last[1] + over_dist * math.cos(
-                                last_angle + adiff / 2.0 + math.pi
-                            )
+                            over_x = last[0] - over_dist * math.sin(c_angle)
+                            over_y = last[1] + over_dist * math.cos(c_angle)
                             xdata.append(over_x)
                             ydata.append(over_y)
                             bdata.append(0.0)

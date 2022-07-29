@@ -357,6 +357,12 @@ def setup_defaults(_) -> dict:
                 "title": _("Show as Polygon"),
                 "tooltip": _("showing as polygon in 3D preview"),
             },
+            "object_ids": {
+                "default": True,
+                "type": "bool",
+                "title": _("Show Object-ID's"),
+                "tooltip": _("shows id of each object"),
+            },
             "3d_show": {
                 "default": False,
                 "type": "bool",
