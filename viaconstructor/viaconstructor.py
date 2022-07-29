@@ -47,6 +47,7 @@ from .calc import (
     calc_distance,
     clean_segments,
     find_tool_offsets,
+    found_next_open_segment_point,
     found_next_segment_point,
     found_next_tab_point,
     line_center_2d,
@@ -133,6 +134,7 @@ class GLWidget(QGLWidget):
     mouse_pos_y = 0
     tab_selector = False
     start_selector = False
+    repair_selector = False
     selection = ()
     size_x = 0
     size_y = 0
@@ -191,8 +193,9 @@ class GLWidget(QGLWidget):
         min_max = self.project["minMax"]
         if not min_max:
             return
-        self.size_x = min_max[2] - min_max[0]
-        self.size_y = min_max[3] - min_max[1]
+
+        self.size_x = max(min_max[2] - min_max[0], 0.1)
+        self.size_y = max(min_max[3] - min_max[1], 0.1)
         self.scale = min(1.0 / self.size_x, 1.0 / self.size_y) / 1.4
 
         GL.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT)
@@ -224,6 +227,16 @@ class GLWidget(QGLWidget):
                 GL.glVertex3f(self.selection[0] - 1, self.selection[1] + 1, depth)
                 GL.glVertex3f(self.selection[0] + 1, self.selection[1] - 1, depth)
                 GL.glEnd()
+            elif self.repair_selector:
+                if len(self.selection) > 4:
+                    depth = 0.1
+                    GL.glLineWidth(15)
+                    GL.glColor4f(1.0, 0.0, 0.0, 1.0)
+                    GL.glBegin(GL.GL_LINES)
+                    GL.glVertex3f(self.selection[0], self.selection[1], depth)
+                    GL.glVertex3f(self.selection[4], self.selection[5], depth)
+                    GL.glEnd()
+
             else:
                 depth = self.project["setup"]["mill"]["depth"] - 0.1
                 GL.glLineWidth(5)
@@ -239,6 +252,7 @@ class GLWidget(QGLWidget):
         self.selection = ()
         self.tab_selector = not self.tab_selector
         self.start_selector = False
+        self.repair_selector = False
         if self.tab_selector:
             self.view_2d()
 
@@ -246,7 +260,17 @@ class GLWidget(QGLWidget):
         self.selection = ()
         self.start_selector = not self.start_selector
         self.tab_selector = False
+        self.repair_selector = False
         if self.start_selector:
+            self.view_2d()
+
+    def toggle_repair_selector(self) -> None:
+        self.selection = ()
+        self.repair_selector = not self.repair_selector
+        self.tab_selector = False
+        self.start_selector = False
+        if self.repair_selector:
+            self.update_drawing()
             self.view_2d()
 
     def view_2d(self) -> None:
@@ -262,6 +286,8 @@ class GLWidget(QGLWidget):
         if self.tab_selector:
             return
         if self.start_selector:
+            return
+        if self.repair_selector:
             return
         self.ortho = False
         self.rot_x = -20.0
@@ -290,7 +316,9 @@ class GLWidget(QGLWidget):
         self.trans_x_last = self.trans_x
         self.trans_y_last = self.trans_y
         self.trans_z_last = self.trans_z
-        if self.tab_selector or self.start_selector and self.selection:
+        if (
+            self.tab_selector or self.start_selector or self.repair_selector
+        ) and self.selection:
             if self.mbutton == 1:
                 if self.selection:
                     if self.tab_selector:
@@ -303,6 +331,21 @@ class GLWidget(QGLWidget):
                             self.selection[1],
                         )
                         self.project["app"].update_starts()
+                    elif self.repair_selector:
+                        obj_idx = self.selection[2]
+                        self.project["segments_org"].append(
+                            {
+                                "type": "LINE",
+                                "object": None,
+                                "layer": self.project["objects"][obj_idx]["layer"],
+                                "start": (self.selection[0], self.selection[1]),
+                                "end": (self.selection[4], self.selection[5]),
+                                "bulge": 0.0,
+                            }
+                        )
+                        self.selection = ()
+                        self.project["app"].prepare_segments()
+
                 self.update_drawing()
                 self.update()
             elif self.mbutton == 2:
@@ -366,20 +409,6 @@ class GLWidget(QGLWidget):
             moffset = self.mpos - event.pos()
             self.trans_x = self.trans_x_last + moffset.x() / self.screen_w
             self.trans_y = self.trans_y_last - moffset.y() / self.screen_h * self.aspect
-        elif self.mbutton == 2 and not self.tab_selector and not self.start_selector:
-            moffset = self.mpos - event.pos()
-            self.rot_z = self.rot_z_last - moffset.x() / 4
-            self.trans_z = self.trans_z_last + moffset.y() / 500
-            if self.ortho:
-                self.ortho = False
-                self.initializeGL()
-        elif self.mbutton == 4 and not self.tab_selector and not self.start_selector:
-            moffset = self.mpos - event.pos()
-            self.rot_x = self.rot_x_last + -moffset.x() / 4
-            self.rot_y = self.rot_y_last - moffset.y() / 4
-            if self.ortho:
-                self.ortho = False
-                self.initializeGL()
         elif self.tab_selector:
             (self.mouse_pos_x, self.mouse_pos_y) = self.mouse_pos_to_real_pos(
                 event.pos()
@@ -394,6 +423,40 @@ class GLWidget(QGLWidget):
             self.selection = found_next_segment_point(
                 (self.mouse_pos_x, self.mouse_pos_y), self.project["objects"]
             )
+        elif self.repair_selector:
+            (self.mouse_pos_x, self.mouse_pos_y) = self.mouse_pos_to_real_pos(
+                event.pos()
+            )
+
+            self.selection = found_next_open_segment_point(
+                (self.mouse_pos_x, self.mouse_pos_y), self.project["objects"]
+            )
+            if self.selection:
+                selection_end = found_next_open_segment_point(
+                    (self.mouse_pos_x, self.mouse_pos_y),
+                    self.project["objects"],
+                    max_dist=10.0,
+                    exclude=(self.selection[2], self.selection[3]),
+                )
+                if selection_end:
+                    self.selection += selection_end
+                else:
+                    self.selection = ()
+
+        elif self.mbutton == 2:
+            moffset = self.mpos - event.pos()
+            self.rot_z = self.rot_z_last - moffset.x() / 4
+            self.trans_z = self.trans_z_last + moffset.y() / 500
+            if self.ortho:
+                self.ortho = False
+                self.initializeGL()
+        elif self.mbutton == 4:
+            moffset = self.mpos - event.pos()
+            self.rot_x = self.rot_x_last + -moffset.x() / 4
+            self.rot_y = self.rot_y_last - moffset.y() / 4
+            if self.ortho:
+                self.ortho = False
+                self.initializeGL()
 
     def wheelEvent(self, event) -> None:  # pylint: disable=C0103,W0613
         """mouse wheel moved."""
@@ -512,6 +575,10 @@ class ViaConstructor:
         """start selector."""
         self.project["glwidget"].toggle_start_selector()
 
+    def _toolbar_toggle_repair_selector(self) -> None:
+        """start selector."""
+        self.project["glwidget"].toggle_repair_selector()
+
     def _toolbar_view_reset(self) -> None:
         """center view."""
         self.project["glwidget"].view_reset()
@@ -613,8 +680,9 @@ class ViaConstructor:
         if self.project["setup"]["view"]["3d_show"]:
             if hasattr(self.draw_reader, "draw_3d"):
                 self.draw_reader.draw_3d()
-        if not draw_maschinecode_path(self.project):
-            self.status_bar.showMessage("error while drawing maschine commands")
+        if not self.project["glwidget"].repair_selector:
+            if not draw_maschinecode_path(self.project):
+                self.status_bar.showMessage("error while drawing maschine commands")
         draw_object_ids(self.project)
         draw_object_edges(self.project)
         if self.project["setup"]["view"]["polygon_show"]:
@@ -1044,6 +1112,14 @@ class ViaConstructor:
                 True,
                 "start",
             ),
+            _("Repair-Selector"): (
+                "tab-selector.png",
+                "",
+                _("Repair-Selector"),
+                self._toolbar_toggle_repair_selector,
+                True,
+                "repair",
+            ),
         }
         self.toolbar = QToolBar("top toolbar")
         self.main.addToolBar(self.toolbar)
@@ -1171,6 +1247,50 @@ class ViaConstructor:
                 else:
                     print(f"Unknown setup-type: {entry['type']}")
 
+    def prepare_segments(self) -> None:
+
+        segments = deepcopy(self.project["segments_org"])
+        self.project["segments"] = clean_segments(segments)
+
+        self.project["objects"] = segments2objects(self.project["segments"])
+        self.project["maxOuter"] = find_tool_offsets(self.project["objects"])
+        self.project["tabs"]["data"] = []
+
+        for obj in self.project["objects"].values():
+            obj["setup"] = {}
+            for sect in ("tool", "mill", "pockets", "tabs"):
+                obj["setup"][sect] = deepcopy(self.project["setup"][sect])
+            layer = obj.get("layer")
+            # experimental: get some milling data from layer name (https://groups.google.com/g/dxf2gcode-users/c/q3hPQkN2OCo)
+            if layer:
+                if layer.startswith("IGNORE:"):
+                    obj["setup"]["mill"]["active"] = False
+                elif layer.startswith("BREAKS:") or layer.startswith("_TABS"):
+                    obj["setup"]["mill"]["active"] = False
+                    for segment in obj["segments"]:
+                        self.project["tabs"]["data"].append(
+                            (
+                                (segment["start"][0], segment["start"][1]),
+                                (segment["end"][0], segment["end"][1]),
+                            )
+                        )
+                elif layer.startswith("MILL:"):
+                    matches = LAYER_REGEX.findall(obj["layer"])
+                    if matches:
+                        for match in matches:
+                            cmd = match[0].upper()
+                            value = match[1]
+                            if cmd == "MILL":
+                                obj["setup"]["mill"]["active"] = bool(value == "1")
+                            elif cmd in ("MILLDEPTH", "MD"):
+                                obj["setup"]["mill"]["depth"] = -abs(float(value))
+                            elif cmd in ("SLICEDEPTH", "SD"):
+                                obj["setup"]["mill"]["step"] = -abs(float(value))
+                            elif cmd in ("FEEDXY", "FXY"):
+                                obj["setup"]["tool"]["rate_h"] = int(value)
+                            elif cmd in ("FEEDZ", "FZ"):
+                                obj["setup"]["tool"]["rate_v"] = int(value)
+
     def __init__(self) -> None:
         """viaconstructor main init."""
         # arguments
@@ -1222,46 +1342,7 @@ class ViaConstructor:
         ] = f"{'.'.join(self.project['filename_draw'].split('.')[:-1])}.{self.project['suffix']}"
 
         # prepare #
-        self.project["segments"] = deepcopy(self.project["segments_org"])
-        self.project["segments"] = clean_segments(self.project["segments"])
-        self.project["objects"] = segments2objects(self.project["segments"])
-        self.project["maxOuter"] = find_tool_offsets(self.project["objects"])
-        self.project["tabs"]["data"] = []
-
-        for obj in self.project["objects"].values():
-            obj["setup"] = {}
-            for sect in ("tool", "mill", "pockets", "tabs"):
-                obj["setup"][sect] = deepcopy(self.project["setup"][sect])
-            layer = obj.get("layer")
-            # experimental: get some milling data from layer name (https://groups.google.com/g/dxf2gcode-users/c/q3hPQkN2OCo)
-            if layer:
-                if layer.startswith("IGNORE:"):
-                    obj["setup"]["mill"]["active"] = False
-                elif layer.startswith("BREAKS:") or layer.startswith("_TABS"):
-                    obj["setup"]["mill"]["active"] = False
-                    for segment in obj["segments"]:
-                        self.project["tabs"]["data"].append(
-                            (
-                                (segment["start"][0], segment["start"][1]),
-                                (segment["end"][0], segment["end"][1]),
-                            )
-                        )
-                elif layer.startswith("MILL:"):
-                    matches = LAYER_REGEX.findall(obj["layer"])
-                    if matches:
-                        for match in matches:
-                            cmd = match[0].upper()
-                            value = match[1]
-                            if cmd == "MILL":
-                                obj["setup"]["mill"]["active"] = bool(value == "1")
-                            elif cmd in ("MILLDEPTH", "MD"):
-                                obj["setup"]["mill"]["depth"] = -abs(float(value))
-                            elif cmd in ("SLICEDEPTH", "SD"):
-                                obj["setup"]["mill"]["step"] = -abs(float(value))
-                            elif cmd in ("FEEDXY", "FXY"):
-                                obj["setup"]["tool"]["rate_h"] = int(value)
-                            elif cmd in ("FEEDZ", "FZ"):
-                                obj["setup"]["tool"]["rate_v"] = int(value)
+        self.prepare_segments()
 
         qapp = QApplication(sys.argv)
         window = QWidget()

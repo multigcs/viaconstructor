@@ -60,7 +60,7 @@ class DxfReader:
                 (element.dxf.start.x, element.dxf.start.y),
                 (element.dxf.end.x, element.dxf.end.y),
             )
-            if dist > 0.0:
+            if dist > 0.000001:
                 self.segments.append(
                     {
                         "type": dxftype,
@@ -83,7 +83,7 @@ class DxfReader:
             for point in element._control_points:  # type: ignore
                 if last:
                     dist = calc_distance((last[0], last[1]), (point[0], point[1]))
-                    if dist > 0.0:
+                    if dist > 0.000001:
                         self.segments.append(
                             {
                                 "type": "LINE",
@@ -127,7 +127,7 @@ class DxfReader:
                         element.dxf.radius,
                     )
                     dist = calc_distance((start.x, start.y), (end.x, end.y))
-                    if dist > 0.0:
+                    if dist > 0.000001:
                         self.segments.append(
                             {
                                 "type": dxftype,
@@ -152,7 +152,7 @@ class DxfReader:
                     element.dxf.radius,
                 )
                 dist = calc_distance((start.x, start.y), (end.x, end.y))
-                if dist > 0.0:
+                if dist > 0.000001:
                     self.segments.append(
                         {
                             "type": dxftype,

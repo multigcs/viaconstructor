@@ -379,6 +379,31 @@ def found_next_segment_point(mpos, objects):
     return nearest
 
 
+def found_next_open_segment_point(mpos, objects, max_dist=None, exclude=None):
+    nearest = ()
+    min_dist = None
+    for obj_idx, obj in objects.items():
+        if not obj["closed"]:
+            for segmentd_idx in (0, -1):
+                if exclude and exclude[0] == obj_idx and exclude[1] == segmentd_idx:
+                    continue
+
+                if segmentd_idx == 0:
+                    pos_x = obj["segments"][segmentd_idx]["start"][0]
+                    pos_y = obj["segments"][segmentd_idx]["start"][1]
+                else:
+                    pos_x = obj["segments"][segmentd_idx]["end"][0]
+                    pos_y = obj["segments"][segmentd_idx]["end"][1]
+                dist = calc_distance(mpos, (pos_x, pos_y))
+                if max_dist and dist > max_dist:
+                    continue
+                if min_dist is None or dist < min_dist:
+                    min_dist = dist
+                    nearest = (pos_x, pos_y, obj_idx, segmentd_idx)
+
+    return nearest
+
+
 def found_next_offset_point(mpos, offset):
     nearest = ()
     min_dist = None
