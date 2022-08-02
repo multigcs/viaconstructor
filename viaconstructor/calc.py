@@ -81,8 +81,8 @@ def calc_face(p_1, p_2):
     angle = angle_of_line(p_1, p_2) + math.pi
     center_x = (p_1[0] + p_2[0]) / 2
     center_y = (p_1[1] + p_2[1]) / 2
-    bcenter_x = center_x - 0.5 * math.sin(angle)
-    bcenter_y = center_y + 0.5 * math.cos(angle)
+    bcenter_x = center_x - 0.01 * math.sin(angle)
+    bcenter_y = center_y + 0.01 * math.cos(angle)
     return (bcenter_x, bcenter_y)
 
 

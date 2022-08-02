@@ -4,6 +4,7 @@ import argparse
 import math
 
 import ezdxf
+from ezdxf.path import make_path
 
 from ..calc import calc_distance  # pylint: disable=E0402
 
@@ -11,6 +12,7 @@ from ..calc import calc_distance  # pylint: disable=E0402
 class DxfReader:
 
     VTYPES = ("INSERT", "LWPOLYLINE", "POLYLINE", "MLINE")
+    MIN_DIST = 0.0001
 
     def __init__(
         self, filename: str, args: argparse.Namespace = None
@@ -61,7 +63,7 @@ class DxfReader:
                 (element.dxf.start.x, element.dxf.start.y),
                 (element.dxf.end.x, element.dxf.end.y),
             )
-            if dist > 0.000001:
+            if dist > self.MIN_DIST:
                 self.segments.append(
                     {
                         "type": dxftype,
@@ -81,10 +83,15 @@ class DxfReader:
 
         elif dxftype == "SPLINE":
             last: list[float] = []
-            for point in element._control_points:  # type: ignore
+
+            path = make_path(element)
+            for command in path:
+                print(command.type)
+                print(command.end)
+                point = command.end
                 if last:
                     dist = calc_distance((last[0], last[1]), (point[0], point[1]))
-                    if dist > 0.000001:
+                    if dist > self.MIN_DIST:
                         self.segments.append(
                             {
                                 "type": "LINE",
@@ -137,7 +144,7 @@ class DxfReader:
                         element.dxf.radius,
                     )
                     dist = calc_distance((start.x, start.y), (end.x, end.y))
-                    if dist > 0.000001:
+                    if dist > self.MIN_DIST:
                         self.segments.append(
                             {
                                 "type": dxftype,
@@ -162,7 +169,7 @@ class DxfReader:
                     element.dxf.radius,
                 )
                 dist = calc_distance((start.x, start.y), (end.x, end.y))
-                if dist > 0.000001:
+                if dist > self.MIN_DIST:
                     self.segments.append(
                         {
                             "type": dxftype,

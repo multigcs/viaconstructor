@@ -102,11 +102,11 @@ class PostProcessorGcodeLinuxCNC(PostProcessor):
             line.append(f"Z{round(z_pos, 6)}")
             self.z_pos = z_pos
         if i_pos is not None:
-            line.append(f"I{round(i_pos, 6)}")
+            line.append(f"I{round(i_pos, 5)}")
         if j_pos is not None:
-            line.append(f"J{round(j_pos, 6)}")
+            line.append(f"J{round(j_pos, 5)}")
         if r_pos is not None:
-            line.append(f"R{round(r_pos, 6)}")
+            line.append(f"R{round(r_pos, 5)}")
         if line:
             self.gcode.append("G02 " + " ".join(line))
 
@@ -124,11 +124,11 @@ class PostProcessorGcodeLinuxCNC(PostProcessor):
             line.append(f"Z{round(z_pos, 6)}")
             self.z_pos = z_pos
         if i_pos is not None:
-            line.append(f"I{round(i_pos, 6)}")
+            line.append(f"I{round(i_pos, 5)}")
         if j_pos is not None:
-            line.append(f"J{round(j_pos, 6)}")
+            line.append(f"J{round(j_pos, 5)}")
         if r_pos is not None:
-            line.append(f"R{round(r_pos, 6)}")
+            line.append(f"R{round(r_pos, 5)}")
         if line:
             self.gcode.append("G03 " + " ".join(line))
 

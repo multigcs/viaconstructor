@@ -6,8 +6,13 @@ import math
 import ezdxf
 import svgpathtools
 
+from ..calc import calc_distance  # pylint: disable=E0402
+
 
 class SvgReader:
+
+    MIN_DIST = 0.0001
+
     def __init__(
         self, filename: str, args: argparse.Namespace = None
     ):  # pylint: disable=W0613
@@ -27,7 +32,7 @@ class SvgReader:
             height = float(size_attr[3])
         else:
             height_attr = svg_attributes.get("height")
-            if height_attr.endswith("mm"):
+            if height_attr and height_attr.endswith("mm"):
                 height = float(height_attr[0:-2])
 
         for path in paths:
@@ -49,6 +54,7 @@ class SvgReader:
                     path[0].radius.real,
                 )
             else:
+                # print("##path", path)
                 for segment in path:
                     if isinstance(segment, svgpathtools.path.Line):
                         self.add_line(
@@ -69,10 +75,20 @@ class SvgReader:
                             )
                             last_x = pos.real
                             last_y = pos.imag
+
                         self.add_line(
                             (last_x, height - last_y),
                             (segment.end.real, height - segment.end.imag),
                         )
+
+                        last_x = segment.end.real
+                        last_y = segment.end.imag
+
+                if path.iscontinuous():
+                    self.add_line(
+                        (last_x, height - last_y),
+                        (path[0].start.real, height - path[0].start.imag),
+                    )
 
         self.min_max = [0.0, 0.0, 10.0, 10.0]
         for seg_idx, segment in enumerate(self.segments):
@@ -116,6 +132,33 @@ class SvgReader:
                     (angle + astep) / 180 * math.pi,
                     radius,
                 )
+                dist = calc_distance((start.x, start.y), (end.x, end.y))
+                if dist > self.MIN_DIST:
+                    self.segments.append(
+                        {
+                            "type": "ARC",
+                            "object": None,
+                            "layer": layer,
+                            "start": (start.x, start.y),
+                            "end": (end.x, end.y),
+                            "bulge": bulge,
+                            "center": (
+                                center[0],
+                                center[1],
+                            ),
+                        }
+                    )
+                angle += astep
+
+        else:
+            (start, end, bulge) = ezdxf.math.arc_to_bulge(
+                center,
+                start_angle / 180 * math.pi,
+                end_angle / 180 * math.pi,
+                radius,
+            )
+            dist = calc_distance((start.x, start.y), (end.x, end.y))
+            if dist > self.MIN_DIST:
                 self.segments.append(
                     {
                         "type": "ARC",
@@ -130,41 +173,20 @@ class SvgReader:
                         ),
                     }
                 )
-                angle += astep
-
-        else:
-            (start, end, bulge) = ezdxf.math.arc_to_bulge(
-                center,
-                start_angle / 180 * math.pi,
-                end_angle / 180 * math.pi,
-                radius,
-            )
-            self.segments.append(
-                {
-                    "type": "ARC",
-                    "object": None,
-                    "layer": layer,
-                    "start": (start.x, start.y),
-                    "end": (end.x, end.y),
-                    "bulge": bulge,
-                    "center": (
-                        center[0],
-                        center[1],
-                    ),
-                }
-            )
 
     def add_line(self, start, end, layer="0") -> None:
-        self.segments.append(
-            {
-                "type": "LINE",
-                "object": None,
-                "layer": layer,
-                "start": start,
-                "end": end,
-                "bulge": 0.0,
-            }
-        )
+        dist = calc_distance(start, end)
+        if dist > self.MIN_DIST:
+            self.segments.append(
+                {
+                    "type": "LINE",
+                    "object": None,
+                    "layer": layer,
+                    "start": start,
+                    "end": end,
+                    "bulge": 0.0,
+                }
+            )
 
     def get_segments(self) -> list[dict]:
         return self.segments
