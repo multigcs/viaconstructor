@@ -61,9 +61,8 @@ class SvgReader:
                             (segment.start.real, height - segment.start.imag),
                             (segment.end.real, height - segment.end.imag),
                         )
-                    # elif isinstance(segment, svgpathtools.path.Arc):
-                    #    print("####", segment.rotation, segment.delta)
-                    #    self.add_arc((segment.center.real, -segment.center.imag), segment.radius.real, start_angle = segment.rotation, adiff = segment.delta)
+                        last_x = segment.end.real
+                        last_y = segment.end.imag
                     else:
                         last_x = segment.start.real
                         last_y = segment.start.imag
@@ -80,7 +79,6 @@ class SvgReader:
                             (last_x, height - last_y),
                             (segment.end.real, height - segment.end.imag),
                         )
-
                         last_x = segment.end.real
                         last_y = segment.end.imag
 
