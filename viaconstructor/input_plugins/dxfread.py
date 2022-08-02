@@ -86,8 +86,6 @@ class DxfReader:
 
             path = make_path(element)
             for command in path:
-                print(command.type)
-                print(command.end)
                 point = command.end
                 if last:
                     dist = calc_distance((last[0], last[1]), (point[0], point[1]))
