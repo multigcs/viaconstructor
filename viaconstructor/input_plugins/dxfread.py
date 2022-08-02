@@ -20,13 +20,13 @@ class DxfReader:
         """converting dxf into single segments."""
         self.filename = filename
         self.doc = ezdxf.readfile(self.filename)
+        self.scale = ezdxf.units.conversion_factor(self.doc.units, ezdxf.units.MM)  # type: ignore
 
         # dxf to single segments
         self.segments: list[dict] = []
         self.model_space = self.doc.modelspace()
         for element in self.model_space:
             dxftype = element.dxftype()
-
             if dxftype in self.VTYPES:
                 for v_element in element.virtual_entities():  # type: ignore
                     self.add_entity(v_element)
@@ -70,12 +70,12 @@ class DxfReader:
                         "object": None,
                         "layer": element.dxf.layer,
                         "start": (
-                            element.dxf.start.x + offset[0],
-                            element.dxf.start.y + offset[1],
+                            (element.dxf.start.x + offset[0]) * self.scale,
+                            (element.dxf.start.y + offset[1]) * self.scale,
                         ),
                         "end": (
-                            element.dxf.end.x + offset[0],
-                            element.dxf.end.y + offset[1],
+                            (element.dxf.end.x + offset[0]) * self.scale,
+                            (element.dxf.end.y + offset[1]) * self.scale,
                         ),
                         "bulge": 0.0,
                     }
@@ -95,8 +95,14 @@ class DxfReader:
                                 "type": "LINE",
                                 "object": None,
                                 "layer": element.dxf.layer,
-                                "start": (last[0] + offset[0], last[1] + offset[1]),
-                                "end": (point[0] + offset[0], point[1] + offset[1]),
+                                "start": (
+                                    (last[0] + offset[0]) * self.scale,
+                                    (last[1] + offset[1]) * self.scale,
+                                ),
+                                "end": (
+                                    (point[0] + offset[0]) * self.scale,
+                                    (point[1] + offset[1]) * self.scale,
+                                ),
                                 "bulge": 0.0,
                             }
                         )
@@ -148,12 +154,18 @@ class DxfReader:
                                 "type": dxftype,
                                 "object": None,
                                 "layer": element.dxf.layer,
-                                "start": (start.x + offset[0], start.y + offset[1]),
-                                "end": (end.x + offset[0], end.y + offset[1]),
+                                "start": (
+                                    (start.x + offset[0]) * self.scale,
+                                    (start.y + offset[1]) * self.scale,
+                                ),
+                                "end": (
+                                    (end.x + offset[0]) * self.scale,
+                                    (end.y + offset[1]) * self.scale,
+                                ),
                                 "bulge": bulge,
                                 "center": (
-                                    element.dxf.center[0] + offset[0],
-                                    element.dxf.center[1] + offset[1],
+                                    (element.dxf.center[0] + offset[0]) * self.scale,
+                                    (element.dxf.center[1] + offset[1]) * self.scale,
                                 ),
                             }
                         )
@@ -173,12 +185,18 @@ class DxfReader:
                             "type": dxftype,
                             "object": None,
                             "layer": element.dxf.layer,
-                            "start": (start.x + offset[0], start.y + offset[1]),
-                            "end": (end.x + offset[0], end.y + offset[1]),
+                            "start": (
+                                (start.x + offset[0]) * self.scale,
+                                (start.y + offset[1]) * self.scale,
+                            ),
+                            "end": (
+                                (end.x + offset[0]) * self.scale,
+                                (end.y + offset[1]) * self.scale,
+                            ),
                             "bulge": bulge,
                             "center": (
-                                element.dxf.center[0] + offset[0],
-                                element.dxf.center[1] + offset[1],
+                                (element.dxf.center[0] + offset[0]) * self.scale,
+                                (element.dxf.center[1] + offset[1]) * self.scale,
                             ),
                         }
                     )
