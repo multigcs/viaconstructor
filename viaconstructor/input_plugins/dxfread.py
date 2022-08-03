@@ -20,7 +20,12 @@ class DxfReader:
         """converting dxf into single segments."""
         self.filename = filename
         self.doc = ezdxf.readfile(self.filename)
-        self.scale = ezdxf.units.conversion_factor(self.doc.units, ezdxf.units.MM)  # type: ignore
+        self.scale = 1.0
+        if self.doc.units != 0:
+            try:
+                self.scale = ezdxf.units.conversion_factor(self.doc.units, ezdxf.units.MM)  # type: ignore
+            except Exception:  # pylint: disable=W0703
+                print(f"UNKNOWN UNITS: {self.doc.units}")
 
         # dxf to single segments
         self.segments: list[dict] = []
