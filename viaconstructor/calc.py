@@ -178,7 +178,10 @@ def find_tool_offsets(objects):
         outer = find_outer_objects(objects, obj["segments"][0]["start"], [obj_idx])
         obj["outer_objects"] = outer
         if obj["closed"]:
-            obj["tool_offset"] = "outside" if len(outer) % 2 == 0 else "inside"
+            if "setup" not in obj or obj["setup"]["mill"]["offset"] == "auto":
+                obj["tool_offset"] = "outside" if len(outer) % 2 == 0 else "inside"
+            else:
+                obj["tool_offset"] = obj["setup"]["mill"]["offset"]
         if max_outer < len(outer):
             max_outer = len(outer)
         for outer_idx in outer:

@@ -65,12 +65,14 @@ def setup_defaults(_) -> dict:
             "small_circles": {
                 "default": False,
                 "type": "bool",
+                "per_object": True,
                 "title": _("Small-Circles"),
                 "tooltip": _("milling small circles even if the tool is bigger"),
             },
             "overcut": {
                 "default": False,
                 "type": "bool",
+                "per_object": True,
                 "title": _("Overcut"),
                 "tooltip": _("Overcuting edges"),
             },
@@ -87,6 +89,19 @@ def setup_defaults(_) -> dict:
                 ),
                 "title": _("Zero-Position"),
                 "tooltip": _("setting the Zero-Postition of the Workpiece"),
+            },
+            "offset": {
+                "default": "auto",
+                "type": "select",
+                "per_object": True,
+                "options": (
+                    ("auto", _("auto")),
+                    ("inside", _("inside")),
+                    ("outside", _("outside")),
+                    ("none", _("none")),
+                ),
+                "title": _("Offset"),
+                "tooltip": _("tool offset"),
             },
         },
         "tool": {

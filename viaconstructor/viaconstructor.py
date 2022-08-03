@@ -788,7 +788,7 @@ class ViaConstructor:
             print(f"Unknown setup-type: {entry_type}")
             value = None
         self.project["objects"][obj_idx]["setup"][sname][ename] = value
-
+        self.project["maxOuter"] = find_tool_offsets(self.project["objects"])
         self.update_drawing()
 
     def update_table(self) -> None:
@@ -979,8 +979,6 @@ class ViaConstructor:
 
         self.project["segments"] = deepcopy(self.project["segments_org"])
         self.project["segments"] = clean_segments(self.project["segments"])
-        self.project["maxOuter"] = find_tool_offsets(self.project["objects"])
-
         for obj in self.project["objects"].values():
             for sect in ("tool", "mill", "pockets", "tabs"):
                 for key, global_value in self.project["setup"][sect].items():
@@ -990,6 +988,8 @@ class ViaConstructor:
                         and obj["setup"][sect][key] == old_setup[sect][key]
                     ):
                         obj["setup"][sect][key] = self.project["setup"][sect][key]
+
+        self.project["maxOuter"] = find_tool_offsets(self.project["objects"])
 
         self.update_table()
         self.update_drawing()
@@ -1276,7 +1276,6 @@ class ViaConstructor:
         segments = deepcopy(self.project["segments_org"])
         self.project["segments"] = clean_segments(segments)
         self.project["objects"] = segments2objects(self.project["segments"])
-        self.project["maxOuter"] = find_tool_offsets(self.project["objects"])
         self.project["tabs"]["data"] = []
         for obj in self.project["objects"].values():
             obj["setup"] = {}
@@ -1312,6 +1311,8 @@ class ViaConstructor:
                                 obj["setup"]["tool"]["rate_h"] = int(value)
                             elif cmd in ("FEEDZ", "FZ"):
                                 obj["setup"]["tool"]["rate_v"] = int(value)
+
+        self.project["maxOuter"] = find_tool_offsets(self.project["objects"])
 
     def __init__(self) -> None:
         """viaconstructor main init."""
