@@ -7,3 +7,4 @@ pygame
 Hershey-Fonts
 svgpathtools
 meshcut
+pyclipper

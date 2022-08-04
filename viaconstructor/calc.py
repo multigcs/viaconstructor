@@ -5,6 +5,7 @@ from copy import deepcopy
 
 import cavaliercontours as cavc
 import ezdxf
+import pyclipper
 
 # import trimesh
 # import pocketing
@@ -302,22 +303,26 @@ def inside_vertex(vertex_data, point):
     return bool(abs(angle) >= math.pi)
 
 
-def vertex2points(vertex_data):
+def vertex2points(vertex_data, no_bulge=False, scale=1.0):
     """converts an vertex to a list of points"""
     points = []
-    for pos_x, pos_y, bulge in zip(vertex_data[0], vertex_data[1], vertex_data[2]):
-        points.append((pos_x, pos_y, bulge))
+    if no_bulge:
+        for pos_x, pos_y in zip(vertex_data[0], vertex_data[1]):
+            points.append((pos_x * scale, pos_y * scale))
+    else:
+        for pos_x, pos_y, bulge in zip(vertex_data[0], vertex_data[1], vertex_data[2]):
+            points.append((pos_x * scale, pos_y * scale, bulge))
     return points
 
 
-def points2vertex(points):
+def points2vertex(points, scale=1.0):
     """converts a list of points to vertex"""
     xdata = []
     ydata = []
     bdata = []
     for point in points:
-        pos_x = point[0]
-        pos_y = point[1]
+        pos_x = point[0] * scale
+        pos_y = point[1] * scale
         xdata.append(pos_x)
         ydata.append(pos_y)
         bdata.append(0)
@@ -485,6 +490,28 @@ def do_pockets_trochoidal(  # pylint: disable=R0913
 """
 
 
+def points2offsets(
+    obj,
+    obj_idx,
+    points,
+    polyline_offsets,
+    offset_idx,
+    tool_offset,
+    scale=1.0,
+):
+    vertex_data = points2vertex(points, scale=scale)
+    polyline_offset = cavc.Polyline(vertex_data, is_closed=obj["closed"])
+    polyline_offset.level = len(obj.get("outer_objects", []))
+    polyline_offset.tool_offset = tool_offset
+    polyline_offset.layer = obj["layer"]
+    polyline_offset.setup = obj["setup"]
+    polyline_offset.start = obj.get("start", ())
+    polyline_offset.is_pocket = True
+    polyline_offsets[f"{obj_idx}.{offset_idx}"] = polyline_offset
+    offset_idx += 1
+    return offset_idx
+
+
 def do_pockets(  # pylint: disable=R0913
     polyline,
     obj,
@@ -493,44 +520,103 @@ def do_pockets(  # pylint: disable=R0913
     tool_radius,
     polyline_offsets,
     offset_idx,
-    vertex_data_org,
+    vertex_data_org,  # pylint: disable=W0613
 ):
     """calculates multiple offset lines of an polyline"""
-    offsets = polyline.parallel_offset(delta=-tool_radius, check_self_intersect=True)
-    for polyline_offset in offsets:
-        if polyline_offset:
-            # workaround for bad offsets
-            vertex_data = polyline_offset.vertex_data()
-            point = (vertex_data[0][0], vertex_data[1][0], vertex_data[2][0])
-            if not inside_vertex(vertex_data_org, point):
-                continue
 
-            polyline_offset.level = len(obj.get("outer_objects", []))
-            polyline_offset.tool_offset = tool_offset
-            polyline_offset.layer = obj["layer"]
-            polyline_offset.setup = obj["setup"]
-            polyline_offset.start = obj.get("start", ())
-            polyline_offset.is_pocket = True
-            polyline_offsets[f"{obj_idx}.{offset_idx}"] = polyline_offset
-            offset_idx += 1
-            if polyline_offset.is_closed():
-                offset_idx = do_pockets(
-                    polyline_offset,
+    if obj.get("inner_objects") and obj["setup"]["pockets"]["islands"]:
+        subjs = []
+        vertex_data = polyline.vertex_data()
+        points = vertex2points(vertex_data, no_bulge=True, scale=100.0)
+        pco = pyclipper.PyclipperOffset()  # pylint: disable=E1101
+        pco.AddPath(
+            points,
+            pyclipper.JT_ROUND,  # pylint: disable=E1101
+            pyclipper.ET_CLOSEDPOLYGON,  # pylint: disable=E1101
+        )
+        level = len(obj.get("outer_objects", []))
+        for idx in obj.get("inner_objects", []):
+            polyline_offset = polyline_offsets.get(f"{idx}.0")
+            if polyline_offset and polyline_offset.level == level + 1:
+                vertex_data = polyline_offset.vertex_data()
+                points = vertex2points(vertex_data, no_bulge=True, scale=100.0)
+                pco.AddPath(
+                    points,
+                    pyclipper.JT_ROUND,  # pylint: disable=E1101
+                    pyclipper.ET_CLOSEDPOLYGON,  # pylint: disable=E1101
+                )
+        subjs = pco.Execute(-tool_radius * 100)
+
+        for points in subjs:
+            offset_idx = points2offsets(
+                obj,
+                obj_idx,
+                points,
+                polyline_offsets,
+                offset_idx,
+                tool_offset,
+                scale=0.01,
+            )
+
+        while True:
+            pco = pyclipper.PyclipperOffset()  # pylint: disable=E1101
+            for subj in subjs:
+                pco.AddPath(
+                    subj,
+                    pyclipper.JT_ROUND,  # pylint: disable=E1101
+                    pyclipper.ET_CLOSEDPOLYGON,  # pylint: disable=E1101
+                )
+            subjs = pco.Execute(-tool_radius * 100)  # pylint: disable=E1101
+            if not subjs:
+                break
+
+            for points in subjs:
+                offset_idx = points2offsets(
                     obj,
                     obj_idx,
-                    tool_offset,
-                    tool_radius,
+                    points,
                     polyline_offsets,
                     offset_idx,
-                    vertex_data_org,
+                    tool_offset,
+                    scale=0.01,
                 )
-
+    else:
+        offsets = polyline.parallel_offset(
+            delta=-tool_radius, check_self_intersect=True
+        )
+        for polyline_offset in offsets:
+            if polyline_offset:
+                # workaround for bad offsets
+                vertex_data = polyline_offset.vertex_data()
+                point = (vertex_data[0][0], vertex_data[1][0], vertex_data[2][0])
+                if not inside_vertex(vertex_data_org, point):
+                    continue
+                polyline_offset.level = len(obj.get("outer_objects", []))
+                polyline_offset.tool_offset = tool_offset
+                polyline_offset.layer = obj["layer"]
+                polyline_offset.setup = obj["setup"]
+                polyline_offset.start = obj.get("start", ())
+                polyline_offset.is_pocket = True
+                polyline_offsets[f"{obj_idx}.{offset_idx}"] = polyline_offset
+                offset_idx += 1
+                if polyline_offset.is_closed():
+                    offset_idx = do_pockets(
+                        polyline_offset,
+                        obj,
+                        obj_idx,
+                        tool_offset,
+                        tool_radius,
+                        polyline_offsets,
+                        offset_idx,
+                        vertex_data_org,
+                    )
     return offset_idx
 
 
-def object2polyline_offsets(diameter, obj, obj_idx, max_outer, small_circles=False):
+def object2polyline_offsets(
+    diameter, obj, obj_idx, max_outer, polyline_offsets, small_circles=False
+):
     """calculates the offset line(s) of one object"""
-    polyline_offsets = {}
 
     def overcut() -> None:
         quarter_pi = math.pi / 4
@@ -704,26 +790,28 @@ def object2polyline_offsets(diameter, obj, obj_idx, max_outer, small_circles=Fal
 def objects2polyline_offsets(diameter, objects, max_outer, small_circles=False):
     """calculates the offset line(s) of all objects"""
     polyline_offsets = {}
-    for obj_idx, obj in objects.items():
-        if not obj["setup"]["mill"]["active"]:
-            continue
 
-        obj_copy = deepcopy(obj)
-        do_reverse = 0
-        if obj_copy["tool_offset"] == "inside":
-            do_reverse = 1 - do_reverse
+    for level in range(max_outer, -1, -1):
+        for obj_idx, obj in objects.items():
+            if not obj["setup"]["mill"]["active"]:
+                continue
+            if len(obj.get("outer_objects", [])) != level:
+                continue
 
-        if obj_copy["setup"]["mill"]["reverse"]:
-            do_reverse = 1 - do_reverse
+            obj_copy = deepcopy(obj)
+            do_reverse = 0
+            if obj_copy["tool_offset"] == "inside":
+                do_reverse = 1 - do_reverse
 
-        if do_reverse:
-            reverse_object(obj_copy)
+            if obj_copy["setup"]["mill"]["reverse"]:
+                do_reverse = 1 - do_reverse
 
-        polyline_offsets.update(
+            if do_reverse:
+                reverse_object(obj_copy)
+
             object2polyline_offsets(
-                diameter, obj_copy, obj_idx, max_outer, small_circles
+                diameter, obj_copy, obj_idx, max_outer, polyline_offsets, small_circles
             )
-        )
 
     return polyline_offsets
 

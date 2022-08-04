@@ -400,7 +400,7 @@ def segment2machine_cmd(
 
 
 def get_nearest_free_object(
-    polylines, level: int, last_pos: list, milling: dict
+    polylines, level: int, last_pos: list, milling: dict, is_pocket: bool
 ) -> tuple:
     found: bool = False
     nearest_dist: Union[None, float] = None
@@ -410,8 +410,21 @@ def get_nearest_free_object(
         if (
             offset_num not in milling
             and offset.level == level
+            and offset.is_pocket == is_pocket
             and offset.setup["mill"]["active"]
         ):
+            if offset.is_pocket and offset.setup["pockets"]["insideout"]:
+                pocket_filter = None
+                offset_num_pre = offset_num.split(".")[0]
+                for pocket_offset_num in polylines:
+                    if (
+                        pocket_offset_num not in milling
+                        and pocket_offset_num.startswith(f"{offset_num_pre}.")
+                    ):
+                        pocket_filter = pocket_offset_num
+                if offset_num != pocket_filter:
+                    continue
+
             if offset.is_closed():
                 vertex_data = offset.vertex_data()
                 if offset.start:
@@ -466,96 +479,78 @@ def polylines2machine_cmd(project: dict, post: PostProcessor) -> str:
 
     order = 0
     for level in range(project["maxOuter"], -1, -1):
-        while True:
+        for is_pocket in (True, False):
 
-            (found, nearest_idx, nearest_point) = get_nearest_free_object(
-                polylines, level, last_pos, milling
-            )
+            while True:
+                (found, nearest_idx, nearest_point) = get_nearest_free_object(
+                    polylines, level, last_pos, milling, is_pocket
+                )
 
-            if found:
-                milling[nearest_idx] = nearest_idx
-                polyline = polylines[nearest_idx]
+                if found:
+                    milling[nearest_idx] = nearest_idx
+                    polyline = polylines[nearest_idx]
 
-                vertex_data = polyline.vertex_data()
-                is_closed = polyline.is_closed()
-                max_depth = polyline.setup["mill"]["depth"]
+                    vertex_data = polyline.vertex_data()
+                    is_closed = polyline.is_closed()
+                    max_depth = polyline.setup["mill"]["depth"]
 
-                if polyline.setup["tabs"]["active"]:
-                    polyline.setup["tabs"]["data"] = tabs["data"]
-                else:
-                    polyline.setup["tabs"]["data"] = []
+                    if polyline.setup["tabs"]["active"]:
+                        polyline.setup["tabs"]["data"] = tabs["data"]
+                    else:
+                        polyline.setup["tabs"]["data"] = []
 
-                points = vertex2points(vertex_data)
-                if is_closed:
-                    points = rotate_list(points, nearest_point)
-                elif nearest_point != 0:
-                    # redir open line and reverse bulge
-                    x_start = list(vertex_data[0])
-                    x_start.reverse()
-                    y_start = list(vertex_data[1])
-                    y_start.reverse()
-                    bulges = list(vertex_data[2])
-                    bulges.reverse()
-                    bulges = rotate_list(bulges, 1)
-                    for num, point in enumerate(bulges):
-                        bulges[num] = -bulges[num]
-                    points = vertex2points((x_start, y_start, bulges))
+                    points = vertex2points(vertex_data)
+                    if is_closed:
+                        points = rotate_list(points, nearest_point)
+                    elif nearest_point != 0:
+                        # redir open line and reverse bulge
+                        x_start = list(vertex_data[0])
+                        x_start.reverse()
+                        y_start = list(vertex_data[1])
+                        y_start.reverse()
+                        bulges = list(vertex_data[2])
+                        bulges.reverse()
+                        bulges = rotate_list(bulges, 1)
+                        for num, point in enumerate(bulges):
+                            bulges[num] = -bulges[num]
+                        points = vertex2points((x_start, y_start, bulges))
 
-                helix_mode = polyline.setup["mill"]["helix_mode"]
+                    helix_mode = polyline.setup["mill"]["helix_mode"]
 
-                # get object distance
-                obj_distance = 0
-                last = points[0]
-                for point in points:
-                    obj_distance += calc_distance(point, last)
-                    last = point
-                if is_closed:
-                    obj_distance += calc_distance(point, points[0])
+                    # get object distance
+                    obj_distance = 0
+                    last = points[0]
+                    for point in points:
+                        obj_distance += calc_distance(point, last)
+                        last = point
+                    if is_closed:
+                        obj_distance += calc_distance(point, points[0])
 
-                post.separation()
-                post.comment("--------------------------------------------------")
-                post.comment(f"Level: {level}")
-                post.comment(f"Order: {order}")
-                post.comment(f"Object: {nearest_idx}")
-                post.comment(f"Distance: {obj_distance}mm")
-                post.comment(f"Closed: {is_closed}")
-                post.comment(f"isPocket: {polyline.is_pocket}")
-                if not project["setup"]["maschine"]["laser"] and "Z" in project["axis"]:
-                    post.comment(
-                        f"Depth: {polyline.setup['mill']['depth']}mm / {polyline.setup['mill']['step']}mm"
-                    )
-                post.comment(f"Tool-Diameter: {project['setup']['tool']['diameter']}mm")
-                if polyline.tool_offset:
-                    post.comment(
-                        f"Tool-Offset: {project['setup']['tool']['diameter'] / 2.0}mm {polyline.tool_offset}"
-                    )
-                post.comment("--------------------------------------------------")
-
-                if is_closed:
+                    post.separation()
+                    post.comment("--------------------------------------------------")
+                    post.comment(f"Level: {level}")
+                    post.comment(f"Order: {order}")
+                    post.comment(f"Object: {nearest_idx}")
+                    post.comment(f"Distance: {obj_distance}mm")
+                    post.comment(f"Closed: {is_closed}")
+                    post.comment(f"isPocket: {polyline.is_pocket}")
                     if (
                         not project["setup"]["maschine"]["laser"]
                         and "Z" in project["axis"]
                     ):
-                        post.move(z_pos=project["setup"]["mill"]["fast_move_z"])
-                    post.move(x_pos=points[0][0], y_pos=points[0][1])
+                        post.comment(
+                            f"Depth: {polyline.setup['mill']['depth']}mm / {polyline.setup['mill']['step']}mm"
+                        )
+                    post.comment(
+                        f"Tool-Diameter: {project['setup']['tool']['diameter']}mm"
+                    )
+                    if polyline.tool_offset:
+                        post.comment(
+                            f"Tool-Offset: {project['setup']['tool']['diameter'] / 2.0}mm {polyline.tool_offset}"
+                        )
+                    post.comment("--------------------------------------------------")
 
-                depth = polyline.setup["mill"]["step"]
-                if project["setup"]["maschine"]["laser"] or "Z" not in project["axis"]:
-                    depth = 0.0
-                    post.spindel_cw(project["setup"]["tool"]["speed"], pause=0)
-
-                last_depth = 0.0
-                while True:
-                    if depth < polyline.setup["mill"]["depth"]:
-                        depth = polyline.setup["mill"]["depth"]
-
-                    if (
-                        not project["setup"]["maschine"]["laser"]
-                        and "Z" in project["axis"]
-                    ):
-                        post.comment(f"- Depth: {depth}mm -")
-
-                    if not is_closed:
+                    if is_closed:
                         if (
                             not project["setup"]["maschine"]["laser"]
                             and "Z" in project["axis"]
@@ -563,87 +558,114 @@ def polylines2machine_cmd(project: dict, post: PostProcessor) -> str:
                             post.move(z_pos=project["setup"]["mill"]["fast_move_z"])
                         post.move(x_pos=points[0][0], y_pos=points[0][1])
 
-                    if (
-                        not project["setup"]["maschine"]["laser"]
-                        and "Z" in project["axis"]
-                    ):
-                        post.feedrate(project["setup"]["tool"]["rate_v"])
-                        if helix_mode:
-                            post.linear(z_pos=last_depth)
-                        else:
-                            post.linear(z_pos=depth)
-                        post.feedrate(project["setup"]["tool"]["rate_h"])
-
-                    trav_distance = 0
-                    last = points[0]
-                    for point in points:
-                        if helix_mode:
-                            trav_distance += calc_distance(point, last)
-                            depth_diff = depth - last_depth
-                            set_depth = last_depth + (
-                                trav_distance / obj_distance * depth_diff
-                            )
-                        else:
-                            set_depth = depth
-                        segment2machine_cmd(
-                            project,
-                            post,
-                            last,
-                            point,
-                            set_depth,
-                            max_depth,
-                            polyline.setup["tabs"],
-                        )
-                        last = point
-
-                    if is_closed:
-                        point = points[0]
-
-                        if helix_mode:
-                            trav_distance += calc_distance(point, last)
-                            depth_diff = depth - last_depth
-                            set_depth = last_depth + (
-                                trav_distance / obj_distance * depth_diff
-                            )
-                        else:
-                            set_depth = depth
-                        segment2machine_cmd(
-                            project,
-                            post,
-                            last,
-                            point,
-                            set_depth,
-                            max_depth,
-                            polyline.setup["tabs"],
-                        )
-
-                    last_depth = depth
-
-                    if depth <= polyline.setup["mill"]["depth"]:
-                        if helix_mode:
-                            helix_mode = False
-                            continue
-                        break
-                    depth += polyline.setup["mill"]["step"]
-
+                    depth = polyline.setup["mill"]["step"]
                     if (
                         project["setup"]["maschine"]["laser"]
                         or "Z" not in project["axis"]
                     ):
-                        break
+                        depth = 0.0
+                        post.spindel_cw(project["setup"]["tool"]["speed"], pause=0)
 
-                if not project["setup"]["maschine"]["laser"]:
-                    post.move(z_pos=project["setup"]["mill"]["fast_move_z"])
-                else:
-                    post.spindel_off()
+                    last_depth = 0.0
+                    while True:
+                        if depth < polyline.setup["mill"]["depth"]:
+                            depth = polyline.setup["mill"]["depth"]
 
-                if is_closed:
-                    last_pos = points[0]
+                        if (
+                            not project["setup"]["maschine"]["laser"]
+                            and "Z" in project["axis"]
+                        ):
+                            post.comment(f"- Depth: {depth}mm -")
+
+                        if not is_closed:
+                            if (
+                                not project["setup"]["maschine"]["laser"]
+                                and "Z" in project["axis"]
+                            ):
+                                post.move(z_pos=project["setup"]["mill"]["fast_move_z"])
+                            post.move(x_pos=points[0][0], y_pos=points[0][1])
+
+                        if (
+                            not project["setup"]["maschine"]["laser"]
+                            and "Z" in project["axis"]
+                        ):
+                            post.feedrate(project["setup"]["tool"]["rate_v"])
+                            if helix_mode:
+                                post.linear(z_pos=last_depth)
+                            else:
+                                post.linear(z_pos=depth)
+                            post.feedrate(project["setup"]["tool"]["rate_h"])
+
+                        trav_distance = 0
+                        last = points[0]
+                        for point in points:
+                            if helix_mode:
+                                trav_distance += calc_distance(point, last)
+                                depth_diff = depth - last_depth
+                                set_depth = last_depth + (
+                                    trav_distance / obj_distance * depth_diff
+                                )
+                            else:
+                                set_depth = depth
+                            segment2machine_cmd(
+                                project,
+                                post,
+                                last,
+                                point,
+                                set_depth,
+                                max_depth,
+                                polyline.setup["tabs"],
+                            )
+                            last = point
+
+                        if is_closed:
+                            point = points[0]
+
+                            if helix_mode:
+                                trav_distance += calc_distance(point, last)
+                                depth_diff = depth - last_depth
+                                set_depth = last_depth + (
+                                    trav_distance / obj_distance * depth_diff
+                                )
+                            else:
+                                set_depth = depth
+                            segment2machine_cmd(
+                                project,
+                                post,
+                                last,
+                                point,
+                                set_depth,
+                                max_depth,
+                                polyline.setup["tabs"],
+                            )
+
+                        last_depth = depth
+
+                        if depth <= polyline.setup["mill"]["depth"]:
+                            if helix_mode:
+                                helix_mode = False
+                                continue
+                            break
+                        depth += polyline.setup["mill"]["step"]
+
+                        if (
+                            project["setup"]["maschine"]["laser"]
+                            or "Z" not in project["axis"]
+                        ):
+                            break
+
+                    if not project["setup"]["maschine"]["laser"]:
+                        post.move(z_pos=project["setup"]["mill"]["fast_move_z"])
+                    else:
+                        post.spindel_off()
+
+                    if is_closed:
+                        last_pos = points[0]
+                    else:
+                        last_pos = points[-1]
+                    order += 1
                 else:
-                    last_pos = points[-1]
-                order += 1
-            else:
-                break
+                    break
 
     machine_cmd_end(project, post)
     return post.get()

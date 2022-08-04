@@ -36,6 +36,8 @@ def main() -> int:
     parser.add_argument("-x", "--width", help="screen width", type=int, default=800)
     parser.add_argument("-y", "--height", help="screen height", type=int, default=600)
     parser.add_argument("-o", "--output", help="save to image", type=str, default=None)
+    parser.add_argument("-g", "--grid", help="show grid", type=int, default=1)
+    parser.add_argument("-l", "--legend", help="show legend", type=int, default=1)
     args = parser.parse_args()
 
     # setup
@@ -76,18 +78,20 @@ def main() -> int:
     draw = ImageDraw.Draw(out)
 
     # draw grid
-    for pos_x in range(0, int(size[0]), 10):
-        draw_line((pos_x, 0.0), (pos_x, size[1]), color=(27, 27, 27))
-    for pos_y in range(0, int(size[1]), 10):
-        draw_line((0.0, pos_y), (size[0], pos_y), color=(27, 27, 27))
+    if args.grid == 1:
+        for pos_x in range(0, int(size[0]), 10):
+            draw_line((pos_x, 0.0), (pos_x, size[1]), color=(27, 27, 27))
+        for pos_y in range(0, int(size[1]), 10):
+            draw_line((0.0, pos_y), (size[0], pos_y), color=(27, 27, 27))
 
     # draw path
     reader.draw(draw_line)
 
     # draw info
-    if screen_width >= 320 or screen_height >= 240:
-        info = f"W={round(size[0], 2)}\nH={round(size[1], 2)}"
-        draw.multiline_text((5, 5), info, font=fnt, fill=(255, 255, 255))
+    if args.legend == 1:
+        if screen_width >= 320 or screen_height >= 240:
+            info = f"W={round(size[0], 2)}\nH={round(size[1], 2)}"
+            draw.multiline_text((5, 5), info, font=fnt, fill=(255, 255, 255))
 
     if args.output:
         # save to image

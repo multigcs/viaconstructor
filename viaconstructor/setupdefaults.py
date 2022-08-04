@@ -256,6 +256,20 @@ def setup_defaults(_) -> dict:
                 "title": _("Pocket"),
                 "tooltip": _("do pocket operation on this object"),
             },
+            "islands": {
+                "default": True,
+                "type": "bool",
+                "per_object": True,
+                "title": _("Islands"),
+                "tooltip": _("keep islands"),
+            },
+            "insideout": {
+                "default": False,
+                "type": "bool",
+                "per_object": True,
+                "title": _("insideout"),
+                "tooltip": _("from inside to out"),
+            },
         },
         "tabs": {
             "active": {
