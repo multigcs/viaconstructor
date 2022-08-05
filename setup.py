@@ -19,6 +19,6 @@ setup(
     long_description=open('README.md').read(),
     install_requires=["PyQt5", "ezdxf", "cavaliercontours-python", "PyOpenGL", "Pillow", "pygame", "Hershey-Fonts", "svgpathtools", "meshcut", "pyclipper"],
     include_package_data=True,
-    data_files = [ ('data', ['data/exit.png', 'data/select.png', 'data/flip-x.png', 'data/flip-y.png', 'data/load-setup-gcode.png', 'data/load-setup.png', 'data/rotate.png', 'data/save-gcode.png', 'data/save-setup-as.png', 'data/save-setup.png', 'data/view-2d.png', 'data/view-reset.png']) ]
+    data_files = [ ('data', ['data/exit.png', 'data/select.png', 'data/flip-x.png', 'data/flip-y.png', 'data/load-setup-gcode.png', 'data/load-setup.png', 'data/rotate.png', 'data/save-gcode.png', 'data/save-setup-as.png', 'data/save-setup.png', 'data/view-2d.png', 'data/view-reset.png', 'data/tab-selector.png']) ]
 )
 
