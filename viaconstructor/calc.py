@@ -185,6 +185,12 @@ def find_tool_offsets(objects):
                 obj["tool_offset"] = obj["setup"]["mill"]["offset"]
         if max_outer < len(outer):
             max_outer = len(outer)
+
+        if obj.get("layer", "").startswith("BREAKS:") or obj.get(
+            "layer", ""
+        ).startswith("_TABS"):
+            continue
+
         for outer_idx in outer:
             objects[outer_idx]["inner_objects"].append(obj_idx)
     return max_outer
@@ -323,9 +329,13 @@ def points2vertex(points, scale=1.0):
     for point in points:
         pos_x = point[0] * scale
         pos_y = point[1] * scale
+        if len(point) > 2:
+            bulge = point[2]
+        else:
+            bulge = 0.0
         xdata.append(pos_x)
         ydata.append(pos_y)
-        bdata.append(0)
+        bdata.append(bulge)
     return (xdata, ydata, bdata)
 
 
@@ -523,7 +533,6 @@ def do_pockets(  # pylint: disable=R0913
     vertex_data_org,  # pylint: disable=W0613
 ):
     """calculates multiple offset lines of an polyline"""
-
     if obj.get("inner_objects") and obj["setup"]["pockets"]["islands"]:
         subjs = []
         vertex_data = polyline.vertex_data()
@@ -580,6 +589,33 @@ def do_pockets(  # pylint: disable=R0913
                     tool_offset,
                     scale=0.01,
                 )
+
+    elif obj["segments"][0]["type"] == "CIRCLE" and "center" in obj["segments"][0]:
+        start = obj["segments"][0]["start"]
+        center = obj["segments"][0]["center"]
+        radius = calc_distance(start, center)
+        points = []
+        rad = 0
+        while True:
+            rad += tool_radius / 2
+            if rad > radius - tool_radius:
+                break
+            points.append((center[0] - rad, center[1] + 0.1, 1.0))
+            rad += tool_radius / 2
+            if rad > radius - tool_radius:
+                break
+            points.append((center[0] + rad, center[1] - 0.1, 1.0))
+        vertex_data = points2vertex(points)
+        polyline_offset = cavc.Polyline(vertex_data, is_closed=False)
+        polyline_offset.level = len(obj.get("outer_objects", []))
+        polyline_offset.tool_offset = tool_offset
+        polyline_offset.layer = obj["layer"]
+        polyline_offset.setup = obj["setup"]
+        polyline_offset.start = obj.get("start", ())
+        polyline_offset.is_pocket = True
+        polyline_offsets[f"{obj_idx}.{offset_idx}"] = polyline_offset
+        offset_idx += 1
+
     else:
         offsets = polyline.parallel_offset(
             delta=-tool_radius, check_self_intersect=True
@@ -749,7 +785,7 @@ def object2polyline_offsets(
                             obj,
                             obj_idx,
                             tool_offset,
-                            tool_radius * 1.2,
+                            tool_radius,
                             polyline_offsets,
                             offset_idx,
                             polyline.vertex_data(),
