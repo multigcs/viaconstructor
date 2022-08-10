@@ -90,13 +90,12 @@ class GcodeParser:
                 elif self.state["move_mode"] == 1:
                     self.linear_move(cords, False)
                 elif self.state["move_mode"] in {2, 3}:
-                    if "X" in ldata and "Y" in ldata:
-                        if "R" in cords:
-                            self.arc_move_r(self.state["move_mode"], cords, cords["R"])
-                        elif "I" in ldata and "J" in ldata:
-                            self.arc_move_ij(
-                                self.state["move_mode"], cords, ldata["I"], ldata["J"]
-                            )
+                    if "R" in cords:
+                        self.arc_move_r(self.state["move_mode"], cords, cords["R"])
+                    elif "I" in ldata and "J" in ldata:
+                        self.arc_move_ij(
+                            self.state["move_mode"], cords, ldata["I"], ldata["J"]
+                        )
 
         minp = {}
         maxp = {}
