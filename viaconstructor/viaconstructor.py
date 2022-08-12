@@ -491,7 +491,7 @@ class ViaConstructor:
             "table": None,
         },
     }
-    save_tabs = "ask"
+    save_tabs = "no"
     save_starts = "no"
     draw_reader: Union[DxfReader, SvgReader, HpglReader, StlReader]
 
@@ -1347,9 +1347,9 @@ class ViaConstructor:
         # load drawing #
         if self.args.filename.lower().endswith(".svg"):
             self.draw_reader = SvgReader(self.args.filename, self.args)
-            self.save_tabs = "no"
         elif self.args.filename.lower().endswith(".dxf"):
             self.draw_reader = DxfReader(self.args.filename, self.args)
+            self.save_tabs = "ask"
         elif self.args.filename.lower().endswith(".hpgl"):
             self.draw_reader = HpglReader(self.args.filename, self.args)
         elif self.args.filename.lower().endswith(".stl"):
