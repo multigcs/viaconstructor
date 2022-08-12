@@ -29,6 +29,7 @@ from PyQt5.QtWidgets import (  # pylint: disable=E0611
     QFileDialog,
     QGridLayout,
     QHBoxLayout,
+    QInputDialog,
     QLabel,
     QLineEdit,
     QMainWindow,
@@ -59,6 +60,7 @@ from .calc import (
     objects2minmax,
     objects2polyline_offsets,
     rotate_objects,
+    scale_objects,
     segments2objects,
 )
 from .gldraw import (
@@ -493,6 +495,7 @@ class ViaConstructor:
             "table": None,
         },
     }
+    info = ""
     save_tabs = "no"
     save_starts = "no"
     draw_reader: Union[DxfReader, SvgReader, HpglReader, StlReader]
@@ -564,6 +567,19 @@ class ViaConstructor:
         self.project["minMax"] = objects2minmax(self.project["objects"])
         self.update_drawing()
 
+    def _toolbar_scale(self) -> None:
+        scale, dialog_ok = QInputDialog.getText(
+            self.project["window"], _("Workpiece-Scale"), _("Scale-Factor:"), text="1.0"
+        )
+        if (
+            dialog_ok
+            and str(scale).replace(".", "").isnumeric()
+            and float(scale) != 1.0
+        ):
+            scale_objects(self.project["objects"], float(scale))
+            self.project["minMax"] = objects2minmax(self.project["objects"])
+            self.update_drawing()
+
     def _toolbar_view_2d(self) -> None:
         """center view."""
         self.project["glwidget"].view_2d()
@@ -597,7 +613,7 @@ class ViaConstructor:
 
     def _toolbar_save_machine_cmd(self) -> None:
         """save machine_cmd."""
-        self.status_bar.showMessage("save machine_cmd..")
+        self.status_bar.showMessage(f"{self.info} - save machine_cmd..")
         file_dialog = QFileDialog(self.main)
         file_dialog.setNameFilters(
             [f"self.project['suffix'] (*.{self.project['suffix']})"]
@@ -612,9 +628,11 @@ class ViaConstructor:
             f"{self.project['suffix']} (*.{self.project['suffix']})",
         )
         if name[0] and self.machine_cmd_save(name[0]):
-            self.status_bar.showMessage(f"save maschine-code..done ({name[0]})")
+            self.status_bar.showMessage(
+                f"{self.info} - save maschine-code..done ({name[0]})"
+            )
         else:
-            self.status_bar.showMessage("save maschine-code..cancel")
+            self.status_bar.showMessage(f"{self.info} - save maschine-code..cancel")
 
     def setup_load(self, filename: str) -> bool:
         if os.path.isfile(filename):
@@ -634,15 +652,15 @@ class ViaConstructor:
 
     def _toolbar_save_setup(self) -> None:
         """save setup."""
-        self.status_bar.showMessage("save setup..")
+        self.status_bar.showMessage(f"{self.info} - save setup..")
         if self.setup_save(self.args.setup):
-            self.status_bar.showMessage("save setup..done")
+            self.status_bar.showMessage(f"{self.info} - save setup..done")
         else:
-            self.status_bar.showMessage("save setup..error")
+            self.status_bar.showMessage(f"{self.info} - save setup..error")
 
     def _toolbar_load_setup_from(self) -> None:
         """load setup from."""
-        self.status_bar.showMessage("load setup from..")
+        self.status_bar.showMessage(f"{self.info} - load setup from..")
         file_dialog = QFileDialog(self.main)
         file_dialog.setNameFilters(["setup (*.json)"])
         name = file_dialog.getOpenFileName(
@@ -653,26 +671,30 @@ class ViaConstructor:
             self.update_table()
             self.global_changed(0)
             self.update_drawing()
-            self.status_bar.showMessage(f"load setup from..done ({name[0]})")
+            self.status_bar.showMessage(
+                f"{self.info} - load setup from..done ({name[0]})"
+            )
         else:
-            self.status_bar.showMessage("load setup from..cancel")
+            self.status_bar.showMessage(f"{self.info} - load setup from..cancel")
 
     def _toolbar_save_setup_as(self) -> None:
         """save setup as."""
-        self.status_bar.showMessage("save setup as..")
+        self.status_bar.showMessage(f"{self.info} - save setup as..")
         file_dialog = QFileDialog(self.main)
         file_dialog.setNameFilters(["setup (*.json)"])
         name = file_dialog.getSaveFileName(
             self.main, "Save Setup", self.args.setup, "setup (*.json)"
         )
         if name[0] and self.setup_save(name[0]):
-            self.status_bar.showMessage(f"save setup as..done ({name[0]})")
+            self.status_bar.showMessage(
+                f"{self.info} - save setup as..done ({name[0]})"
+            )
         else:
-            self.status_bar.showMessage("save setup as..cancel")
+            self.status_bar.showMessage(f"{self.info} - ave setup as..cancel")
 
     def update_drawing(self, draw_only=False) -> None:
         """update drawings."""
-        self.status_bar.showMessage("calculate..")
+        self.status_bar.showMessage(f"{self.info} - calculate..")
         if not draw_only:
             self.run_calculation()
         self.project["gllist"] = GL.glGenLists(1)
@@ -683,7 +705,9 @@ class ViaConstructor:
                 self.draw_reader.draw_3d()
         if not self.project["glwidget"].repair_selector:
             if not draw_maschinecode_path(self.project):
-                self.status_bar.showMessage("error while drawing maschine commands")
+                self.status_bar.showMessage(
+                    f"{self.info} - error while drawing maschine commands"
+                )
 
         if self.project["setup"]["view"]["object_ids"]:
             draw_object_ids(self.project)
@@ -692,7 +716,11 @@ class ViaConstructor:
         if self.project["setup"]["view"]["polygon_show"]:
             draw_object_faces(self.project)
         GL.glEndList()
-        self.status_bar.showMessage("calculate..done")
+        self.info = f"{self.project['minMax'][2] - self.project['minMax'][0]}x{self.project['minMax'][3] - self.project['minMax'][1]}mm"
+        self.main.setWindowTitle(
+            f"viaConstructor: {self.project['filename_draw']} - {self.info}"
+        )
+        self.status_bar.showMessage(f"{self.info} - calculate..done")
 
     def materials_select(self, material_idx) -> None:
         """calculates the milling feedrate and tool-speed for the selected material
@@ -1002,7 +1030,7 @@ class ViaConstructor:
         ] = f"{'.'.join(self.project['filename_draw'].split('.')[:-1])}.{self.project['suffix']}"
         if os.path.isfile(self.project["filename_machine_cmd"]):
             self.status_bar.showMessage(
-                f"loading setup from maschinecode: {self.project['filename_machine_cmd']}"
+                f"{self.info} - loading setup from maschinecode: {self.project['filename_machine_cmd']}"
             )
             with open(self.project["filename_machine_cmd"], "r") as fd_machine_cmd:
                 gdata = fd_machine_cmd.read()
@@ -1014,10 +1042,12 @@ class ViaConstructor:
                             self.project["setup"][sname].update(ndata.get(sname, {}))
                         self.update_drawing()
                         self.status_bar.showMessage(
-                            "loading setup from maschinecode..done"
+                            f"{self.info} - loading setup from maschinecode..done"
                         )
                         return
-        self.status_bar.showMessage("loading setup from maschinecode..failed")
+        self.status_bar.showMessage(
+            f"{self.info} - loading setup from maschinecode..failed"
+        )
 
     def _toolbar_exit(self) -> None:
         """exit button."""
@@ -1111,6 +1141,14 @@ class ViaConstructor:
                 "",
                 _("Rotate workpiece"),
                 self._toolbar_rotate,
+                True,
+                "workpiece",
+            ),
+            _("Scale"): (
+                "scale.png",
+                "",
+                _("Scale workpiece"),
+                self._toolbar_scale,
                 True,
                 "workpiece",
             ),
@@ -1381,7 +1419,7 @@ class ViaConstructor:
 
         # gui #
         qapp = QApplication(sys.argv)
-        window = QWidget()
+        self.project["window"] = QWidget()
         self.project["app"] = self
 
         my_format = QGLFormat.defaultFormat()
@@ -1389,7 +1427,7 @@ class ViaConstructor:
         QGLFormat.setDefaultFormat(my_format)
         if not QGLFormat.hasOpenGL():
             QMessageBox.information(
-                window,
+                self.project["window"],
                 "OpenGL using samplebuffers",
                 "This system does not support OpenGL.",
             )
@@ -1399,7 +1437,7 @@ class ViaConstructor:
 
         self.main = QMainWindow()
         self.main.setWindowTitle(f"viaConstructor: {self.project['filename_draw']}")
-        self.main.setCentralWidget(window)
+        self.main.setCentralWidget(self.project["window"])
 
         self.this_dir, self.this_filename = os.path.split(__file__)
 
@@ -1407,7 +1445,7 @@ class ViaConstructor:
 
         self.status_bar = QStatusBar()
         self.main.setStatusBar(self.status_bar)
-        self.status_bar.showMessage("startup")
+        self.status_bar.showMessage(f"{self.info} - startup")
 
         self.project["textwidget"] = QPlainTextEdit()
         self.project["objwidget"] = QTreeView()
@@ -1447,7 +1485,7 @@ class ViaConstructor:
         right_widget = QWidget()
         right_widget.setLayout(right_gridlayout)
 
-        hlay = QHBoxLayout(window)
+        hlay = QHBoxLayout(self.project["window"])
         hlay.addWidget(left_widget, stretch=1)
         hlay.addWidget(right_widget, stretch=3)
 

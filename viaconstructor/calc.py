@@ -926,3 +926,15 @@ def rotate_objects(objects: dict, min_max: list[float]) -> None:
             segment["bulge"] = -segment["bulge"]
         reverse_object(obj)
     mirror_objects(objects, min_max, horizontal=True)
+
+
+def scale_objects(objects: dict, scale: float) -> None:
+    """rotates an object"""
+    for obj in objects.values():
+        for segment in obj["segments"]:
+            for ptype in ("start", "end", "center"):
+                if ptype in segment:
+                    segment[ptype] = (
+                        segment[ptype][0] * scale,
+                        segment[ptype][1] * scale,
+                    )

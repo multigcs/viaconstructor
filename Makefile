@@ -104,4 +104,4 @@ gettext:
 dist:
 	rm -rf dist/*
 	python3 setup.py sdist
-	twine upload dist/viaconstructor*
+	twine upload -u meister23 --verbose dist/viaconstructor*
