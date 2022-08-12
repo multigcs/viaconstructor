@@ -40,22 +40,23 @@ class HpglReader:
                 line = ""
             if line[0:2] in {"IP", "SC"}:
                 coords = line[2:].split(",")
-                if line.startswith("IP"):
-                    min_x = float(coords[0])
-                    min_y = float(coords[1])
-                    max_x = float(coords[2])
-                    max_y = float(coords[3])
-                    self.state["plotter"] = (max_x - min_x, max_y - min_y)
-                else:
-                    min_x = float(coords[0])
-                    max_x = float(coords[1])
-                    min_y = float(coords[2])
-                    max_y = float(coords[3])
-                    self.state["user"] = (max_x - min_x, max_y - min_y)
-                self.state["scale"] = (
-                    self.state["plotter"][0] / self.state["user"][0],
-                    self.state["plotter"][1] / self.state["user"][1],
-                )
+                if coords and coords[0]:
+                    if line.startswith("IP"):
+                        min_x = float(coords[0])
+                        min_y = float(coords[1])
+                        max_x = float(coords[2])
+                        max_y = float(coords[3])
+                        self.state["plotter"] = (max_x - min_x, max_y - min_y)
+                    else:
+                        min_x = float(coords[0])
+                        max_x = float(coords[1])
+                        min_y = float(coords[2])
+                        max_y = float(coords[3])
+                        self.state["user"] = (max_x - min_x, max_y - min_y)
+                    self.state["scale"] = (
+                        self.state["plotter"][0] / self.state["user"][0],
+                        self.state["plotter"][1] / self.state["user"][1],
+                    )
                 line = ""
             elif line.startswith("PU"):
                 draw = False
@@ -119,6 +120,8 @@ class HpglReader:
             if line:
                 is_x = True
                 for cord in line.split(","):
+                    if not cord.isnumeric():
+                        continue
                     if is_x:
                         new_x = float(cord) / self.state["scale"][0]
                     else:
@@ -126,16 +129,13 @@ class HpglReader:
                         if not absolute:
                             new_x += last_x
                             new_y += last_y
-
                         if draw:
                             self.add_line(
                                 (last_x, last_y),
                                 (new_x, new_y),
                             )
-
                         last_x = new_x
                         last_y = new_y
-
                     is_x = not is_x
 
         self.min_max = [0.0, 0.0, 10.0, 10.0]
