@@ -7,11 +7,13 @@ import math
 import os
 import re
 import sys
+import tempfile
 from copy import deepcopy
 from functools import partial
 from pathlib import Path
 from typing import Union
 
+import setproctitle
 from PyQt5.QtGui import (  # pylint: disable=E0611
     QIcon,
     QStandardItem,
@@ -1316,6 +1318,8 @@ class ViaConstructor:
 
     def __init__(self) -> None:
         """viaconstructor main init."""
+        setproctitle.setproctitle("viaconstructor")
+
         # arguments
         parser = argparse.ArgumentParser()
         parser.add_argument("filename", help="input file", type=str)
@@ -1347,6 +1351,14 @@ class ViaConstructor:
         # load drawing #
         if self.args.filename.lower().endswith(".svg"):
             self.draw_reader = SvgReader(self.args.filename, self.args)
+
+        elif self.args.filename.lower().endswith(".eps"):
+            print("# try to convert eps into dxf format")
+            with tempfile.NamedTemporaryFile() as tmp:
+                cmd = f"pstoedit -f dxf {self.args.filename} {tmp.name}"
+                print(f"# running: {cmd}")
+                os.system(cmd)
+                self.draw_reader = DxfReader(tmp.name, self.args)
         elif self.args.filename.lower().endswith(".dxf"):
             self.draw_reader = DxfReader(self.args.filename, self.args)
             self.save_tabs = "ask"

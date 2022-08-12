@@ -455,13 +455,17 @@ def get_nearest_free_object(
                 # on open obejcts, test first and last point
                 vertex_data = offset.vertex_data()
                 if len(vertex_data) > 0 and len(vertex_data[0]) > 0:
-                    dist = calc_distance(last_pos, (vertex_data[0][0], vertex_data[1][0]))
+                    dist = calc_distance(
+                        last_pos, (vertex_data[0][0], vertex_data[1][0])
+                    )
                     if nearest_dist is None or dist < nearest_dist:
                         nearest_dist = dist
                         nearest_idx = offset_num
                         nearest_point = 0
                         found = True
-                    dist = calc_distance(last_pos, (vertex_data[0][-1], vertex_data[1][-1]))
+                    dist = calc_distance(
+                        last_pos, (vertex_data[0][-1], vertex_data[1][-1])
+                    )
                     if nearest_dist is None or dist < nearest_dist:
                         nearest_dist = dist
                         nearest_idx = offset_num

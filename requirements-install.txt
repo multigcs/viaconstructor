@@ -8,3 +8,4 @@ Hershey-Fonts
 svgpathtools
 meshcut
 pyclipper
+setproctitle
