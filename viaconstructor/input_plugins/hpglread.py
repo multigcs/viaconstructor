@@ -36,7 +36,7 @@ class HpglReader:
         hpgl = hpgl.replace(";", "\n")
         for line in hpgl.split("\n"):
             line = line.strip()
-            if line[0:2] in {"IN", "LT", "CO", "CI", "CT", "SP"}:
+            if line[0:2] in {"IN", "LT", "CO", "CI", "IP", "SC", "CT", "SP"}:
                 line = ""
             if line[0:2] in {"IP", "SC"}:
                 coords = line[2:].split(",")
@@ -120,7 +120,7 @@ class HpglReader:
             if line:
                 is_x = True
                 for cord in line.split(","):
-                    if not cord.isnumeric():
+                    if not cord.isnumeric() and not cord.lstrip("-").isnumeric():
                         continue
                     if is_x:
                         new_x = float(cord) / self.state["scale"][0]
