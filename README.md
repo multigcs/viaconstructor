@@ -17,7 +17,7 @@ OpenSource CAM-Tool to generate gCode from DXF-Files
  * the gcode-interpreter can be used externaly to generate thumbnails and previews
  * the dxf-reader can be used externaly to generate thumbnails and previews
  * automatic offset finder (inside/outside)
- * automatig order of multiple parts (nearest first)
+ * automatic order of multiple parts (nearest first)
  * nested parts will milled in the right order (inside parts first)
 
 ![viaconstructor](https://raw.githubusercontent.com/multigcs/viaconstructor/main/docs/viaconstructor.png)
