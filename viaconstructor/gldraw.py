@@ -81,8 +81,8 @@ def draw_mill_line(
         GL.glEnd()
 
     # center line
-    if options == "fast":
-        GL.glColor3f(0.91, 0.91, 0.91)
+    if options != "OFF":
+        GL.glColor3f(0.91, 0.0, 0.0)
     else:
         GL.glColor3f(0.11, 0.63, 0.36)
     GL.glBegin(GL.GL_LINES)

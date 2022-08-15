@@ -170,6 +170,13 @@ def setup_defaults(_) -> dict:
                         "lenght": 12.0,
                         "blades": 1,
                     },
+                    {
+                        "name": "Laser",
+                        "number": 1,
+                        "diameter": 0.1,
+                        "lenght": 10.0,
+                        "blades": 0,
+                    },
                 ],
                 "columns": {
                     "name": "str",
@@ -335,11 +342,16 @@ def setup_defaults(_) -> dict:
                 "title": _("Plugin"),
                 "tooltip": _("output plugin selection"),
             },
-            "laser": {
-                "default": False,
-                "type": "bool",
-                "title": _("Laser-Mode"),
-                "tooltip": _("Laser-Mode"),
+            "mode": {
+                "default": "mill",
+                "type": "select",
+                "options": (
+                    ("mill", _("mode")),
+                    ("laser", _("laser")),
+                    ("laser_z", _("laser+z")),
+                ),
+                "title": _("Tool-Mode"),
+                "tooltip": _("Tool-Mode"),
             },
             "postcommand": {
                 "default": "",

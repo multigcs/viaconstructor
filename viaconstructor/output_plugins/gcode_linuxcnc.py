@@ -61,15 +61,15 @@ class PostProcessorGcodeLinuxCNC(PostProcessor):
     def tool(self, number="1") -> None:
         self.gcode.append(f"M06 T{number}")
 
-    def spindel_off(self) -> None:
+    def spindle_off(self) -> None:
         self.gcode.append("M05 (Spindle off)")
 
-    def spindel_cw(self, speed: int, pause: int = 1) -> None:
+    def spindle_cw(self, speed: int, pause: int = 1) -> None:
         self.gcode.append(f"M03 S{speed} (Spindle on / CW)")
         if pause:
             self.gcode.append(f"G04 P{pause} (pause in sec)")
 
-    def spindel_ccw(self, speed: int, pause: int = 1) -> None:
+    def spindle_ccw(self, speed: int, pause: int = 1) -> None:
         self.gcode.append(f"M04 S{speed} (Spindle on / CCW)")
         if pause:
             self.gcode.append(f"G04 P{pause} (pause in sec)")

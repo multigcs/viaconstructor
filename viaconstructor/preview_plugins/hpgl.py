@@ -36,10 +36,12 @@ class HpglParser:
             elif line.startswith("PU"):
                 draw = False
                 self.linear_move({"Z": 1.0}, True)
+                self.state["spindle"]["dir"] = "OFF"
                 line = line[2:]
             elif line.startswith("PD"):
                 draw = True
                 self.linear_move({"Z": -1.0}, False)
+                self.state["spindle"]["dir"] = "CW"
                 line = line[2:]
             elif line[0:2] in {"AA", "AR"}:
                 params = line[2:].split(",")
@@ -159,7 +161,7 @@ class HpglParser:
         for axis in self.state["position"]:
             if axis not in cords:
                 cords[axis] = self.state["position"][axis]
-        self.path.append([self.state["position"], cords, "fast" if fast else ""])
+        self.path.append([self.state["position"], cords, self.state["spindle"]["dir"]])
         self.state["position"] = cords
 
     def arc_move_r(self, angle_dir, cords, radius) -> None:  # pylint: disable=W0613
@@ -175,7 +177,9 @@ class HpglParser:
         h_x2_div_d = 4.0 * arc_r * arc_r - diff_x * diff_x - diff_y * diff_y
         if h_x2_div_d < 0:
             print("### ARC ERROR ###")
-            self.path.append([self.state["position"], cords, ""])
+            self.path.append(
+                [self.state["position"], cords, self.state["spindle"]["dir"]]
+            )
             self.state["position"] = cords
             return
         h_x2_div_d = -math.sqrt(h_x2_div_d) / math.hypot(diff_x, diff_y)
@@ -220,10 +224,10 @@ class HpglParser:
                 new_y = center_y + radius * math.cos(angle - math.pi / 2)
                 new_z = start_z + ((angle - start_angle) / diff_angle) * diff_z
                 new_pos = {"X": new_x, "Y": new_y, "Z": new_z}
-                self.path.append([last_pos, new_pos, ""])
+                self.path.append([last_pos, new_pos, self.state["spindle"]["dir"]])
                 last_pos = new_pos
                 angle += 0.2
-            self.path.append([last_pos, cords, ""])
+            self.path.append([last_pos, cords, self.state["spindle"]["dir"]])
         elif start_angle > end_angle:
             angle = start_angle
             while angle > end_angle:
@@ -231,8 +235,8 @@ class HpglParser:
                 new_y = center_y + radius * math.cos(angle - math.pi / 2)
                 new_z = start_z + ((angle - start_angle) / diff_angle) * diff_z
                 new_pos = {"X": new_x, "Y": new_y, "Z": new_z}
-                self.path.append([last_pos, new_pos, ""])
+                self.path.append([last_pos, new_pos, self.state["spindle"]["dir"]])
                 last_pos = new_pos
                 angle -= 0.2
-            self.path.append([last_pos, cords, ""])
+            self.path.append([last_pos, cords, self.state["spindle"]["dir"]])
         self.state["position"] = cords

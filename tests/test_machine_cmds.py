@@ -138,7 +138,7 @@ class fakeOffset:
                     },
                     "view": {"path": "simple"},
                     "maschine": {
-                        "laser": False,
+                        "mode": "mill",
                     },
                 },
                 "tablewidget": "",
@@ -147,17 +147,18 @@ class fakeOffset:
             """(--------------------------------------------------)
 (Generator: viaConstructor)
 (Filename: /tmp/t.dxf)
+(Tool-Mode: mill)
 (--------------------------------------------------)
 
 G21 (Metric/mm)
 G40 (No Offsets)
 G90 (Absolute-Mode)
-F1000
 G64 P0.05
 M05 (Spindle off)
 M06 T1
 M03 S10000 (Spindle on / CW)
 G04 P1 (pause in sec)
+F1000
 G00 Z20.0
 
 

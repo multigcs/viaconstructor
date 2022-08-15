@@ -1,7 +1,7 @@
 (--------------------------------------------------)
 (Generator: viaConstructor)
 (Filename: tests/data/check.dxf)
-(Laser-Mode: active)
+(Tool-Mode: laser)
 (--------------------------------------------------)
 
 G21 (Metric/mm)

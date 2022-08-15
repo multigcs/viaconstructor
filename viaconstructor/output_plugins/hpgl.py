@@ -38,13 +38,13 @@ class PostProcessorHpgl(PostProcessor):
     def tool(self, number="1") -> None:
         self.hpgl.append(f"SP{number}")
 
-    def spindel_cw(self, speed: int, pause: int = 1) -> None:  # pylint: disable=W0613
+    def spindle_cw(self, speed: int, pause: int = 1) -> None:  # pylint: disable=W0613
         self.toolrun = True
 
-    def spindel_ccw(self, speed: int, pause: int = 1) -> None:  # pylint: disable=W0613
+    def spindle_ccw(self, speed: int, pause: int = 1) -> None:  # pylint: disable=W0613
         self.toolrun = True
 
-    def spindel_off(self) -> None:
+    def spindle_off(self) -> None:
         self.toolrun = False
 
     def move(self, x_pos=None, y_pos=None, z_pos=None) -> None:

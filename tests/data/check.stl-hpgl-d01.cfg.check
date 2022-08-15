@@ -2,6 +2,7 @@
 CO --------------------------------------------------;
 CO Generator: viaConstructor;
 CO Filename: tests/data/check.stl;
+CO Tool-Mode: mill;
 CO --------------------------------------------------;
 ;
 PU;

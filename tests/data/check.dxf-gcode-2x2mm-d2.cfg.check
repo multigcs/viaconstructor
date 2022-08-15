@@ -1,17 +1,18 @@
 (--------------------------------------------------)
 (Generator: viaConstructor)
 (Filename: tests/data/check.dxf)
+(Tool-Mode: mill)
 (--------------------------------------------------)
 
 G21 (Metric/mm)
 G40 (No Offsets)
 G90 (Absolute-Mode)
-F100
 G64 P0.02
 M05 (Spindle off)
 M06 T1
 M03 S10000 (Spindle on / CW)
 G04 P1 (pause in sec)
+F100
 G00 Z5.0
 
 

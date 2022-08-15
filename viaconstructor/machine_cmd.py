@@ -48,13 +48,13 @@ class PostProcessor:
     def tool(self, number="1") -> None:
         pass
 
-    def spindel_off(self) -> None:
+    def spindle_off(self) -> None:
         pass
 
-    def spindel_cw(self, speed: int, pause: int = 1) -> None:
+    def spindle_cw(self, speed: int, pause: int = 1) -> None:
         pass
 
-    def spindel_ccw(self, speed: int, pause: int = 1) -> None:
+    def spindle_ccw(self, speed: int, pause: int = 1) -> None:
         pass
 
     def linear(self, x_pos=None, y_pos=None, z_pos=None) -> None:
@@ -79,26 +79,28 @@ def machine_cmd_begin(project: dict, post: PostProcessor) -> None:
     post.comment("--------------------------------------------------")
     post.comment("Generator: viaConstructor")
     post.comment(f"Filename: {project['filename_draw']}")
-    if project["setup"]["maschine"]["laser"]:
-        post.comment("Laser-Mode: active")
+    post.comment(f"Tool-Mode: {project['setup']['maschine']['mode']}")
     post.comment("--------------------------------------------------")
     post.separation()
     post.program_start()
     post.unit("mm")
     post.offsets("none")
     post.absolute(True)
-    if not project["setup"]["maschine"]["laser"] and "Z" in project["axis"]:
-        post.feedrate(project["setup"]["tool"]["rate_v"])
+    if project["setup"]["maschine"]["mode"] == "mill" and "Z" in project["axis"]:
         if project["setup"]["mill"]["G64"] > 0.0:
             post.g64(project["setup"]["mill"]["G64"])
-        post.spindel_off()
+        post.spindle_off()
         post.tool(project["setup"]["tool"]["number"])
-        post.spindel_cw(project["setup"]["tool"]["speed"])
+        post.spindle_cw(project["setup"]["tool"]["speed"])
+        post.feedrate(project["setup"]["tool"]["rate_v"])
+        post.move(z_pos=project["setup"]["mill"]["fast_move_z"])
+    elif project["setup"]["maschine"]["mode"] == "laser_z" and "Z" in project["axis"]:
+        post.spindle_off()
+        post.feedrate(project["setup"]["tool"]["rate_v"])
         post.move(z_pos=project["setup"]["mill"]["fast_move_z"])
     else:
-        post.spindel_off()
+        post.spindle_off()
         post.feedrate(project["setup"]["tool"]["rate_h"])
-
     post.separation()
 
 
@@ -106,9 +108,9 @@ def machine_cmd_end(project: dict, post: PostProcessor) -> None:
     """machine_cmd-footer"""
     post.separation()
     post.comment("- end -")
-    if not project["setup"]["maschine"]["laser"] and "Z" in project["axis"]:
+    if project["setup"]["maschine"]["mode"] != "laser" and "Z" in project["axis"]:
         post.move(z_pos=project["setup"]["mill"]["fast_move_z"])
-        post.spindel_off()
+        post.spindle_off()
     if project["setup"]["mill"]["back_home"]:
         post.move(x_pos=0.0, y_pos=0.0)
     post.program_end()
@@ -170,8 +172,11 @@ def segment2machine_cmd(
                 )
                 last = end
 
-                if project["setup"]["maschine"]["laser"] or "Z" not in project["axis"]:
-                    post.spindel_off()
+                if (
+                    project["setup"]["maschine"]["mode"] != "mill"
+                    or "Z" not in project["axis"]
+                ):
+                    post.spindle_off()
 
                 if tabs_type == "rectangle":
                     post.linear(
@@ -231,8 +236,11 @@ def segment2machine_cmd(
                         j_pos=(center[1] - last[1]),
                     )
                 last = end
-                if project["setup"]["maschine"]["laser"] or "Z" not in project["axis"]:
-                    post.spindel_cw(project["setup"]["tool"]["speed"], pause=0)
+                if (
+                    project["setup"]["maschine"]["mode"] != "mill"
+                    or "Z" not in project["axis"]
+                ):
+                    post.spindle_cw(project["setup"]["tool"]["speed"], pause=0)
 
                 break
 
@@ -279,8 +287,11 @@ def segment2machine_cmd(
                 )
                 last = end
 
-                if project["setup"]["maschine"]["laser"] or "Z" not in project["axis"]:
-                    post.spindel_off()
+                if (
+                    project["setup"]["maschine"]["mode"] != "mill"
+                    or "Z" not in project["axis"]
+                ):
+                    post.spindle_off()
 
                 if tabs_type == "rectangle":
                     post.linear(
@@ -341,8 +352,11 @@ def segment2machine_cmd(
                     )
 
                 last = end
-                if project["setup"]["maschine"]["laser"] or "Z" not in project["axis"]:
-                    post.spindel_cw(project["setup"]["tool"]["speed"], pause=0)
+                if (
+                    project["setup"]["maschine"]["mode"] != "mill"
+                    or "Z" not in project["axis"]
+                ):
+                    post.spindle_cw(project["setup"]["tool"]["speed"], pause=0)
 
                 break
 
@@ -376,8 +390,11 @@ def segment2machine_cmd(
                 tab_end_y = last[1] - (tab_dist + (tab_width / 2)) * math.cos(angle)
 
                 post.linear(x_pos=tab_start_x, y_pos=tab_start_y, z_pos=set_depth)
-                if project["setup"]["maschine"]["laser"] or "Z" not in project["axis"]:
-                    post.spindel_off()
+                if (
+                    project["setup"]["maschine"]["mode"] != "mill"
+                    or "Z" not in project["axis"]
+                ):
+                    post.spindle_off()
 
                 if tabs_type == "rectangle":
                     post.linear(x_pos=tab_start_x, y_pos=tab_start_y, z_pos=tabs_depth)
@@ -393,8 +410,11 @@ def segment2machine_cmd(
 
                 post.linear(x_pos=tab_end_x, y_pos=tab_end_y, z_pos=set_depth)
 
-                if project["setup"]["maschine"]["laser"] or "Z" not in project["axis"]:
-                    post.spindel_cw(project["setup"]["tool"]["speed"], pause=0)
+                if (
+                    project["setup"]["maschine"]["mode"] != "mill"
+                    or "Z" not in project["axis"]
+                ):
+                    post.spindle_cw(project["setup"]["tool"]["speed"], pause=0)
 
         post.linear(x_pos=point[0], y_pos=point[1], z_pos=set_depth)
 
@@ -540,7 +560,7 @@ def polylines2machine_cmd(project: dict, post: PostProcessor) -> str:
                     post.comment(f"Closed: {is_closed}")
                     post.comment(f"isPocket: {polyline.is_pocket}")
                     if (
-                        not project["setup"]["maschine"]["laser"]
+                        project["setup"]["maschine"]["mode"] != "laser"
                         and "Z" in project["axis"]
                     ):
                         post.comment(
@@ -557,19 +577,19 @@ def polylines2machine_cmd(project: dict, post: PostProcessor) -> str:
 
                     if is_closed:
                         if (
-                            not project["setup"]["maschine"]["laser"]
+                            project["setup"]["maschine"]["mode"] != "laser"
                             and "Z" in project["axis"]
                         ):
                             post.move(z_pos=project["setup"]["mill"]["fast_move_z"])
-                        post.move(x_pos=points[0][0], y_pos=points[0][1])
+                    post.move(x_pos=points[0][0], y_pos=points[0][1])
 
                     depth = polyline.setup["mill"]["step"]
                     if (
-                        project["setup"]["maschine"]["laser"]
+                        project["setup"]["maschine"]["mode"] != "mill"
                         or "Z" not in project["axis"]
                     ):
                         depth = 0.0
-                        post.spindel_cw(project["setup"]["tool"]["speed"], pause=0)
+                        post.spindle_cw(project["setup"]["tool"]["speed"], pause=0)
 
                     last_depth = 0.0
                     while True:
@@ -577,21 +597,21 @@ def polylines2machine_cmd(project: dict, post: PostProcessor) -> str:
                             depth = polyline.setup["mill"]["depth"]
 
                         if (
-                            not project["setup"]["maschine"]["laser"]
+                            project["setup"]["maschine"]["mode"] != "laser"
                             and "Z" in project["axis"]
                         ):
                             post.comment(f"- Depth: {depth}mm -")
 
                         if not is_closed:
                             if (
-                                not project["setup"]["maschine"]["laser"]
+                                project["setup"]["maschine"]["mode"] != "laser"
                                 and "Z" in project["axis"]
                             ):
                                 post.move(z_pos=project["setup"]["mill"]["fast_move_z"])
                             post.move(x_pos=points[0][0], y_pos=points[0][1])
 
                         if (
-                            not project["setup"]["maschine"]["laser"]
+                            project["setup"]["maschine"]["mode"] != "laser"
                             and "Z" in project["axis"]
                         ):
                             post.feedrate(project["setup"]["tool"]["rate_v"])
@@ -646,7 +666,10 @@ def polylines2machine_cmd(project: dict, post: PostProcessor) -> str:
 
                         last_depth = depth
 
-                        if depth <= polyline.setup["mill"]["depth"]:
+                        zoffset = 0.0
+                        if project["setup"]["maschine"]["mode"] == "laser_z":
+                            zoffset = polyline.setup["mill"]["step"]
+                        if depth <= polyline.setup["mill"]["depth"] - zoffset:
                             if helix_mode:
                                 helix_mode = False
                                 continue
@@ -654,15 +677,16 @@ def polylines2machine_cmd(project: dict, post: PostProcessor) -> str:
                         depth += polyline.setup["mill"]["step"]
 
                         if (
-                            project["setup"]["maschine"]["laser"]
+                            project["setup"]["maschine"]["mode"] == "laser"
                             or "Z" not in project["axis"]
                         ):
                             break
 
-                    if not project["setup"]["maschine"]["laser"]:
+                    if project["setup"]["maschine"]["mode"] != "laser":
                         post.move(z_pos=project["setup"]["mill"]["fast_move_z"])
-                    else:
-                        post.spindel_off()
+
+                    if project["setup"]["maschine"]["mode"] != "mill":
+                        post.spindle_off()
 
                     if is_closed:
                         last_pos = points[0]
