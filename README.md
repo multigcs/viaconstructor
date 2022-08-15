@@ -3,6 +3,8 @@
 OpenSource CAM-Tool to generate gCode from DXF-Files
 
 !!!!!!! beta - version !!!!!!!
+>= Python-3.9
+
 
 ## Features:
 
