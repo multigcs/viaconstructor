@@ -1,6 +1,6 @@
 # viaConstructor
 
-OpenSource CAM-Tool to generate gCode from DXF-Files
+OpenSource CAM-Tool to generate gCode from DXF,SVG and HPGL-Files
 
 ## Known Issues:
 * beta - version
@@ -19,6 +19,7 @@ OpenSource CAM-Tool to generate gCode from DXF-Files
  * automatic offset finder (inside/outside)
  * automatic order of multiple parts (nearest first)
  * nested parts will milled in the right order (inside parts first)
+ * gCode and HPGL output
 
 ![viaconstructor](https://raw.githubusercontent.com/multigcs/viaconstructor/main/docs/viaconstructor.png)
 
