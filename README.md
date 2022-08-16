@@ -21,6 +21,10 @@ OpenSource CAM-Tool to generate gCode from DXF,SVG and HPGL-Files
  * nested parts will milled in the right order (inside parts first)
  * gCode and HPGL output
 
+## demo-video
+[![Demo-Video](http://img.youtube.com/vi/4OBiqeqKDsk/0.jpg)](https://www.youtube.com/watch?v=4OBiqeqKDsk "Demo-Video")
+
+## screenshot
 ![viaconstructor](https://raw.githubusercontent.com/multigcs/viaconstructor/main/docs/viaconstructor.png)
 
 ## quikstart
