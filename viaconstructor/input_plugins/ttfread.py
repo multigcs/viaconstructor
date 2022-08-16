@@ -27,11 +27,11 @@ class TtfReader:
 
         for char in args.text:  # type: ignore
             if char == " ":
-                ctx["pos"][0] += 50  # type: ignore
+                ctx["pos"][0] += 500 * scale  # type: ignore
                 continue
             if char == "\n":
                 ctx["pos"][0] = 0  # type: ignore
-                ctx["pos"][1] -= 100  # type: ignore
+                ctx["pos"][1] -= 1000 * scale  # type: ignore
                 continue
             face.load_char(
                 char,
