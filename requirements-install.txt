@@ -9,3 +9,4 @@ svgpathtools
 meshcut
 pyclipper
 setproctitle
+freetype-py

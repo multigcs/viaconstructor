@@ -74,6 +74,7 @@ from .input_plugins.dxfread import DxfReader
 from .input_plugins.hpglread import HpglReader
 from .input_plugins.stlread import StlReader
 from .input_plugins.svgread import SvgReader
+from .input_plugins.ttfread import TtfReader
 from .machine_cmd import polylines2machine_cmd
 from .output_plugins.gcode_linuxcnc import PostProcessorGcodeLinuxCNC
 from .output_plugins.hpgl import PostProcessorHpgl
@@ -498,7 +499,7 @@ class ViaConstructor:
     info = ""
     save_tabs = "no"
     save_starts = "no"
-    draw_reader: Union[DxfReader, SvgReader, HpglReader, StlReader]
+    draw_reader: Union[DxfReader, SvgReader, HpglReader, StlReader, TtfReader]
 
     def run_calculation(self) -> None:
         """run all calculations."""
@@ -1356,7 +1357,7 @@ class ViaConstructor:
 
     def __init__(self) -> None:
         """viaconstructor main init."""
-        setproctitle.setproctitle("viaconstructor")
+        setproctitle.setproctitle("viaconstructor")  # pylint: disable=I1101
 
         # arguments
         parser = argparse.ArgumentParser()
@@ -1371,8 +1372,24 @@ class ViaConstructor:
         parser.add_argument(
             "-o", "--output", help="save to machine_cmd", type=str, default=None
         )
+        # STL-Reader
         parser.add_argument(
             "-z", "--zslice", help="slice at postion z (stl)", type=str, default=None
+        )
+        # TTF-Reader
+        parser.add_argument(
+            "-t",
+            "--text",
+            help="text for the Truetype reader",
+            type=str,
+            default="ViaConstructor",
+        )
+        parser.add_argument(
+            "-th",
+            "--text-height",
+            help="text height for the Truetype reader",
+            type=float,
+            default=100,
         )
         self.args = parser.parse_args()
 
@@ -1404,6 +1421,8 @@ class ViaConstructor:
             self.draw_reader = HpglReader(self.args.filename, self.args)
         elif self.args.filename.lower().endswith(".stl"):
             self.draw_reader = StlReader(self.args.filename, self.args)
+        elif self.args.filename.lower().endswith(".ttf"):
+            self.draw_reader = TtfReader(self.args.filename, self.args)
         else:
             print(f"ERROR: Unknown file suffix: {self.args.filename}")
             sys.exit(1)

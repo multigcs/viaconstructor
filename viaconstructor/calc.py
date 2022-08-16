@@ -99,6 +99,16 @@ def angle_2d(p_1, p_2):
     return dtheta
 
 
+def quadratic_bezier(curv_pos, points):
+    curve_x = (1 - curv_pos) * (
+        (1 - curv_pos) * points[0][0] + curv_pos * points[1][0]
+    ) + curv_pos * ((1 - curv_pos) * points[1][0] + curv_pos * points[2][0])
+    curve_y = (1 - curv_pos) * (
+        (1 - curv_pos) * points[0][1] + curv_pos * points[1][1]
+    ) + curv_pos * ((1 - curv_pos) * points[1][1] + curv_pos * points[2][1])
+    return curve_x, curve_y
+
+
 # ########## Object & Segments Functions ###########
 
 

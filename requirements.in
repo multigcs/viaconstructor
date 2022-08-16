@@ -6,8 +6,10 @@ Pillow==9.0.1
 Hershey-Fonts==2.1.0
 svgpathtools==1.5.1
 pyclipper==1.3.0
+freetype-py==2.3.0
 
 # for gcode-preview.py display
 pygame==2.1.2
 meshcut==0.3.0
 setproctitle==1.2.3
+
