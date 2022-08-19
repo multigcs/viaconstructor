@@ -240,7 +240,16 @@ class GLWidget(QGLWidget):
                     GL.glVertex3f(self.selection[0], self.selection[1], depth)
                     GL.glVertex3f(self.selection[4], self.selection[5], depth)
                     GL.glEnd()
-
+            elif self.selector_mode == "delete":
+                depth = 0.1
+                GL.glLineWidth(5)
+                GL.glColor4f(1.0, 0.0, 0.0, 1.0)
+                GL.glBegin(GL.GL_LINES)
+                GL.glVertex3f(self.selection[0] - 1, self.selection[1] - 1, depth)
+                GL.glVertex3f(self.selection[0] + 1, self.selection[1] + 1, depth)
+                GL.glVertex3f(self.selection[0] - 1, self.selection[1] + 1, depth)
+                GL.glVertex3f(self.selection[0] + 1, self.selection[1] - 1, depth)
+                GL.glEnd()
             else:
                 depth = self.project["setup"]["mill"]["depth"] - 0.1
                 GL.glLineWidth(5)
@@ -274,6 +283,15 @@ class GLWidget(QGLWidget):
         self.selection = ()
         if self.selector_mode == "":
             self.selector_mode = "repair"
+            self.view_2d()
+        else:
+            self.selector_mode = ""
+            self.view_reset()
+
+    def toggle_delete_selector(self) -> None:
+        self.selection = ()
+        if self.selector_mode == "":
+            self.selector_mode = "delete"
             self.view_2d()
         else:
             self.selector_mode = ""
@@ -331,6 +349,8 @@ class GLWidget(QGLWidget):
                             self.selection[1],
                         )
                         self.project["app"].update_starts()
+                    elif self.selector_mode == "delete":
+                        pass
                     elif self.selector_mode == "repair":
                         obj_idx = self.selection[2]
                         self.project["segments_org"].append(
@@ -366,6 +386,11 @@ class GLWidget(QGLWidget):
                         self.update_drawing()
                         self.update()
                         self.project["app"].update_tabs()
+                elif self.selector_mode == "delete":
+                    obj_idx = self.selection[2]
+                    del self.project["objects"][obj_idx]
+                    self.update_drawing()
+                    self.update()
                 elif self.selector_mode == "start":
                     obj_idx = self.selection[2]
                     self.project["objects"][obj_idx]["start"] = ()
@@ -417,6 +442,13 @@ class GLWidget(QGLWidget):
                 (self.mouse_pos_x, self.mouse_pos_y), self.project["offsets"]
             )
         elif self.selector_mode == "start":
+            (self.mouse_pos_x, self.mouse_pos_y) = self.mouse_pos_to_real_pos(
+                event.pos()
+            )
+            self.selection = found_next_segment_point(
+                (self.mouse_pos_x, self.mouse_pos_y), self.project["objects"]
+            )
+        elif self.selector_mode == "delete":
             (self.mouse_pos_x, self.mouse_pos_y) = self.mouse_pos_to_real_pos(
                 event.pos()
             )
@@ -583,6 +615,10 @@ class ViaConstructor:
         """tab selector."""
         self.project["glwidget"].toggle_tab_selector()
 
+    def _toolbar_toggle_delete_selector(self) -> None:
+        """delete selector."""
+        self.project["glwidget"].toggle_delete_selector()
+
     def _toolbar_toggle_start_selector(self) -> None:
         """start selector."""
         self.project["glwidget"].toggle_start_selector()
@@ -707,7 +743,11 @@ class ViaConstructor:
         if self.project["setup"]["view"]["object_ids"]:
             draw_object_ids(self.project)
 
-        draw_object_edges(self.project)
+        selected = -1
+        if self.project["glwidget"].selector_mode == "delete":
+            selected = self.project["glwidget"].selection[2]
+
+        draw_object_edges(self.project, selected=selected)
         if self.project["setup"]["view"]["polygon_show"]:
             draw_object_faces(self.project)
         GL.glEndList()
@@ -1170,6 +1210,14 @@ class ViaConstructor:
                 self._toolbar_toggle_repair_selector,
                 True,
                 "repair",
+            ),
+            _("Delete-Selector"): (
+                "tab-selector.png",
+                "",
+                _("Delete-Selector"),
+                self._toolbar_toggle_delete_selector,
+                True,
+                "delete",
             ),
         }
         self.toolbar = QToolBar("top toolbar")

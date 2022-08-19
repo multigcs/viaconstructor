@@ -289,15 +289,18 @@ def draw_object_ids(project: dict) -> None:
     GL.glEnd()
 
 
-def draw_object_edges(project: dict) -> None:
+def draw_object_edges(project: dict, selected: int = -1) -> None:
     """draws the edges of an object"""
-    for obj in project["objects"].values():
+    for obj_idx, obj in project["objects"].items():
         if obj.get("layer", "").startswith("BREAKS:") or obj.get(
             "layer", ""
         ).startswith("_TABS"):
             continue
         GL.glLineWidth(1)
-        GL.glColor4f(1.0, 1.0, 1.0, 1.0)
+        if obj_idx == selected:
+            GL.glColor4f(1.0, 0.0, 0.0, 1.0)
+        else:
+            GL.glColor4f(1.0, 1.0, 1.0, 1.0)
         # side
         GL.glBegin(GL.GL_LINES)
         for segment in obj["segments"]:
