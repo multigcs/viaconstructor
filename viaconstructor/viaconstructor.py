@@ -753,6 +753,8 @@ class ViaConstructor:
             self.main, "Load Drawing", "", "drawing (*.dxf)"
         )
         if name[0] and self.load_drawing(name[0]):
+            self.update_table()
+            self.global_changed(0)
             self.update_drawing()
             self.status_bar_message(f"{self.info} - load drawing..done ({name[0]})")
         else:
