@@ -138,9 +138,7 @@ class GLWidget(QGLWidget):
     mpos = None
     mouse_pos_x = 0
     mouse_pos_y = 0
-    tab_selector = False
-    start_selector = False
-    repair_selector = False
+    selector_mode = ""
     selection = ()
     size_x = 0
     size_y = 0
@@ -222,7 +220,7 @@ class GLWidget(QGLWidget):
         GL.glCallList(self.project["gllist"])
 
         if self.selection:
-            if self.start_selector:
+            if self.selector_mode == "start":
                 # depth = self.project["setup"]["mill"]["depth"] - 0.1
                 depth = 0.1
                 GL.glLineWidth(5)
@@ -233,7 +231,7 @@ class GLWidget(QGLWidget):
                 GL.glVertex3f(self.selection[0] - 1, self.selection[1] + 1, depth)
                 GL.glVertex3f(self.selection[0] + 1, self.selection[1] - 1, depth)
                 GL.glEnd()
-            elif self.repair_selector:
+            elif self.selector_mode == "repair":
                 if len(self.selection) > 4:
                     depth = 0.1
                     GL.glLineWidth(15)
@@ -256,28 +254,30 @@ class GLWidget(QGLWidget):
 
     def toggle_tab_selector(self) -> None:
         self.selection = ()
-        self.tab_selector = not self.tab_selector
-        self.start_selector = False
-        self.repair_selector = False
-        if self.tab_selector:
+        if self.selector_mode == "":
+            self.selector_mode = "tab"
             self.view_2d()
+        else:
+            self.selector_mode = ""
+            self.view_reset()
 
     def toggle_start_selector(self) -> None:
         self.selection = ()
-        self.start_selector = not self.start_selector
-        self.tab_selector = False
-        self.repair_selector = False
-        if self.start_selector:
+        if self.selector_mode == "":
+            self.selector_mode = "start"
             self.view_2d()
+        else:
+            self.selector_mode = ""
+            self.view_reset()
 
     def toggle_repair_selector(self) -> None:
         self.selection = ()
-        self.repair_selector = not self.repair_selector
-        self.tab_selector = False
-        self.start_selector = False
-        if self.repair_selector:
-            self.update_drawing()
+        if self.selector_mode == "":
+            self.selector_mode = "repair"
             self.view_2d()
+        else:
+            self.selector_mode = ""
+            self.view_reset()
 
     def view_2d(self) -> None:
         """toggle view function."""
@@ -289,11 +289,7 @@ class GLWidget(QGLWidget):
 
     def view_reset(self) -> None:
         """toggle view function."""
-        if self.tab_selector:
-            return
-        if self.start_selector:
-            return
-        if self.repair_selector:
+        if self.selector_mode != "":
             return
         self.ortho = False
         self.rot_x = -20.0
@@ -322,22 +318,20 @@ class GLWidget(QGLWidget):
         self.trans_x_last = self.trans_x
         self.trans_y_last = self.trans_y
         self.trans_z_last = self.trans_z
-        if (
-            self.tab_selector or self.start_selector or self.repair_selector
-        ) and self.selection:
+        if self.selector_mode != "" and self.selection:
             if self.mbutton == 1:
                 if self.selection:
-                    if self.tab_selector:
+                    if self.selector_mode == "tab":
                         self.project["tabs"]["data"].append(self.selection)
                         self.project["app"].update_tabs()
-                    elif self.start_selector:
+                    elif self.selector_mode == "start":
                         obj_idx = self.selection[2]
                         self.project["objects"][obj_idx]["start"] = (
                             self.selection[0],
                             self.selection[1],
                         )
                         self.project["app"].update_starts()
-                    elif self.repair_selector:
+                    elif self.selector_mode == "repair":
                         obj_idx = self.selection[2]
                         self.project["segments_org"].append(
                             {
@@ -355,7 +349,7 @@ class GLWidget(QGLWidget):
                 self.update_drawing()
                 self.update()
             elif self.mbutton == 2:
-                if self.tab_selector:
+                if self.selector_mode == "tab":
                     sel_idx = -1
                     sel_dist = -1
                     for tab_idx, tab in enumerate(self.project["tabs"]["data"]):
@@ -372,7 +366,7 @@ class GLWidget(QGLWidget):
                         self.update_drawing()
                         self.update()
                         self.project["app"].update_tabs()
-                elif self.start_selector:
+                elif self.selector_mode == "start":
                     obj_idx = self.selection[2]
                     self.project["objects"][obj_idx]["start"] = ()
                     self.update_drawing()
@@ -415,21 +409,21 @@ class GLWidget(QGLWidget):
             moffset = self.mpos - event.pos()
             self.trans_x = self.trans_x_last + moffset.x() / self.screen_w
             self.trans_y = self.trans_y_last - moffset.y() / self.screen_h * self.aspect
-        elif self.tab_selector:
+        elif self.selector_mode == "tab":
             (self.mouse_pos_x, self.mouse_pos_y) = self.mouse_pos_to_real_pos(
                 event.pos()
             )
             self.selection = found_next_tab_point(
                 (self.mouse_pos_x, self.mouse_pos_y), self.project["offsets"]
             )
-        elif self.start_selector:
+        elif self.selector_mode == "start":
             (self.mouse_pos_x, self.mouse_pos_y) = self.mouse_pos_to_real_pos(
                 event.pos()
             )
             self.selection = found_next_segment_point(
                 (self.mouse_pos_x, self.mouse_pos_y), self.project["objects"]
             )
-        elif self.repair_selector:
+        elif self.selector_mode == "repair":
             (self.mouse_pos_x, self.mouse_pos_y) = self.mouse_pos_to_real_pos(
                 event.pos()
             )
@@ -704,7 +698,7 @@ class ViaConstructor:
         if self.project["setup"]["view"]["3d_show"]:
             if hasattr(self.draw_reader, "draw_3d"):
                 self.draw_reader.draw_3d()
-        if not self.project["glwidget"].repair_selector:
+        if self.project["glwidget"].selector_mode != "repair":
             if not draw_maschinecode_path(self.project):
                 self.status_bar.showMessage(
                     f"{self.info} - error while drawing maschine commands"
