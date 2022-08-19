@@ -2,12 +2,12 @@
 
 import argparse
 import gettext
+import importlib
 import json
 import math
 import os
 import re
 import sys
-import tempfile
 from copy import deepcopy
 from functools import partial
 from pathlib import Path
@@ -71,11 +71,7 @@ from .gldraw import (
     draw_object_faces,
     draw_object_ids,
 )
-from .input_plugins.dxfread import DxfReader
-from .input_plugins.hpglread import HpglReader
-from .input_plugins.stlread import StlReader
-from .input_plugins.svgread import SvgReader
-from .input_plugins.ttfread import TtfReader
+from .input_plugins_base import DrawReaderBase
 from .machine_cmd import polylines2machine_cmd
 from .output_plugins.gcode_linuxcnc import PostProcessorGcodeLinuxCNC
 from .output_plugins.hpgl import PostProcessorHpgl
@@ -87,6 +83,17 @@ except ImportError:
     QApplication(sys.argv)
     QMessageBox.critical(None, "OpenGL", "PyOpenGL must be installed.")  # type: ignore
     sys.exit(1)
+
+
+reader_plugins: dict = {}
+for reader in ("dxfread", "hpglread", "stlread", "svgread", "ttfread"):
+    try:
+        drawing_reader = importlib.import_module(
+            f".{reader}", "viaconstructor.input_plugins"
+        )
+        reader_plugins[reader] = drawing_reader.DrawReader
+    except Exception as reader_error:  # pylint: disable=W0703
+        print(f"ERRO while loading input plugin {reader}: {reader_error}")
 
 
 LAYER_REGEX = re.compile(r"([a-zA-Z]{1,4}):\s*([+-]?([0-9]+([.][0-9]*)?|[.][0-9]+))")
@@ -527,9 +534,7 @@ class ViaConstructor:
     info = ""
     save_tabs = "no"
     save_starts = "no"
-    draw_reader: Optional[
-        Union[DxfReader, SvgReader, HpglReader, StlReader, TtfReader]
-    ] = None
+    draw_reader: Optional[DrawReaderBase] = None
     status_bar: Optional[QWidget] = None
     main: Optional[QMainWindow] = None
 
@@ -693,6 +698,8 @@ class ViaConstructor:
     def status_bar_message(self, message) -> None:
         if self.status_bar:
             self.status_bar.showMessage(message)
+        else:
+            print(f"STATUS: {message}")
 
     def _toolbar_save_machine_cmd(self) -> None:
         """save machine_cmd."""
@@ -1507,30 +1514,37 @@ class ViaConstructor:
         self.project["maxOuter"] = find_tool_offsets(self.project["objects"])
 
     def load_drawing(self, filename: str) -> bool:
-        if filename.lower().endswith(".svg"):
-            self.draw_reader = SvgReader(filename, self.args)
-        elif filename.lower().endswith(".eps"):
-            print("# try to convert eps into dxf format")
-            with tempfile.NamedTemporaryFile() as tmp:
-                cmd = f"pstoedit -f dxf {filename} {tmp.name}"
-                print(f"# running: {cmd}")
-                os.system(cmd)
-                self.draw_reader = DxfReader(tmp.name, self.args)
-        elif filename.lower().endswith(".dxf"):
-            self.draw_reader = DxfReader(filename, self.args)
-            self.save_tabs = "ask"
-        elif filename.lower().endswith(".hpgl"):
-            self.draw_reader = HpglReader(filename, self.args)
-        elif filename.lower().endswith(".stl"):
-            self.draw_reader = StlReader(filename, self.args)
-        elif filename.lower().endswith(".ttf"):
-            self.draw_reader = TtfReader(filename, self.args)
-        else:
-            print(f"ERROR: Unknown file suffix: {filename}")
-            sys.exit(1)
+        # clean project
+        self.project["filename_draw"] = ""
+        self.project["filename_machine_cmd"] = ""
+        self.project["suffix"] = "ngc"
+        self.project["axis"] = ["X", "Y", "Z"]
+        self.project["machine_cmd"] = ""
+        self.project["segments"] = {}
+        self.project["objects"] = {}
+        self.project["offsets"] = {}
+        self.project["gllist"] = []
+        self.project["maxOuter"] = []
+        self.project["minMax"] = []
+        self.project["table"] = []
+        self.project["status"] = "INIT"
+        self.project["tabs"] = {"data": [], "table": None}
+        self.info = ""
+        self.save_tabs = "no"
+        self.save_starts = "no"
+        self.draw_reader = None
+
+        # find plugin
+        suffix = filename.split(".")[-1].lower()
+        for reader_plugin in reader_plugins.values():
+            if suffix in reader_plugin.suffix():
+                self.draw_reader = reader_plugin(filename, self.args)
+                if reader_plugin.can_save_tabs:
+                    self.save_tabs = "ask"
+                break
 
         if self.draw_reader:
-            self.project["segments_org"] = self.draw_reader.get_segments()  # type: ignore
+            self.project["segments_org"] = self.draw_reader.get_segments()
             self.project["filename_draw"] = filename
             self.project[
                 "filename_machine_cmd"
@@ -1538,6 +1552,7 @@ class ViaConstructor:
             self.prepare_segments()
             return True
 
+        print(f"ERROR: can not load file: {filename}")
         return False
 
     def __init__(self) -> None:

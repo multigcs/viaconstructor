@@ -7,12 +7,15 @@ import ezdxf
 from ezdxf.path import make_path
 
 from ..calc import calc_distance  # pylint: disable=E0402
+from ..input_plugins_base import DrawReaderBase
 
 
-class DxfReader:
+class DrawReader(DrawReaderBase):
 
     VTYPES = ("INSERT", "LWPOLYLINE", "POLYLINE", "MLINE")
     MIN_DIST = 0.0001
+
+    can_save_tabs = True
 
     def __init__(
         self, filename: str, args: argparse.Namespace = None

@@ -5,9 +5,10 @@ import argparse
 import freetype
 
 from ..calc import calc_distance, quadratic_bezier  # pylint: disable=E0402
+from ..input_plugins_base import DrawReaderBase
 
 
-class TtfReader:
+class DrawReader(DrawReaderBase):
     def __init__(self, filename: str, args: argparse.Namespace = None):
         """slicing and converting stl into single segments."""
         self.filename = filename
@@ -146,4 +147,4 @@ class TtfReader:
 
     @staticmethod
     def suffix() -> list[str]:
-        return ["stl"]
+        return ["ttf"]

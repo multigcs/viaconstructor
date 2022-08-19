@@ -1,16 +1,22 @@
 """dxfpreview tool."""
 
 import argparse
+import importlib
 import os.path
 import sys
 from os import environ
 
 from PIL import Image, ImageDraw, ImageFont
 
-from viaconstructor.input_plugins.dxfread import DxfReader
-from viaconstructor.input_plugins.hpglread import HpglReader
-from viaconstructor.input_plugins.stlread import StlReader
-from viaconstructor.input_plugins.svgread import SvgReader
+reader_plugins: dict = {}
+for reader in ("dxfread", "hpglread", "stlread", "svgread", "ttfread"):
+    try:
+        drawing_reader = importlib.import_module(
+            f".{reader}", "viaconstructor.input_plugins"
+        )
+        reader_plugins[reader] = drawing_reader.DrawReader
+    except Exception as reader_error:  # pylint: disable=W0703
+        print(f"ERRO while loading input plugin {reader}: {reader_error}")
 
 
 def main() -> int:
@@ -32,7 +38,7 @@ def main() -> int:
 
     # arguments
     parser = argparse.ArgumentParser()
-    parser.add_argument("filename", help="dxf file", type=str)
+    parser.add_argument("filename", help="input file", type=str)
     parser.add_argument("-x", "--width", help="screen width", type=int, default=800)
     parser.add_argument("-y", "--height", help="screen height", type=int, default=600)
     parser.add_argument("-o", "--output", help="save to image", type=str, default=None)
@@ -48,20 +54,17 @@ def main() -> int:
     offset_x = 10
     offset_y = 10
 
-    # parse dxf
-    if not os.path.isfile(filename):
-        print("file not found:", filename)
-        sys.exit(1)
-    if filename.lower().endswith(".svg"):
-        reader = SvgReader(filename)
-    elif filename.lower().endswith(".hpgl"):
-        reader = HpglReader(filename)
-    elif filename.lower().endswith(".stl"):
-        reader = StlReader(filename)
-    else:
-        reader = DxfReader(filename)
-    minmax = reader.get_minmax()
+    suffix = filename.split(".")[-1].lower()
+    for reader_plugin in reader_plugins.values():
+        if suffix in reader_plugin.suffix():
+            reader = reader_plugin(filename, args)
+            break
 
+    if not reader:
+        print(f"ERROR: can not load file: {filename}")
+        sys.exit(1)
+
+    minmax = reader.get_minmax()
     size = reader.get_size()
 
     # calc scale

@@ -8,9 +8,10 @@ import stl
 from OpenGL import GL
 
 from ..calc import calc_distance  # pylint: disable=E0402
+from ..input_plugins_base import DrawReaderBase
 
 
-class StlReader:
+class DrawReader(DrawReaderBase):
     def __init__(self, filename: str, args: argparse.Namespace = None):
         """slicing and converting stl into single segments."""
         self.filename = filename

@@ -572,7 +572,7 @@ from viaconstructor.input_plugins import dxfread
     ),
 )
 def test_DxfReader(filename, expected, expected_minmax, expected_size):
-    dxfreader = dxfread.DxfReader(filename)
+    dxfreader = dxfread.DrawReader(filename)
     result = dxfreader.get_segments()
     print(result)
     assert result == expected

@@ -7,10 +7,10 @@ import ezdxf
 import svgpathtools
 
 from ..calc import calc_distance  # pylint: disable=E0402
+from ..input_plugins_base import DrawReaderBase
 
 
-class SvgReader:
-
+class DrawReader(DrawReaderBase):
     MIN_DIST = 0.0001
 
     def __init__(

@@ -4,9 +4,10 @@ import argparse
 import math
 
 from ..calc import angle_of_line, calc_distance  # pylint: disable=E0402
+from ..input_plugins_base import DrawReaderBase
 
 
-class HpglReader:
+class DrawReader(DrawReaderBase):
     def __init__(
         self, filename: str, args: argparse.Namespace = None
     ):  # pylint: disable=W0613
