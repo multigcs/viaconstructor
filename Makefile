@@ -1,5 +1,10 @@
 
-all: isort black lint pytest pdoc help_gen gettext docindex
+all: isort black lint pytest pdoc help_gen gettext docindex done
+
+done:
+	@echo "-------------------------"
+	@echo "ALL RIGHT !"
+	@echo "-------------------------"
 
 check: isort_check black_check lint pytest_check
 
@@ -85,7 +90,7 @@ install:
 	python3 setup.py install
 
 docker-build:
-	docker build -t viaconstructor .
+	docker build -t viaconstructor -f Dockerfile .
 
 docker-run-pip-install:
 	docker rm viaconstructor || true

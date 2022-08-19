@@ -96,9 +96,6 @@ for reader in ("dxfread", "hpglread", "stlread", "svgread", "ttfread"):
         print(f"ERRO while loading input plugin {reader}: {reader_error}")
 
 
-LAYER_REGEX = re.compile(r"([a-zA-Z]{1,4}):\s*([+-]?([0-9]+([.][0-9]*)?|[.][0-9]+))")
-
-
 def no_translation(text):
     return text
 
@@ -508,6 +505,10 @@ class GLWidget(QGLWidget):
 
 class ViaConstructor:
     """viaconstructor main class."""
+
+    LAYER_REGEX = re.compile(
+        r"([a-zA-Z]{1,4}):\s*([+-]?([0-9]+([.][0-9]*)?|[.][0-9]+))"
+    )
 
     project: dict = {
         "setup_defaults": setup_defaults(_),
@@ -1495,7 +1496,7 @@ class ViaConstructor:
                             )
                         )
                 elif layer.startswith("MILL:"):
-                    matches = LAYER_REGEX.findall(obj["layer"])
+                    matches = self.LAYER_REGEX.findall(obj["layer"])
                     if matches:
                         for match in matches:
                             cmd = match[0].upper()
