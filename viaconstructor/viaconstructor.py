@@ -527,7 +527,9 @@ class ViaConstructor:
     info = ""
     save_tabs = "no"
     save_starts = "no"
-    draw_reader: Union[DxfReader, SvgReader, HpglReader, StlReader, TtfReader]
+    draw_reader: Optional[
+        Union[DxfReader, SvgReader, HpglReader, StlReader, TtfReader]
+    ] = None
     status_bar: Optional[QWidget] = None
     main: Optional[QMainWindow] = None
 
@@ -571,6 +573,9 @@ class ViaConstructor:
 
     def run_calculation(self) -> None:
         """run all calculations."""
+        if not self.draw_reader:
+            return
+
         psetup: dict = self.project["setup"]
         min_max = objects2minmax(self.project["objects"])
         self.project["minMax"] = min_max
@@ -731,6 +736,20 @@ class ViaConstructor:
         else:
             self.status_bar_message(f"{self.info} - save dxf..cancel")
 
+    def _toolbar_load_drawing(self) -> None:
+        """load drawing."""
+        self.status_bar_message(f"{self.info} - load drawing..")
+        file_dialog = QFileDialog(self.main)
+        file_dialog.setNameFilters(["drawing (*.dxf)"])
+        name = file_dialog.getOpenFileName(
+            self.main, "Load Drawing", "", "drawing (*.dxf)"
+        )
+        if name[0] and self.load_drawing(name[0]):
+            self.update_drawing()
+            self.status_bar_message(f"{self.info} - load drawing..done ({name[0]})")
+        else:
+            self.status_bar_message(f"{self.info} - load drawing..cancel")
+
     def setup_load(self, filename: str) -> bool:
         if os.path.isfile(filename):
             setup = open(filename, "r").read()
@@ -787,6 +806,9 @@ class ViaConstructor:
 
     def update_drawing(self, draw_only=False) -> None:
         """update drawings."""
+        if not self.draw_reader:
+            return
+
         self.status_bar_message(f"{self.info} - calculate..")
         if not draw_only:
             self.run_calculation()
@@ -1065,7 +1087,7 @@ class ViaConstructor:
                 self.save_tabs = "yes"
             else:
                 self.save_tabs = "no"
-        if self.save_tabs == "yes":
+        if self.save_tabs == "yes" and self.draw_reader:
             self.draw_reader.save_tabs(self.project["tabs"]["data"])
 
     def global_changed(self, value) -> None:  # pylint: disable=W0613
@@ -1160,6 +1182,22 @@ class ViaConstructor:
     def create_toolbar(self) -> None:
         """creates the_toolbar."""
         toolbuttons = {
+            _("Load drawing"): (
+                "open.png",
+                "",
+                _("Load drawing"),
+                self._toolbar_load_drawing,
+                True,
+                "main",
+            ),
+            _("Save drawing as DXF"): (
+                "save.png",
+                "Ctrl+S",
+                _("Save drawing as DXF"),
+                self._toolbar_save_dxf,
+                True,
+                "main",
+            ),
             _("Exit"): (
                 "exit.png",
                 "Ctrl+Q",
@@ -1167,14 +1205,6 @@ class ViaConstructor:
                 self._toolbar_exit,
                 True,
                 "main",
-            ),
-            _("Save drawing as DXF"): (
-                "save-gcode.png",
-                "Ctrl+S",
-                _("Save drawing as DXF"),
-                self._toolbar_save_dxf,
-                True,
-                "dxf",
             ),
             _("Save Machine-Commands"): (
                 "save-gcode.png",
@@ -1273,7 +1303,7 @@ class ViaConstructor:
                 "tabs",
             ),
             _("Start-Selector"): (
-                "tab-selector.png",
+                "start.png",
                 "",
                 _("Start-Selector"),
                 self._toolbar_toggle_start_selector,
@@ -1281,7 +1311,7 @@ class ViaConstructor:
                 "start",
             ),
             _("Repair-Selector"): (
-                "tab-selector.png",
+                "repair.png",
                 "",
                 _("Repair-Selector"),
                 self._toolbar_toggle_repair_selector,
@@ -1289,7 +1319,7 @@ class ViaConstructor:
                 "repair",
             ),
             _("Delete-Selector"): (
-                "tab-selector.png",
+                "delete.png",
                 "",
                 _("Delete-Selector"),
                 self._toolbar_toggle_delete_selector,
@@ -1476,6 +1506,40 @@ class ViaConstructor:
 
         self.project["maxOuter"] = find_tool_offsets(self.project["objects"])
 
+    def load_drawing(self, filename: str) -> bool:
+        if filename.lower().endswith(".svg"):
+            self.draw_reader = SvgReader(filename, self.args)
+        elif filename.lower().endswith(".eps"):
+            print("# try to convert eps into dxf format")
+            with tempfile.NamedTemporaryFile() as tmp:
+                cmd = f"pstoedit -f dxf {filename} {tmp.name}"
+                print(f"# running: {cmd}")
+                os.system(cmd)
+                self.draw_reader = DxfReader(tmp.name, self.args)
+        elif filename.lower().endswith(".dxf"):
+            self.draw_reader = DxfReader(filename, self.args)
+            self.save_tabs = "ask"
+        elif filename.lower().endswith(".hpgl"):
+            self.draw_reader = HpglReader(filename, self.args)
+        elif filename.lower().endswith(".stl"):
+            self.draw_reader = StlReader(filename, self.args)
+        elif filename.lower().endswith(".ttf"):
+            self.draw_reader = TtfReader(filename, self.args)
+        else:
+            print(f"ERROR: Unknown file suffix: {filename}")
+            sys.exit(1)
+
+        if self.draw_reader:
+            self.project["segments_org"] = self.draw_reader.get_segments()  # type: ignore
+            self.project["filename_draw"] = filename
+            self.project[
+                "filename_machine_cmd"
+            ] = f"{'.'.join(self.project['filename_draw'].split('.')[:-1])}.{self.project['suffix']}"
+            self.prepare_segments()
+            return True
+
+        return False
+
     def __init__(self) -> None:
         """viaconstructor main init."""
         setproctitle.setproctitle("viaconstructor")  # pylint: disable=I1101
@@ -1538,122 +1602,94 @@ class ViaConstructor:
             self.setup_load(self.args.setup)
 
         # load drawing #
-        if self.args.filename.lower().endswith(".svg"):
-            self.draw_reader = SvgReader(self.args.filename, self.args)
-
-        elif self.args.filename.lower().endswith(".eps"):
-            print("# try to convert eps into dxf format")
-            with tempfile.NamedTemporaryFile() as tmp:
-                cmd = f"pstoedit -f dxf {self.args.filename} {tmp.name}"
-                print(f"# running: {cmd}")
-                os.system(cmd)
-                self.draw_reader = DxfReader(tmp.name, self.args)
-        elif self.args.filename.lower().endswith(".dxf"):
-            self.draw_reader = DxfReader(self.args.filename, self.args)
-            self.save_tabs = "ask"
-        elif self.args.filename.lower().endswith(".hpgl"):
-            self.draw_reader = HpglReader(self.args.filename, self.args)
-        elif self.args.filename.lower().endswith(".stl"):
-            self.draw_reader = StlReader(self.args.filename, self.args)
-        elif self.args.filename.lower().endswith(".ttf"):
-            self.draw_reader = TtfReader(self.args.filename, self.args)
-        else:
-            print(f"ERROR: Unknown file suffix: {self.args.filename}")
-            sys.exit(1)
-
-        self.project["segments_org"] = self.draw_reader.get_segments()
-        self.project["filename_draw"] = self.args.filename
-        self.project[
-            "filename_machine_cmd"
-        ] = f"{'.'.join(self.project['filename_draw'].split('.')[:-1])}.{self.project['suffix']}"
-
-        # prepare #
-        self.prepare_segments()
-
-        if self.args.dxf:
-            self.update_drawing()
-            print("saving dawing to file:", self.args.dxf)
-            self.save_objects_as_dxf(self.args.dxf)
-        elif self.args.output:
-            self.update_drawing()
-            print("saving machine_cmd to file:", self.args.output)
-            open(self.args.output, "w").write(self.project["machine_cmd"])
-        else:
-            # gui #
-            qapp = QApplication(sys.argv)
-            self.project["window"] = QWidget()
-            self.project["app"] = self
-
-            my_format = QGLFormat.defaultFormat()
-            my_format.setSampleBuffers(True)
-            QGLFormat.setDefaultFormat(my_format)
-            if not QGLFormat.hasOpenGL():
-                QMessageBox.information(
-                    self.project["window"],
-                    "OpenGL using samplebuffers",
-                    "This system does not support OpenGL.",
-                )
+        if self.args.filename and self.load_drawing(self.args.filename):
+            # save and exit
+            if self.args.dxf:
+                self.update_drawing()
+                print("saving dawing to file:", self.args.dxf)
+                self.save_objects_as_dxf(self.args.dxf)
+                sys.exit(0)
+            if self.args.output:
+                self.update_drawing()
+                print("saving machine_cmd to file:", self.args.output)
+                open(self.args.output, "w").write(self.project["machine_cmd"])
                 sys.exit(0)
 
-            self.project["glwidget"] = GLWidget(self.project, self.update_drawing)
+        # gui #
+        qapp = QApplication(sys.argv)
+        self.project["window"] = QWidget()
+        self.project["app"] = self
 
-            self.main = QMainWindow()
-            self.main.setWindowTitle(f"viaConstructor: {self.project['filename_draw']}")
-            self.main.setCentralWidget(self.project["window"])
+        my_format = QGLFormat.defaultFormat()
+        my_format.setSampleBuffers(True)
+        QGLFormat.setDefaultFormat(my_format)
+        if not QGLFormat.hasOpenGL():
+            QMessageBox.information(
+                self.project["window"],
+                "OpenGL using samplebuffers",
+                "This system does not support OpenGL.",
+            )
+            sys.exit(0)
 
-            self.this_dir, self.this_filename = os.path.split(__file__)
+        self.project["glwidget"] = GLWidget(self.project, self.update_drawing)
 
-            self.create_toolbar()
+        self.main = QMainWindow()
+        self.main.setWindowTitle(f"viaConstructor: {self.project['filename_draw']}")
+        self.main.setCentralWidget(self.project["window"])
 
-            self.status_bar = QStatusBar()
-            self.main.setStatusBar(self.status_bar)
-            self.status_bar_message(f"{self.info} - startup")
+        self.this_dir, self.this_filename = os.path.split(__file__)
 
-            self.project["textwidget"] = QPlainTextEdit()
-            self.project["objwidget"] = QTreeView()
-            self.project["objmodel"] = QStandardItemModel()
-            self.update_table()
-            left_gridlayout = QGridLayout()
-            left_gridlayout.addWidget(QLabel("Objects-Settings:"))
+        self.create_toolbar()
 
-            ltabwidget = QTabWidget()
-            ltabwidget.addTab(self.project["objwidget"], "Objects")
+        self.status_bar = QStatusBar()
+        self.main.setStatusBar(self.status_bar)
+        self.status_bar_message(f"{self.info} - startup")
 
-            left_gridlayout.addWidget(ltabwidget)
+        self.project["textwidget"] = QPlainTextEdit()
+        self.project["objwidget"] = QTreeView()
+        self.project["objmodel"] = QStandardItemModel()
+        self.update_table()
+        left_gridlayout = QGridLayout()
+        left_gridlayout.addWidget(QLabel("Objects-Settings:"))
 
-            tabwidget = QTabWidget()
-            tabwidget.addTab(self.project["glwidget"], "3D-View")
-            tabwidget.addTab(self.project["textwidget"], "Maschine-Output")
+        ltabwidget = QTabWidget()
+        ltabwidget.addTab(self.project["objwidget"], "Objects")
 
-            right_gridlayout = QGridLayout()
-            right_gridlayout.addWidget(tabwidget)
+        left_gridlayout.addWidget(ltabwidget)
 
-            left_widget = QWidget()
-            left_widget.setContentsMargins(0, 0, 0, 0)
+        tabwidget = QTabWidget()
+        tabwidget.addTab(self.project["glwidget"], "3D-View")
+        tabwidget.addTab(self.project["textwidget"], "Maschine-Output")
 
-            vbox = QVBoxLayout(left_widget)
-            vbox.setContentsMargins(0, 0, 0, 0)
-            vbox.addWidget(QLabel(_("Global-Settings:")))
+        right_gridlayout = QGridLayout()
+        right_gridlayout.addWidget(tabwidget)
 
-            self.tabwidget = QTabWidget()
-            self.create_global_setup(self.tabwidget)
-            vbox.addWidget(self.tabwidget)
+        left_widget = QWidget()
+        left_widget.setContentsMargins(0, 0, 0, 0)
 
-            bottom_container = QWidget()
-            bottom_container.setContentsMargins(0, 0, 0, 0)
-            bottom_container.setLayout(left_gridlayout)
-            vbox.addWidget(bottom_container, stretch=1)
+        vbox = QVBoxLayout(left_widget)
+        vbox.setContentsMargins(0, 0, 0, 0)
+        vbox.addWidget(QLabel(_("Global-Settings:")))
 
-            right_widget = QWidget()
-            right_widget.setLayout(right_gridlayout)
+        self.tabwidget = QTabWidget()
+        self.create_global_setup(self.tabwidget)
+        vbox.addWidget(self.tabwidget)
 
-            hlay = QHBoxLayout(self.project["window"])
-            hlay.addWidget(left_widget, stretch=1)
-            hlay.addWidget(right_widget, stretch=3)
+        bottom_container = QWidget()
+        bottom_container.setContentsMargins(0, 0, 0, 0)
+        bottom_container.setLayout(left_gridlayout)
+        vbox.addWidget(bottom_container, stretch=1)
 
-            self.main.resize(1600, 1200)
-            self.main.show()
-            sys.exit(qapp.exec_())
+        right_widget = QWidget()
+        right_widget.setLayout(right_gridlayout)
+
+        hlay = QHBoxLayout(self.project["window"])
+        hlay.addWidget(left_widget, stretch=1)
+        hlay.addWidget(right_widget, stretch=3)
+
+        self.main.resize(1600, 1200)
+        self.main.show()
+        sys.exit(qapp.exec_())
 
 
 if __name__ == "__main__":
