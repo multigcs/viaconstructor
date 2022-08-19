@@ -863,10 +863,11 @@ def objects2polyline_offsets(diameter, objects, max_outer, small_circles=False):
 # analyze size
 def objects2minmax(objects):
     """find the min/max values of objects"""
-    min_x = objects[0]["segments"][0]["start"][0]
-    min_y = objects[0]["segments"][0]["start"][1]
-    max_x = objects[0]["segments"][0]["start"][0]
-    max_y = objects[0]["segments"][0]["start"][1]
+    fist_key = list(objects.keys())[0]
+    min_x = objects[fist_key]["segments"][0]["start"][0]
+    min_y = objects[fist_key]["segments"][0]["start"][1]
+    max_x = objects[fist_key]["segments"][0]["start"][0]
+    max_y = objects[fist_key]["segments"][0]["start"][1]
     for obj in objects.values():
         if obj.get("layer", "").startswith("BREAKS:") or obj.get(
             "layer", ""

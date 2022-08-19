@@ -11,8 +11,9 @@ import tempfile
 from copy import deepcopy
 from functools import partial
 from pathlib import Path
-from typing import Union
+from typing import Optional, Union
 
+import ezdxf
 import setproctitle
 from PyQt5.QtGui import (  # pylint: disable=E0611
     QIcon,
@@ -521,11 +522,52 @@ class ViaConstructor:
             "data": [],
             "table": None,
         },
+        "textwidget": None,
     }
     info = ""
     save_tabs = "no"
     save_starts = "no"
     draw_reader: Union[DxfReader, SvgReader, HpglReader, StlReader, TtfReader]
+    status_bar: Optional[QWidget] = None
+    main: Optional[QMainWindow] = None
+
+    def save_objects_as_dxf(self, output_file) -> bool:
+        try:
+            doc = ezdxf.new("R2010")
+            msp = doc.modelspace()
+            doc.units = ezdxf.units.MM
+            for obj in self.project["objects"].values():
+                for segment in obj["segments"]:
+                    if segment["bulge"] == 0.0:
+                        msp.add_line(
+                            segment["start"],
+                            segment["end"],
+                            dxfattribs={"layer": segment["layer"]},
+                        )
+                    else:
+                        (
+                            center,
+                            start_angle,  # pylint: disable=W0612
+                            end_angle,  # pylint: disable=W0612
+                            radius,  # pylint: disable=W0612
+                        ) = ezdxf.math.bulge_to_arc(
+                            segment["start"], segment["end"], segment["bulge"]
+                        )
+                        msp.add_arc(
+                            center=center,
+                            radius=radius,
+                            start_angle=start_angle * 180 / math.pi,
+                            end_angle=end_angle * 180 / math.pi,
+                            dxfattribs={"layer": segment["layer"]},
+                        )
+            for vport in doc.viewports.get_config("*Active"):  # type: ignore
+                vport.dxf.grid_on = True
+                vport.dxf.center = (200, 200)
+            doc.saveas(output_file)
+        except Exception as error:  # pylint: disable=W0703
+            print(f"ERROR while saving sxf: {error}")
+            return False
+        return True
 
     def run_calculation(self) -> None:
         """run all calculations."""
@@ -575,9 +617,10 @@ class ViaConstructor:
             sys.exit(1)
 
         self.project["machine_cmd"] = polylines2machine_cmd(self.project, output_plugin)
-        self.project["textwidget"].clear()
-        self.project["textwidget"].insertPlainText(self.project["machine_cmd"])
-        self.project["textwidget"].verticalScrollBar().setValue(0)
+        if self.project["textwidget"]:
+            self.project["textwidget"].clear()
+            self.project["textwidget"].insertPlainText(self.project["machine_cmd"])
+            self.project["textwidget"].verticalScrollBar().setValue(0)
 
     def _toolbar_flipx(self) -> None:
         mirror_objects(self.project["objects"], self.project["minMax"], vertical=True)
@@ -642,12 +685,16 @@ class ViaConstructor:
             return True
         return False
 
+    def status_bar_message(self, message) -> None:
+        if self.status_bar:
+            self.status_bar.showMessage(message)
+
     def _toolbar_save_machine_cmd(self) -> None:
         """save machine_cmd."""
-        self.status_bar.showMessage(f"{self.info} - save machine_cmd..")
+        self.status_bar_message(f"{self.info} - save machine_cmd..")
         file_dialog = QFileDialog(self.main)
         file_dialog.setNameFilters(
-            [f"self.project['suffix'] (*.{self.project['suffix']})"]
+            [f"{self.project['suffix']} (*.{self.project['suffix']})"]
         )
         self.project[
             "filename_machine_cmd"
@@ -659,11 +706,30 @@ class ViaConstructor:
             f"{self.project['suffix']} (*.{self.project['suffix']})",
         )
         if name[0] and self.machine_cmd_save(name[0]):
-            self.status_bar.showMessage(
+            self.status_bar_message(
                 f"{self.info} - save maschine-code..done ({name[0]})"
             )
         else:
-            self.status_bar.showMessage(f"{self.info} - save maschine-code..cancel")
+            self.status_bar_message(f"{self.info} - save maschine-code..cancel")
+
+    def _toolbar_save_dxf(self) -> None:
+        """save doawing as dxf."""
+        self.status_bar_message(f"{self.info} - save drawing as dxf..")
+        file_dialog = QFileDialog(self.main)
+        file_dialog.setNameFilters(["dxf (*.dxf)"])
+        self.project[
+            "filename_machine_cmd"
+        ] = f"{'.'.join(self.project['filename_draw'].split('.')[:-1])}.dxf"
+        name = file_dialog.getSaveFileName(
+            self.main,
+            "Save File",
+            self.project["filename_machine_cmd"],
+            "dxf (*.dxf)",
+        )
+        if name[0] and self.save_objects_as_dxf(name[0]):
+            self.status_bar_message(f"{self.info} - save dxf..done ({name[0]})")
+        else:
+            self.status_bar_message(f"{self.info} - save dxf..cancel")
 
     def setup_load(self, filename: str) -> bool:
         if os.path.isfile(filename):
@@ -683,15 +749,15 @@ class ViaConstructor:
 
     def _toolbar_save_setup(self) -> None:
         """save setup."""
-        self.status_bar.showMessage(f"{self.info} - save setup..")
+        self.status_bar_message(f"{self.info} - save setup..")
         if self.setup_save(self.args.setup):
-            self.status_bar.showMessage(f"{self.info} - save setup..done")
+            self.status_bar_message(f"{self.info} - save setup..done")
         else:
-            self.status_bar.showMessage(f"{self.info} - save setup..error")
+            self.status_bar_message(f"{self.info} - save setup..error")
 
     def _toolbar_load_setup_from(self) -> None:
         """load setup from."""
-        self.status_bar.showMessage(f"{self.info} - load setup from..")
+        self.status_bar_message(f"{self.info} - load setup from..")
         file_dialog = QFileDialog(self.main)
         file_dialog.setNameFilters(["setup (*.json)"])
         name = file_dialog.getOpenFileName(
@@ -702,30 +768,26 @@ class ViaConstructor:
             self.update_table()
             self.global_changed(0)
             self.update_drawing()
-            self.status_bar.showMessage(
-                f"{self.info} - load setup from..done ({name[0]})"
-            )
+            self.status_bar_message(f"{self.info} - load setup from..done ({name[0]})")
         else:
-            self.status_bar.showMessage(f"{self.info} - load setup from..cancel")
+            self.status_bar_message(f"{self.info} - load setup from..cancel")
 
     def _toolbar_save_setup_as(self) -> None:
         """save setup as."""
-        self.status_bar.showMessage(f"{self.info} - save setup as..")
+        self.status_bar_message(f"{self.info} - save setup as..")
         file_dialog = QFileDialog(self.main)
         file_dialog.setNameFilters(["setup (*.json)"])
         name = file_dialog.getSaveFileName(
             self.main, "Save Setup", self.args.setup, "setup (*.json)"
         )
         if name[0] and self.setup_save(name[0]):
-            self.status_bar.showMessage(
-                f"{self.info} - save setup as..done ({name[0]})"
-            )
+            self.status_bar_message(f"{self.info} - save setup as..done ({name[0]})")
         else:
-            self.status_bar.showMessage(f"{self.info} - ave setup as..cancel")
+            self.status_bar_message(f"{self.info} - ave setup as..cancel")
 
     def update_drawing(self, draw_only=False) -> None:
         """update drawings."""
-        self.status_bar.showMessage(f"{self.info} - calculate..")
+        self.status_bar_message(f"{self.info} - calculate..")
         if not draw_only:
             self.run_calculation()
         self.project["gllist"] = GL.glGenLists(1)
@@ -734,9 +796,12 @@ class ViaConstructor:
         if self.project["setup"]["view"]["3d_show"]:
             if hasattr(self.draw_reader, "draw_3d"):
                 self.draw_reader.draw_3d()
-        if self.project["glwidget"].selector_mode != "repair":
+        if (
+            self.project["glwidget"]
+            and self.project["glwidget"].selector_mode != "repair"
+        ):
             if not draw_maschinecode_path(self.project):
-                self.status_bar.showMessage(
+                self.status_bar_message(
                     f"{self.info} - error while drawing maschine commands"
                 )
 
@@ -744,7 +809,10 @@ class ViaConstructor:
             draw_object_ids(self.project)
 
         selected = -1
-        if self.project["glwidget"].selector_mode == "delete":
+        if (
+            self.project["glwidget"]
+            and self.project["glwidget"].selector_mode == "delete"
+        ):
             selected = self.project["glwidget"].selection[2]
 
         draw_object_edges(self.project, selected=selected)
@@ -752,10 +820,11 @@ class ViaConstructor:
             draw_object_faces(self.project)
         GL.glEndList()
         self.info = f"{self.project['minMax'][2] - self.project['minMax'][0]}x{self.project['minMax'][3] - self.project['minMax'][1]}mm"
-        self.main.setWindowTitle(
-            f"viaConstructor: {self.project['filename_draw']} - {self.info}"
-        )
-        self.status_bar.showMessage(f"{self.info} - calculate..done")
+        if self.main:
+            self.main.setWindowTitle(
+                f"viaConstructor: {self.project['filename_draw']} - {self.info}"
+            )
+        self.status_bar_message(f"{self.info} - calculate..done")
 
     def materials_select(self, material_idx) -> None:
         """calculates the milling feedrate and tool-speed for the selected material
@@ -796,7 +865,7 @@ class ViaConstructor:
         )
         info_test.append("")
         ret = QMessageBox.question(
-            self.main,
+            self.main,  # type: ignore
             "Warning",
             "\n".join(info_test),
             QMessageBox.Ok | QMessageBox.Cancel,
@@ -962,7 +1031,7 @@ class ViaConstructor:
             info_test.append(" will be removed !")
             info_test.append("")
             ret = QMessageBox.question(
-                self.main,
+                self.main,  # type: ignore
                 "Warning",
                 "\n".join(info_test),
                 QMessageBox.Yes | QMessageBox.No,
@@ -987,7 +1056,7 @@ class ViaConstructor:
             info_test.append(" will be removed !")
             info_test.append("")
             ret = QMessageBox.question(
-                self.main,
+                self.main,  # type: ignore
                 "Warning",
                 "\n".join(info_test),
                 QMessageBox.Yes | QMessageBox.No,
@@ -1064,7 +1133,7 @@ class ViaConstructor:
             "filename_machine_cmd"
         ] = f"{'.'.join(self.project['filename_draw'].split('.')[:-1])}.{self.project['suffix']}"
         if os.path.isfile(self.project["filename_machine_cmd"]):
-            self.status_bar.showMessage(
+            self.status_bar_message(
                 f"{self.info} - loading setup from maschinecode: {self.project['filename_machine_cmd']}"
             )
             with open(self.project["filename_machine_cmd"], "r") as fd_machine_cmd:
@@ -1076,11 +1145,11 @@ class ViaConstructor:
                         for sname in self.project["setup"]:
                             self.project["setup"][sname].update(ndata.get(sname, {}))
                         self.update_drawing()
-                        self.status_bar.showMessage(
+                        self.status_bar_message(
                             f"{self.info} - loading setup from maschinecode..done"
                         )
                         return
-        self.status_bar.showMessage(
+        self.status_bar_message(
             f"{self.info} - loading setup from maschinecode..failed"
         )
 
@@ -1098,6 +1167,14 @@ class ViaConstructor:
                 self._toolbar_exit,
                 True,
                 "main",
+            ),
+            _("Save drawing as DXF"): (
+                "save-gcode.png",
+                "Ctrl+S",
+                _("Save drawing as DXF"),
+                self._toolbar_save_dxf,
+                True,
+                "dxf",
             ),
             _("Save Machine-Commands"): (
                 "save-gcode.png",
@@ -1221,7 +1298,7 @@ class ViaConstructor:
             ),
         }
         self.toolbar = QToolBar("top toolbar")
-        self.main.addToolBar(self.toolbar)
+        self.main.addToolBar(self.toolbar)  # type: ignore
         section = ""
 
         for title, toolbutton in toolbuttons.items():
@@ -1405,7 +1482,9 @@ class ViaConstructor:
 
         # arguments
         parser = argparse.ArgumentParser()
-        parser.add_argument("filename", help="input file", type=str)
+        parser.add_argument(
+            "filename", help="input file", type=str, nargs="?", default=None
+        )
         parser.add_argument(
             "-s",
             "--setup",
@@ -1414,7 +1493,18 @@ class ViaConstructor:
             default=f"{os.path.join(Path.home(), 'viaconstructor.json')}",
         )
         parser.add_argument(
-            "-o", "--output", help="save to machine_cmd", type=str, default=None
+            "-o",
+            "--output",
+            help="save to machine_cmd and exit",
+            type=str,
+            default=None,
+        )
+        parser.add_argument(
+            "-d",
+            "--dxf",
+            help="convert drawing to dxf file and exit",
+            type=str,
+            default=None,
         )
         # STL-Reader
         parser.add_argument(
@@ -1480,83 +1570,87 @@ class ViaConstructor:
         # prepare #
         self.prepare_segments()
 
-        # gui #
-        qapp = QApplication(sys.argv)
-        self.project["window"] = QWidget()
-        self.project["app"] = self
-
-        my_format = QGLFormat.defaultFormat()
-        my_format.setSampleBuffers(True)
-        QGLFormat.setDefaultFormat(my_format)
-        if not QGLFormat.hasOpenGL():
-            QMessageBox.information(
-                self.project["window"],
-                "OpenGL using samplebuffers",
-                "This system does not support OpenGL.",
-            )
-            sys.exit(0)
-
-        self.project["glwidget"] = GLWidget(self.project, self.update_drawing)
-
-        self.main = QMainWindow()
-        self.main.setWindowTitle(f"viaConstructor: {self.project['filename_draw']}")
-        self.main.setCentralWidget(self.project["window"])
-
-        self.this_dir, self.this_filename = os.path.split(__file__)
-
-        self.create_toolbar()
-
-        self.status_bar = QStatusBar()
-        self.main.setStatusBar(self.status_bar)
-        self.status_bar.showMessage(f"{self.info} - startup")
-
-        self.project["textwidget"] = QPlainTextEdit()
-        self.project["objwidget"] = QTreeView()
-        self.project["objmodel"] = QStandardItemModel()
-        self.update_table()
-        left_gridlayout = QGridLayout()
-        left_gridlayout.addWidget(QLabel("Objects-Settings:"))
-
-        ltabwidget = QTabWidget()
-        ltabwidget.addTab(self.project["objwidget"], "Objects")
-
-        left_gridlayout.addWidget(ltabwidget)
-
-        tabwidget = QTabWidget()
-        tabwidget.addTab(self.project["glwidget"], "3D-View")
-        tabwidget.addTab(self.project["textwidget"], "Maschine-Output")
-
-        right_gridlayout = QGridLayout()
-        right_gridlayout.addWidget(tabwidget)
-
-        left_widget = QWidget()
-        left_widget.setContentsMargins(0, 0, 0, 0)
-
-        vbox = QVBoxLayout(left_widget)
-        vbox.setContentsMargins(0, 0, 0, 0)
-        vbox.addWidget(QLabel(_("Global-Settings:")))
-
-        self.tabwidget = QTabWidget()
-        self.create_global_setup(self.tabwidget)
-        vbox.addWidget(self.tabwidget)
-
-        bottom_container = QWidget()
-        bottom_container.setContentsMargins(0, 0, 0, 0)
-        bottom_container.setLayout(left_gridlayout)
-        vbox.addWidget(bottom_container, stretch=1)
-
-        right_widget = QWidget()
-        right_widget.setLayout(right_gridlayout)
-
-        hlay = QHBoxLayout(self.project["window"])
-        hlay.addWidget(left_widget, stretch=1)
-        hlay.addWidget(right_widget, stretch=3)
-
-        if self.args.output:
+        if self.args.dxf:
+            self.update_drawing()
+            print("saving dawing to file:", self.args.dxf)
+            self.save_objects_as_dxf(self.args.dxf)
+        elif self.args.output:
             self.update_drawing()
             print("saving machine_cmd to file:", self.args.output)
             open(self.args.output, "w").write(self.project["machine_cmd"])
         else:
+            # gui #
+            qapp = QApplication(sys.argv)
+            self.project["window"] = QWidget()
+            self.project["app"] = self
+
+            my_format = QGLFormat.defaultFormat()
+            my_format.setSampleBuffers(True)
+            QGLFormat.setDefaultFormat(my_format)
+            if not QGLFormat.hasOpenGL():
+                QMessageBox.information(
+                    self.project["window"],
+                    "OpenGL using samplebuffers",
+                    "This system does not support OpenGL.",
+                )
+                sys.exit(0)
+
+            self.project["glwidget"] = GLWidget(self.project, self.update_drawing)
+
+            self.main = QMainWindow()
+            self.main.setWindowTitle(f"viaConstructor: {self.project['filename_draw']}")
+            self.main.setCentralWidget(self.project["window"])
+
+            self.this_dir, self.this_filename = os.path.split(__file__)
+
+            self.create_toolbar()
+
+            self.status_bar = QStatusBar()
+            self.main.setStatusBar(self.status_bar)
+            self.status_bar_message(f"{self.info} - startup")
+
+            self.project["textwidget"] = QPlainTextEdit()
+            self.project["objwidget"] = QTreeView()
+            self.project["objmodel"] = QStandardItemModel()
+            self.update_table()
+            left_gridlayout = QGridLayout()
+            left_gridlayout.addWidget(QLabel("Objects-Settings:"))
+
+            ltabwidget = QTabWidget()
+            ltabwidget.addTab(self.project["objwidget"], "Objects")
+
+            left_gridlayout.addWidget(ltabwidget)
+
+            tabwidget = QTabWidget()
+            tabwidget.addTab(self.project["glwidget"], "3D-View")
+            tabwidget.addTab(self.project["textwidget"], "Maschine-Output")
+
+            right_gridlayout = QGridLayout()
+            right_gridlayout.addWidget(tabwidget)
+
+            left_widget = QWidget()
+            left_widget.setContentsMargins(0, 0, 0, 0)
+
+            vbox = QVBoxLayout(left_widget)
+            vbox.setContentsMargins(0, 0, 0, 0)
+            vbox.addWidget(QLabel(_("Global-Settings:")))
+
+            self.tabwidget = QTabWidget()
+            self.create_global_setup(self.tabwidget)
+            vbox.addWidget(self.tabwidget)
+
+            bottom_container = QWidget()
+            bottom_container.setContentsMargins(0, 0, 0, 0)
+            bottom_container.setLayout(left_gridlayout)
+            vbox.addWidget(bottom_container, stretch=1)
+
+            right_widget = QWidget()
+            right_widget.setLayout(right_gridlayout)
+
+            hlay = QHBoxLayout(self.project["window"])
+            hlay.addWidget(left_widget, stretch=1)
+            hlay.addWidget(right_widget, stretch=3)
+
             self.main.resize(1600, 1200)
             self.main.show()
             sys.exit(qapp.exec_())
