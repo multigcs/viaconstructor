@@ -87,11 +87,13 @@ install:
 docker-build:
 	docker build -t viaconstructor .
 
-docker-run:
+docker-run-pip-install:
 	docker rm viaconstructor || true
-	#macOS: -e DISPLAY=docker.for.mac.host.internal:0
-	#Windows: -e DISPLAY=host.docker.internal:0
-	docker run --net=host -e DISPLAY=:0  --privileged --name viaconstructor -t -i viaconstructor
+	docker run --net=host -e DISPLAY=:0  --privileged --name viaconstructor -v $(CURDIR)/tests/data:/usr/src -t -i viaconstructor /bin/bash -c "cd /usr/src; pip3 install viaconstructor; viaconstructor simple.dxf"
+
+docker-run-dev:
+	docker rm viaconstructor || true
+	docker run --net=host -e DISPLAY=:0  --privileged --name viaconstructor -v $(CURDIR):/usr/src/viaconstructor -t -i viaconstructor /bin/bash -c "cd /usr/src/viaconstructor; pip3 install -r requirements.txt; bin/viaconstructor tests/data/simple.dxf"
 
 gettext:
 	/usr/bin/pygettext3 -d base -o locales/base.pot viaconstructor/viaconstructor.py viaconstructor/setupdefaults.py
