@@ -76,6 +76,7 @@ from .machine_cmd import polylines2machine_cmd
 from .output_plugins.gcode_linuxcnc import PostProcessorGcodeLinuxCNC
 from .output_plugins.hpgl import PostProcessorHpgl
 from .setupdefaults import setup_defaults
+from .vc_types import VcSegment
 
 try:
     from OpenGL import GL
@@ -359,14 +360,16 @@ class GLWidget(QGLWidget):
                     elif self.selector_mode == "repair":
                         obj_idx = self.selection[2]
                         self.project["segments_org"].append(
-                            {
-                                "type": "LINE",
-                                "object": None,
-                                "layer": self.project["objects"][obj_idx]["layer"],
-                                "start": (self.selection[0], self.selection[1]),
-                                "end": (self.selection[4], self.selection[5]),
-                                "bulge": 0.0,
-                            }
+                            VcSegment(
+                                {
+                                    "type": "LINE",
+                                    "object": None,
+                                    "layer": self.project["objects"][obj_idx]["layer"],
+                                    "start": (self.selection[0], self.selection[1]),
+                                    "end": (self.selection[4], self.selection[5]),
+                                    "bulge": 0.0,
+                                }
+                            )
                         )
                         self.selection = ()
                         self.project["app"].prepare_segments()
@@ -548,9 +551,9 @@ class ViaConstructor:
                 for segment in obj["segments"]:
                     if segment["bulge"] == 0.0:
                         msp.add_line(
-                            segment["start"],
-                            segment["end"],
-                            dxfattribs={"layer": segment["layer"]},
+                            segment.start,
+                            segment.end,
+                            dxfattribs={"layer": segment.layer},
                         )
                     else:
                         (
@@ -559,14 +562,14 @@ class ViaConstructor:
                             end_angle,  # pylint: disable=W0612
                             radius,  # pylint: disable=W0612
                         ) = ezdxf.math.bulge_to_arc(
-                            segment["start"], segment["end"], segment["bulge"]
+                            segment.start, segment.end, segment.bulge
                         )
                         msp.add_arc(
                             center=center,
                             radius=radius,
                             start_angle=start_angle * 180 / math.pi,
                             end_angle=end_angle * 180 / math.pi,
-                            dxfattribs={"layer": segment["layer"]},
+                            dxfattribs={"layer": segment.layer},
                         )
             for vport in doc.viewports.get_config("*Active"):  # type: ignore
                 vport.dxf.grid_on = True
@@ -1102,7 +1105,6 @@ class ViaConstructor:
 
     def global_changed(self, value) -> None:  # pylint: disable=W0613
         """global setup changed."""
-
         if self.project["status"] == "CHANGE":
             return
 
@@ -1142,6 +1144,9 @@ class ViaConstructor:
 
         if self.project["setup"]["mill"]["step"] >= 0.0:
             self.project["setup"]["mill"]["step"] = -0.05
+
+        if not self.draw_reader:
+            return
 
         self.project["segments"] = deepcopy(self.project["segments_org"])
         self.project["segments"] = clean_segments(self.project["segments"])
@@ -1493,8 +1498,8 @@ class ViaConstructor:
                     for segment in obj["segments"]:
                         self.project["tabs"]["data"].append(
                             (
-                                (segment["start"][0], segment["start"][1]),
-                                (segment["end"][0], segment["end"][1]),
+                                (segment.start[0], segment.start[1]),
+                                (segment.end[0], segment.end[1]),
                             )
                         )
                 elif layer.startswith("MILL:"):

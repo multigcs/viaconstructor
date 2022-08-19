@@ -8,6 +8,7 @@ import svgpathtools
 
 from ..calc import calc_distance  # pylint: disable=E0402
 from ..input_plugins_base import DrawReaderBase
+from ..vc_types import VcSegment
 
 
 class DrawReader(DrawReaderBase):
@@ -133,18 +134,20 @@ class DrawReader(DrawReaderBase):
                 dist = calc_distance((start.x, start.y), (end.x, end.y))
                 if dist > self.MIN_DIST:
                     self.segments.append(
-                        {
-                            "type": "ARC",
-                            "object": None,
-                            "layer": layer,
-                            "start": (start.x, start.y),
-                            "end": (end.x, end.y),
-                            "bulge": bulge,
-                            "center": (
-                                center[0],
-                                center[1],
-                            ),
-                        }
+                        VcSegment(
+                            {
+                                "type": "ARC",
+                                "object": None,
+                                "layer": layer,
+                                "start": (start.x, start.y),
+                                "end": (end.x, end.y),
+                                "bulge": bulge,
+                                "center": (
+                                    center[0],
+                                    center[1],
+                                ),
+                            }
+                        )
                     )
                 angle += astep
 
@@ -158,32 +161,36 @@ class DrawReader(DrawReaderBase):
             dist = calc_distance((start.x, start.y), (end.x, end.y))
             if dist > self.MIN_DIST:
                 self.segments.append(
-                    {
-                        "type": "ARC",
-                        "object": None,
-                        "layer": layer,
-                        "start": (start.x, start.y),
-                        "end": (end.x, end.y),
-                        "bulge": bulge,
-                        "center": (
-                            center[0],
-                            center[1],
-                        ),
-                    }
+                    VcSegment(
+                        {
+                            "type": "ARC",
+                            "object": None,
+                            "layer": layer,
+                            "start": (start.x, start.y),
+                            "end": (end.x, end.y),
+                            "bulge": bulge,
+                            "center": (
+                                center[0],
+                                center[1],
+                            ),
+                        }
+                    )
                 )
 
     def add_line(self, start, end, layer="0") -> None:
         dist = calc_distance(start, end)
         if dist > self.MIN_DIST:
             self.segments.append(
-                {
-                    "type": "LINE",
-                    "object": None,
-                    "layer": layer,
-                    "start": start,
-                    "end": end,
-                    "bulge": 0.0,
-                }
+                VcSegment(
+                    {
+                        "type": "LINE",
+                        "object": None,
+                        "layer": layer,
+                        "start": start,
+                        "end": end,
+                        "bulge": 0.0,
+                    }
+                )
             )
 
     def get_segments(self) -> list[dict]:

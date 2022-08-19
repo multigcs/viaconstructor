@@ -7,6 +7,8 @@ import cavaliercontours as cavc
 import ezdxf
 import pyclipper
 
+from .vc_types import VcObject
+
 # import trimesh
 # import pocketing
 # from shapely import geometry
@@ -133,12 +135,12 @@ def clean_segments(segments: list) -> list:
     """removing double and overlaying lines."""
     cleaned = {}
     for segment1 in segments:
-        min_x = round(min(segment1["start"][0], segment1["end"][0]), 4)
-        min_y = round(min(segment1["start"][1], segment1["end"][1]), 4)
-        max_x = round(max(segment1["start"][0], segment1["end"][0]), 4)
-        max_y = round(max(segment1["start"][1], segment1["end"][1]), 4)
-        bulge = round(segment1["bulge"], 4) or 0.0
-        key = f"{min_x},{min_y},{max_x},{max_y},{bulge},{segment1.get('layer', '')}"
+        min_x = round(min(segment1.start[0], segment1.end[0]), 4)
+        min_y = round(min(segment1.start[1], segment1.end[1]), 4)
+        max_x = round(max(segment1.start[0], segment1.end[0]), 4)
+        max_y = round(max(segment1.start[1], segment1.end[1]), 4)
+        bulge = round(segment1.bulge, 4) or 0.0
+        key = f"{min_x},{min_y},{max_x},{max_y},{bulge},{segment1.layer}"
         cleaned[key] = segment1
     return list(cleaned.values())
 
@@ -148,23 +150,23 @@ def is_inside_polygon(obj, point):
     angle = 0.0
     p_1 = [0, 0]
     p_2 = [0, 0]
-    for segment in obj["segments"]:
-        p_1[0] = segment["start"][0] - point[0]
-        p_1[1] = segment["start"][1] - point[1]
-        p_2[0] = segment["end"][0] - point[0]
-        p_2[1] = segment["end"][1] - point[1]
+    for segment in obj.segments:
+        p_1[0] = segment.start[0] - point[0]
+        p_1[1] = segment.start[1] - point[1]
+        p_2[0] = segment.end[0] - point[0]
+        p_2[1] = segment.end[1] - point[1]
         angle += angle_2d(p_1, p_2)
     return bool(abs(angle) >= math.pi)
 
 
 def reverse_object(obj):
     """reverse the direction of an object."""
-    obj["segments"].reverse()
-    for segment in obj["segments"]:
-        end = segment["end"]
-        segment["end"] = segment["start"]
-        segment["start"] = end
-        segment["bulge"] = -segment["bulge"]
+    obj.segments.reverse()
+    for segment in obj.segments:
+        end = segment.end
+        segment.end = segment.start
+        segment.start = end
+        segment.bulge = -segment.bulge
     return obj
 
 
@@ -175,7 +177,7 @@ def find_outer_objects(objects, point, exclude=None):
         exclude = []
     outer = []
     for obj_idx, obj in objects.items():
-        if obj["closed"] and obj_idx not in exclude:
+        if obj.closed and obj_idx not in exclude:
             inside = is_inside_polygon(obj, point)
             if inside:
                 outer.append(obj_idx)
@@ -186,19 +188,18 @@ def find_tool_offsets(objects):
     """check if object is inside an other closed  objects."""
     max_outer = 0
     for obj_idx, obj in objects.items():
-        outer = find_outer_objects(objects, obj["segments"][0]["start"], [obj_idx])
-        obj["outer_objects"] = outer
-        if obj["closed"]:
-            if "setup" not in obj or obj["setup"]["mill"]["offset"] == "auto":
-                obj["tool_offset"] = "outside" if len(outer) % 2 == 0 else "inside"
+        outer = find_outer_objects(objects, obj.segments[0].start, [obj_idx])
+        obj.outer_objects = outer
+        if obj.closed:
+
+            if obj.setup["mill"]["offset"] == "auto":
+                obj.tool_offset = "outside" if len(outer) % 2 == 0 else "inside"
             else:
-                obj["tool_offset"] = obj["setup"]["mill"]["offset"]
+                obj.tool_offset = obj.setup["mill"]["offset"]
         if max_outer < len(outer):
             max_outer = len(outer)
 
-        if obj.get("layer", "").startswith("BREAKS:") or obj.get(
-            "layer", ""
-        ).startswith("_TABS"):
+        if obj.layer.startswith("BREAKS:") or obj.layer.startswith("_TABS"):
             continue
 
         for outer_idx in outer:
@@ -216,22 +217,24 @@ def segments2objects(segments):
         last = None
 
         # create new object
-        obj = {
-            "segments": [],
-            "closed": False,
-            "tool_offset": "none",
-            "overwrite_offset": None,
-            "outer_objects": [],
-            "inner_objects": [],
-            "layer": "",
-        }
+        obj = VcObject(
+            {
+                "segments": [],
+                "closed": False,
+                "tool_offset": "none",
+                "overwrite_offset": None,
+                "outer_objects": [],
+                "inner_objects": [],
+                "layer": "",
+            }
+        )
 
         # add first unused segment from segments
         for seg_idx, segment in enumerate(test_segments):
-            if segment["object"] is None:
-                segment["object"] = obj_idx
-                obj["segments"].append(segment)
-                obj["layer"] = segment["layer"]
+            if segment.object is None:
+                segment.object = obj_idx
+                obj.segments.append(segment)
+                obj.layer = segment.layer
                 last = segment
                 found = True
                 test_segments.pop(seg_idx)
@@ -243,24 +246,24 @@ def segments2objects(segments):
             while True:
                 found_next = False
                 for seg_idx, segment in enumerate(test_segments):
-                    if segment["object"] is None and obj["layer"] == segment["layer"]:
+                    if segment["object"] is None and obj.layer == segment.layer:
                         # add matching segment
-                        if fuzy_match(last["end"], segment["start"]):
-                            segment["object"] = obj_idx
-                            obj["segments"].append(segment)
+                        if fuzy_match(last.end, segment.start):
+                            segment.object = obj_idx
+                            obj.segments.append(segment)
                             last = segment
                             found_next = True
                             rev += 1
                             test_segments.pop(seg_idx)
                             break
-                        if fuzy_match(last["end"], segment["end"]):
+                        if fuzy_match(last.end, segment.end):
                             # reverse segment direction
-                            end = segment["end"]
-                            segment["end"] = segment["start"]
-                            segment["start"] = end
-                            segment["bulge"] = -segment["bulge"]
+                            end = segment.end
+                            segment.end = segment.start
+                            segment.start = end
+                            segment.bulge = -segment.bulge
                             segment["object"] = obj_idx
-                            obj["segments"].append(segment)
+                            obj.segments.append(segment)
                             last = segment
                             found_next = True
                             rev += 1
@@ -268,25 +271,21 @@ def segments2objects(segments):
                             break
 
                 if not found_next:
-                    obj["closed"] = fuzy_match(
-                        obj["segments"][0]["start"], obj["segments"][-1]["end"]
-                    )
-                    if obj["closed"]:
+                    obj.closed = fuzy_match(obj.segments[0].start, obj.segments[-1].end)
+                    if obj.closed:
                         break
 
                     if rev > 0:
                         reverse_object(obj)
-                        last = obj["segments"][-1]
+                        last = obj.segments[-1]
                         rev = 0
                     else:
                         break
 
-        if obj["segments"]:
-            if obj["closed"]:
+        if obj.segments:
+            if obj.closed:
                 # set direction on closed objects
-                point = calc_face(
-                    obj["segments"][0]["start"], obj["segments"][0]["end"]
-                )
+                point = calc_face(obj.segments[0].start, obj.segments[0].end)
                 inside = is_inside_polygon(obj, point)
                 if inside:
                     reverse_object(obj)
@@ -355,19 +354,19 @@ def object2vertex(obj):
     ydata = []
     bdata = []
     segment = {}
-    for segment in obj["segments"]:
-        pos_x = segment["start"][0]
-        pos_y = segment["start"][1]
-        bulge = segment.get("bulge")
+    for segment in obj.segments:
+        pos_x = segment.start[0]
+        pos_y = segment.start[1]
+        bulge = segment.bulge
         bulge = min(bulge, 1.0)
         bulge = max(bulge, -1.0)
         xdata.append(pos_x)
         ydata.append(pos_y)
         bdata.append(bulge)
 
-    if segment and not obj["closed"]:
-        xdata.append(segment["end"][0])
-        ydata.append(segment["end"][1])
+    if segment and not obj.closed:
+        xdata.append(segment.end[0])
+        ydata.append(segment.end[1])
         bdata.append(0)
     return (xdata, ydata, bdata)
 
@@ -377,9 +376,9 @@ def found_next_segment_point(mpos, objects):
     nearest = ()
     min_dist = None
     for obj_idx, obj in objects.items():
-        for segment in obj["segments"]:
-            pos_x = segment["start"][0]
-            pos_y = segment["start"][1]
+        for segment in obj.segments:
+            pos_x = segment.start[0]
+            pos_y = segment.start[1]
             dist = calc_distance(mpos, (pos_x, pos_y))
             if min_dist is None or dist < min_dist:
                 min_dist = dist
@@ -391,16 +390,16 @@ def found_next_open_segment_point(mpos, objects, max_dist=None, exclude=None):
     nearest = ()
     min_dist = None
     for obj_idx, obj in objects.items():
-        if not obj["closed"]:
+        if not obj.closed:
             for segmentd_idx in (0, -1):
                 if exclude and exclude[0] == obj_idx and exclude[1] == segmentd_idx:
                     continue
                 if segmentd_idx == 0:
-                    pos_x = obj["segments"][segmentd_idx]["start"][0]
-                    pos_y = obj["segments"][segmentd_idx]["start"][1]
+                    pos_x = obj.segments[segmentd_idx].start[0]
+                    pos_y = obj.segments[segmentd_idx].start[1]
                 else:
-                    pos_x = obj["segments"][segmentd_idx]["end"][0]
-                    pos_y = obj["segments"][segmentd_idx]["end"][1]
+                    pos_x = obj.segments[segmentd_idx].end[0]
+                    pos_y = obj.segments[segmentd_idx].end[1]
                 dist = calc_distance(mpos, (pos_x, pos_y))
                 if max_dist and dist > max_dist:
                     continue
@@ -494,12 +493,12 @@ def do_pockets_trochoidal(  # pylint: disable=R0913
         for point in part:
             points.append(point.tolist())
         vertex_data = points2vertex(points)
-        polyline_offset = cavc.Polyline(vertex_data, is_closed=obj["closed"])
-        polyline_offset.level = len(obj.get("outer_objects", []))
+        polyline_offset = cavc.Polyline(vertex_data, is_closed=obj.closed)
+        polyline_offset.level = len(obj.outer_objects)
         polyline_offset.tool_offset = tool_offset
-        polyline_offset.layer = obj["layer"]
-        polyline_offset.setup = obj["setup"]
-        polyline_offset.start = obj.get("start", ())
+        polyline_offset.layer = obj.layer
+        polyline_offset.setup = obj.setup
+        polyline_offset.start = obj.start
         polyline_offset.is_pocket = True
         polyline_offsets[f"{obj_idx}.{offset_idx}"] = polyline_offset
         offset_idx += 1
@@ -518,12 +517,12 @@ def points2offsets(
     scale=1.0,
 ):
     vertex_data = points2vertex(points, scale=scale)
-    polyline_offset = cavc.Polyline(vertex_data, is_closed=obj["closed"])
-    polyline_offset.level = len(obj.get("outer_objects", []))
+    polyline_offset = cavc.Polyline(vertex_data, is_closed=obj.closed)
+    polyline_offset.level = len(obj.outer_objects)
     polyline_offset.tool_offset = tool_offset
-    polyline_offset.layer = obj["layer"]
-    polyline_offset.setup = obj["setup"]
-    polyline_offset.start = obj.get("start", ())
+    polyline_offset.layer = obj.layer
+    polyline_offset.setup = obj.setup
+    polyline_offset.start = obj.start
     polyline_offset.is_pocket = True
     polyline_offsets[f"{obj_idx}.{offset_idx}"] = polyline_offset
     offset_idx += 1
@@ -541,7 +540,7 @@ def do_pockets(  # pylint: disable=R0913
     vertex_data_org,  # pylint: disable=W0613
 ):
     """calculates multiple offset lines of an polyline"""
-    if obj.get("inner_objects") and obj["setup"]["pockets"]["islands"]:
+    if obj.inner_objects and obj.setup["pockets"]["islands"]:
         subjs = []
         vertex_data = polyline.vertex_data()
         points = vertex2points(vertex_data, no_bulge=True, scale=100.0)
@@ -551,8 +550,8 @@ def do_pockets(  # pylint: disable=R0913
             pyclipper.JT_ROUND,  # pylint: disable=E1101
             pyclipper.ET_CLOSEDPOLYGON,  # pylint: disable=E1101
         )
-        level = len(obj.get("outer_objects", []))
-        for idx in obj.get("inner_objects", []):
+        level = len(obj.outer_objects)
+        for idx in obj.inner_objects:
             polyline_offset = polyline_offsets.get(f"{idx}.0")
             if polyline_offset and polyline_offset.level == level + 1:
                 vertex_data = polyline_offset.vertex_data()
@@ -598,9 +597,9 @@ def do_pockets(  # pylint: disable=R0913
                     scale=0.01,
                 )
 
-    elif obj["segments"][0]["type"] == "CIRCLE" and "center" in obj["segments"][0]:
-        start = obj["segments"][0]["start"]
-        center = obj["segments"][0]["center"]
+    elif obj.segments[0]["type"] == "CIRCLE" and "center" in obj.segments[0]:
+        start = obj.segments[0].start
+        center = obj.segments[0].center
         radius = calc_distance(start, center)
         points = []
         rad = 0
@@ -615,11 +614,11 @@ def do_pockets(  # pylint: disable=R0913
             points.append((center[0] + rad, center[1] - 0.1, 1.0))
         vertex_data = points2vertex(points)
         polyline_offset = cavc.Polyline(vertex_data, is_closed=False)
-        polyline_offset.level = len(obj.get("outer_objects", []))
+        polyline_offset.level = len(obj.outer_objects)
         polyline_offset.tool_offset = tool_offset
-        polyline_offset.layer = obj["layer"]
-        polyline_offset.setup = obj["setup"]
-        polyline_offset.start = obj.get("start", ())
+        polyline_offset.layer = obj.layer
+        polyline_offset.setup = obj.setup
+        polyline_offset.start = obj.start
         polyline_offset.is_pocket = True
         polyline_offsets[f"{obj_idx}.{offset_idx}"] = polyline_offset
         offset_idx += 1
@@ -635,11 +634,11 @@ def do_pockets(  # pylint: disable=R0913
                 point = (vertex_data[0][0], vertex_data[1][0], vertex_data[2][0])
                 if not inside_vertex(vertex_data_org, point):
                     continue
-                polyline_offset.level = len(obj.get("outer_objects", []))
+                polyline_offset.level = len(obj.outer_objects)
                 polyline_offset.tool_offset = tool_offset
-                polyline_offset.layer = obj["layer"]
-                polyline_offset.setup = obj["setup"]
-                polyline_offset.start = obj.get("start", ())
+                polyline_offset.layer = obj.layer
+                polyline_offset.setup = obj.setup
+                polyline_offset.start = obj.start
                 polyline_offset.is_pocket = True
                 polyline_offsets[f"{obj_idx}.{offset_idx}"] = polyline_offset
                 offset_idx += 1
@@ -685,15 +684,15 @@ def object2polyline_offsets(
                         c_angle = last_angle + adiff / 2.0 + math.pi
                         over_x = last[0] - radius_3 * math.sin(c_angle)
                         over_y = last[1] + radius_3 * math.cos(c_angle)
-                        for segment in obj["segments"]:
+                        for segment in obj.segments:
                             is_b = is_between(
-                                (segment["start"][0], segment["start"][1]),
+                                (segment.start[0], segment.start[1]),
                                 (last[0], last[1]),
                                 (over_x, over_y),
                             )
                             if is_b:
                                 dist = calc_distance(
-                                    (segment["start"][0], segment["start"][1]),
+                                    (segment.start[0], segment.start[1]),
                                     (last[0], last[1]),
                                 )
                                 over_dist = dist - abs(tool_radius)
@@ -725,15 +724,15 @@ def object2polyline_offsets(
                     c_angle = last_angle + adiff / 2.0 + math.pi
                     over_x = last[0] - radius_3 * math.sin(c_angle)
                     over_y = last[1] + radius_3 * math.cos(c_angle)
-                    for segment in obj["segments"]:
+                    for segment in obj.segments:
                         is_b = is_between(
-                            (segment["start"][0], segment["start"][1]),
+                            (segment.start[0], segment.start[1]),
                             (last[0], last[1]),
                             (over_x, over_y),
                         )
                         if is_b:
                             dist = calc_distance(
-                                (segment["start"][0], segment["start"][1]),
+                                (segment.start[0], segment.start[1]),
                                 (last[0], last[1]),
                             )
                             over_dist = dist - abs(tool_radius)
@@ -748,27 +747,27 @@ def object2polyline_offsets(
                             break
 
             over_polyline = cavc.Polyline((xdata, ydata, bdata), is_closed=True)
-            over_polyline.level = len(obj.get("outer_objects", []))
-            over_polyline.start = obj.get("start", ())
-            over_polyline.setup = obj.get("setup", {})
-            over_polyline.layer = obj.get("layer", "")
+            over_polyline.level = len(obj.outer_objects)
+            over_polyline.start = obj.start
+            over_polyline.setup = obj.setup
+            over_polyline.layer = obj.layer
             over_polyline.is_pocket = False
             over_polyline.tool_offset = tool_offset
             polyline_offsets[f"{obj_idx}.{offset_idx}"] = over_polyline
 
-    tool_offset = obj["tool_offset"]
-    if obj["overwrite_offset"] is not None:
-        tool_radius = obj["overwrite_offset"]
+    tool_offset = obj.tool_offset
+    if obj.overwrite_offset is not None:
+        tool_radius = obj.overwrite_offset
     else:
         tool_radius = diameter / 2.0
 
-    if obj["setup"]["mill"]["reverse"]:
+    if obj.setup["mill"]["reverse"]:
         tool_radius = -tool_radius
 
-    is_circle = bool(obj["segments"][0]["type"] == "CIRCLE")
+    is_circle = bool(obj.segments[0].type == "CIRCLE")
 
     vertex_data = object2vertex(obj)
-    polyline = cavc.Polyline(vertex_data, is_closed=obj["closed"])
+    polyline = cavc.Polyline(vertex_data, is_closed=obj.closed)
 
     offset_idx = 0
     if polyline.is_closed() and tool_offset != "none":
@@ -777,16 +776,16 @@ def object2polyline_offsets(
         )
         if polyline_offset_list:
             for polyline_offset in polyline_offset_list:
-                polyline_offset.level = len(obj.get("outer_objects", []))
-                polyline_offset.start = obj.get("start", ())
+                polyline_offset.level = len(obj.outer_objects)
+                polyline_offset.start = obj.start
                 polyline_offset.tool_offset = tool_offset
-                polyline_offset.setup = obj["setup"]
-                polyline_offset.layer = obj.get("layer", "")
+                polyline_offset.setup = obj.setup
+                polyline_offset.layer = obj.layer
                 polyline_offset.is_pocket = False
                 polyline_offset.is_circle = is_circle
                 polyline_offsets[f"{obj_idx}.{offset_idx}"] = polyline_offset
                 offset_idx += 1
-                if tool_offset == "inside" and obj["setup"]["pockets"]["active"]:
+                if tool_offset == "inside" and obj.setup["pockets"]["active"]:
                     if polyline_offset.is_closed():
                         offset_idx = do_pockets(
                             polyline_offset,
@@ -800,29 +799,29 @@ def object2polyline_offsets(
                         )
         elif is_circle and small_circles:
             # adding holes that smaler as the tool
-            center_x = obj["segments"][0]["center"][0]
-            center_y = obj["segments"][0]["center"][1]
+            center_x = obj.segments[0].center[0]
+            center_y = obj.segments[0].center[1]
             vertex_data = ((center_x,), (center_y,), (0,))
             polyline_offset = cavc.Polyline(vertex_data, is_closed=False)
-            polyline_offset.level = len(obj.get("outer_objects", []))
-            polyline_offset.start = obj.get("start", ())
+            polyline_offset.level = len(obj.outer_objects)
+            polyline_offset.start = obj.start
             polyline_offset.tool_offset = tool_offset
-            polyline_offset.setup = obj["setup"]
-            polyline_offset.layer = obj.get("layer", "")
+            polyline_offset.setup = obj.setup
+            polyline_offset.layer = obj.layer
             polyline_offset.is_pocket = False
             polyline_offset.is_circle = True
             polyline_offsets[f"{obj_idx}.{offset_idx}.x"] = polyline_offset
             offset_idx += 1
 
-        if obj["setup"]["mill"]["overcut"]:
+        if obj.setup["mill"]["overcut"]:
             overcut()
 
     else:
         polyline.level = max_outer
-        polyline.setup = obj["setup"]
+        polyline.setup = obj.setup
         polyline.tool_offset = tool_offset
-        polyline.start = obj.get("start", ())
-        polyline.layer = obj.get("layer", "")
+        polyline.start = obj.start
+        polyline.layer = obj.layer
         polyline.is_pocket = False
         polyline.is_circle = False
         polyline_offsets[f"{obj_idx}.{offset_idx}"] = polyline
@@ -837,14 +836,14 @@ def objects2polyline_offsets(diameter, objects, max_outer, small_circles=False):
 
     for level in range(max_outer, -1, -1):
         for obj_idx, obj in objects.items():
-            if not obj["setup"]["mill"]["active"]:
+            if not obj.setup["mill"]["active"]:
                 continue
-            if len(obj.get("outer_objects", [])) != level:
+            if len(obj.outer_objects) != level:
                 continue
 
             obj_copy = deepcopy(obj)
             do_reverse = 0
-            if obj_copy["tool_offset"] == "inside":
+            if obj_copy.tool_offset == "inside":
                 do_reverse = 1 - do_reverse
 
             if obj_copy["setup"]["mill"]["reverse"]:
@@ -863,32 +862,32 @@ def objects2polyline_offsets(diameter, objects, max_outer, small_circles=False):
 # analyze size
 def objects2minmax(objects):
     """find the min/max values of objects"""
+    if len(objects.keys()) == 0:
+        return (0, 0, 0, 0)
     fist_key = list(objects.keys())[0]
-    min_x = objects[fist_key]["segments"][0]["start"][0]
-    min_y = objects[fist_key]["segments"][0]["start"][1]
-    max_x = objects[fist_key]["segments"][0]["start"][0]
-    max_y = objects[fist_key]["segments"][0]["start"][1]
+    min_x = objects[fist_key]["segments"][0].start[0]
+    min_y = objects[fist_key]["segments"][0].start[1]
+    max_x = objects[fist_key]["segments"][0].start[0]
+    max_y = objects[fist_key]["segments"][0].start[1]
     for obj in objects.values():
-        if obj.get("layer", "").startswith("BREAKS:") or obj.get(
-            "layer", ""
-        ).startswith("_TABS"):
+        if obj.layer.startswith("BREAKS:") or obj.layer.startswith("_TABS"):
             continue
-        for segment in obj["segments"]:
-            min_x = min(min_x, segment["start"][0])
-            min_x = min(min_x, segment["end"][0])
-            min_y = min(min_y, segment["start"][1])
-            min_y = min(min_y, segment["end"][1])
-            max_x = max(max_x, segment["start"][0])
-            max_x = max(max_x, segment["end"][0])
-            max_y = max(max_y, segment["start"][1])
-            max_y = max(max_y, segment["end"][1])
+        for segment in obj.segments:
+            min_x = min(min_x, segment.start[0])
+            min_x = min(min_x, segment.end[0])
+            min_y = min(min_y, segment.start[1])
+            min_y = min(min_y, segment.end[1])
+            max_x = max(max_x, segment.start[0])
+            max_x = max(max_x, segment.end[0])
+            max_y = max(max_y, segment.start[1])
+            max_y = max(max_y, segment.end[1])
     return (min_x, min_y, max_x, max_y)
 
 
 def move_objects(objects: dict, xoff: float, yoff: float) -> None:
     """moves an object"""
     for obj in objects.values():
-        for segment in obj["segments"]:
+        for segment in obj.segments:
             for ptype in ("start", "end", "center"):
                 if ptype in segment:
                     segment[ptype] = (
@@ -906,7 +905,7 @@ def mirror_objects(
     """mirrors an object"""
     if vertical or horizontal:
         for obj in objects.values():
-            for segment in obj["segments"]:
+            for segment in obj.segments:
                 for ptype in ("start", "end", "center"):
                     if ptype in segment:
                         pos_x = segment[ptype][0]
@@ -918,7 +917,7 @@ def mirror_objects(
                         segment[ptype] = (pos_x, pos_y)
 
                 if vertical != horizontal:
-                    segment["bulge"] = -segment["bulge"]
+                    segment.bulge = -segment.bulge
 
             if vertical != horizontal:
                 reverse_object(obj)
@@ -927,12 +926,12 @@ def mirror_objects(
 def rotate_objects(objects: dict, min_max: list[float]) -> None:
     """rotates an object"""
     for obj in objects.values():
-        for segment in obj["segments"]:
+        for segment in obj.segments:
             for ptype in ("start", "end", "center"):
                 if ptype in segment:
                     segment[ptype] = (segment[ptype][1], segment[ptype][0])
 
-            segment["bulge"] = -segment["bulge"]
+            segment.bulge = -segment.bulge
         reverse_object(obj)
     mirror_objects(objects, min_max, horizontal=True)
 
@@ -940,7 +939,7 @@ def rotate_objects(objects: dict, min_max: list[float]) -> None:
 def scale_objects(objects: dict, scale: float) -> None:
     """rotates an object"""
     for obj in objects.values():
-        for segment in obj["segments"]:
+        for segment in obj.segments:
             for ptype in ("start", "end", "center"):
                 if ptype in segment:
                     segment[ptype] = (

@@ -1,6 +1,7 @@
 import pytest
 
 from viaconstructor import calc
+from viaconstructor.vc_types import VcObject, VcSegment
 
 
 @pytest.mark.parametrize(
@@ -99,112 +100,147 @@ def test_angle_2d(p1, p2, expected):
     (
         (
             [
-                {
-                    "start": (100, 100),
-                    "end": (200, 200),
-                    "bulge": 0.0,
-                },
-                {
-                    "start": (20, 0),
-                    "end": (300, 300),
-                    "bulge": 0.0,
-                },
+                VcSegment(
+                    {
+                        "start": (100, 100),
+                        "end": (200, 200),
+                        "bulge": 0.0,
+                    }
+                ),
+                VcSegment(
+                    {
+                        "start": (20, 0),
+                        "end": (300, 300),
+                        "bulge": 0.0,
+                    }
+                ),
             ],
             [
-                {
-                    "start": (100, 100),
-                    "end": (200, 200),
-                    "bulge": 0.0,
-                },
-                {
-                    "start": (20, 0),
-                    "end": (300, 300),
-                    "bulge": 0.0,
-                },
+                VcSegment(
+                    {
+                        "start": (100, 100),
+                        "end": (200, 200),
+                        "bulge": 0.0,
+                    }
+                ),
+                VcSegment(
+                    {
+                        "start": (20, 0),
+                        "end": (300, 300),
+                        "bulge": 0.0,
+                    }
+                ),
             ],
         ),
         (
             [
-                {
-                    "start": (100, 100),
-                    "end": (200, 200),
-                    "bulge": 0.0,
-                },
-                {
-                    "start": (20, 0),
-                    "end": (300, 300),
-                    "bulge": 0.0,
-                },
-                {
-                    "start": (20, 0),
-                    "end": (300, 300),
-                    "bulge": 0.0,
-                },
+                VcSegment(
+                    {
+                        "start": (100, 100),
+                        "end": (200, 200),
+                        "bulge": 0.0,
+                    }
+                ),
+                VcSegment(
+                    {
+                        "start": (20, 0),
+                        "end": (300, 300),
+                        "bulge": 0.0,
+                    }
+                ),
+                VcSegment(
+                    {
+                        "start": (20, 0),
+                        "end": (300, 300),
+                        "bulge": 0.0,
+                    }
+                ),
             ],
             [
-                {
-                    "start": (100, 100),
-                    "end": (200, 200),
-                    "bulge": 0.0,
-                },
-                {
-                    "start": (20, 0),
-                    "end": (300, 300),
-                    "bulge": 0.0,
-                },
+                VcSegment(
+                    {
+                        "start": (100, 100),
+                        "end": (200, 200),
+                        "bulge": 0.0,
+                    }
+                ),
+                VcSegment(
+                    {
+                        "start": (20, 0),
+                        "end": (300, 300),
+                        "bulge": 0.0,
+                    }
+                ),
             ],
         ),
     ),
 )
 def test_clean_segments(segments, expected):
-    assert True
-    assert calc.clean_segments(segments) == expected
+    assert str(calc.clean_segments(segments)) == str(expected)
 
 
 @pytest.mark.parametrize(
     "obj, point, expected",
     (
         (
-            {
-                "segments": [
-                    {
-                        "start": (10.0, 90.0, 0.0),
-                        "end": (0.0, 0.0, 0.0),
-                    },
-                    {
-                        "start": (0.0, 0.0, 0.0),
-                        "end": (110.0, -10.0, 0.0),
-                    },
-                    {
-                        "start": (110.0, -10.0, 0.0),
-                        "end": (120.0, 80.0, 0.0),
-                    },
-                    {
-                        "start": (120.0, 80.0, 0.0),
-                        "end": (10.0, 90.0, 0.0),
-                    },
-                ],
-            },
+            VcObject(
+                {
+                    "segments": [
+                        VcSegment(
+                            {
+                                "start": (10.0, 90.0, 0.0),
+                                "end": (0.0, 0.0, 0.0),
+                            }
+                        ),
+                        VcSegment(
+                            {
+                                "start": (0.0, 0.0, 0.0),
+                                "end": (110.0, -10.0, 0.0),
+                            }
+                        ),
+                        VcSegment(
+                            {
+                                "start": (110.0, -10.0, 0.0),
+                                "end": (120.0, 80.0, 0.0),
+                            }
+                        ),
+                        VcSegment(
+                            {
+                                "start": (120.0, 80.0, 0.0),
+                                "end": (10.0, 90.0, 0.0),
+                            }
+                        ),
+                    ],
+                }
+            ),
             (20.0, 70.0, 0.0),
             True,
         ),
         (
-            {
-                "segments": [
-                    {
-                        "start": (20.0, 70.0, 0.0),
-                        "end": (20.0, 10.0, 0.0),
-                    },
-                    {
-                        "start": (20.0, 10.0, 0.0),
-                        "end": (80.0, 70.0, 0.0),
-                    },
-                    {
-                        "start": (80.0, 70.0, 0.0),
-                        "end": (20.0, 70.0, 0.0),
-                    },
-                ],
-            },
+            VcObject(
+                {
+                    "segments": [
+                        VcSegment(
+                            {
+                                "start": (20.0, 70.0, 0.0),
+                                "end": (20.0, 10.0, 0.0),
+                            }
+                        ),
+                        VcSegment(
+                            {
+                                "start": (20.0, 10.0, 0.0),
+                                "end": (80.0, 70.0, 0.0),
+                            }
+                        ),
+                        VcSegment(
+                            {
+                                "start": (80.0, 70.0, 0.0),
+                                "end": (20.0, 70.0, 0.0),
+                            }
+                        ),
+                    ],
+                }
+            ),
             (10.0, 90.0, 0.0),
             False,
         ),
@@ -218,55 +254,79 @@ def test_is_inside_polygon(obj, point, expected):
     "obj, expected",
     (
         (
-            {
-                "segments": [
-                    {
-                        "start": (10.0, 90.0, 0.0),
-                        "end": (0.0, 0.0, 0.0),
-                        "bulge": 0.0,
-                    },
-                    {
-                        "start": (0.0, 0.0, 0.0),
-                        "end": (110.0, -10.0, 0.0),
-                        "bulge": 0.0,
-                    },
-                    {
-                        "start": (110.0, -10.0, 0.0),
-                        "end": (120.0, 80.0, 0.0),
-                        "bulge": 1.0,
-                    },
-                    {
-                        "start": (120.0, 80.0, 0.0),
-                        "end": (10.0, 90.0, 0.0),
-                        "bulge": 0.0,
-                    },
-                ],
-            },
-            {
-                "segments": [
-                    {
-                        "start": (10.0, 90.0, 0.0),
-                        "end": (120.0, 80.0, 0.0),
-                        "bulge": -0.0,
-                    },
-                    {
-                        "start": (120.0, 80.0, 0.0),
-                        "end": (110.0, -10.0, 0.0),
-                        "bulge": -1.0,
-                    },
-                    {
-                        "start": (110.0, -10.0, 0.0),
-                        "end": (0.0, 0.0, 0.0),
-                        "bulge": -0.0,
-                    },
-                    {"start": (0.0, 0.0, 0.0), "end": (10.0, 90.0, 0.0), "bulge": -0.0},
-                ]
-            },
+            VcObject(
+                {
+                    "segments": [
+                        VcSegment(
+                            {
+                                "start": (10.0, 90.0, 0.0),
+                                "end": (0.0, 0.0, 0.0),
+                                "bulge": 0.0,
+                            }
+                        ),
+                        VcSegment(
+                            {
+                                "start": (0.0, 0.0, 0.0),
+                                "end": (110.0, -10.0, 0.0),
+                                "bulge": 0.0,
+                            }
+                        ),
+                        VcSegment(
+                            {
+                                "start": (110.0, -10.0, 0.0),
+                                "end": (120.0, 80.0, 0.0),
+                                "bulge": 1.0,
+                            }
+                        ),
+                        VcSegment(
+                            {
+                                "start": (120.0, 80.0, 0.0),
+                                "end": (10.0, 90.0, 0.0),
+                                "bulge": 0.0,
+                            }
+                        ),
+                    ],
+                }
+            ),
+            VcObject(
+                {
+                    "segments": [
+                        VcSegment(
+                            {
+                                "start": (10.0, 90.0, 0.0),
+                                "end": (120.0, 80.0, 0.0),
+                                "bulge": -0.0,
+                            }
+                        ),
+                        VcSegment(
+                            {
+                                "start": (120.0, 80.0, 0.0),
+                                "end": (110.0, -10.0, 0.0),
+                                "bulge": -1.0,
+                            }
+                        ),
+                        VcSegment(
+                            {
+                                "start": (110.0, -10.0, 0.0),
+                                "end": (0.0, 0.0, 0.0),
+                                "bulge": -0.0,
+                            }
+                        ),
+                        VcSegment(
+                            {
+                                "start": (0.0, 0.0, 0.0),
+                                "end": (10.0, 90.0, 0.0),
+                                "bulge": -0.0,
+                            }
+                        ),
+                    ]
+                }
+            ),
         ),
     ),
 )
 def test_reverse_object(obj, expected):
-    assert calc.reverse_object(obj) == expected
+    assert str(calc.reverse_object(obj)) == str(expected)
 
 
 @pytest.mark.parametrize(
@@ -274,44 +334,62 @@ def test_reverse_object(obj, expected):
     (
         (
             {
-                0: {
-                    "segments": [
-                        {
-                            "start": (20.0, 70.0, 0.0),
-                            "end": (20.0, 10.0, 0.0),
-                        },
-                        {
-                            "start": (20.0, 10.0, 0.0),
-                            "end": (80.0, 70.0, 0.0),
-                        },
-                        {
-                            "start": (80.0, 70.0, 0.0),
-                            "end": (20.0, 70.0, 0.0),
-                        },
-                    ],
-                    "closed": True,
-                },
-                1: {
-                    "segments": [
-                        {
-                            "start": (10.0, 90.0, 0.0),
-                            "end": (0.0, 0.0, 0.0),
-                        },
-                        {
-                            "start": (0.0, 0.0, 0.0),
-                            "end": (110.0, -10.0, 0.0),
-                        },
-                        {
-                            "start": (110.0, -10.0, 0.0),
-                            "end": (120.0, 80.0, 0.0),
-                        },
-                        {
-                            "start": (120.0, 80.0, 0.0),
-                            "end": (10.0, 90.0, 0.0),
-                        },
-                    ],
-                    "closed": True,
-                },
+                0: VcObject(
+                    {
+                        "segments": [
+                            VcSegment(
+                                {
+                                    "start": (20.0, 70.0, 0.0),
+                                    "end": (20.0, 10.0, 0.0),
+                                }
+                            ),
+                            VcSegment(
+                                {
+                                    "start": (20.0, 10.0, 0.0),
+                                    "end": (80.0, 70.0, 0.0),
+                                }
+                            ),
+                            VcSegment(
+                                {
+                                    "start": (80.0, 70.0, 0.0),
+                                    "end": (20.0, 70.0, 0.0),
+                                }
+                            ),
+                        ],
+                        "closed": True,
+                    }
+                ),
+                1: VcObject(
+                    {
+                        "segments": [
+                            VcSegment(
+                                {
+                                    "start": (10.0, 90.0, 0.0),
+                                    "end": (0.0, 0.0, 0.0),
+                                }
+                            ),
+                            VcSegment(
+                                {
+                                    "start": (0.0, 0.0, 0.0),
+                                    "end": (110.0, -10.0, 0.0),
+                                }
+                            ),
+                            VcSegment(
+                                {
+                                    "start": (110.0, -10.0, 0.0),
+                                    "end": (120.0, 80.0, 0.0),
+                                }
+                            ),
+                            VcSegment(
+                                {
+                                    "start": (120.0, 80.0, 0.0),
+                                    "end": (10.0, 90.0, 0.0),
+                                }
+                            ),
+                        ],
+                        "closed": True,
+                    }
+                ),
             },
             (20.0, 70.0, 0.0),
             [0],
@@ -328,52 +406,72 @@ def test_find_outer_objects(objects, point, exclude, expected):
     (
         (
             {
-                0: {
-                    "segments": [
-                        {
-                            "start": (20.0, 70.0, 0.0),
-                            "end": (20.0, 10.0, 0.0),
-                        },
-                        {
-                            "start": (20.0, 10.0, 0.0),
-                            "end": (80.0, 70.0, 0.0),
-                        },
-                        {
-                            "start": (80.0, 70.0, 0.0),
-                            "end": (20.0, 70.0, 0.0),
-                        },
-                    ],
-                    "closed": True,
-                    "tool_offset": "inside",
-                    "overwrite_offset": None,
-                    "outer_objects": [1],
-                    "inner_objects": [],
-                },
-                1: {
-                    "segments": [
-                        {
-                            "start": (10.0, 90.0, 0.0),
-                            "end": (0.0, 0.0, 0.0),
-                        },
-                        {
-                            "start": (0.0, 0.0, 0.0),
-                            "end": (110.0, -10.0, 0.0),
-                        },
-                        {
-                            "start": (110.0, -10.0, 0.0),
-                            "end": (120.0, 80.0, 0.0),
-                        },
-                        {
-                            "start": (120.0, 80.0, 0.0),
-                            "end": (10.0, 90.0, 0.0),
-                        },
-                    ],
-                    "closed": True,
-                    "tool_offset": "outside",
-                    "overwrite_offset": None,
-                    "outer_objects": [],
-                    "inner_objects": [0],
-                },
+                0: VcObject(
+                    {
+                        "segments": [
+                            VcSegment(
+                                {
+                                    "start": (20.0, 70.0, 0.0),
+                                    "end": (20.0, 10.0, 0.0),
+                                }
+                            ),
+                            VcSegment(
+                                {
+                                    "start": (20.0, 10.0, 0.0),
+                                    "end": (80.0, 70.0, 0.0),
+                                }
+                            ),
+                            VcSegment(
+                                {
+                                    "start": (80.0, 70.0, 0.0),
+                                    "end": (20.0, 70.0, 0.0),
+                                }
+                            ),
+                        ],
+                        "closed": True,
+                        "tool_offset": "inside",
+                        "overwrite_offset": None,
+                        "outer_objects": [1],
+                        "inner_objects": [],
+                        "setup": {"mill": {"offset": ""}},
+                    }
+                ),
+                1: VcObject(
+                    {
+                        "segments": [
+                            VcSegment(
+                                {
+                                    "start": (10.0, 90.0, 0.0),
+                                    "end": (0.0, 0.0, 0.0),
+                                }
+                            ),
+                            VcSegment(
+                                {
+                                    "start": (0.0, 0.0, 0.0),
+                                    "end": (110.0, -10.0, 0.0),
+                                }
+                            ),
+                            VcSegment(
+                                {
+                                    "start": (110.0, -10.0, 0.0),
+                                    "end": (120.0, 80.0, 0.0),
+                                }
+                            ),
+                            VcSegment(
+                                {
+                                    "start": (120.0, 80.0, 0.0),
+                                    "end": (10.0, 90.0, 0.0),
+                                }
+                            ),
+                        ],
+                        "closed": True,
+                        "tool_offset": "outside",
+                        "overwrite_offset": None,
+                        "outer_objects": [],
+                        "inner_objects": [0],
+                        "setup": {"mill": {"offset": ""}},
+                    }
+                ),
             },
             1,
         ),
@@ -388,146 +486,178 @@ def test_find_tool_offsets(objects, expected):
     (
         (
             [
-                {
-                    "type": "LINE",
-                    "object": None,
-                    "layer": "0",
-                    "start": (20.0, 70.0, 0.0),
-                    "end": (80.0, 70.0, 0.0),
-                    "bulge": 0.0,
-                },
-                {
-                    "type": "LINE",
-                    "object": None,
-                    "layer": "0",
-                    "start": (80.0, 70.0, 0.0),
-                    "end": (20.0, 10.0, 0.0),
-                    "bulge": 0.0,
-                },
-                {
-                    "type": "LINE",
-                    "object": None,
-                    "layer": "0",
-                    "start": (20.0, 70.0, 0.0),
-                    "end": (20.0, 10.0, 0.0),
-                    "bulge": 0.0,
-                },
-                {
-                    "type": "LINE",
-                    "object": None,
-                    "layer": "0",
-                    "start": (10.0, 90.0, 0.0),
-                    "end": (120.0, 80.0, 0.0),
-                    "bulge": 0.0,
-                },
-                {
-                    "type": "LINE",
-                    "object": None,
-                    "layer": "0",
-                    "start": (120.0, 80.0, 0.0),
-                    "end": (110.0, -10.0, 0.0),
-                    "bulge": 0.0,
-                },
-                {
-                    "type": "LINE",
-                    "object": None,
-                    "layer": "0",
-                    "start": (110.0, -10.0, 0.0),
-                    "end": (0.0, 0.0, 0.0),
-                    "bulge": 0.0,
-                },
-                {
-                    "type": "LINE",
-                    "object": None,
-                    "layer": "0",
-                    "start": (0.0, 0.0, 0.0),
-                    "end": (10.0, 90.0, 0.0),
-                    "bulge": 0.0,
-                },
+                VcSegment(
+                    {
+                        "type": "LINE",
+                        "object": None,
+                        "layer": "0",
+                        "start": (20.0, 70.0, 0.0),
+                        "end": (80.0, 70.0, 0.0),
+                        "bulge": 0.0,
+                    }
+                ),
+                VcSegment(
+                    {
+                        "type": "LINE",
+                        "object": None,
+                        "layer": "0",
+                        "start": (80.0, 70.0, 0.0),
+                        "end": (20.0, 10.0, 0.0),
+                        "bulge": 0.0,
+                    }
+                ),
+                VcSegment(
+                    {
+                        "type": "LINE",
+                        "object": None,
+                        "layer": "0",
+                        "start": (20.0, 70.0, 0.0),
+                        "end": (20.0, 10.0, 0.0),
+                        "bulge": 0.0,
+                    }
+                ),
+                VcSegment(
+                    {
+                        "type": "LINE",
+                        "object": None,
+                        "layer": "0",
+                        "start": (10.0, 90.0, 0.0),
+                        "end": (120.0, 80.0, 0.0),
+                        "bulge": 0.0,
+                    }
+                ),
+                VcSegment(
+                    {
+                        "type": "LINE",
+                        "object": None,
+                        "layer": "0",
+                        "start": (120.0, 80.0, 0.0),
+                        "end": (110.0, -10.0, 0.0),
+                        "bulge": 0.0,
+                    }
+                ),
+                VcSegment(
+                    {
+                        "type": "LINE",
+                        "object": None,
+                        "layer": "0",
+                        "start": (110.0, -10.0, 0.0),
+                        "end": (0.0, 0.0, 0.0),
+                        "bulge": 0.0,
+                    }
+                ),
+                VcSegment(
+                    {
+                        "type": "LINE",
+                        "object": None,
+                        "layer": "0",
+                        "start": (0.0, 0.0, 0.0),
+                        "end": (10.0, 90.0, 0.0),
+                        "bulge": 0.0,
+                    }
+                ),
             ],
             {
-                0: {
-                    "segments": [
-                        {
-                            "type": "LINE",
-                            "object": 0,
-                            "layer": "0",
-                            "start": (20.0, 70.0, 0.0),
-                            "end": (20.0, 10.0, 0.0),
-                            "bulge": -0.0,
-                        },
-                        {
-                            "type": "LINE",
-                            "object": 0,
-                            "layer": "0",
-                            "start": (20.0, 10.0, 0.0),
-                            "end": (80.0, 70.0, 0.0),
-                            "bulge": -0.0,
-                        },
-                        {
-                            "type": "LINE",
-                            "object": 0,
-                            "layer": "0",
-                            "start": (80.0, 70.0, 0.0),
-                            "end": (20.0, 70.0, 0.0),
-                            "bulge": -0.0,
-                        },
-                    ],
-                    "closed": True,
-                    "tool_offset": "none",
-                    "overwrite_offset": None,
-                    "outer_objects": [],
-                    "inner_objects": [],
-                    "layer": "0",
-                },
-                1: {
-                    "segments": [
-                        {
-                            "type": "LINE",
-                            "object": 1,
-                            "layer": "0",
-                            "start": (10.0, 90.0, 0.0),
-                            "end": (0.0, 0.0, 0.0),
-                            "bulge": -0.0,
-                        },
-                        {
-                            "type": "LINE",
-                            "object": 1,
-                            "layer": "0",
-                            "start": (0.0, 0.0, 0.0),
-                            "end": (110.0, -10.0, 0.0),
-                            "bulge": -0.0,
-                        },
-                        {
-                            "type": "LINE",
-                            "object": 1,
-                            "layer": "0",
-                            "start": (110.0, -10.0, 0.0),
-                            "end": (120.0, 80.0, 0.0),
-                            "bulge": -0.0,
-                        },
-                        {
-                            "type": "LINE",
-                            "object": 1,
-                            "layer": "0",
-                            "start": (120.0, 80.0, 0.0),
-                            "end": (10.0, 90.0, 0.0),
-                            "bulge": -0.0,
-                        },
-                    ],
-                    "closed": True,
-                    "tool_offset": "none",
-                    "overwrite_offset": None,
-                    "outer_objects": [],
-                    "inner_objects": [],
-                    "layer": "0",
-                },
+                0: VcObject(
+                    {
+                        "segments": [
+                            VcSegment(
+                                {
+                                    "type": "LINE",
+                                    "object": 0,
+                                    "layer": "0",
+                                    "start": (20.0, 70.0, 0.0),
+                                    "end": (20.0, 10.0, 0.0),
+                                    "bulge": -0.0,
+                                }
+                            ),
+                            VcSegment(
+                                {
+                                    "type": "LINE",
+                                    "object": 0,
+                                    "layer": "0",
+                                    "start": (20.0, 10.0, 0.0),
+                                    "end": (80.0, 70.0, 0.0),
+                                    "bulge": -0.0,
+                                }
+                            ),
+                            VcSegment(
+                                {
+                                    "type": "LINE",
+                                    "object": 0,
+                                    "layer": "0",
+                                    "start": (80.0, 70.0, 0.0),
+                                    "end": (20.0, 70.0, 0.0),
+                                    "bulge": -0.0,
+                                }
+                            ),
+                        ],
+                        "closed": True,
+                        "tool_offset": "none",
+                        "overwrite_offset": None,
+                        "outer_objects": [],
+                        "inner_objects": [],
+                        "layer": "0",
+                    }
+                ),
+                1: VcObject(
+                    {
+                        "segments": [
+                            VcSegment(
+                                {
+                                    "type": "LINE",
+                                    "object": 1,
+                                    "layer": "0",
+                                    "start": (10.0, 90.0, 0.0),
+                                    "end": (0.0, 0.0, 0.0),
+                                    "bulge": -0.0,
+                                }
+                            ),
+                            VcSegment(
+                                {
+                                    "type": "LINE",
+                                    "object": 1,
+                                    "layer": "0",
+                                    "start": (0.0, 0.0, 0.0),
+                                    "end": (110.0, -10.0, 0.0),
+                                    "bulge": -0.0,
+                                }
+                            ),
+                            VcSegment(
+                                {
+                                    "type": "LINE",
+                                    "object": 1,
+                                    "layer": "0",
+                                    "start": (110.0, -10.0, 0.0),
+                                    "end": (120.0, 80.0, 0.0),
+                                    "bulge": -0.0,
+                                }
+                            ),
+                            VcSegment(
+                                {
+                                    "type": "LINE",
+                                    "object": 1,
+                                    "layer": "0",
+                                    "start": (120.0, 80.0, 0.0),
+                                    "end": (10.0, 90.0, 0.0),
+                                    "bulge": -0.0,
+                                }
+                            ),
+                        ],
+                        "closed": True,
+                        "tool_offset": "none",
+                        "overwrite_offset": None,
+                        "outer_objects": [],
+                        "inner_objects": [],
+                        "layer": "0",
+                    }
+                ),
             },
         ),
     ),
 )
 def test_segments2objects(objects, expected):
-    assert calc.segments2objects(objects) == expected
+    assert str(calc.segments2objects(objects)) == str(expected)
 
 
 @pytest.mark.parametrize(
@@ -548,68 +678,78 @@ def test_inside_vertex(vertex_data, point, expected):
     "obj, expected, expected_minmax",
     (
         (
-            {
-                "segments": [
-                    {
-                        "type": "LINE",
-                        "object": 5,
-                        "layer": "0",
-                        "start": (40.0, 30.0, 0.0),
-                        "end": (40.0, 10.0, 0.0),
-                        "bulge": -0.0,
+            VcObject(
+                {
+                    "segments": [
+                        VcSegment(
+                            {
+                                "type": "LINE",
+                                "object": 5,
+                                "layer": "0",
+                                "start": (40.0, 30.0, 0.0),
+                                "end": (40.0, 10.0, 0.0),
+                                "bulge": -0.0,
+                            }
+                        ),
+                        VcSegment(
+                            {
+                                "type": "LINE",
+                                "object": 5,
+                                "layer": "0",
+                                "start": (40.0, 10.0, 0.0),
+                                "end": (60.0, 10.0, 0.0),
+                                "bulge": -0.0,
+                            }
+                        ),
+                        VcSegment(
+                            {
+                                "type": "LINE",
+                                "object": 5,
+                                "layer": "0",
+                                "start": (60.0, 10.0, 0.0),
+                                "end": (60.0, 30.0, 0.0),
+                                "bulge": -0.0,
+                            }
+                        ),
+                        VcSegment(
+                            {
+                                "type": "LINE",
+                                "object": 5,
+                                "layer": "0",
+                                "start": (60.0, 30.0, 0.0),
+                                "end": (40.0, 30.0, 0.0),
+                                "bulge": -0.0,
+                            }
+                        ),
+                    ],
+                    "closed": True,
+                    "tool_offset": "inside",
+                    "overwrite_offset": None,
+                    "outer_objects": [4],
+                    "inner_objects": [6],
+                    "setup": {
+                        "mill": {
+                            "rate_h": 1000,
+                            "rate_v": 100,
+                            "fast_move_z": 5.0,
+                            "G64": 0.05,
+                            "depth": -9.0,
+                            "step": -9.0,
+                            "active": True,
+                            "helix_mode": False,
+                            "reverse": False,
+                            "pocket": False,
+                            "back_home": True,
+                            "small_circles": True,
+                            "zero": "original",
+                            "overcut": False,
+                        },
+                        "tool": {"number": 1, "diameter": 4.0, "speed": 10000},
+                        "tabs": {"active": False},
+                        "pockets": {"active": False},
                     },
-                    {
-                        "type": "LINE",
-                        "object": 5,
-                        "layer": "0",
-                        "start": (40.0, 10.0, 0.0),
-                        "end": (60.0, 10.0, 0.0),
-                        "bulge": -0.0,
-                    },
-                    {
-                        "type": "LINE",
-                        "object": 5,
-                        "layer": "0",
-                        "start": (60.0, 10.0, 0.0),
-                        "end": (60.0, 30.0, 0.0),
-                        "bulge": -0.0,
-                    },
-                    {
-                        "type": "LINE",
-                        "object": 5,
-                        "layer": "0",
-                        "start": (60.0, 30.0, 0.0),
-                        "end": (40.0, 30.0, 0.0),
-                        "bulge": -0.0,
-                    },
-                ],
-                "closed": True,
-                "tool_offset": "inside",
-                "overwrite_offset": None,
-                "outer_objects": [4],
-                "inner_objects": [6],
-                "setup": {
-                    "mill": {
-                        "rate_h": 1000,
-                        "rate_v": 100,
-                        "fast_move_z": 5.0,
-                        "G64": 0.05,
-                        "depth": -9.0,
-                        "step": -9.0,
-                        "active": True,
-                        "helix_mode": False,
-                        "reverse": False,
-                        "pocket": False,
-                        "back_home": True,
-                        "small_circles": True,
-                        "zero": "original",
-                        "overcut": False,
-                    },
-                    "tool": {"number": 1, "diameter": 4.0, "speed": 10000},
-                    "tabs": {"active": False},
-                    "pockets": {"active": False},
-                },
-            },
+                }
+            ),
             (
                 [40.0, 40.0, 60.0, 60.0],
                 [30.0, 10.0, 10.0, 30.0],
@@ -630,122 +770,140 @@ def test_object2vertex(obj, expected, expected_minmax):
         (
             4.0,
             {
-                0: {
-                    "segments": [
-                        {
-                            "type": "LINE",
-                            "object": 0,
-                            "layer": "0",
-                            "start": (20.0, 70.0, 0.0),
-                            "end": (20.0, 10.0, 0.0),
-                            "bulge": -0.0,
+                0: VcObject(
+                    {
+                        "segments": [
+                            VcSegment(
+                                {
+                                    "type": "LINE",
+                                    "object": 0,
+                                    "layer": "0",
+                                    "start": (20.0, 70.0, 0.0),
+                                    "end": (20.0, 10.0, 0.0),
+                                    "bulge": -0.0,
+                                }
+                            ),
+                            VcSegment(
+                                {
+                                    "type": "LINE",
+                                    "object": 0,
+                                    "layer": "0",
+                                    "start": (20.0, 10.0, 0.0),
+                                    "end": (80.0, 70.0, 0.0),
+                                    "bulge": -0.0,
+                                }
+                            ),
+                            VcSegment(
+                                {
+                                    "type": "LINE",
+                                    "object": 0,
+                                    "layer": "0",
+                                    "start": (80.0, 70.0, 0.0),
+                                    "end": (20.0, 70.0, 0.0),
+                                    "bulge": -0.0,
+                                }
+                            ),
+                        ],
+                        "closed": True,
+                        "tool_offset": "inside",
+                        "overwrite_offset": None,
+                        "outer_objects": [1],
+                        "inner_objects": [],
+                        "setup": {
+                            "mill": {
+                                "rate_h": 1000,
+                                "rate_v": 100,
+                                "fast_move_z": 5.0,
+                                "G64": 0.05,
+                                "depth": -9.0,
+                                "step": -9.0,
+                                "active": True,
+                                "helix_mode": False,
+                                "reverse": False,
+                                "pocket": False,
+                                "back_home": True,
+                                "small_circles": True,
+                                "zero": "original",
+                                "overcut": False,
+                            },
+                            "tool": {"number": 1, "diameter": 4.0, "speed": 10000},
+                            "tabs": {"active": False},
+                            "pockets": {"active": False},
                         },
-                        {
-                            "type": "LINE",
-                            "object": 0,
-                            "layer": "0",
-                            "start": (20.0, 10.0, 0.0),
-                            "end": (80.0, 70.0, 0.0),
-                            "bulge": -0.0,
+                    }
+                ),
+                1: VcObject(
+                    {
+                        "segments": [
+                            VcSegment(
+                                {
+                                    "type": "LINE",
+                                    "object": 1,
+                                    "layer": "0",
+                                    "start": (10.0, 90.0, 0.0),
+                                    "end": (0.0, 0.0, 0.0),
+                                    "bulge": -0.0,
+                                }
+                            ),
+                            VcSegment(
+                                {
+                                    "type": "LINE",
+                                    "object": 1,
+                                    "layer": "0",
+                                    "start": (0.0, 0.0, 0.0),
+                                    "end": (110.0, -10.0, 0.0),
+                                    "bulge": -0.0,
+                                }
+                            ),
+                            VcSegment(
+                                {
+                                    "type": "LINE",
+                                    "object": 1,
+                                    "layer": "0",
+                                    "start": (110.0, -10.0, 0.0),
+                                    "end": (120.0, 80.0, 0.0),
+                                    "bulge": -0.0,
+                                }
+                            ),
+                            VcSegment(
+                                {
+                                    "type": "LINE",
+                                    "object": 1,
+                                    "layer": "0",
+                                    "start": (120.0, 80.0, 0.0),
+                                    "end": (10.0, 90.0, 0.0),
+                                    "bulge": -0.0,
+                                }
+                            ),
+                        ],
+                        "closed": True,
+                        "tool_offset": "outside",
+                        "overwrite_offset": None,
+                        "outer_objects": [],
+                        "inner_objects": [0],
+                        "setup": {
+                            "mill": {
+                                "rate_h": 1000,
+                                "rate_v": 100,
+                                "fast_move_z": 5.0,
+                                "G64": 0.05,
+                                "depth": -9.0,
+                                "step": -9.0,
+                                "active": True,
+                                "helix_mode": False,
+                                "reverse": False,
+                                "pocket": False,
+                                "back_home": True,
+                                "small_circles": True,
+                                "zero": "original",
+                                "overcut": False,
+                            },
+                            "tool": {"number": 1, "diameter": 4.0, "speed": 10000},
+                            "tabs": {"active": False},
+                            "pockets": {"active": False},
                         },
-                        {
-                            "type": "LINE",
-                            "object": 0,
-                            "layer": "0",
-                            "start": (80.0, 70.0, 0.0),
-                            "end": (20.0, 70.0, 0.0),
-                            "bulge": -0.0,
-                        },
-                    ],
-                    "closed": True,
-                    "tool_offset": "inside",
-                    "overwrite_offset": None,
-                    "outer_objects": [1],
-                    "inner_objects": [],
-                    "setup": {
-                        "mill": {
-                            "rate_h": 1000,
-                            "rate_v": 100,
-                            "fast_move_z": 5.0,
-                            "G64": 0.05,
-                            "depth": -9.0,
-                            "step": -9.0,
-                            "active": True,
-                            "helix_mode": False,
-                            "reverse": False,
-                            "pocket": False,
-                            "back_home": True,
-                            "small_circles": True,
-                            "zero": "original",
-                            "overcut": False,
-                        },
-                        "tool": {"number": 1, "diameter": 4.0, "speed": 10000},
-                        "tabs": {"active": False},
-                        "pockets": {"active": False},
-                    },
-                },
-                1: {
-                    "segments": [
-                        {
-                            "type": "LINE",
-                            "object": 1,
-                            "layer": "0",
-                            "start": (10.0, 90.0, 0.0),
-                            "end": (0.0, 0.0, 0.0),
-                            "bulge": -0.0,
-                        },
-                        {
-                            "type": "LINE",
-                            "object": 1,
-                            "layer": "0",
-                            "start": (0.0, 0.0, 0.0),
-                            "end": (110.0, -10.0, 0.0),
-                            "bulge": -0.0,
-                        },
-                        {
-                            "type": "LINE",
-                            "object": 1,
-                            "layer": "0",
-                            "start": (110.0, -10.0, 0.0),
-                            "end": (120.0, 80.0, 0.0),
-                            "bulge": -0.0,
-                        },
-                        {
-                            "type": "LINE",
-                            "object": 1,
-                            "layer": "0",
-                            "start": (120.0, 80.0, 0.0),
-                            "end": (10.0, 90.0, 0.0),
-                            "bulge": -0.0,
-                        },
-                    ],
-                    "closed": True,
-                    "tool_offset": "outside",
-                    "overwrite_offset": None,
-                    "outer_objects": [],
-                    "inner_objects": [0],
-                    "setup": {
-                        "mill": {
-                            "rate_h": 1000,
-                            "rate_v": 100,
-                            "fast_move_z": 5.0,
-                            "G64": 0.05,
-                            "depth": -9.0,
-                            "step": -9.0,
-                            "active": True,
-                            "helix_mode": False,
-                            "reverse": False,
-                            "pocket": False,
-                            "back_home": True,
-                            "small_circles": True,
-                            "zero": "original",
-                            "overcut": False,
-                        },
-                        "tool": {"number": 1, "diameter": 4.0, "speed": 10000},
-                        "tabs": {"active": False},
-                        "pockets": {"active": False},
-                    },
-                },
+                    }
+                ),
             },
             1,
             True,

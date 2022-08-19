@@ -6,6 +6,7 @@ import freetype
 
 from ..calc import calc_distance, quadratic_bezier  # pylint: disable=E0402
 from ..input_plugins_base import DrawReaderBase
+from ..vc_types import VcSegment
 
 
 class DrawReader(DrawReaderBase):
@@ -51,17 +52,21 @@ class DrawReader(DrawReaderBase):
 
         self.min_max = [0.0, 0.0, 10.0, 10.0]
         for seg_idx, segment in enumerate(self.segments):
-            for point in ("start", "end"):
-                if seg_idx == 0:
-                    self.min_max[0] = segment[point][0]
-                    self.min_max[1] = segment[point][1]
-                    self.min_max[2] = segment[point][0]
-                    self.min_max[3] = segment[point][1]
-                else:
-                    self.min_max[0] = min(self.min_max[0], segment[point][0])
-                    self.min_max[1] = min(self.min_max[1], segment[point][1])
-                    self.min_max[2] = max(self.min_max[2], segment[point][0])
-                    self.min_max[3] = max(self.min_max[3], segment[point][1])
+            if seg_idx == 0:
+                self.min_max[0] = segment.start[0]
+                self.min_max[1] = segment.start[1]
+                self.min_max[2] = segment.start[0]
+                self.min_max[3] = segment.start[1]
+            else:
+                self.min_max[0] = min(self.min_max[0], segment.start[0])
+                self.min_max[1] = min(self.min_max[1], segment.start[1])
+                self.min_max[2] = max(self.min_max[2], segment.start[0])
+                self.min_max[3] = max(self.min_max[3], segment.start[1])
+
+                self.min_max[0] = min(self.min_max[0], segment.end[0])
+                self.min_max[1] = min(self.min_max[1], segment.end[1])
+                self.min_max[2] = max(self.min_max[2], segment.end[0])
+                self.min_max[3] = max(self.min_max[3], segment.end[1])
 
         self.size = []
         self.size.append(self.min_max[2] - self.min_max[0])
@@ -116,14 +121,16 @@ class DrawReader(DrawReaderBase):
         dist = round(calc_distance(start, end), 6)
         if dist > 0.0:
             self.segments.append(
-                {
-                    "type": "LINE",
-                    "object": None,
-                    "layer": layer,
-                    "start": start,
-                    "end": end,
-                    "bulge": 0.0,
-                }
+                VcSegment(
+                    {
+                        "type": "LINE",
+                        "object": None,
+                        "layer": layer,
+                        "start": start,
+                        "end": end,
+                        "bulge": 0.0,
+                    }
+                )
             )
 
     def get_segments(self) -> list[dict]:
@@ -137,7 +144,7 @@ class DrawReader(DrawReaderBase):
 
     def draw(self, draw_function, user_data=()) -> None:
         for segment in self.segments:
-            draw_function(segment["start"], segment["end"], *user_data)
+            draw_function(segment.start, segment.end, *user_data)
 
     def draw_3d(self):
         pass

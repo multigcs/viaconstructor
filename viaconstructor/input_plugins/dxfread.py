@@ -8,6 +8,7 @@ from ezdxf.path import make_path
 
 from ..calc import calc_distance  # pylint: disable=E0402
 from ..input_plugins_base import DrawReaderBase
+from ..vc_types import VcSegment
 
 
 class DrawReader(DrawReaderBase):
@@ -73,20 +74,22 @@ class DrawReader(DrawReaderBase):
             )
             if dist > self.MIN_DIST:
                 self.segments.append(
-                    {
-                        "type": dxftype,
-                        "object": None,
-                        "layer": element.dxf.layer,
-                        "start": (
-                            (element.dxf.start.x + offset[0]) * self.scale,
-                            (element.dxf.start.y + offset[1]) * self.scale,
-                        ),
-                        "end": (
-                            (element.dxf.end.x + offset[0]) * self.scale,
-                            (element.dxf.end.y + offset[1]) * self.scale,
-                        ),
-                        "bulge": 0.0,
-                    }
+                    VcSegment(
+                        {
+                            "type": dxftype,
+                            "object": None,
+                            "layer": element.dxf.layer,
+                            "start": (
+                                (element.dxf.start.x + offset[0]) * self.scale,
+                                (element.dxf.start.y + offset[1]) * self.scale,
+                            ),
+                            "end": (
+                                (element.dxf.end.x + offset[0]) * self.scale,
+                                (element.dxf.end.y + offset[1]) * self.scale,
+                            ),
+                            "bulge": 0.0,
+                        }
+                    )
                 )
 
         elif dxftype == "SPLINE":
@@ -99,20 +102,22 @@ class DrawReader(DrawReaderBase):
                     dist = calc_distance((last[0], last[1]), (point[0], point[1]))
                     if dist > self.MIN_DIST:
                         self.segments.append(
-                            {
-                                "type": "LINE",
-                                "object": None,
-                                "layer": element.dxf.layer,
-                                "start": (
-                                    (last[0] + offset[0]) * self.scale,
-                                    (last[1] + offset[1]) * self.scale,
-                                ),
-                                "end": (
-                                    (point[0] + offset[0]) * self.scale,
-                                    (point[1] + offset[1]) * self.scale,
-                                ),
-                                "bulge": 0.0,
-                            }
+                            VcSegment(
+                                {
+                                    "type": "LINE",
+                                    "object": None,
+                                    "layer": element.dxf.layer,
+                                    "start": (
+                                        (last[0] + offset[0]) * self.scale,
+                                        (last[1] + offset[1]) * self.scale,
+                                    ),
+                                    "end": (
+                                        (point[0] + offset[0]) * self.scale,
+                                        (point[1] + offset[1]) * self.scale,
+                                    ),
+                                    "bulge": 0.0,
+                                }
+                            )
                         )
                 last = point
 
@@ -158,6 +163,42 @@ class DrawReader(DrawReaderBase):
                     dist = calc_distance((start.x, start.y), (end.x, end.y))
                     if dist > self.MIN_DIST:
                         self.segments.append(
+                            VcSegment(
+                                {
+                                    "type": dxftype,
+                                    "object": None,
+                                    "layer": element.dxf.layer,
+                                    "start": (
+                                        (start.x + offset[0]) * self.scale,
+                                        (start.y + offset[1]) * self.scale,
+                                    ),
+                                    "end": (
+                                        (end.x + offset[0]) * self.scale,
+                                        (end.y + offset[1]) * self.scale,
+                                    ),
+                                    "bulge": bulge,
+                                    "center": (
+                                        (element.dxf.center[0] + offset[0])
+                                        * self.scale,
+                                        (element.dxf.center[1] + offset[1])
+                                        * self.scale,
+                                    ),
+                                }
+                            )
+                        )
+                    angle += astep
+
+            else:
+                (start, end, bulge) = ezdxf.math.arc_to_bulge(
+                    element.dxf.center,
+                    element.dxf.start_angle / 180 * math.pi,
+                    element.dxf.end_angle / 180 * math.pi,
+                    element.dxf.radius,
+                )
+                dist = calc_distance((start.x, start.y), (end.x, end.y))
+                if dist > self.MIN_DIST:
+                    self.segments.append(
+                        VcSegment(
                             {
                                 "type": dxftype,
                                 "object": None,
@@ -177,36 +218,6 @@ class DrawReader(DrawReaderBase):
                                 ),
                             }
                         )
-                    angle += astep
-
-            else:
-                (start, end, bulge) = ezdxf.math.arc_to_bulge(
-                    element.dxf.center,
-                    element.dxf.start_angle / 180 * math.pi,
-                    element.dxf.end_angle / 180 * math.pi,
-                    element.dxf.radius,
-                )
-                dist = calc_distance((start.x, start.y), (end.x, end.y))
-                if dist > self.MIN_DIST:
-                    self.segments.append(
-                        {
-                            "type": dxftype,
-                            "object": None,
-                            "layer": element.dxf.layer,
-                            "start": (
-                                (start.x + offset[0]) * self.scale,
-                                (start.y + offset[1]) * self.scale,
-                            ),
-                            "end": (
-                                (end.x + offset[0]) * self.scale,
-                                (end.y + offset[1]) * self.scale,
-                            ),
-                            "bulge": bulge,
-                            "center": (
-                                (element.dxf.center[0] + offset[0]) * self.scale,
-                                (element.dxf.center[1] + offset[1]) * self.scale,
-                            ),
-                        }
                     )
 
         else:

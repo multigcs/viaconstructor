@@ -5,6 +5,7 @@ import math
 
 from ..calc import angle_of_line, calc_distance  # pylint: disable=E0402
 from ..input_plugins_base import DrawReaderBase
+from ..vc_types import VcSegment
 
 
 class DrawReader(DrawReaderBase):
@@ -161,14 +162,16 @@ class DrawReader(DrawReaderBase):
         dist = round(calc_distance(start, end), 6)
         if dist > 0.0:
             self.segments.append(
-                {
-                    "type": "LINE",
-                    "object": None,
-                    "layer": layer,
-                    "start": start,
-                    "end": end,
-                    "bulge": 0.0,
-                }
+                VcSegment(
+                    {
+                        "type": "LINE",
+                        "object": None,
+                        "layer": layer,
+                        "start": start,
+                        "end": end,
+                        "bulge": 0.0,
+                    }
+                )
             )
 
     def get_segments(self) -> list[dict]:
