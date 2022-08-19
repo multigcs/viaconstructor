@@ -1,0 +1,10 @@
+
+FROM archlinux:latest
+
+RUN pacman -Syy
+RUN pacman -S --noconfirm python python-pip glu gcc xterm libxcb xcb-util-wm xcb-util-keysyms libxkbcommon-x11 xcb-util-renderutil xcb-util-image libxkbcommon xorg-fonts-75dpi xorg-fonts-100dpi
+
+RUN pip3 install PyQt5 ezdxf cavaliercontours-python PyOpenGL Pillow pygame Hershey-Fonts svgpathtools meshcut pyclipper setproctitle freetype-py
+
+CMD ["/bin/bash"]
+
