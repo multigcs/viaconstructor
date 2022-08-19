@@ -1185,6 +1185,8 @@ class ViaConstructor:
         for title, toolbutton in toolbuttons.items():
             icon = os.path.join(self.this_dir, "..", "data", toolbutton[0])
             if not os.path.isfile(icon):
+                icon = os.path.join("/usr", "data", toolbutton[0])
+            if not os.path.isfile(icon):
                 icon = os.path.join("/usr", "local", "data", toolbutton[0])
 
             if toolbutton[5] != section:
