@@ -1,0 +1,30 @@
+
+FROM fedora:37
+
+RUN dnf install -y \
+    gcc \
+    gcc-c++ \
+    cmake \
+    make \
+    lcov \
+    qt5-qtbase-devel \
+    qt5-qtdeclarative-devel \
+    qt5-qtmultimedia-devel \
+    qt5-qtsvg-devel \
+    qt5-qtx11extras-devel \
+    qt5-qtxmlpatterns-devel \
+    qt5-rpm-macros \
+    mesa-libGLU \
+    python3-pip \
+    python3-devel \
+    python3-pygame python3-scipy
+
+    # for pygame - but failed with: longintrepr.h not found, so we used the system version from dnf
+    # SDL2-devel SDL2_gfx-devel SDL2_image-devel SDL2_mixer-devel SDL2_ttf-devel SDL2_net-devel SDL2_sound-devel libjpeg-turbo-devel freetype-devel portmidi-devel
+
+RUN pip3 install PyQt5 ezdxf cavaliercontours-python PyOpenGL Pillow pygame Hershey-Fonts svgpathtools meshcut pyclipper setproctitle freetype-py
+
+
+
+CMD ["/bin/bash"]
+
