@@ -637,16 +637,19 @@ class ViaConstructor:
     def _toolbar_flipx(self) -> None:
         mirror_objects(self.project["objects"], self.project["minMax"], vertical=True)
         self.project["minMax"] = objects2minmax(self.project["objects"])
+        self.udate_tabs_data()
         self.update_drawing()
 
     def _toolbar_flipy(self) -> None:
         mirror_objects(self.project["objects"], self.project["minMax"], horizontal=True)
         self.project["minMax"] = objects2minmax(self.project["objects"])
+        self.udate_tabs_data()
         self.update_drawing()
 
     def _toolbar_rotate(self) -> None:
         rotate_objects(self.project["objects"], self.project["minMax"])
         self.project["minMax"] = objects2minmax(self.project["objects"])
+        self.udate_tabs_data()
         self.update_drawing()
 
     def _toolbar_scale(self) -> None:
@@ -660,6 +663,7 @@ class ViaConstructor:
         ):
             scale_objects(self.project["objects"], float(scale))
             self.project["minMax"] = objects2minmax(self.project["objects"])
+            self.udate_tabs_data()
             self.update_drawing()
 
     def _toolbar_view_2d(self) -> None:
@@ -1477,11 +1481,24 @@ class ViaConstructor:
                 else:
                     print(f"Unknown setup-type: {entry['type']}")
 
+    def udate_tabs_data(self) -> None:
+        self.project["tabs"]["data"] = []
+        for obj in self.project["objects"].values():
+            layer = obj.get("layer")
+            if layer.startswith("BREAKS:") or layer.startswith("_TABS"):
+                obj["setup"]["mill"]["active"] = False
+                for segment in obj["segments"]:
+                    self.project["tabs"]["data"].append(
+                        (
+                            (segment.start[0], segment.start[1]),
+                            (segment.end[0], segment.end[1]),
+                        )
+                    )
+
     def prepare_segments(self) -> None:
         segments = deepcopy(self.project["segments_org"])
         self.project["segments"] = clean_segments(segments)
         self.project["objects"] = segments2objects(self.project["segments"])
-        self.project["tabs"]["data"] = []
         for obj in self.project["objects"].values():
             obj["setup"] = {}
             for sect in ("tool", "mill", "pockets", "tabs"):
@@ -1491,15 +1508,6 @@ class ViaConstructor:
             if layer:
                 if layer.startswith("IGNORE:"):
                     obj["setup"]["mill"]["active"] = False
-                elif layer.startswith("BREAKS:") or layer.startswith("_TABS"):
-                    obj["setup"]["mill"]["active"] = False
-                    for segment in obj["segments"]:
-                        self.project["tabs"]["data"].append(
-                            (
-                                (segment.start[0], segment.start[1]),
-                                (segment.end[0], segment.end[1]),
-                            )
-                        )
                 elif layer.startswith("MILL:"):
                     matches = self.LAYER_REGEX.findall(obj["layer"])
                     if matches:
@@ -1516,7 +1524,7 @@ class ViaConstructor:
                                 obj["setup"]["tool"]["rate_h"] = int(value)
                             elif cmd in ("FEEDZ", "FZ"):
                                 obj["setup"]["tool"]["rate_v"] = int(value)
-
+        self.udate_tabs_data()
         self.project["maxOuter"] = find_tool_offsets(self.project["objects"])
 
     def load_drawing(self, filename: str) -> bool:

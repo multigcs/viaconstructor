@@ -35,6 +35,11 @@ class VcSegment:
             return getattr(self, item)
         return default
 
+    def __contains__(self, item):
+        if hasattr(self, item):
+            return True
+        return False
+
     def __getitem__(self, item):
         return getattr(self, item)
 
@@ -71,6 +76,11 @@ class VcObject:
         if hasattr(self, item):
             return getattr(self, item)
         return default
+
+    def __contains__(self, item):
+        if hasattr(self, item):
+            return True
+        return False
 
     def __getitem__(self, item):
         return getattr(self, item)
