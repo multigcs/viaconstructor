@@ -47,9 +47,9 @@ def angle_of_line(p_1, p_2):
     return math.atan2(p_2[1] - p_1[1], p_2[0] - p_1[0])
 
 
-def fuzy_match(p_1, p_2):
+def fuzy_match(p_1, p_2, max_distance=0.01):
     """checks if  two points are matching / rounded."""
-    return calc_distance(p_1, p_2) < 0.01
+    return calc_distance(p_1, p_2) < max_distance
 
 
 def calc_distance(p_1, p_2):
@@ -212,6 +212,8 @@ def segments2objects(segments):
     test_segments = deepcopy(segments)
     objects = {}
     obj_idx = 0
+    max_distance = 0.01
+
     while True:
         found = False
         last = None
@@ -248,7 +250,7 @@ def segments2objects(segments):
                 for seg_idx, segment in enumerate(test_segments):
                     if segment["object"] is None and obj.layer == segment.layer:
                         # add matching segment
-                        if fuzy_match(last.end, segment.start):
+                        if fuzy_match(last.end, segment.start, max_distance):
                             segment.object = obj_idx
                             obj.segments.append(segment)
                             last = segment
@@ -256,7 +258,7 @@ def segments2objects(segments):
                             rev += 1
                             test_segments.pop(seg_idx)
                             break
-                        if fuzy_match(last.end, segment.end):
+                        if fuzy_match(last.end, segment.end, max_distance):
                             # reverse segment direction
                             end = segment.end
                             segment.end = segment.start
@@ -271,7 +273,9 @@ def segments2objects(segments):
                             break
 
                 if not found_next:
-                    obj.closed = fuzy_match(obj.segments[0].start, obj.segments[-1].end)
+                    obj.closed = fuzy_match(
+                        obj.segments[0].start, obj.segments[-1].end, max_distance
+                    )
                     if obj.closed:
                         break
 
@@ -778,6 +782,7 @@ def object2polyline_offsets(
 
     vertex_data = object2vertex(obj)
     polyline = cavc.Polyline(vertex_data, is_closed=obj.closed)
+    polyline.cache = vertex_data
 
     offset_idx = 0
     if polyline.is_closed() and tool_offset != "none":

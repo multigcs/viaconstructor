@@ -44,7 +44,7 @@ M05 (Spindle off)
 (Tool-Offset: 0.1mm inside)
 (--------------------------------------------------)
 G00 X160.100551 Y20.0
-M03 S10000 (Spindle on / CW)
+M03 (Spindle on / CW)
 G01 X160.208705 Y21.029106
 G01 X160.316875 Y22.058211
 G01 X160.63664 Y23.04234
@@ -118,7 +118,7 @@ M05 (Spindle off)
 (Tool-Offset: 0.1mm outside)
 (--------------------------------------------------)
 G00 X200.1
-M03 S10000 (Spindle on / CW)
+M03 (Spindle on / CW)
 G01 Y40.0
 G03 X200.0 Y40.1 I-0.1 J0.0
 G01 X100.0

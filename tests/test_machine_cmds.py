@@ -139,6 +139,7 @@ class fakeOffset:
                     "view": {"path": "simple"},
                     "maschine": {
                         "mode": "mill",
+                        "comments": True,
                     },
                 },
                 "tablewidget": "",

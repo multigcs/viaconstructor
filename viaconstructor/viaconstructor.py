@@ -8,6 +8,7 @@ import math
 import os
 import re
 import sys
+import time
 from copy import deepcopy
 from functools import partial
 from pathlib import Path
@@ -87,7 +88,7 @@ except ImportError:
 
 
 reader_plugins: dict = {}
-for reader in ("dxfread", "hpglread", "stlread", "svgread", "ttfread"):
+for reader in ("dxfread", "hpglread", "stlread", "svgread", "ttfread", "imgread"):
     try:
         drawing_reader = importlib.import_module(
             f".{reader}", "viaconstructor.input_plugins"
@@ -97,11 +98,26 @@ for reader in ("dxfread", "hpglread", "stlread", "svgread", "ttfread"):
         print(f"ERRO while loading input plugin {reader}: {reader_error}")
 
 
+DEBUG = False
+TIMESTAMP = 0
+
+
+def debug(message):
+    global TIMESTAMP  # pylint: disable=W0603
+    if DEBUG:
+        now = time.time()
+        if TIMESTAMP == 0:
+            TIMESTAMP = now
+        print(round(now - TIMESTAMP, 1))
+        print(f"{message} ", end="", flush=True)
+        TIMESTAMP = now
+
+
+# i18n
 def no_translation(text):
     return text
 
 
-# i18n
 _ = no_translation
 lang = os.environ.get("LANGUAGE")
 if lang:
@@ -585,6 +601,8 @@ class ViaConstructor:
         if not self.draw_reader:
             return
 
+        debug("run_calculation: centercalc")
+
         psetup: dict = self.project["setup"]
         min_max = objects2minmax(self.project["objects"])
         self.project["minMax"] = min_max
@@ -606,6 +624,8 @@ class ViaConstructor:
             )
         self.project["minMax"] = objects2minmax(self.project["objects"])
 
+        debug("run_calculation: offsets")
+
         # create toolpath from objects
         self.project["offsets"] = objects2polyline_offsets(
             psetup["tool"]["diameter"],
@@ -613,14 +633,20 @@ class ViaConstructor:
             self.project["maxOuter"],
             psetup["mill"]["small_circles"],
         )
+
         # create machine commands
+        debug("run_calculation: maschine_commands")
         output_plugin: Union[PostProcessorHpgl, PostProcessorGcodeLinuxCNC]
         if self.project["setup"]["maschine"]["plugin"] == "gcode_linuxcnc":
-            output_plugin = PostProcessorGcodeLinuxCNC()
+            output_plugin = PostProcessorGcodeLinuxCNC(
+                self.project["setup"]["maschine"]["comments"]
+            )
             self.project["suffix"] = output_plugin.suffix()
             self.project["axis"] = output_plugin.axis()
         elif self.project["setup"]["maschine"]["plugin"] == "hpgl":
-            output_plugin = PostProcessorHpgl()
+            output_plugin = PostProcessorHpgl(
+                self.project["setup"]["maschine"]["comments"]
+            )
             self.project["suffix"] = output_plugin.suffix()
             self.project["axis"] = output_plugin.axis()
         else:
@@ -629,10 +655,13 @@ class ViaConstructor:
             )
             sys.exit(1)
         self.project["machine_cmd"] = polylines2machine_cmd(self.project, output_plugin)
+        debug("run_calculation: update textwidget")
         if self.project["textwidget"]:
             self.project["textwidget"].clear()
             self.project["textwidget"].insertPlainText(self.project["machine_cmd"])
             self.project["textwidget"].verticalScrollBar().setValue(0)
+
+        debug("run_calculation: done")
 
     def _toolbar_flipx(self) -> None:
         mirror_objects(self.project["objects"], self.project["minMax"], vertical=True)
@@ -824,9 +853,12 @@ class ViaConstructor:
         if not self.draw_reader:
             return
 
+        debug("update_drawing: start")
         self.status_bar_message(f"{self.info} - calculate..")
         if not draw_only:
+            debug("update_drawing: run_calculation")
             self.run_calculation()
+            debug("update_drawing: run_calculation done")
         self.project["gllist"] = GL.glGenLists(1)
         GL.glNewList(self.project["gllist"], GL.GL_COMPILE)
         draw_grid(self.project)
@@ -837,13 +869,17 @@ class ViaConstructor:
             self.project["glwidget"]
             and self.project["glwidget"].selector_mode != "repair"
         ):
+            debug("update_drawing: draw_maschinecode_path")
             if not draw_maschinecode_path(self.project):
                 self.status_bar_message(
                     f"{self.info} - error while drawing maschine commands"
                 )
+            debug("update_drawing: draw_maschinecode_path done")
 
         if self.project["setup"]["view"]["object_ids"]:
+            debug("update_drawing: draw_object_ids")
             draw_object_ids(self.project)
+            debug("update_drawing: draw_object_ids done")
 
         selected = -1
         if (
@@ -852,9 +888,11 @@ class ViaConstructor:
         ):
             selected = self.project["glwidget"].selection[2]
 
+        debug("update_drawing: draw_object_edges")
         draw_object_edges(self.project, selected=selected)
         if self.project["setup"]["view"]["polygon_show"]:
             draw_object_faces(self.project)
+        debug("update_drawing: draw_object_edges done")
         GL.glEndList()
         self.info = f"{self.project['minMax'][2] - self.project['minMax'][0]}x{self.project['minMax'][3] - self.project['minMax'][1]}mm"
         if self.main:
@@ -965,12 +1003,17 @@ class ViaConstructor:
     def update_table(self) -> None:
         """update objects table."""
 
+        debug("update_table: clear")
         self.project["objmodel"].clear()
         self.project["objmodel"].setHorizontalHeaderLabels(["Object", "Value"])
         # self.project["objwidget"].header().setDefaultSectionSize(180)
         self.project["objwidget"].setModel(self.project["objmodel"])
         root = self.project["objmodel"].invisibleRootItem()
 
+        if len(self.project["objects"]) >= 50:
+            debug(f"update_table: too many objects: {len(self.project['objects'])}")
+            return
+        debug("update_table: loading")
         for obj_idx, obj in self.project["objects"].items():
             if obj.get("layer", "").startswith("BREAKS:") or obj.get(
                 "layer", ""
@@ -1054,6 +1097,7 @@ class ViaConstructor:
                         else:
                             print(f"Unknown setup-type: {entry['type']}")
         # self.project["objwidget"].expandAll()
+        debug("update_table: done")
 
     def update_starts(self) -> None:
         """update starts."""
@@ -1496,9 +1540,14 @@ class ViaConstructor:
                     )
 
     def prepare_segments(self) -> None:
+        debug("prepare_segments: copy")
         segments = deepcopy(self.project["segments_org"])
+        debug("prepare_segments: clean_segments")
         self.project["segments"] = clean_segments(segments)
+        debug("prepare_segments: segments2objects")
         self.project["objects"] = segments2objects(self.project["segments"])
+
+        debug("prepare_segments: setup")
         for obj in self.project["objects"].values():
             obj["setup"] = {}
             for sect in ("tool", "mill", "pockets", "tabs"):
@@ -1524,11 +1573,15 @@ class ViaConstructor:
                                 obj["setup"]["tool"]["rate_h"] = int(value)
                             elif cmd in ("FEEDZ", "FZ"):
                                 obj["setup"]["tool"]["rate_v"] = int(value)
+        debug("prepare_segments: udate_tabs_data")
         self.udate_tabs_data()
+        debug("prepare_segments: find_tool_offsets")
         self.project["maxOuter"] = find_tool_offsets(self.project["objects"])
+        debug("prepare_segments: done")
 
     def load_drawing(self, filename: str) -> bool:
         # clean project
+        debug("load_drawing: cleanup")
         self.project["filename_draw"] = ""
         self.project["filename_machine_cmd"] = ""
         self.project["suffix"] = "ngc"
@@ -1549,6 +1602,7 @@ class ViaConstructor:
         self.draw_reader = None
 
         # find plugin
+        debug("load_drawing: start")
         suffix = filename.split(".")[-1].lower()
         for reader_plugin in reader_plugins.values():
             if suffix in reader_plugin.suffix():
@@ -1558,12 +1612,15 @@ class ViaConstructor:
                 break
 
         if self.draw_reader:
+            debug("load_drawing: get segments")
             self.project["segments_org"] = self.draw_reader.get_segments()
             self.project["filename_draw"] = filename
             self.project[
                 "filename_machine_cmd"
             ] = f"{'.'.join(self.project['filename_draw'].split('.')[:-1])}.{self.project['suffix']}"
+            debug("load_drawing: prepare_segments")
             self.prepare_segments()
+            debug("load_drawing: done")
             return True
 
         # disable some options on big drawings for a better view
@@ -1572,10 +1629,12 @@ class ViaConstructor:
             self.project["setup"]["view"]["object_ids"] = False
 
         print(f"ERROR: can not load file: {filename}")
+        debug("load_drawing: error")
         return False
 
     def __init__(self) -> None:
         """viaconstructor main init."""
+        debug("main: startup")
         setproctitle.setproctitle("viaconstructor")  # pylint: disable=I1101
 
         # arguments
@@ -1626,6 +1685,7 @@ class ViaConstructor:
         self.args = parser.parse_args()
 
         # load setup
+        debug("main: load setup")
         self.project["setup"] = {}
         for sname in self.project["setup_defaults"]:
             self.project["setup"][sname] = {}
@@ -1636,6 +1696,7 @@ class ViaConstructor:
             self.setup_load(self.args.setup)
 
         # load drawing #
+        debug("main: load drawing")
         if self.args.filename and self.load_drawing(self.args.filename):
             # save and exit
             if self.args.dxf:
@@ -1650,6 +1711,7 @@ class ViaConstructor:
                 sys.exit(0)
 
         # gui #
+        debug("main: load gui")
         qapp = QApplication(sys.argv)
         self.project["window"] = QWidget()
         self.project["app"] = self
@@ -1723,6 +1785,7 @@ class ViaConstructor:
 
         self.main.resize(1600, 1200)
         self.main.show()
+        debug("main: gui ready")
         sys.exit(qapp.exec_())
 
 

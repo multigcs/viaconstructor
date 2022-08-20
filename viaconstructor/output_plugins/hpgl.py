@@ -5,7 +5,8 @@ from ..machine_cmd import PostProcessor  # pylint: disable=E0402
 
 
 class PostProcessorHpgl(PostProcessor):
-    def __init__(self):
+    def __init__(self, comments=True):
+        self.comments = comments
         self.hpgl: list[str] = []
         self.last_x: int = 0
         self.last_y: int = 0
@@ -16,7 +17,8 @@ class PostProcessorHpgl(PostProcessor):
         self.toolrun: bool = False
 
     def separation(self) -> None:
-        self.hpgl.append("")
+        if self.comments:
+            self.hpgl.append("")
 
     def absolute(self, active=True) -> None:
         if active:
@@ -33,7 +35,8 @@ class PostProcessorHpgl(PostProcessor):
         self.hpgl.append("PU")
 
     def comment(self, text) -> None:
-        self.hpgl.append(f"CO {text}")
+        if self.comments:
+            self.hpgl.append(f"CO {text}")
 
     def tool(self, number="1") -> None:
         self.hpgl.append(f"SP{number}")

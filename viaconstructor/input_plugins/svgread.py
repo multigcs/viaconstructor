@@ -58,7 +58,7 @@ class DrawReader(DrawReaderBase):
                 # print("##path", path)
                 for segment in path:
                     if isinstance(segment, svgpathtools.path.Line):
-                        self.add_line(
+                        self._add_line(
                             (segment.start.real, height - segment.start.imag),
                             (segment.end.real, height - segment.end.imag),
                         )
@@ -70,13 +70,13 @@ class DrawReader(DrawReaderBase):
                         nump = int(segment.length() / 3) + 1
                         for point_n in range(0, nump):
                             pos = segment.point(point_n / nump)
-                            self.add_line(
+                            self._add_line(
                                 (last_x, height - last_y), (pos.real, height - pos.imag)
                             )
                             last_x = pos.real
                             last_y = pos.imag
 
-                        self.add_line(
+                        self._add_line(
                             (last_x, height - last_y),
                             (segment.end.real, height - segment.end.imag),
                         )
@@ -84,7 +84,7 @@ class DrawReader(DrawReaderBase):
                         last_y = segment.end.imag
 
                 if path.iscontinuous():
-                    self.add_line(
+                    self._add_line(
                         (last_x, height - last_y),
                         (path[0].start.real, height - path[0].start.imag),
                     )
@@ -176,41 +176,6 @@ class DrawReader(DrawReaderBase):
                         }
                     )
                 )
-
-    def add_line(self, start, end, layer="0") -> None:
-        dist = calc_distance(start, end)
-        if dist > self.MIN_DIST:
-            self.segments.append(
-                VcSegment(
-                    {
-                        "type": "LINE",
-                        "object": None,
-                        "layer": layer,
-                        "start": start,
-                        "end": end,
-                        "bulge": 0.0,
-                    }
-                )
-            )
-
-    def get_segments(self) -> list[dict]:
-        return self.segments
-
-    def get_minmax(self) -> list[float]:
-        return self.min_max
-
-    def get_size(self) -> list[float]:
-        return self.size
-
-    def draw(self, draw_function, user_data=()) -> None:
-        for segment in self.segments:
-            draw_function(segment["start"], segment["end"], *user_data)
-
-    def draw_3d(self):
-        pass
-
-    def save_tabs(self, tabs: list) -> None:
-        pass
 
     @staticmethod
     def suffix() -> list[str]:

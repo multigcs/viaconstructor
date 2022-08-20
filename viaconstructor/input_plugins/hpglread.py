@@ -5,7 +5,6 @@ import math
 
 from ..calc import angle_of_line, calc_distance  # pylint: disable=E0402
 from ..input_plugins_base import DrawReaderBase
-from ..vc_types import VcSegment
 
 
 class DrawReader(DrawReaderBase):
@@ -90,7 +89,7 @@ class DrawReader(DrawReaderBase):
                         new_y = center_y + radius * math.cos(
                             (start_angle + angle_set) * math.pi / 180 + math.pi / 2
                         )
-                        self.add_line(
+                        self._add_line(
                             (last_x, last_y),
                             (new_x, new_y),
                         )
@@ -104,7 +103,7 @@ class DrawReader(DrawReaderBase):
                         new_y = center_y - radius * math.cos(
                             (start_angle + angle_set) * math.pi / 180 + math.pi / 2
                         )
-                        self.add_line(
+                        self._add_line(
                             (last_x, last_y),
                             (new_x, new_y),
                         )
@@ -132,7 +131,7 @@ class DrawReader(DrawReaderBase):
                             new_x += last_x
                             new_y += last_y
                         if draw:
-                            self.add_line(
+                            self._add_line(
                                 (last_x, last_y),
                                 (new_x, new_y),
                             )
@@ -157,41 +156,6 @@ class DrawReader(DrawReaderBase):
         self.size = []
         self.size.append(self.min_max[2] - self.min_max[0])
         self.size.append(self.min_max[3] - self.min_max[1])
-
-    def add_line(self, start, end, layer="0") -> None:
-        dist = round(calc_distance(start, end), 6)
-        if dist > 0.0:
-            self.segments.append(
-                VcSegment(
-                    {
-                        "type": "LINE",
-                        "object": None,
-                        "layer": layer,
-                        "start": start,
-                        "end": end,
-                        "bulge": 0.0,
-                    }
-                )
-            )
-
-    def get_segments(self) -> list[dict]:
-        return self.segments
-
-    def get_minmax(self) -> list[float]:
-        return self.min_max
-
-    def get_size(self) -> list[float]:
-        return self.size
-
-    def draw(self, draw_function, user_data=()) -> None:
-        for segment in self.segments:
-            draw_function(segment["start"], segment["end"], *user_data)
-
-    def draw_3d(self):
-        pass
-
-    def save_tabs(self, tabs: list) -> None:
-        pass
 
     @staticmethod
     def suffix() -> list[str]:

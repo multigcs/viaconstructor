@@ -2,15 +2,18 @@ from ..machine_cmd import PostProcessor  # pylint: disable=E0402
 
 
 class PostProcessorGcodeLinuxCNC(PostProcessor):
-    def __init__(self):
+    def __init__(self, comments=True):
+        self.comments = comments
         self.gcode: list[str] = []
         self.x_pos: float = None
         self.y_pos: float = None
         self.z_pos: float = None
         self.rate: int = 0
+        self.speed: int = -1
 
     def separation(self) -> None:
-        self.gcode.append("")
+        if self.comments:
+            self.gcode.append("")
 
     def g64(self, value) -> None:
         self.gcode.append(f"G64 P{value}")
@@ -20,29 +23,50 @@ class PostProcessorGcodeLinuxCNC(PostProcessor):
 
     def unit(self, unit="mm") -> None:
         if unit == "mm":
-            self.gcode.append("G21 (Metric/mm)")
+            if self.comments:
+                self.gcode.append("G21 (Metric/mm)")
+            else:
+                self.gcode.append("G21")
         else:
-            self.gcode.append("G20 (Imperial/inches)")
+            if self.comments:
+                self.gcode.append("G20 (Imperial/inches)")
+            else:
+                self.gcode.append("G20")
 
     def absolute(self, active=True) -> None:
         if active:
-            self.gcode.append("G90 (Absolute-Mode)")
+            if self.comments:
+                self.gcode.append("G90 (Absolute-Mode)")
+            else:
+                self.gcode.append("G90")
         else:
-            self.gcode.append("G91 (Incremental-Mode)")
+            if self.comments:
+                self.gcode.append("G91 (Incremental-Mode)")
+            else:
+                self.gcode.append("G91")
 
     def offsets(self, offset="none") -> None:
-        if offset == "none":
-            self.gcode.append("G40 (No Offsets)")
-        elif offset == "left":
-            self.gcode.append("G41 (left offsets)")
+        if self.comments:
+            if offset == "none":
+                self.gcode.append("G40 (No Offsets)")
+            elif offset == "left":
+                self.gcode.append("G41 (left offsets)")
+            else:
+                self.gcode.append("G42 (right offsets)")
         else:
-            self.gcode.append("G42 (right offsets)")
+            if offset == "none":
+                self.gcode.append("G40")
+            elif offset == "left":
+                self.gcode.append("G41")
+            else:
+                self.gcode.append("G42")
 
     def program_end(self) -> None:
         self.gcode.append("M02")
 
     def comment(self, text) -> None:
-        self.gcode.append(f"({text})")
+        if self.comments:
+            self.gcode.append(f"({text})")
 
     def move(self, x_pos=None, y_pos=None, z_pos=None) -> None:
         line = []
@@ -62,17 +86,40 @@ class PostProcessorGcodeLinuxCNC(PostProcessor):
         self.gcode.append(f"M06 T{number}")
 
     def spindle_off(self) -> None:
-        self.gcode.append("M05 (Spindle off)")
+        if self.comments:
+            self.gcode.append("M05 (Spindle off)")
+        else:
+            self.gcode.append("M05")
 
     def spindle_cw(self, speed: int, pause: int = 1) -> None:
-        self.gcode.append(f"M03 S{speed} (Spindle on / CW)")
+        cmd = "M03"
+        if self.speed != speed:
+            self.speed = speed
+            cmd += f" S{speed}"
+        if self.comments:
+            cmd += " (Spindle on / CW)"
+        self.gcode.append(cmd)
+
         if pause:
-            self.gcode.append(f"G04 P{pause} (pause in sec)")
+            if self.comments:
+                self.gcode.append(f"G04 P{pause} (pause in sec)")
+            else:
+                self.gcode.append(f"G04 P{pause}")
 
     def spindle_ccw(self, speed: int, pause: int = 1) -> None:
-        self.gcode.append(f"M04 S{speed} (Spindle on / CCW)")
+        cmd = "M04"
+        if self.speed != speed:
+            self.speed = speed
+            cmd += f" S{speed}"
+        if self.comments:
+            cmd += " (Spindle on / CW)"
+        self.gcode.append(cmd)
+
         if pause:
-            self.gcode.append(f"G04 P{pause} (pause in sec)")
+            if self.comments:
+                self.gcode.append(f"G04 P{pause} (pause in sec)")
+            else:
+                self.gcode.append(f"G04 P{pause}")
 
     def linear(self, x_pos=None, y_pos=None, z_pos=None) -> None:
         line = []

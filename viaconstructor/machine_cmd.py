@@ -77,11 +77,12 @@ class PostProcessor:
 
 def machine_cmd_begin(project: dict, post: PostProcessor) -> None:
     """machine_cmd-header"""
-    post.comment("--------------------------------------------------")
-    post.comment("Generator: viaConstructor")
-    post.comment(f"Filename: {project['filename_draw']}")
-    post.comment(f"Tool-Mode: {project['setup']['maschine']['mode']}")
-    post.comment("--------------------------------------------------")
+    if project["setup"]["maschine"]["comments"]:
+        post.comment("--------------------------------------------------")
+        post.comment("Generator: viaConstructor")
+        post.comment(f"Filename: {project['filename_draw']}")
+        post.comment(f"Tool-Mode: {project['setup']['maschine']['mode']}")
+        post.comment("--------------------------------------------------")
     post.separation()
     post.program_start()
     post.unit("mm")
@@ -108,7 +109,8 @@ def machine_cmd_begin(project: dict, post: PostProcessor) -> None:
 def machine_cmd_end(project: dict, post: PostProcessor) -> None:
     """machine_cmd-footer"""
     post.separation()
-    post.comment("- end -")
+    if project["setup"]["maschine"]["comments"]:
+        post.comment("- end -")
     if project["setup"]["maschine"]["mode"] != "laser" and "Z" in project["axis"]:
         post.move(z_pos=project["setup"]["mill"]["fast_move_z"])
         post.spindle_off()
@@ -551,29 +553,34 @@ def polylines2machine_cmd(project: dict, post: PostProcessor) -> str:
                     if is_closed:
                         obj_distance += calc_distance(point, points[0])
 
-                    post.separation()
-                    post.comment("--------------------------------------------------")
-                    post.comment(f"Level: {level}")
-                    post.comment(f"Order: {order}")
-                    post.comment(f"Object: {nearest_idx}")
-                    post.comment(f"Distance: {obj_distance}mm")
-                    post.comment(f"Closed: {is_closed}")
-                    post.comment(f"isPocket: {polyline.is_pocket}")
-                    if (
-                        project["setup"]["maschine"]["mode"] != "laser"
-                        and "Z" in project["axis"]
-                    ):
+                    if project["setup"]["maschine"]["comments"]:
+                        post.separation()
                         post.comment(
-                            f"Depth: {polyline.setup['mill']['depth']}mm / {polyline.setup['mill']['step']}mm"
+                            "--------------------------------------------------"
                         )
-                    post.comment(
-                        f"Tool-Diameter: {project['setup']['tool']['diameter']}mm"
-                    )
-                    if polyline.tool_offset:
+                        post.comment(f"Level: {level}")
+                        post.comment(f"Order: {order}")
+                        post.comment(f"Object: {nearest_idx}")
+                        post.comment(f"Distance: {obj_distance}mm")
+                        post.comment(f"Closed: {is_closed}")
+                        post.comment(f"isPocket: {polyline.is_pocket}")
+                        if (
+                            project["setup"]["maschine"]["mode"] != "laser"
+                            and "Z" in project["axis"]
+                        ):
+                            post.comment(
+                                f"Depth: {polyline.setup['mill']['depth']}mm / {polyline.setup['mill']['step']}mm"
+                            )
                         post.comment(
-                            f"Tool-Offset: {project['setup']['tool']['diameter'] / 2.0}mm {polyline.tool_offset}"
+                            f"Tool-Diameter: {project['setup']['tool']['diameter']}mm"
                         )
-                    post.comment("--------------------------------------------------")
+                        if polyline.tool_offset:
+                            post.comment(
+                                f"Tool-Offset: {project['setup']['tool']['diameter'] / 2.0}mm {polyline.tool_offset}"
+                            )
+                        post.comment(
+                            "--------------------------------------------------"
+                        )
 
                     if is_closed:
                         if (
@@ -600,7 +607,8 @@ def polylines2machine_cmd(project: dict, post: PostProcessor) -> str:
                             project["setup"]["maschine"]["mode"] != "laser"
                             and "Z" in project["axis"]
                         ):
-                            post.comment(f"- Depth: {depth}mm -")
+                            if project["setup"]["maschine"]["comments"]:
+                                post.comment(f"- Depth: {depth}mm -")
 
                         if not is_closed:
                             if (

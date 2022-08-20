@@ -353,6 +353,12 @@ def setup_defaults(_) -> dict:
                 "title": _("Tool-Mode"),
                 "tooltip": _("Tool-Mode"),
             },
+            "comments": {
+                "default": True,
+                "type": "bool",
+                "title": _("Comments in output"),
+                "tooltip": _("add comments to output"),
+            },
             "postcommand": {
                 "default": "",
                 "type": "str",

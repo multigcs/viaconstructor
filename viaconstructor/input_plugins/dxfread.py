@@ -227,22 +227,6 @@ class DrawReader(DrawReaderBase):
             for attrib in element.dxf.__dict__:
                 print(f"  element.dxf.{attrib} = {getattr(element.dxf, attrib)}")
 
-    def get_segments(self) -> list[dict]:
-        return self.segments
-
-    def get_minmax(self) -> list[float]:
-        return self.min_max
-
-    def get_size(self) -> list[float]:
-        return self.size
-
-    def draw(self, draw_function, user_data=()) -> None:
-        for segment in self.segments:
-            draw_function(segment["start"], segment["end"], *user_data)
-
-    def draw_3d(self):
-        pass
-
     def save_tabs(self, tabs: list) -> None:
         delete_layers = []
         for layer in self.doc.layers:

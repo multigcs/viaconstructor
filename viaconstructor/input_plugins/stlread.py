@@ -7,9 +7,7 @@ import numpy as np
 import stl
 from OpenGL import GL
 
-from ..calc import calc_distance  # pylint: disable=E0402
 from ..input_plugins_base import DrawReaderBase
-from ..vc_types import VcSegment
 
 
 class DrawReader(DrawReaderBase):
@@ -58,11 +56,11 @@ class DrawReader(DrawReaderBase):
             last_y = None
             for point in obj:
                 if last_x is not None:
-                    self.add_line((last_x, last_y), (point[0], point[1]))
+                    self._add_line((last_x, last_y), (point[0], point[1]))
                 last_x = point[0]
                 last_y = point[1]
 
-            self.add_line((last_x, last_y), (obj[0][0], obj[0][1]))
+            self._add_line((last_x, last_y), (obj[0][0], obj[0][1]))
 
         self.min_max = [0.0, 0.0, 10.0, 10.0]
         for seg_idx, segment in enumerate(self.segments):
@@ -82,35 +80,6 @@ class DrawReader(DrawReaderBase):
         self.size.append(self.min_max[2] - self.min_max[0])
         self.size.append(self.min_max[3] - self.min_max[1])
 
-    def add_line(self, start, end, layer="0") -> None:
-        dist = round(calc_distance(start, end), 6)
-        if dist > 0.0:
-            self.segments.append(
-                VcSegment(
-                    {
-                        "type": "LINE",
-                        "object": None,
-                        "layer": layer,
-                        "start": start,
-                        "end": end,
-                        "bulge": 0.0,
-                    }
-                )
-            )
-
-    def get_segments(self) -> list[dict]:
-        return self.segments
-
-    def get_minmax(self) -> list[float]:
-        return self.min_max
-
-    def get_size(self) -> list[float]:
-        return self.size
-
-    def draw(self, draw_function, user_data=()) -> None:
-        for segment in self.segments:
-            draw_function(segment["start"], segment["end"], *user_data)
-
     def draw_3d(self):
         GL.glColor4f(1.0, 1.0, 1.0, 0.3)
         GL.glBegin(GL.GL_TRIANGLES)
@@ -122,9 +91,6 @@ class DrawReader(DrawReaderBase):
             coords = self.verts_3d[face[2]].tolist()
             GL.glVertex3f(coords[0], coords[1], coords[2] - self.diff_z)
         GL.glEnd()
-
-    def save_tabs(self, tabs: list) -> None:
-        pass
 
     @staticmethod
     def suffix() -> list[str]:

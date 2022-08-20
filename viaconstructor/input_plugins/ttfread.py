@@ -4,9 +4,8 @@ import argparse
 
 import freetype
 
-from ..calc import calc_distance, quadratic_bezier  # pylint: disable=E0402
+from ..calc import quadratic_bezier  # pylint: disable=E0402
 from ..input_plugins_base import DrawReaderBase
-from ..vc_types import VcSegment
 
 
 class DrawReader(DrawReaderBase):
@@ -86,7 +85,7 @@ class DrawReader(DrawReaderBase):
             point_a.y * ctx["scale"][1] + ctx["pos"][1],
         )
         ctx["max"] = max(ctx["max"], point[0])
-        self.add_line(ctx["last"], point)
+        self._add_line(ctx["last"], point)
         ctx["last"] = point
 
     def conic_to(self, point_a, point_b, ctx):
@@ -108,7 +107,7 @@ class DrawReader(DrawReaderBase):
                 ),
             )
             ctx["max"] = max(ctx["max"], point[0])
-            self.add_line(ctx["last"], point)
+            self._add_line(ctx["last"], point)
             ctx["last"] = point
             curv_pos += 0.1
 
@@ -116,41 +115,6 @@ class DrawReader(DrawReaderBase):
         print(
             f"UNSUPPORTED 2nd Cubic Bezier: {point_a.x},{point_a.y} {point_b.x},{point_b.y} {point_c.x},{point_c.y}: {ctx}"
         )
-
-    def add_line(self, start, end, layer="0") -> None:
-        dist = round(calc_distance(start, end), 6)
-        if dist > 0.0:
-            self.segments.append(
-                VcSegment(
-                    {
-                        "type": "LINE",
-                        "object": None,
-                        "layer": layer,
-                        "start": start,
-                        "end": end,
-                        "bulge": 0.0,
-                    }
-                )
-            )
-
-    def get_segments(self) -> list[dict]:
-        return self.segments
-
-    def get_minmax(self) -> list[float]:
-        return self.min_max
-
-    def get_size(self) -> list[float]:
-        return self.size
-
-    def draw(self, draw_function, user_data=()) -> None:
-        for segment in self.segments:
-            draw_function(segment.start, segment.end, *user_data)
-
-    def draw_3d(self):
-        pass
-
-    def save_tabs(self, tabs: list) -> None:
-        pass
 
     @staticmethod
     def suffix() -> list[str]:
