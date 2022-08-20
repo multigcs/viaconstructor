@@ -125,7 +125,7 @@ class DrawReader(DrawReaderBase):
                     ctrl1 = coords[1]
                     ctrl2 = coords[2]
                     curv_pos = 0.0
-                    while curv_pos <= 1.0:
+                    while curv_pos < 1.0:
                         ctrl3 = quadratic_bezier(
                             curv_pos,
                             (
