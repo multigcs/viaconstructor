@@ -9,7 +9,7 @@ from setuptools import setup
 
 setup(
     name='viaconstructor',
-    version='0.3.0',
+    version='0.3.1',
     author='Oliver Dippel',
     author_email='o.dippel@gmx.de',
     packages=['viaconstructor', 'viaconstructor.input_plugins', 'viaconstructor.output_plugins', 'viaconstructor.preview_plugins', 'gcodepreview', 'dxfpreview'],

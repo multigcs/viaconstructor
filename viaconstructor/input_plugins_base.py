@@ -9,6 +9,10 @@ class DrawReaderBase:
     segments: list[VcSegment] = []
     filename: str = ""
 
+    @staticmethod
+    def arg_parser(parser) -> None:
+        pass
+
     def draw_3d(self):
         pass
 

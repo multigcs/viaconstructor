@@ -11,6 +11,15 @@ from ..input_plugins_base import DrawReaderBase
 
 
 class DrawReader(DrawReaderBase):
+    @staticmethod
+    def arg_parser(parser) -> None:
+        parser.add_argument(
+            "--stlread-zslice",
+            help="stlread: slice at postion z (stl)",
+            type=str,
+            default=None,
+        )
+
     def __init__(self, filename: str, args: argparse.Namespace = None):
         """slicing and converting stl into single segments."""
         self.filename = filename
@@ -32,12 +41,12 @@ class DrawReader(DrawReaderBase):
         print(f"STL: INFO: z_min={min_z}, z_max={max_z}")
 
         slice_z = None
-        if args.zslice:  # type: ignore
-            if args.zslice.endswith("%"):  # type: ignore
-                percent = float(args.zslice[:-1])  # type: ignore
+        if args.stlread_zslice:  # type: ignore
+            if args.stlread_zslice.endswith("%"):  # type: ignore
+                percent = float(args.stlread_zslice[:-1])  # type: ignore
                 slice_z = min_z + (self.diff_z * percent / 100.0)
             else:
-                slice_z = float(args.zslice)  # type: ignore
+                slice_z = float(args.stlread_zslice)  # type: ignore
 
         if slice_z is None:
             slice_z = min_z + (self.diff_z / 2.0)

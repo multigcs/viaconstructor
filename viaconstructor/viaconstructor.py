@@ -1663,25 +1663,10 @@ class ViaConstructor:
             type=str,
             default=None,
         )
-        # STL-Reader
-        parser.add_argument(
-            "-z", "--zslice", help="slice at postion z (stl)", type=str, default=None
-        )
-        # TTF-Reader
-        parser.add_argument(
-            "-t",
-            "--text",
-            help="text for the Truetype reader",
-            type=str,
-            default="ViaConstructor",
-        )
-        parser.add_argument(
-            "-th",
-            "--text-height",
-            help="text height for the Truetype reader",
-            type=float,
-            default=100,
-        )
+
+        for reader_plugin in reader_plugins.values():
+            reader_plugin.arg_parser(parser)
+
         self.args = parser.parse_args()
 
         # load setup
