@@ -77,7 +77,7 @@ def setup_defaults(_) -> dict:
                 "tooltip": _("Overcuting edges"),
             },
             "zero": {
-                "default": "original",
+                "default": "bottomLeft",
                 "type": "select",
                 "options": (
                     ("original", _("original")),

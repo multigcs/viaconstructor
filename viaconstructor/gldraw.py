@@ -213,7 +213,7 @@ def draw_grid(project: dict) -> None:
         GL.glVertex3f(min_max[2], start_y - 5, mill_depth)
         GL.glVertex3f(min_max[2], end_y, mill_depth)
         draw_text(
-            f"{round(min_max[0], 6)}",
+            f"{round(min_max[0], 2)}",
             min_max[0],
             start_y - 5 - 6,
             mill_depth,
@@ -221,7 +221,7 @@ def draw_grid(project: dict) -> None:
             True,
         )
         draw_text(
-            f"{round(min_max[2], 6)}",
+            f"{round(min_max[2], 2)}",
             min_max[2],
             start_y - 5 - 6,
             mill_depth,
@@ -237,7 +237,7 @@ def draw_grid(project: dict) -> None:
         GL.glVertex3f(start_x, min_max[3], mill_depth)
         GL.glVertex3f(end_x + 5, min_max[3], mill_depth)
         draw_text(
-            f"{round(min_max[1], 6)}",
+            f"{round(min_max[1], 2)}",
             end_x + 5,
             min_max[1],
             mill_depth,
@@ -246,7 +246,7 @@ def draw_grid(project: dict) -> None:
             True,
         )
         draw_text(
-            f"{round(min_max[3], 6)}",
+            f"{round(min_max[3], 2)}",
             end_x + 5,
             min_max[3],
             mill_depth,
@@ -259,14 +259,14 @@ def draw_grid(project: dict) -> None:
         GL.glColor3f(1.0, 0.0, 0.0)
         GL.glBegin(GL.GL_LINES)
         draw_text(
-            f"{round(size_x, 6)}", center_x, start_y - 5 - 6, mill_depth, 0.5, True
+            f"{round(size_x, 2)}", center_x, start_y - 5 - 6, mill_depth, 0.5, True
         )
         GL.glEnd()
         # Size-Y
         GL.glColor3f(0.0, 0.0, 1.0)
         GL.glBegin(GL.GL_LINES)
         draw_text(
-            f"{round(size_y, 6)}", end_x + 5, center_y, mill_depth, 0.5, False, True
+            f"{round(size_y, 2)}", end_x + 5, center_y, mill_depth, 0.5, False, True
         )
         GL.glEnd()
 

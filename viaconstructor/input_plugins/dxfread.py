@@ -4,9 +4,9 @@ import argparse
 import math
 
 import ezdxf
-from ezdxf.path import make_path
+from ezdxf.path import Command, make_path
 
-from ..calc import calc_distance  # pylint: disable=E0402
+from ..calc import calc_distance, quadratic_bezier  # pylint: disable=E0402
 from ..input_plugins_base import DrawReaderBase
 from ..vc_types import VcSegment
 
@@ -62,7 +62,6 @@ class DrawReader(DrawReaderBase):
 
     def add_entity(self, element, offset: tuple = (0, 0)):
         dxftype = element.dxftype()
-
         if dxftype in self.VTYPES:
             for v_element in element.virtual_entities():  # type: ignore
                 self.add_entity(v_element)
@@ -94,11 +93,11 @@ class DrawReader(DrawReaderBase):
 
         elif dxftype == "SPLINE":
             last: list[float] = []
-
             path = make_path(element)
+            last = path.start
             for command in path:
-                point = command.end
-                if last:
+                if command.type == Command.LINE_TO:
+                    point = command.end
                     dist = calc_distance((last[0], last[1]), (point[0], point[1]))
                     if dist > self.MIN_DIST:
                         self.segments.append(
@@ -119,6 +118,117 @@ class DrawReader(DrawReaderBase):
                                 }
                             )
                         )
+
+                elif command.type == Command.CURVE4_TO:
+                    coords = list(command)
+                    nextp = coords[0]
+                    ctrl1 = coords[1]
+                    ctrl2 = coords[2]
+                    curv_pos = 0.0
+                    while curv_pos <= 1.0:
+                        ctrl3 = quadratic_bezier(
+                            curv_pos,
+                            (
+                                (
+                                    last[0],
+                                    last[1],
+                                ),
+                                (
+                                    ctrl1[0],
+                                    ctrl1[1],
+                                ),
+                                (
+                                    ctrl2[0],
+                                    ctrl2[1],
+                                ),
+                            ),
+                        )
+                        ctrl4 = quadratic_bezier(
+                            curv_pos,
+                            (
+                                (
+                                    ctrl1[0],
+                                    ctrl1[1],
+                                ),
+                                (
+                                    ctrl2[0],
+                                    ctrl2[1],
+                                ),
+                                (
+                                    nextp[0],
+                                    nextp[1],
+                                ),
+                            ),
+                        )
+
+                        # ctrlmid = curv_pos of ctrl1 -> ctrl2
+                        diff_x = ctrl2[0] - ctrl1[0]
+                        diff_y = ctrl2[1] - ctrl1[1]
+                        ctrlmid = [0, 0]
+                        ctrlmid[0] = ctrl1[0] + diff_x * curv_pos
+                        ctrlmid[1] = ctrl1[1] + diff_y * curv_pos
+                        point = quadratic_bezier(
+                            curv_pos,
+                            (
+                                (
+                                    ctrl3[0],
+                                    ctrl3[1],
+                                ),
+                                (
+                                    ctrlmid[0],
+                                    ctrlmid[1],
+                                ),
+                                (
+                                    ctrl4[0],
+                                    ctrl4[1],
+                                ),
+                            ),
+                        )
+                        dist = calc_distance((last[0], last[1]), (point[0], point[1]))
+                        if dist > self.MIN_DIST:
+                            self.segments.append(
+                                VcSegment(
+                                    {
+                                        "type": "LINE",
+                                        "object": None,
+                                        "layer": element.dxf.layer,
+                                        "start": (
+                                            (last[0] + offset[0]) * self.scale,
+                                            (last[1] + offset[1]) * self.scale,
+                                        ),
+                                        "end": (
+                                            (point[0] + offset[0]) * self.scale,
+                                            (point[1] + offset[1]) * self.scale,
+                                        ),
+                                        "bulge": 0.0,
+                                    }
+                                )
+                            )
+                            last = point
+                        curv_pos += 0.2
+                    point = command.end
+                    dist = calc_distance((last[0], last[1]), (point[0], point[1]))
+                    if dist > self.MIN_DIST:
+                        self.segments.append(
+                            VcSegment(
+                                {
+                                    "type": "LINE",
+                                    "object": None,
+                                    "layer": element.dxf.layer,
+                                    "start": (
+                                        (last[0] + offset[0]) * self.scale,
+                                        (last[1] + offset[1]) * self.scale,
+                                    ),
+                                    "end": (
+                                        (point[0] + offset[0]) * self.scale,
+                                        (point[1] + offset[1]) * self.scale,
+                                    ),
+                                    "bulge": 0.0,
+                                }
+                            )
+                        )
+                        last = point
+
                 last = point
 
         elif dxftype in {"ARC", "CIRCLE"}:
