@@ -1558,6 +1558,11 @@ class ViaConstructor:
             self.prepare_segments()
             return True
 
+        # disable some options on big drawings for a better view
+        if len(self.project["objects"]) >= 50:
+            self.project["setup"]["view"]["path"] = "minimal"
+            self.project["setup"]["view"]["object_ids"] = False
+
         print(f"ERROR: can not load file: {filename}")
         return False
 
