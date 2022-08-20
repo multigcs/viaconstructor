@@ -111,6 +111,13 @@ def quadratic_bezier(curv_pos, points):
     return curve_x, curve_y
 
 
+def point_of_line(p_1, p_2, line_pos):
+    return [
+        p_1[0] + (p_2[0] - p_1[0]) * line_pos,
+        p_1[1] + (p_2[1] - p_1[1]) * line_pos,
+    ]
+
+
 # ########## Object & Segments Functions ###########
 
 
