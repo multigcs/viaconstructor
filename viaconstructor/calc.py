@@ -300,6 +300,16 @@ def segments2objects(segments):
 
 
 # ########## Vertex Functions ###########
+def vertex_data_cache(offset):
+    """Caching the very slow vertex_data() function."""
+    if hasattr(offset, "cache"):
+        vertex_data = offset.cache
+    else:
+        vertex_data = offset.vertex_data()
+        offset.cache = vertex_data
+    return vertex_data
+
+
 def inside_vertex(vertex_data, point):
     """checks if a point is inside an polygon in vertex format."""
     angle = 0.0
@@ -412,7 +422,7 @@ def found_next_open_segment_point(mpos, objects, max_dist=None, exclude=None):
 def found_next_offset_point(mpos, offset):
     nearest = ()
     min_dist = None
-    vertex_data = offset.vertex_data()
+    vertex_data = vertex_data_cache(offset)
     point_num = 0
     for pos_x, pos_y in zip(vertex_data[0], vertex_data[1]):
         dist = calc_distance(mpos, (pos_x, pos_y))
@@ -425,7 +435,7 @@ def found_next_offset_point(mpos, offset):
 
 def found_next_tab_point(mpos, offsets):
     for offset in offsets.values():
-        vertex_data = offset.vertex_data()
+        vertex_data = vertex_data_cache(offset)
         if offset.is_closed():
             last_x = vertex_data[0][-1]
             last_y = vertex_data[1][-1]
@@ -542,7 +552,7 @@ def do_pockets(  # pylint: disable=R0913
     """calculates multiple offset lines of an polyline"""
     if obj.inner_objects and obj.setup["pockets"]["islands"]:
         subjs = []
-        vertex_data = polyline.vertex_data()
+        vertex_data = vertex_data_cache(polyline)
         points = vertex2points(vertex_data, no_bulge=True, scale=100.0)
         pco = pyclipper.PyclipperOffset()  # pylint: disable=E1101
         pco.AddPath(
@@ -554,7 +564,7 @@ def do_pockets(  # pylint: disable=R0913
         for idx in obj.inner_objects:
             polyline_offset = polyline_offsets.get(f"{idx}.0")
             if polyline_offset and polyline_offset.level == level + 1:
-                vertex_data = polyline_offset.vertex_data()
+                vertex_data = vertex_data_cache(polyline_offset)
                 points = vertex2points(vertex_data, no_bulge=True, scale=100.0)
                 pco.AddPath(
                     points,
@@ -630,7 +640,7 @@ def do_pockets(  # pylint: disable=R0913
         for polyline_offset in offsets:
             if polyline_offset:
                 # workaround for bad offsets
-                vertex_data = polyline_offset.vertex_data()
+                vertex_data = vertex_data_cache(polyline_offset)
                 point = (vertex_data[0][0], vertex_data[1][0], vertex_data[2][0])
                 if not inside_vertex(vertex_data_org, point):
                     continue
@@ -665,7 +675,7 @@ def object2polyline_offsets(
         quarter_pi = math.pi / 4
         radius_3 = abs(tool_radius * 3)
         for offset_idx, polyline in enumerate(list(polyline_offsets.values())):
-            points = vertex2points(polyline.vertex_data())
+            points = vertex2points(vertex_data_cache(polyline))
             xdata = []
             ydata = []
             bdata = []
@@ -776,6 +786,8 @@ def object2polyline_offsets(
         )
         if polyline_offset_list:
             for polyline_offset in polyline_offset_list:
+                vertex_data = polyline_offset.vertex_data()
+                polyline_offset.cache = vertex_data
                 polyline_offset.level = len(obj.outer_objects)
                 polyline_offset.start = obj.start
                 polyline_offset.tool_offset = tool_offset
@@ -795,7 +807,7 @@ def object2polyline_offsets(
                             tool_radius,
                             polyline_offsets,
                             offset_idx,
-                            polyline.vertex_data(),
+                            vertex_data,
                         )
         elif is_circle and small_circles:
             # adding holes that smaler as the tool
@@ -803,6 +815,7 @@ def object2polyline_offsets(
             center_y = obj.segments[0].center[1]
             vertex_data = ((center_x,), (center_y,), (0,))
             polyline_offset = cavc.Polyline(vertex_data, is_closed=False)
+            polyline_offset.cache = polyline_offset.vertex_data()
             polyline_offset.level = len(obj.outer_objects)
             polyline_offset.start = obj.start
             polyline_offset.tool_offset = tool_offset

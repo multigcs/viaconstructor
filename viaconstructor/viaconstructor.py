@@ -613,7 +613,6 @@ class ViaConstructor:
             self.project["maxOuter"],
             psetup["mill"]["small_circles"],
         )
-
         # create machine commands
         output_plugin: Union[PostProcessorHpgl, PostProcessorGcodeLinuxCNC]
         if self.project["setup"]["maschine"]["plugin"] == "gcode_linuxcnc":
@@ -629,7 +628,6 @@ class ViaConstructor:
                 f"ERROR: Unknown maschine output plugin: {self.project['setup']['maschine']['plugin']}"
             )
             sys.exit(1)
-
         self.project["machine_cmd"] = polylines2machine_cmd(self.project, output_plugin)
         if self.project["textwidget"]:
             self.project["textwidget"].clear()

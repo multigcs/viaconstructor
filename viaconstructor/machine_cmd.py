@@ -11,6 +11,7 @@ from .calc import (
     lines_intersect,
     rotate_list,
     vertex2points,
+    vertex_data_cache,
 )
 
 
@@ -241,7 +242,6 @@ def segment2machine_cmd(
                     or "Z" not in project["axis"]
                 ):
                     post.spindle_cw(project["setup"]["tool"]["speed"], pause=0)
-
                 break
 
         post.arc_ccw(
@@ -357,7 +357,6 @@ def segment2machine_cmd(
                     or "Z" not in project["axis"]
                 ):
                     post.spindle_cw(project["setup"]["tool"]["speed"], pause=0)
-
                 break
 
         post.arc_cw(
@@ -420,7 +419,7 @@ def segment2machine_cmd(
 
 
 def get_nearest_free_object(
-    polylines, level: int, last_pos: list, milling: dict, is_pocket: bool
+    polylines, level: int, last_pos: list, milling: set, is_pocket: bool
 ) -> tuple:
     found: bool = False
     nearest_dist: Union[None, float] = None
@@ -433,6 +432,7 @@ def get_nearest_free_object(
             and offset.is_pocket == is_pocket
             and offset.setup["mill"]["active"]
         ):
+
             if offset.is_pocket and offset.setup["pockets"]["insideout"]:
                 pocket_filter = None
                 offset_num_pre = offset_num.split(".")[0]
@@ -445,8 +445,8 @@ def get_nearest_free_object(
                 if offset_num != pocket_filter:
                     continue
 
+            vertex_data = vertex_data_cache(offset)
             if offset.is_closed():
-                vertex_data = offset.vertex_data()
                 if offset.start:
                     point_num = found_next_offset_point(
                         (offset.start[0], offset.start[1]), offset
@@ -472,8 +472,7 @@ def get_nearest_free_object(
                             found = True
                         point_num += 1
             else:
-                # on open obejcts, test first and last point
-                vertex_data = offset.vertex_data()
+                # on open objects, test first and last point
                 if len(vertex_data) > 0 and len(vertex_data[0]) > 0:
                     dist = calc_distance(
                         last_pos, (vertex_data[0][0], vertex_data[1][0])
@@ -483,6 +482,7 @@ def get_nearest_free_object(
                         nearest_idx = offset_num
                         nearest_point = 0
                         found = True
+
                     dist = calc_distance(
                         last_pos, (vertex_data[0][-1], vertex_data[1][-1])
                     )
@@ -491,12 +491,13 @@ def get_nearest_free_object(
                         nearest_idx = offset_num
                         nearest_point = len(vertex_data[0]) - 1
                         found = True
+
     return (found, nearest_idx, nearest_point)
 
 
 def polylines2machine_cmd(project: dict, post: PostProcessor) -> str:
     """generates machine_cmd from polilines"""
-    milling: dict = {}
+    milling: set = set()
     last_pos: list = [0, 0]
     polylines = project["offsets"]
     machine_cmd_begin(project, post)
@@ -505,17 +506,15 @@ def polylines2machine_cmd(project: dict, post: PostProcessor) -> str:
     order = 0
     for level in range(project["maxOuter"], -1, -1):
         for is_pocket in (True, False):
-
             while True:
                 (found, nearest_idx, nearest_point) = get_nearest_free_object(
                     polylines, level, last_pos, milling, is_pocket
                 )
 
                 if found:
-                    milling[nearest_idx] = nearest_idx
+                    milling.add(nearest_idx)
                     polyline = polylines[nearest_idx]
-
-                    vertex_data = polyline.vertex_data()
+                    vertex_data = vertex_data_cache(polyline)
                     is_closed = polyline.is_closed()
                     max_depth = polyline.setup["mill"]["depth"]
 
@@ -524,9 +523,8 @@ def polylines2machine_cmd(project: dict, post: PostProcessor) -> str:
                     else:
                         polyline.setup["tabs"]["data"] = []
 
-                    points = vertex2points(vertex_data)
                     if is_closed:
-                        points = rotate_list(points, nearest_point)
+                        points = rotate_list(vertex2points(vertex_data), nearest_point)
                     elif nearest_point != 0:
                         # redir open line and reverse bulge
                         x_start = list(vertex_data[0])
@@ -539,6 +537,8 @@ def polylines2machine_cmd(project: dict, post: PostProcessor) -> str:
                         for num, point in enumerate(bulges):
                             bulges[num] = -bulges[num]
                         points = vertex2points((x_start, y_start, bulges))
+                    else:
+                        points = vertex2points(vertex_data)
 
                     helix_mode = polyline.setup["mill"]["helix_mode"]
 
@@ -693,6 +693,7 @@ def polylines2machine_cmd(project: dict, post: PostProcessor) -> str:
                     else:
                         last_pos = points[-1]
                     order += 1
+
                 else:
                     break
 
