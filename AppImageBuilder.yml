@@ -1,0 +1,57 @@
+version: 1
+script:
+  - mkdir -p AppDir/usr/share/icons/hicolor/256x256/apps/
+  - cp docs/logo.png AppDir/usr/share/icons/hicolor/256x256/apps/viaconstructor.png
+  - python3 -m pip install --ignore-installed --prefix=/usr --root=AppDir ezdxf
+  - cp -a deb_dist/viaconstructor-*/debian/python3-viaconstructor/* AppDir/
+
+
+AppDir:
+  path: ./AppDir
+
+  app_info:
+    id: org.multixmedia.viaconstructor
+    name: viaconstructor
+    icon: viaconstructor
+    version: 0.3.3
+    exec: usr/bin/python3
+    exec_args: "-m viaconstructor $@"
+
+  apt:
+    arch: amd64
+    sources:
+      - sourceline: 'deb [arch=amd64] http://archive.ubuntu.com/ubuntu/ jammy main restricted universe multiverse'
+        key_url: 'http://keyserver.ubuntu.com/pks/lookup?op=get&search=0x871920D1991BC93C'
+
+    include:
+      - python3
+      - python3-pkg-resources
+      - python3-pyqt5
+      - python3-pyqt5.qtopengl
+      - python3-freetype
+      - python3-matplotlib
+      - python3-opengl
+      - python3-pil
+      - python3-pyclipper
+      - python3-pygame
+      - python3-pyqt5
+      - python3-python-utils
+      - python3-setproctitle
+      - python3-svgwrite
+    exclude: []
+
+  runtime:
+    env:
+      PYTHONHOME: '${APPDIR}/usr'
+      PYTHONPATH: '${APPDIR}/usr/lib/python3.10/site-packages'
+
+#  test:
+#    debian:
+#      image: appimagecrafters/tests-env:debian-stable
+#      command: ./AppRun
+#      use_host_x: true
+#
+AppImage:
+  update-information: 'gh-releases-zsync|AppImageCrafters|python-appimage-example|latest|python-appimage-*x86_64.AppImage.zsync'
+  sign-key: None
+  arch: x86_64

@@ -129,3 +129,15 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# builder system
+appimage-build/
+docs/help/
+docs/pdoc/
+docs/readme.html
+viaconstructor-*.AppImage
+viaconstructor-*.tar.gz
+AppDir/
+locales/de/LC_MESSAGES/base.po~
+pyvenv/
+deb_dist/

@@ -22,9 +22,7 @@ RUN dnf install -y \
     # for pygame - but failed with: longintrepr.h not found, so we used the system version from dnf
     # SDL2-devel SDL2_gfx-devel SDL2_image-devel SDL2_mixer-devel SDL2_ttf-devel SDL2_net-devel SDL2_sound-devel libjpeg-turbo-devel freetype-devel portmidi-devel
 
-RUN pip3 install PyQt5 ezdxf cavaliercontours-python PyOpenGL Pillow pygame Hershey-Fonts svgpathtools meshcut pyclipper setproctitle freetype-py
-
-
+RUN pip3 install PyQt5 ezdxf PyOpenGL Pillow pygame pyclipper setproctitle freetype-py matplotlib svgwrite
 
 CMD ["/bin/bash"]
 

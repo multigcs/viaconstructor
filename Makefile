@@ -1,4 +1,7 @@
 
+VERSION := $(shell grep "version=" setup.py | cut -d"'" -f2)
+
+
 all: isort black lint pytest pdoc help_gen gettext docindex done
 
 done:
@@ -69,9 +72,16 @@ clean:
 	rm -rf .coverage
 	rm -rf .mypy_cache
 	rm -rf */__pycache__/
+	rm -rf */*/__pycache__
+	rm -rf */*/*/__pycache__
 	rm -rf dist/
+	rm -rf deb_dist/
 	rm -rf build/
 	rm -rf viaconstructor.egg-info/
+	rm -rf deb_dist/
+	rm -rf AppDir/
+	rm -rf viaconstructor-*.AppImage
+	rm -rf viaconstructor-*.tar.gz
 
 dist-clean: clean
 	rm -rf pyvenv
@@ -92,6 +102,14 @@ install:
 docker-build:
 	docker build -t viaconstructor -f Dockerfile .
 
+docker-run-dist: dist
+	docker rm viaconstructor || true
+	docker run --net=host -e DISPLAY=:0  --privileged --name viaconstructor -v $(CURDIR):/usr/src/viaconstructor -t -i viaconstructor /bin/bash -c "cd /usr/src/viaconstructor; pip3 install dist/viaconstructor-*.tar.gz; cd ~ ; viaconstructor /usr/src/viaconstructor/tests/data/simple.dxf"
+
+docker-run-deb: bdist_deb
+	docker rm viaconstructor || true
+	docker run --net=host -e DISPLAY=:0  --privileged --name viaconstructor -v $(CURDIR):/usr/src/viaconstructor -t -i viaconstructor /bin/bash -c "cd /usr/src/viaconstructor; apt-get install -y ./deb_dist/python3-viaconstructor_*.deb; cd ~ ; viaconstructor /usr/src/viaconstructor/tests/data/simple.dxf"
+
 docker-run-pip-install:
 	docker rm viaconstructor || true
 	docker run --net=host -e DISPLAY=:0  --privileged --name viaconstructor -v $(CURDIR)/tests/data:/usr/src -t -i viaconstructor /bin/bash -c "cd /usr/src; pip3 install viaconstructor; viaconstructor simple.dxf"
@@ -109,6 +127,20 @@ gettext:
 	done
 
 dist:
-	rm -rf dist/*
 	python3 setup.py sdist
+
+pypi: dist
 	twine upload -u meister23 --verbose dist/viaconstructor*
+
+bdist_deb:
+	python3 setup.py --command-packages=stdeb.command bdist_deb
+	ls -l deb_dist/*.deb
+
+bdist_rpm: 
+	python setup.py bdist_rpm
+
+appimage: bdist_deb
+	rm -rf viaconstructor-.*.AppImage
+	sed -i "s| version: .*| version: ${VERSION}|g" AppImageBuilder.yml
+	appimage-builder || true
+	chmod +x viaconstructor-*.AppImage

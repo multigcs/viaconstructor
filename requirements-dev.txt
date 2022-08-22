@@ -93,3 +93,5 @@ markdown==3.3.7
 pdoc3==0.10.0
 isort==5.10.1
 stdeb
+twine
+appimage-builder
