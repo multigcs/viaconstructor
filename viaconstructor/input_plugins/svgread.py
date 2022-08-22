@@ -4,9 +4,9 @@ import argparse
 import math
 
 import ezdxf
-import svgpathtools
 
 from ..calc import calc_distance  # pylint: disable=E0402
+from ..ext import svgpathtools
 from ..input_plugins_base import DrawReaderBase
 from ..vc_types import VcSegment
 

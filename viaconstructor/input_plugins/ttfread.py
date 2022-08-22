@@ -12,13 +12,13 @@ class DrawReader(DrawReaderBase):
     @staticmethod
     def arg_parser(parser) -> None:
         parser.add_argument(
-            "--tftread-text",
-            help="tftread: text for the Truetype reader",
+            "--ttfread-text",
+            help="ttfread: text for the Truetype reader",
             type=str,
             default="ViaConstructor",
         )
         parser.add_argument(
-            "--tftread-height",
+            "--ttfread-height",
             help="text height for the Truetype reader",
             type=float,
             default=100,
@@ -32,7 +32,7 @@ class DrawReader(DrawReaderBase):
         face = freetype.Face(self.filename)
         face.set_char_size(18 * 64)
 
-        scale = args.tftread_height / 1000.0  # type: ignore
+        scale = args.ttfread_height / 1000.0  # type: ignore
 
         ctx = {
             "last": (),
@@ -41,7 +41,7 @@ class DrawReader(DrawReaderBase):
             "scale": (scale, scale),
         }
 
-        for char in args.tftread_text:  # type: ignore
+        for char in args.ttfread_text:  # type: ignore
             if char == " ":
                 ctx["pos"][0] += 500 * scale  # type: ignore
                 continue

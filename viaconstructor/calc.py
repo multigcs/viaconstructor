@@ -3,10 +3,10 @@
 import math
 from copy import deepcopy
 
-import cavaliercontours as cavc
 import ezdxf
 import pyclipper
 
+from .ext.cavaliercontours import cavaliercontours as cavc
 from .vc_types import VcObject
 
 # import trimesh

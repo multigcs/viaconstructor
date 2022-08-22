@@ -44,6 +44,10 @@ def main() -> int:
     parser.add_argument("-o", "--output", help="save to image", type=str, default=None)
     parser.add_argument("-g", "--grid", help="show grid", type=int, default=1)
     parser.add_argument("-l", "--legend", help="show legend", type=int, default=1)
+
+    for reader_plugin in reader_plugins.values():
+        reader_plugin.arg_parser(parser)
+
     args = parser.parse_args()
 
     # setup

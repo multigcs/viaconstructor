@@ -2,11 +2,11 @@
 
 import argparse
 
-import meshcut
 import numpy as np
-import stl
 from OpenGL import GL
 
+from ..ext import stl
+from ..ext.meshcut import meshcut
 from ..input_plugins_base import DrawReaderBase
 
 

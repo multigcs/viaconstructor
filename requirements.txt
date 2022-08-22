@@ -4,8 +4,6 @@
 #
 #    pip-compile requirements.in
 #
-cavaliercontours-python==0.0.1
-    # via -r requirements.in
 ezdxf==0.17.2
     # via -r requirements.in
 numpy==1.23.0
@@ -26,10 +24,9 @@ pyqt5-sip==12.11.0
     # via pyqt5
 typing-extensions==4.3.0
     # via ezdxf
-Hershey-Fonts==2.1.0
-    # via -r requirements.in
-svgpathtools==1.5.1
-meshcut==0.3.0
 pyclipper==1.3.0
 setproctitle==1.2.3
 freetype-py==2.3.0
+python-utils
+svgwrite
+matplotlib

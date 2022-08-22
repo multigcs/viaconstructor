@@ -3,7 +3,6 @@
 import math
 from typing import Sequence
 
-from HersheyFonts import HersheyFonts
 from OpenGL import GL
 from OpenGL.GLU import (
     GLU_TESS_BEGIN,
@@ -24,6 +23,7 @@ from OpenGL.GLU import (
 )
 
 from .calc import angle_of_line, calc_distance, line_center_3d, object2vertex
+from .ext.HersheyFonts.HersheyFonts import HersheyFonts
 from .preview_plugins.gcode import GcodeParser
 from .preview_plugins.hpgl import HpglParser
 

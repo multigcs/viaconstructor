@@ -4,20 +4,26 @@ import argparse
 import math
 
 import ezdxf
-from ezdxf.addons import MTextExplode
-from ezdxf.path import Command, make_path
-from ezdxf.tools import fonts
 
 from ..calc import calc_distance, point_of_line  # pylint: disable=E0402
 from ..input_plugins_base import DrawReaderBase
 from ..vc_types import VcSegment
 
 try:
-    from ezdxf.addons import text2path
+    from ezdxf.addons import MTextExplode
+    from ezdxf.path import Command, make_path
+    from ezdxf.tools import fonts
 
-    SUPPORT_TEXT = True
+    try:
+        from ezdxf.addons import text2path
+
+        SUPPORT_TEXT = True
+    except Exception:  # pylint: disable=W0703
+        print("for text support, please install matplotlib")
+        SUPPORT_TEXT = False
+
 except Exception:  # pylint: disable=W0703
-    print("for text support, please install matplotlib")
+    print("WARNING: please install newer version of ezdxf")
     SUPPORT_TEXT = False
 
 
@@ -46,20 +52,24 @@ class DrawReader(DrawReaderBase):
         self.doc = ezdxf.readfile(self.filename)
         if args is None or args.dxfread_scale == 0.0:
             self.scale = 1.0
-            if self.doc.units != 0:
-                try:
+            try:
+                if self.doc.units != 0:
                     self.scale = ezdxf.units.conversion_factor(self.doc.units, ezdxf.units.MM)  # type: ignore
-                except Exception:  # pylint: disable=W0703
-                    print(f"UNKNOWN UNITS: {self.doc.units}")
+            except Exception:  # pylint: disable=W0703
+                print("UNKNOWN UNITS")
+                print("WARNING: please install newer version of ezdxf")
         else:
             self.scale = args.dxfread_scale
 
         self.segments: list[dict] = []
         self.model_space = self.doc.modelspace()
 
-        with MTextExplode(self.model_space) as xpl:
-            for mtext in self.model_space.query("MTEXT"):
-                xpl.explode(mtext)
+        try:
+            with MTextExplode(self.model_space) as xpl:
+                for mtext in self.model_space.query("MTEXT"):
+                    xpl.explode(mtext)
+        except Exception:  # pylint: disable=W0703
+            print("WARNING: please install newer version of ezdxf")
 
         for element in self.model_space:
             dxftype = element.dxftype()

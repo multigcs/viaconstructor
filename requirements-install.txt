@@ -1,12 +1,8 @@
 PyQt5
 ezdxf
-cavaliercontours-python
 PyOpenGL
 Pillow
 pygame
-Hershey-Fonts
-svgpathtools
-meshcut
 pyclipper
 setproctitle
 freetype-py

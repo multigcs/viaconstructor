@@ -92,4 +92,4 @@ mypy==0.941
 markdown==3.3.7
 pdoc3==0.10.0
 isort==5.10.1
-meshcut==0.3.0
+stdeb

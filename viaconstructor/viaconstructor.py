@@ -99,7 +99,6 @@ for reader in ("dxfread", "hpglread", "stlread", "svgread", "ttfread", "imgread"
 
 
 DEBUG = False
-DEBUG = True
 TIMESTAMP = 0
 
 
