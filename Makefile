@@ -1,5 +1,6 @@
 
 VERSION := $(shell grep "version=" setup.py | cut -d"'" -f2)
+DOCKERBASE := archlinux
 
 
 all: isort black lint pytest pdoc help_gen gettext docindex done
@@ -100,7 +101,7 @@ install:
 	python3 setup.py install
 
 docker-build:
-	docker build -t viaconstructor -f Dockerfile .
+	docker build -t viaconstructor -f Dockerfile.${DOCKERBASE} .
 
 docker-run-dist: dist
 	docker rm viaconstructor || true
