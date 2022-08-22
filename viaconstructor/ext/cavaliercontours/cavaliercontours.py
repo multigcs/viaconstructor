@@ -1,9 +1,14 @@
 import ctypes, pathlib
 import numpy as np
+import platform
 
 module_root = pathlib.Path(__file__).resolve().parent
-libname = module_root / "lib/libCavalierContours.so"
-c_lib = ctypes.CDLL(libname)
+try:
+    libname = module_root / "lib/libCavalierContours.so"
+    c_lib = ctypes.CDLL(libname)
+except Exception:
+    libname = module_root / f"lib/libCavalierContours.{platform.python_implementation().lower()}-{''.join(platform.python_version_tuple()[:2])}-x86_64-{platform.system().lower()}-gnu.so"
+    c_lib = ctypes.CDLL(libname)
 
 class _PointStruct(ctypes.Structure):
     _fields_ = [('x', ctypes.c_double),
