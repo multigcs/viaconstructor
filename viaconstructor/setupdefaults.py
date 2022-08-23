@@ -271,7 +271,7 @@ def setup_defaults(_) -> dict:
                 "tooltip": _("keep islands"),
             },
             "insideout": {
-                "default": False,
+                "default": True,
                 "type": "bool",
                 "per_object": True,
                 "title": _("insideout"),

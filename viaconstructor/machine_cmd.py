@@ -602,7 +602,12 @@ def polylines2machine_cmd(project: dict, post: PostProcessor) -> str:
                             "--------------------------------------------------"
                         )
 
+                    if polyline.setup["mill"]["step"] >= -0.01:
+                        polyline.setup["mill"]["step"] = -0.01
+
                     depth = polyline.setup["mill"]["step"]
+                    if depth < polyline.setup["mill"]["depth"]:
+                        depth = polyline.setup["mill"]["depth"]
 
                     if (
                         project["setup"]["maschine"]["mode"] == "mill"
