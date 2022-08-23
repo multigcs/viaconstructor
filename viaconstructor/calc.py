@@ -646,9 +646,7 @@ def do_pockets(  # pylint: disable=R0913
         offset_idx += 1
 
     else:
-        offsets = polyline.parallel_offset(
-            delta=tool_radius, check_self_intersect=True
-        )
+        offsets = polyline.parallel_offset(delta=tool_radius, check_self_intersect=True)
         for polyline_offset in offsets:
             if polyline_offset:
                 # workaround for bad offsets

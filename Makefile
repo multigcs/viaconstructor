@@ -3,7 +3,7 @@ VERSION ?= $(shell grep "version=" setup.py | cut -d"'" -f2)
 DOCKERBASE ?= fedora
 
 
-all: isort black lint pytest pdoc help_gen gettext docindex done
+all: isort black lint pytest help_gen gettext docindex done
 
 done:
 	@echo "-------------------------"

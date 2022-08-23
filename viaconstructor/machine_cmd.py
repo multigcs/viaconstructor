@@ -561,7 +561,7 @@ def polylines2machine_cmd(project: dict, post: PostProcessor) -> str:
                         post.comment(f"Level: {level}")
                         post.comment(f"Order: {order}")
                         post.comment(f"Object: {nearest_idx}")
-                        post.comment(f"Distance: {obj_distance}mm")
+                        post.comment(f"Distance: {round(obj_distance, 4)}mm")
                         post.comment(f"Closed: {is_closed}")
                         post.comment(f"isPocket: {polyline.is_pocket}")
                         if (
