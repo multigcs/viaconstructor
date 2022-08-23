@@ -61,14 +61,20 @@ class DrawReader(DrawReaderBase):
         laser_on = False
         last = (0, 0)
         lines = []
+
+        pixel = image_data.getpixel((0, 0))
+        mid_value = 127
+        if isinstance(pixel, tuple):
+            mid_value = tuple([mid_value] * len(pixel))
+
         height = image_data.height
         for y_pos in range(0, image_data.height):
             for x_pos in range(0, image_data.width):
                 pixel = image_data.getpixel((x_pos, y_pos))
-                if not laser_on and pixel < 127:
+                if not laser_on and pixel < mid_value:
                     laser_on = True
                     last = (x_pos, height - y_pos)
-                elif laser_on and pixel >= 127:
+                elif laser_on and pixel >= mid_value:
                     laser_on = False
                     lines.append((last, (x_pos, height - y_pos)))
             if laser_on:
