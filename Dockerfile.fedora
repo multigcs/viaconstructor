@@ -1,12 +1,14 @@
 
 FROM fedora:37
 
+RUN dnf makecache --refresh
 RUN dnf install -y \
     gcc \
     gcc-c++ \
     cmake \
     make \
     lcov \
+    diffutils \
     qt5-qtbase-devel \
     qt5-qtdeclarative-devel \
     qt5-qtmultimedia-devel \

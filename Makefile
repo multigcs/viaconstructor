@@ -1,6 +1,6 @@
 
-VERSION := $(shell grep "version=" setup.py | cut -d"'" -f2)
-DOCKERBASE := archlinux
+VERSION ?= $(shell grep "version=" setup.py | cut -d"'" -f2)
+DOCKERBASE ?= fedora
 
 
 all: isort black lint pytest pdoc help_gen gettext docindex done
@@ -103,6 +103,11 @@ install:
 docker-build:
 	docker build -t viaconstructor -f Dockerfile.${DOCKERBASE} .
 
+docker-run-dist-check: dist
+	docker rm viaconstructor || true
+	docker run --net=host -e DISPLAY=:0  --privileged --name viaconstructor -v $(CURDIR):/usr/src/viaconstructor -t -i viaconstructor /bin/bash -c "cd /usr/src/viaconstructor; pip3 install dist/viaconstructor-*.tar.gz; cd ~ ; ln -sf /usr/src/viaconstructor/tests ./ ; viaconstructor tests/data/check.dxf -s tests/data/gcode-2x2mm-d2.cfg -o /tmp/out.ngc ; diff /tmp/out.ngc tests/data/check.dxf-gcode-2x2mm-d2.cfg.check"
+	@echo "--- DISTCHECK OK ---"
+
 docker-run-dist: dist
 	docker rm viaconstructor || true
 	docker run --net=host -e DISPLAY=:0  --privileged --name viaconstructor -v $(CURDIR):/usr/src/viaconstructor -t -i viaconstructor /bin/bash -c "cd /usr/src/viaconstructor; pip3 install dist/viaconstructor-*.tar.gz; cd ~ ; viaconstructor /usr/src/viaconstructor/tests/data/simple.dxf"
@@ -130,7 +135,7 @@ gettext:
 dist:
 	python3 setup.py sdist
 
-pypi: dist
+pypi: dist docker-run-dist-check
 	twine upload -u meister23 --verbose dist/viaconstructor*
 
 bdist_deb:

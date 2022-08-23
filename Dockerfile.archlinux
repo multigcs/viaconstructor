@@ -2,7 +2,7 @@
 FROM archlinux:latest
 
 RUN pacman -Syy
-RUN pacman -S --noconfirm python python-pip glu gcc xterm libxcb xcb-util-wm xcb-util-keysyms libxkbcommon-x11 xcb-util-renderutil xcb-util-image libxkbcommon xorg-fonts-75dpi xorg-fonts-100dpi
+RUN pacman -Syu --noconfirm python python-pip glu gcc xterm libxcb xcb-util-wm xcb-util-keysyms libxkbcommon-x11 xcb-util-renderutil xcb-util-image libxkbcommon xorg-fonts-75dpi xorg-fonts-100dpi diffutils
 
 RUN pip3 install PyQt5 ezdxf PyOpenGL Pillow pygame pyclipper setproctitle freetype-py matplotlib svgwrite
 
