@@ -9,10 +9,6 @@ import pyclipper
 from .ext.cavaliercontours import cavaliercontours as cavc
 from .vc_types import VcObject
 
-# import trimesh
-# import pocketing
-# from shapely import geometry
-
 TWO_PI = math.pi * 2
 
 
@@ -488,46 +484,6 @@ def found_next_tab_point(mpos, offsets):
     return ()
 
 
-"""
-def do_pockets_trochoidal(  # pylint: disable=R0913
-    polyline,
-    obj,
-    obj_idx,
-    tool_offset,
-    tool_radius,
-    polyline_offsets,
-    offset_idx,
-    vertex_data_org,
-):
-    plist = []
-    vertex_data = polyline.vertex_data()
-    for pos_x, pos_y in zip(vertex_data[0], vertex_data[1]):
-        plist.append([pos_x, pos_y])
-
-    poly = geometry.Polygon(plist)
-
-    #toolpaths = pocketing.contour.contour_parallel(poly, tool_radius)
-    toolpaths = [pocketing.trochoidal.toolpath(poly, step=(tool_radius * 0.75))]
-
-    for part in toolpaths:
-        points = []
-        for point in part:
-            points.append(point.tolist())
-        vertex_data = points2vertex(points)
-        polyline_offset = cavc.Polyline(vertex_data, is_closed=obj.closed)
-        polyline_offset.level = len(obj.outer_objects)
-        polyline_offset.tool_offset = tool_offset
-        polyline_offset.layer = obj.layer
-        polyline_offset.setup = obj.setup
-        polyline_offset.start = obj.start
-        polyline_offset.is_pocket = True
-        polyline_offsets[f"{obj_idx}.{offset_idx}"] = polyline_offset
-        offset_idx += 1
-
-    return offset_idx
-"""
-
-
 def points2offsets(
     obj,
     obj_idx,
@@ -545,6 +501,7 @@ def points2offsets(
     polyline_offset.setup = obj.setup
     polyline_offset.start = obj.start
     polyline_offset.is_pocket = True
+    polyline_offset.fixed_direction = False
     polyline_offsets[f"{obj_idx}.{offset_idx}"] = polyline_offset
     offset_idx += 1
     return offset_idx
@@ -629,11 +586,11 @@ def do_pockets(  # pylint: disable=R0913
             rad += abs_tool_radius / 2
             if rad > radius - abs_tool_radius:
                 break
-            points.append((center[0] - rad, center[1] + 0.1, 1.0))
+            points.append((center[0] - rad, center[1] + 0.01, 1.0))
             rad += abs_tool_radius / 2
             if rad > radius - abs_tool_radius:
                 break
-            points.append((center[0] + rad, center[1] - 0.1, 1.0))
+            points.append((center[0] + rad, center[1] - 0.01, 1.0))
         vertex_data = points2vertex(points)
         polyline_offset = cavc.Polyline(vertex_data, is_closed=False)
         polyline_offset.level = len(obj.outer_objects)
@@ -642,6 +599,7 @@ def do_pockets(  # pylint: disable=R0913
         polyline_offset.setup = obj.setup
         polyline_offset.start = obj.start
         polyline_offset.is_pocket = True
+        polyline_offset.fixed_direction = True
         polyline_offsets[f"{obj_idx}.{offset_idx}"] = polyline_offset
         offset_idx += 1
 
@@ -660,6 +618,7 @@ def do_pockets(  # pylint: disable=R0913
                 polyline_offset.setup = obj.setup
                 polyline_offset.start = obj.start
                 polyline_offset.is_pocket = True
+                polyline_offset.fixed_direction = False
                 polyline_offsets[f"{obj_idx}.{offset_idx}"] = polyline_offset
                 offset_idx += 1
                 if polyline_offset.is_closed():
@@ -772,6 +731,7 @@ def object2polyline_offsets(
             over_polyline.setup = obj.setup
             over_polyline.layer = obj.layer
             over_polyline.is_pocket = False
+            over_polyline.fixed_direction = False
             over_polyline.tool_offset = tool_offset
             polyline_offsets[f"{obj_idx}.{offset_idx}"] = over_polyline
 
@@ -805,6 +765,7 @@ def object2polyline_offsets(
                 polyline_offset.setup = obj.setup
                 polyline_offset.layer = obj.layer
                 polyline_offset.is_pocket = False
+                polyline_offset.fixed_direction = False
                 polyline_offset.is_circle = is_circle
                 polyline_offsets[f"{obj_idx}.{offset_idx}"] = polyline_offset
                 offset_idx += 1
@@ -833,6 +794,7 @@ def object2polyline_offsets(
             polyline_offset.setup = obj.setup
             polyline_offset.layer = obj.layer
             polyline_offset.is_pocket = False
+            polyline_offset.fixed_direction = False
             polyline_offset.is_circle = True
             polyline_offsets[f"{obj_idx}.{offset_idx}.x"] = polyline_offset
             offset_idx += 1
@@ -847,6 +809,7 @@ def object2polyline_offsets(
         polyline.start = obj.start
         polyline.layer = obj.layer
         polyline.is_pocket = False
+        polyline.fixed_direction = False
         polyline.is_circle = False
         polyline_offsets[f"{obj_idx}.{offset_idx}"] = polyline
         offset_idx += 1
