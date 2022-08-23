@@ -561,6 +561,7 @@ def do_pockets(  # pylint: disable=R0913
     vertex_data_org,  # pylint: disable=W0613
 ):
     """calculates multiple offset lines of an polyline"""
+    abs_tool_radius = abs(tool_radius)
     if obj.inner_objects and obj.setup["pockets"]["islands"]:
         subjs = []
         vertex_data = vertex_data_cache(polyline)
@@ -582,7 +583,7 @@ def do_pockets(  # pylint: disable=R0913
                     pyclipper.JT_ROUND,  # pylint: disable=E1101
                     pyclipper.ET_CLOSEDPOLYGON,  # pylint: disable=E1101
                 )
-        subjs = pco.Execute(-tool_radius * 100)
+        subjs = pco.Execute(-abs_tool_radius * 100)
 
         for points in subjs:
             offset_idx = points2offsets(
@@ -603,7 +604,7 @@ def do_pockets(  # pylint: disable=R0913
                     pyclipper.JT_ROUND,  # pylint: disable=E1101
                     pyclipper.ET_CLOSEDPOLYGON,  # pylint: disable=E1101
                 )
-            subjs = pco.Execute(-tool_radius * 100)  # pylint: disable=E1101
+            subjs = pco.Execute(-abs_tool_radius * 100)  # pylint: disable=E1101
             if not subjs:
                 break
 
@@ -625,12 +626,12 @@ def do_pockets(  # pylint: disable=R0913
         points = []
         rad = 0
         while True:
-            rad += tool_radius / 2
-            if rad > radius - tool_radius:
+            rad += abs_tool_radius / 2
+            if rad > radius - abs_tool_radius:
                 break
             points.append((center[0] - rad, center[1] + 0.1, 1.0))
-            rad += tool_radius / 2
-            if rad > radius - tool_radius:
+            rad += abs_tool_radius / 2
+            if rad > radius - abs_tool_radius:
                 break
             points.append((center[0] + rad, center[1] - 0.1, 1.0))
         vertex_data = points2vertex(points)
@@ -646,7 +647,7 @@ def do_pockets(  # pylint: disable=R0913
 
     else:
         offsets = polyline.parallel_offset(
-            delta=-tool_radius, check_self_intersect=True
+            delta=tool_radius, check_self_intersect=True
         )
         for polyline_offset in offsets:
             if polyline_offset:
@@ -794,7 +795,7 @@ def object2polyline_offsets(
     offset_idx = 0
     if polyline.is_closed() and tool_offset != "none":
         polyline_offset_list = polyline.parallel_offset(
-            delta=-tool_radius, check_self_intersect=True
+            delta=tool_radius, check_self_intersect=True
         )
         if polyline_offset_list:
             for polyline_offset in polyline_offset_list:
@@ -868,7 +869,7 @@ def objects2polyline_offsets(diameter, objects, max_outer, small_circles=False):
 
             obj_copy = deepcopy(obj)
             do_reverse = 0
-            if obj_copy.tool_offset == "inside":
+            if obj_copy.tool_offset == "outside":
                 do_reverse = 1 - do_reverse
 
             if obj_copy["setup"]["mill"]["reverse"]:
