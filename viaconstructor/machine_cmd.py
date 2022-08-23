@@ -421,18 +421,26 @@ def segment2machine_cmd(
 
 
 def get_nearest_free_object(
-    polylines, level: int, last_pos: list, milling: set, is_pocket: bool
+    polylines,
+    level: int,
+    last_pos: list,
+    milling: set,
+    is_pocket: bool,
+    next_filter: str,
 ) -> tuple:
     found: bool = False
     nearest_dist: Union[None, float] = None
     nearest_idx: int = 0
     nearest_point = 0
     for offset_num, offset in polylines.items():
-        if (
-            offset_num not in milling
-            and offset.level == level
-            and offset.is_pocket == is_pocket
-            and offset.setup["mill"]["active"]
+        if offset_num not in milling and (  # pylint: disable=R0916
+            (
+                next_filter == ""
+                and offset.level == level
+                and offset.is_pocket == is_pocket
+                and offset.setup["mill"]["active"]
+            )
+            or next_filter == offset_num
         ):
 
             if offset.is_pocket and offset.setup["pockets"]["insideout"]:
@@ -505,15 +513,22 @@ def polylines2machine_cmd(project: dict, post: PostProcessor) -> str:
     machine_cmd_begin(project, post)
     tabs = project.get("tabs", {})
 
+    next_filter = ""
     order = 0
     for level in range(project["maxOuter"], -1, -1):
         for is_pocket in (True, False):
             while True:
                 (found, nearest_idx, nearest_point) = get_nearest_free_object(
-                    polylines, level, last_pos, milling, is_pocket
+                    polylines, level, last_pos, milling, is_pocket, next_filter
                 )
-
+                next_filter = ""
                 if found:
+                    if "." in nearest_idx and nearest_idx.split(".")[-1] == "1":
+                        # get parent after last pocket line
+                        next_filter = f"{nearest_idx.split('.')[0]}.0"
+                        if next_filter in milling:
+                            next_filter = ""
+
                     milling.add(nearest_idx)
                     polyline = polylines[nearest_idx]
                     vertex_data = vertex_data_cache(polyline)
