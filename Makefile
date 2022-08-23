@@ -124,6 +124,10 @@ docker-run-dev:
 	docker rm viaconstructor || true
 	docker run --net=host -e DISPLAY=:0  --privileged --name viaconstructor -v $(CURDIR):/usr/src/viaconstructor -t -i viaconstructor /bin/bash -c "cd /usr/src/viaconstructor; pip3 install -r requirements.txt; bin/viaconstructor tests/data/simple.dxf"
 
+docker-run-shell:
+	docker rm viaconstructor || true
+	docker run --net=host -e DISPLAY=:0  --privileged --name viaconstructor -v $(CURDIR):/usr/src/viaconstructor -t -i viaconstructor /bin/bash
+
 gettext:
 	/usr/bin/pygettext3 -d base -o locales/base.pot viaconstructor/viaconstructor.py viaconstructor/setupdefaults.py
 	@for lang in de ; do \

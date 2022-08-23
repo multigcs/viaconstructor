@@ -1,0 +1,21 @@
+
+FROM alpine:3.16
+
+RUN apk add --no-cache bash
+
+RUN apk add --no-cache bash python3 py3-pip glu make g++ gcc xterm libxcb xcb-util-wm xcb-util-keysyms libxkbcommon-x11 xcb-util-renderutil xcb-util-image libxkbcommon diffutils
+# xorg-fonts-75dpi xorg-fonts-100dpi 
+
+RUN apk add --no-cache py3-qt5
+RUN apk add --no-cache sdl2_ttf-dev sdl2-dev sdl2_net-dev sdl2_gfx sdl2_ttf sdl2_mixer sdl2 sdl2_net sdl2_mixer-dev sdl2_image-dev sdl2_image sdl2_gfx-dev
+RUN apk add --no-cache python3-dev portmidi-dev libjpeg-turbo-dev
+
+RUN pip3 install ezdxf PyOpenGL Pillow pygame pyclipper setproctitle freetype-py matplotlib svgwrite
+
+CMD ["/bin/bash"]
+
+
+
+
+
+
