@@ -18,6 +18,12 @@ class DrawReader(DrawReaderBase):
             default=0.1,
         )
         parser.add_argument(
+            "--imgread-threshold",
+            help="imgread: threshold value (1-255)",
+            type=int,
+            default=127,
+        )
+        parser.add_argument(
             "--imgread-lines",
             help="imgread: do not merge lines",
             action="store_true",
@@ -30,7 +36,8 @@ class DrawReader(DrawReaderBase):
         self.filename = filename
         self.segments = []
 
-        image_data = Image.open(filename)
+        image_data = Image.open(filename).convert("L")
+
         print(f"Image-Size: {image_data.width}x{image_data.height}")
 
         def get_next_line(end_point):
@@ -63,7 +70,7 @@ class DrawReader(DrawReaderBase):
         lines = []
 
         pixel = image_data.getpixel((0, 0))
-        mid_value = 127
+        mid_value = args.imgread_threshold
         if isinstance(pixel, tuple):
             mid_value = tuple([mid_value] * len(pixel))
 
