@@ -1,7 +1,5 @@
-(--------------------------------------------------)
-(Generator: viaConstructor)
-(Filename: tests/data/simple.dxf)
-(--------------------------------------------------)
+
+$X
 
 G21 (Metric/mm)
 G40 (No Offsets)
@@ -9,9 +7,8 @@ G90 (Absolute-Mode)
 F100
 G64 P0.05
 M05 (Spindle off)
-M06 T1
+
 M03 S10000 (Spindle on / CW)
-G04 P1 (pause in sec)
 G00 Z5.0
 G00 X0.0 Y0.0
 
