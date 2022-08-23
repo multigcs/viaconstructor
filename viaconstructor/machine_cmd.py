@@ -437,13 +437,12 @@ def get_nearest_free_object(
             (
                 next_filter == ""
                 and offset.level == level
-                and offset.is_pocket == is_pocket
+                and (offset.is_pocket != 0) == is_pocket
                 and offset.setup["mill"]["active"]
             )
             or next_filter == offset_num
         ):
-
-            if offset.is_pocket and offset.setup["pockets"]["insideout"]:
+            if offset.is_pocket == 1 and offset.setup["pockets"]["insideout"]:
                 pocket_filter = None
                 offset_num_pre = offset_num.split(".")[0]
                 for pocket_offset_num in polylines:
@@ -502,7 +501,7 @@ def get_nearest_free_object(
                             nearest_point = len(vertex_data[0]) - 1
                             found = True
 
-    return (found, nearest_idx, nearest_point)
+    return (found, nearest_idx, nearest_point, nearest_dist)
 
 
 def polylines2machine_cmd(project: dict, post: PostProcessor) -> str:
@@ -515,10 +514,16 @@ def polylines2machine_cmd(project: dict, post: PostProcessor) -> str:
 
     next_filter = ""
     order = 0
+    was_pocket = False
     for level in range(project["maxOuter"], -1, -1):
         for is_pocket in (True, False):
             while True:
-                (found, nearest_idx, nearest_point) = get_nearest_free_object(
+                (
+                    found,
+                    nearest_idx,
+                    nearest_point,
+                    nearest_dist,
+                ) = get_nearest_free_object(
                     polylines, level, last_pos, milling, is_pocket, next_filter
                 )
                 next_filter = ""
@@ -578,7 +583,7 @@ def polylines2machine_cmd(project: dict, post: PostProcessor) -> str:
                         post.comment(f"Object: {nearest_idx}")
                         post.comment(f"Distance: {round(obj_distance, 4)}mm")
                         post.comment(f"Closed: {is_closed}")
-                        post.comment(f"isPocket: {polyline.is_pocket}")
+                        post.comment(f"isPocket: {polyline.is_pocket != 0}")
                         if (
                             project["setup"]["maschine"]["mode"] != "laser"
                             and "Z" in project["axis"]
@@ -597,21 +602,31 @@ def polylines2machine_cmd(project: dict, post: PostProcessor) -> str:
                             "--------------------------------------------------"
                         )
 
-                    if is_closed:
-                        if (
-                            project["setup"]["maschine"]["mode"] != "laser"
-                            and "Z" in project["axis"]
+                    depth = polyline.setup["mill"]["step"]
+
+                    if (
+                        project["setup"]["maschine"]["mode"] == "mill"
+                        and "Z" in project["axis"]
+                    ):
+                        if not (
+                            was_pocket
+                            and is_pocket
+                            and nearest_dist < project["setup"]["tool"]["diameter"]
                         ):
                             post.move(z_pos=project["setup"]["mill"]["fast_move_z"])
-                    post.move(x_pos=points[0][0], y_pos=points[0][1])
+                        elif helix_mode:
+                            post.move(z_pos=0.0)
+                        else:
+                            post.move(z_pos=depth)
 
-                    depth = polyline.setup["mill"]["step"]
                     if (
                         project["setup"]["maschine"]["mode"] != "mill"
                         or "Z" not in project["axis"]
                     ):
                         depth = 0.0
-                        post.spindle_cw(project["setup"]["tool"]["speed"], pause=0)
+                        post.move(z_pos=depth)
+
+                    post.move(x_pos=points[0][0], y_pos=points[0][1])
 
                     last_depth = 0.0
                     while True:
@@ -627,7 +642,7 @@ def polylines2machine_cmd(project: dict, post: PostProcessor) -> str:
 
                         if not is_closed:
                             if (
-                                project["setup"]["maschine"]["mode"] != "laser"
+                                project["setup"]["maschine"]["mode"] == "mill"
                                 and "Z" in project["axis"]
                             ):
                                 post.move(z_pos=project["setup"]["mill"]["fast_move_z"])
@@ -643,6 +658,12 @@ def polylines2machine_cmd(project: dict, post: PostProcessor) -> str:
                             else:
                                 post.linear(z_pos=depth)
                             post.feedrate(project["setup"]["tool"]["rate_h"])
+
+                        if (
+                            project["setup"]["maschine"]["mode"] != "mill"
+                            or "Z" not in project["axis"]
+                        ):
+                            post.spindle_cw(project["setup"]["tool"]["speed"], pause=0)
 
                         trav_distance = 0
                         last = points[0]
@@ -705,8 +726,8 @@ def polylines2machine_cmd(project: dict, post: PostProcessor) -> str:
                         ):
                             break
 
-                    if project["setup"]["maschine"]["mode"] != "laser":
-                        post.move(z_pos=project["setup"]["mill"]["fast_move_z"])
+                    # if project["setup"]["maschine"]["mode"] != "laser":
+                    #    post.move(z_pos=project["setup"]["mill"]["fast_move_z"])
 
                     if project["setup"]["maschine"]["mode"] != "mill":
                         post.spindle_off()
@@ -716,9 +737,10 @@ def polylines2machine_cmd(project: dict, post: PostProcessor) -> str:
                     else:
                         last_pos = points[-1]
                     order += 1
-
                 else:
                     break
+
+                was_pocket = is_pocket
 
     machine_cmd_end(project, post)
     return post.get()

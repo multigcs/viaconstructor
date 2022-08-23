@@ -492,6 +492,7 @@ def points2offsets(
     offset_idx,
     tool_offset,
     scale=1.0,
+    is_pocket=0,
 ):
     vertex_data = points2vertex(points, scale=scale)
     polyline_offset = cavc.Polyline(vertex_data, is_closed=obj.closed)
@@ -500,7 +501,7 @@ def points2offsets(
     polyline_offset.layer = obj.layer
     polyline_offset.setup = obj.setup
     polyline_offset.start = obj.start
-    polyline_offset.is_pocket = True
+    polyline_offset.is_pocket = is_pocket
     polyline_offset.fixed_direction = False
     polyline_offsets[f"{obj_idx}.{offset_idx}"] = polyline_offset
     offset_idx += 1
@@ -551,6 +552,7 @@ def do_pockets(  # pylint: disable=R0913
                 offset_idx,
                 tool_offset,
                 scale=0.01,
+                is_pocket=2,
             )
 
         while True:
@@ -564,7 +566,6 @@ def do_pockets(  # pylint: disable=R0913
             subjs = pco.Execute(-abs_tool_radius * 100)  # pylint: disable=E1101
             if not subjs:
                 break
-
             for points in subjs:
                 offset_idx = points2offsets(
                     obj,
@@ -574,6 +575,7 @@ def do_pockets(  # pylint: disable=R0913
                     offset_idx,
                     tool_offset,
                     scale=0.01,
+                    is_pocket=2,
                 )
 
     elif obj.segments[0]["type"] == "CIRCLE" and "center" in obj.segments[0]:
@@ -598,7 +600,7 @@ def do_pockets(  # pylint: disable=R0913
         polyline_offset.layer = obj.layer
         polyline_offset.setup = obj.setup
         polyline_offset.start = obj.start
-        polyline_offset.is_pocket = True
+        polyline_offset.is_pocket = 1
         polyline_offset.fixed_direction = True
         polyline_offsets[f"{obj_idx}.{offset_idx}"] = polyline_offset
         offset_idx += 1
@@ -617,7 +619,7 @@ def do_pockets(  # pylint: disable=R0913
                 polyline_offset.layer = obj.layer
                 polyline_offset.setup = obj.setup
                 polyline_offset.start = obj.start
-                polyline_offset.is_pocket = True
+                polyline_offset.is_pocket = 1
                 polyline_offset.fixed_direction = False
                 polyline_offsets[f"{obj_idx}.{offset_idx}"] = polyline_offset
                 offset_idx += 1
@@ -730,7 +732,7 @@ def object2polyline_offsets(
             over_polyline.start = obj.start
             over_polyline.setup = obj.setup
             over_polyline.layer = obj.layer
-            over_polyline.is_pocket = False
+            over_polyline.is_pocket = 0
             over_polyline.fixed_direction = False
             over_polyline.tool_offset = tool_offset
             polyline_offsets[f"{obj_idx}.{offset_idx}"] = over_polyline
@@ -764,7 +766,7 @@ def object2polyline_offsets(
                 polyline_offset.tool_offset = tool_offset
                 polyline_offset.setup = obj.setup
                 polyline_offset.layer = obj.layer
-                polyline_offset.is_pocket = False
+                polyline_offset.is_pocket = 0
                 polyline_offset.fixed_direction = False
                 polyline_offset.is_circle = is_circle
                 polyline_offsets[f"{obj_idx}.{offset_idx}"] = polyline_offset
@@ -793,7 +795,7 @@ def object2polyline_offsets(
             polyline_offset.tool_offset = tool_offset
             polyline_offset.setup = obj.setup
             polyline_offset.layer = obj.layer
-            polyline_offset.is_pocket = False
+            polyline_offset.is_pocket = 0
             polyline_offset.fixed_direction = False
             polyline_offset.is_circle = True
             polyline_offsets[f"{obj_idx}.{offset_idx}.x"] = polyline_offset
@@ -808,7 +810,7 @@ def object2polyline_offsets(
         polyline.tool_offset = tool_offset
         polyline.start = obj.start
         polyline.layer = obj.layer
-        polyline.is_pocket = False
+        polyline.is_pocket = 0
         polyline.fixed_direction = False
         polyline.is_circle = False
         polyline_offsets[f"{obj_idx}.{offset_idx}"] = polyline
