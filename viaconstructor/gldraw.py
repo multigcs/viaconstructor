@@ -153,6 +153,7 @@ def draw_grid(project: dict) -> None:
     center_x = min_max[0] + size_x / 2
     size_y = min_max[3] - min_max[1]
     center_y = min_max[1] + size_y / 2
+    z_offset = -project["setup"]["workpiece"]["offset_z"]
 
     if project["setup"]["view"]["grid_show"]:
         # Grid-X
@@ -190,6 +191,18 @@ def draw_grid(project: dict) -> None:
     GL.glVertex3f(-1, 1, 0.0)
     GL.glVertex3f(1, -1, 0.0)
     GL.glEnd()
+
+    # Z-Offset
+    if z_offset:
+        GL.glLineWidth(1)
+        GL.glColor3f(1.0, 0.0, 1.0)
+        GL.glBegin(GL.GL_LINES)
+        GL.glVertex3f(-2, -1, z_offset)
+        GL.glVertex3f(2, 2, z_offset)
+        GL.glVertex3f(-2, 2, z_offset)
+        GL.glVertex3f(2, -2, z_offset)
+        GL.glEnd()
+
     # Zero-X
     GL.glColor3f(0.5, 0.0, 0.0)
     GL.glBegin(GL.GL_LINES)

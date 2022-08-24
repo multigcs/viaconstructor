@@ -608,15 +608,15 @@ class ViaConstructor:
         psetup: dict = self.project["setup"]
         min_max = objects2minmax(self.project["objects"])
         self.project["minMax"] = min_max
-        if psetup["mill"]["zero"] == "bottomLeft":
+        if psetup["workpiece"]["zero"] == "bottomLeft":
             move_objects(self.project["objects"], -min_max[0], -min_max[1])
-        elif psetup["mill"]["zero"] == "bottomRight":
+        elif psetup["workpiece"]["zero"] == "bottomRight":
             move_objects(self.project["objects"], -min_max[2], -min_max[1])
-        elif psetup["mill"]["zero"] == "topLeft":
+        elif psetup["workpiece"]["zero"] == "topLeft":
             move_objects(self.project["objects"], -min_max[0], -min_max[3])
-        elif psetup["mill"]["zero"] == "topRight":
+        elif psetup["workpiece"]["zero"] == "topRight":
             move_objects(self.project["objects"], -min_max[2], -min_max[3])
-        elif psetup["mill"]["zero"] == "center":
+        elif psetup["workpiece"]["zero"] == "center":
             xdiff = min_max[2] - min_max[0]
             ydiff = min_max[3] - min_max[1]
             move_objects(

@@ -113,10 +113,10 @@ class fakeOffset:
                 "glwidget": "",
                 "setup": {
                     "workpiece": {
-                        "mirrorH": False,
-                        "mirrorV": False,
-                        "rotate": "0",
                         "zero": "bottomLeft",
+                        "offset_x": 0.0,
+                        "offset_y": 0.0,
+                        "offset_z": 0.0,
                     },
                     "tool": {
                         "diameter": 4.0,
@@ -140,9 +140,6 @@ class fakeOffset:
                     "maschine": {
                         "mode": "mill",
                         "comments": True,
-                        "offset_x": 0.0,
-                        "offset_y": 0.0,
-                        "offset_z": 0.0,
                     },
                 },
                 "tablewidget": "",

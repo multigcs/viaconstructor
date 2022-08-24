@@ -94,6 +94,15 @@ def machine_cmd_begin(project: dict, post: PostProcessor) -> None:
 
     post.unit("mm")
     post.tool_offsets("none")
+
+    post.machine_offsets(
+        offsets=(
+            project["setup"]["workpiece"]["offset_x"],
+            project["setup"]["workpiece"]["offset_y"],
+            project["setup"]["workpiece"]["offset_z"],
+        )
+    )
+
     post.absolute(True)
     if project["setup"]["maschine"]["mode"] == "mill" and "Z" in project["axis"]:
         if project["setup"]["mill"]["G64"] > 0.0:

@@ -10,6 +10,7 @@ class PostProcessorGcodeLinuxCNC(PostProcessor):
         self.z_pos: float = None
         self.rate: int = 0
         self.speed: int = -1
+        self.offsets: tuple[float, float, float] = (0.0, 0.0, 0.0)
 
     def separation(self) -> None:
         if self.comments:
@@ -64,9 +65,16 @@ class PostProcessorGcodeLinuxCNC(PostProcessor):
     def machine_offsets(
         self, offsets: tuple[float, float, float] = (0.0, 0.0, 0.0)
     ) -> None:
-        pass
+        self.offsets = offsets
+        if self.offsets != (0.0, 0.0, 0.0):
+            self.gcode.append(
+                f"G10 L2 P1 X{offsets[0]} Y{offsets[1]} Z{offsets[2]} (workpiece offsets for G54)"
+            )
+            self.gcode.append("G54")
 
     def program_end(self) -> None:
+        if self.offsets != (0.0, 0.0, 0.0):
+            self.gcode.append("G10 L2 P1 X0 Y0 Z0 (reset offsets for G54)")
         self.gcode.append("M02")
 
     def comment(self, text) -> None:
