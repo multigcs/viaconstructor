@@ -121,8 +121,7 @@ def no_translation(text):
 _ = no_translation
 lang = os.environ.get("LANGUAGE")
 if lang:
-    this_dir, this_filename = os.path.split(__file__)
-    localedir = os.path.join(this_dir, "..", "locales")
+    localedir = os.path.join(Path(__file__).resolve().parent, "locales")
     try:
         lang_translations = gettext.translation(
             "base", localedir=localedir, languages=[lang]
@@ -130,7 +129,7 @@ if lang:
         lang_translations.install()
         _ = lang_translations.gettext
     except FileNotFoundError:
-        pass
+        print(f"WARNING: localedir not found {localedir}")
 
 
 class GLWidget(QGLWidget):
@@ -557,6 +556,8 @@ class ViaConstructor:
     draw_reader: Optional[DrawReaderBase] = None
     status_bar: Optional[QWidget] = None
     main: Optional[QMainWindow] = None
+
+    module_root = Path(__file__).resolve().parent
 
     def save_objects_as_dxf(self, output_file) -> bool:
         try:
@@ -1394,12 +1395,7 @@ class ViaConstructor:
         section = ""
 
         for title, toolbutton in toolbuttons.items():
-            icon = os.path.join(self.this_dir, "..", "data", toolbutton[0])
-            if not os.path.isfile(icon):
-                icon = os.path.join("/usr", "data", toolbutton[0])
-            if not os.path.isfile(icon):
-                icon = os.path.join("/usr", "local", "data", toolbutton[0])
-
+            icon = os.path.join(self.module_root, "icons", toolbutton[0])
             if toolbutton[5] != section:
                 self.toolbar.addSeparator()
                 section = toolbutton[5]
@@ -1505,7 +1501,7 @@ class ViaConstructor:
                             button.setIcon(
                                 QIcon(
                                     os.path.join(
-                                        self.this_dir, "..", "data", "select.png"
+                                        self.module_root, "icons", "select.png"
                                     )
                                 )
                             )

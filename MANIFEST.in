@@ -1,1 +1,4 @@
 include viaconstructor/ext/cavaliercontours/lib/*.so
+include viaconstructor/icons/*.png
+include viaconstructor/locales/*/LC_MESSAGES/base.po
+include viaconstructor/locales/*/LC_MESSAGES/base.mo
