@@ -1437,11 +1437,11 @@ class ViaConstructor:
             for ename, entry in self.project["setup_defaults"][sname].items():
                 container = QWidget()
                 hlayout = QHBoxLayout(container)
-                label = QLabel(_(entry.get("title", ename)))
+                label = QLabel(entry.get("title", ename))
                 hlayout.addWidget(label)
                 vlayout.addWidget(container)
                 if entry["type"] == "bool":
-                    checkbox = QCheckBox(_(entry.get("title", ename)))
+                    checkbox = QCheckBox(entry.get("title", ename))
                     checkbox.setChecked(self.project["setup"][sname][ename])
                     checkbox.setToolTip(entry.get("tooltip", f"{sname}/{ename}"))
                     checkbox.stateChanged.connect(self.global_changed)  # type: ignore

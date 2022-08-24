@@ -5,7 +5,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
-"POT-Creation-Date: 2022-08-24 13:09+0200\n"
+"POT-Creation-Date: 2022-08-24 13:13+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -53,7 +53,7 @@ msgstr ""
 
 #: viaconstructor/setupdefaults.py:43
 msgid "enable/disable this object"
-msgstr "aktivieren/deaktivieren des Objekts"
+msgstr ""
 
 #: viaconstructor/setupdefaults.py:49 viaconstructor/setupdefaults.py:50
 msgid "Helix"
@@ -61,7 +61,7 @@ msgstr ""
 
 #: viaconstructor/setupdefaults.py:56 viaconstructor/setupdefaults.py:57
 msgid "Reverse"
-msgstr "Umdrehen"
+msgstr ""
 
 #: viaconstructor/setupdefaults.py:62
 msgid "Back-Home"
@@ -77,7 +77,7 @@ msgstr ""
 
 #: viaconstructor/setupdefaults.py:70
 msgid "milling small circles even if the tool is bigger"
-msgstr "fräse Kreise auch wenn diese kleiner als der Fräser sind"
+msgstr ""
 
 #: viaconstructor/setupdefaults.py:76
 msgid "Overcut"
@@ -86,39 +86,38 @@ msgstr ""
 #: viaconstructor/setupdefaults.py:77
 msgid "Overcuting edges"
 msgstr ""
-"Ausfräsen von Ecken die bedingt durch den Fräser-Radius stehen bleiben würden"
 
 #: viaconstructor/setupdefaults.py:83
 msgid "original"
-msgstr "Original"
+msgstr ""
 
 #: viaconstructor/setupdefaults.py:84
 msgid "bottomLeft"
-msgstr "Unten-Links"
+msgstr ""
 
 #: viaconstructor/setupdefaults.py:85
 msgid "center"
-msgstr "Mittig"
+msgstr ""
 
 #: viaconstructor/setupdefaults.py:86
 msgid "bottomRight"
-msgstr "Unten-Rechts"
+msgstr ""
 
 #: viaconstructor/setupdefaults.py:87
 msgid "topLeft"
-msgstr "Oben-Links"
+msgstr ""
 
 #: viaconstructor/setupdefaults.py:88
 msgid "topRight"
-msgstr "Oben-Rechts"
+msgstr ""
 
 #: viaconstructor/setupdefaults.py:90
 msgid "Zero-Position"
-msgstr "Null-Position"
+msgstr ""
 
 #: viaconstructor/setupdefaults.py:91
 msgid "setting the Zero-Postition of the Workpiece"
-msgstr "setzen der Null-Position des Werkstücks"
+msgstr ""
 
 #: viaconstructor/setupdefaults.py:98
 msgid "auto"
@@ -162,27 +161,27 @@ msgstr ""
 
 #: viaconstructor/setupdefaults.py:129
 msgid "Number"
-msgstr "Nummer"
+msgstr ""
 
 #: viaconstructor/setupdefaults.py:130
 msgid "setting the Tool-Number to load in gcode"
-msgstr "setzen der Werkzeug-Nummer"
+msgstr ""
 
 #: viaconstructor/setupdefaults.py:137
 msgid "Diameter"
-msgstr "Durchmesser"
+msgstr ""
 
 #: viaconstructor/setupdefaults.py:138
 msgid "setting the Tool-Diameter to calculate the Offsets"
-msgstr "setzen des Fräser-Durchmesser's"
+msgstr ""
 
 #: viaconstructor/setupdefaults.py:145
 msgid "Speed"
-msgstr "Geschwindigkeit"
+msgstr ""
 
 #: viaconstructor/setupdefaults.py:146
 msgid "setting the Tool-Speed in RPM"
-msgstr "setzen der Fräser-Geschwindigkeit (Umdehungen/Minute)"
+msgstr ""
 
 #: viaconstructor/setupdefaults.py:188
 msgid "Tools"
@@ -206,7 +205,7 @@ msgstr ""
 
 #: viaconstructor/setupdefaults.py:264
 msgid "do pocket operation on this object"
-msgstr "erzeuge pocket operation auf diesem Objekt"
+msgstr ""
 
 #: viaconstructor/setupdefaults.py:270
 msgid "Islands"
@@ -273,9 +272,8 @@ msgid "maximum feedrate while milling"
 msgstr ""
 
 #: viaconstructor/setupdefaults.py:332
-#, fuzzy
 msgid "Tool-Speed"
-msgstr "Geschwindigkeit"
+msgstr ""
 
 #: viaconstructor/setupdefaults.py:333
 msgid "maximum tool-speed"
@@ -310,9 +308,8 @@ msgid "laser+z"
 msgstr ""
 
 #: viaconstructor/setupdefaults.py:353 viaconstructor/setupdefaults.py:354
-#, fuzzy
 msgid "Tool-Mode"
-msgstr "Geschwindigkeit"
+msgstr ""
 
 #: viaconstructor/setupdefaults.py:359
 msgid "Comments in output"
@@ -520,4 +517,4 @@ msgstr ""
 
 #: viaconstructor/viaconstructor.py:1750
 msgid "Global-Settings:"
-msgstr "Globale-Einstellungen:"
+msgstr ""
