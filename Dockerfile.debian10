@@ -1,0 +1,12 @@
+
+FROM python:3.9-buster
+
+RUN apt-get update
+RUN apt-get -y install libglib2.0-0 libgl1 libqt5gui5 libglu1-mesa diffutils
+
+RUN pip3 install PyQt5 ezdxf PyOpenGL Pillow pygame pyclipper setproctitle freetype-py matplotlib svgwrite
+
+RUN ln -s /usr/lib/x86_64-linux-gnu/libxcb-util.so.0 /usr/lib/x86_64-linux-gnu/libxcb-util.so.1
+
+CMD ["/bin/bash"]
+
