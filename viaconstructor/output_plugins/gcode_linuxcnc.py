@@ -45,7 +45,7 @@ class PostProcessorGcodeLinuxCNC(PostProcessor):
             else:
                 self.gcode.append("G91")
 
-    def offsets(self, offset="none") -> None:
+    def tool_offsets(self, offset="none") -> None:
         if self.comments:
             if offset == "none":
                 self.gcode.append("G40 (No Offsets)")
@@ -60,6 +60,11 @@ class PostProcessorGcodeLinuxCNC(PostProcessor):
                 self.gcode.append("G41")
             else:
                 self.gcode.append("G42")
+
+    def machine_offsets(
+        self, offsets: tuple[float, float, float] = (0.0, 0.0, 0.0)
+    ) -> None:
+        self.gcode.append(f"G54 X{offsets[0]} Y{offsets[1]} Z{offsets[2]}")
 
     def program_end(self) -> None:
         self.gcode.append("M02")

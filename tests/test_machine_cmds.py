@@ -140,6 +140,9 @@ class fakeOffset:
                     "maschine": {
                         "mode": "mill",
                         "comments": True,
+                        "offset_x": 0.0,
+                        "offset_y": 0.0,
+                        "offset_z": 0.0,
                     },
                 },
                 "tablewidget": "",
@@ -153,6 +156,7 @@ class fakeOffset:
 
 G21 (Metric/mm)
 G40 (No Offsets)
+G54 X0.0 Y0.0 Z0.0
 G90 (Absolute-Mode)
 G64 P0.05
 M05 (Spindle off)

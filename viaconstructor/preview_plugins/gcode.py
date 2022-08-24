@@ -68,6 +68,8 @@ class GcodeParser:
                     self.state["offsets"] = "LEFT"
                 elif ldata["G"] == 42:
                     self.state["offsets"] = "RIGHT"
+                elif ldata["G"] == 54:
+                    pass
                 elif ldata["G"] == 64:
                     if "P" in ldata:
                         pass

@@ -31,7 +31,12 @@ class PostProcessor:
     def absolute(self, active=True) -> None:
         pass
 
-    def offsets(self, offset="none") -> None:
+    def tool_offsets(self, offset="none") -> None:
+        pass
+
+    def machine_offsets(
+        self, offsets: tuple[float, float, float] = (0.0, 0.0, 0.0)
+    ) -> None:
         pass
 
     def program_start(self) -> None:
@@ -84,9 +89,18 @@ def machine_cmd_begin(project: dict, post: PostProcessor) -> None:
         post.comment(f"Tool-Mode: {project['setup']['maschine']['mode']}")
         post.comment("--------------------------------------------------")
     post.separation()
+
     post.program_start()
+
     post.unit("mm")
-    post.offsets("none")
+    post.tool_offsets("none")
+    post.machine_offsets(
+        offsets=(
+            project["setup"]["maschine"]["offset_x"],
+            project["setup"]["maschine"]["offset_y"],
+            project["setup"]["maschine"]["offset_z"],
+        )
+    )
     post.absolute(True)
     if project["setup"]["maschine"]["mode"] == "mill" and "Z" in project["axis"]:
         if project["setup"]["mill"]["G64"] > 0.0:

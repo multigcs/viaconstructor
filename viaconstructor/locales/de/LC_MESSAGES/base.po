@@ -5,7 +5,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
-"POT-Creation-Date: 2022-08-24 13:13+0200\n"
+"POT-Creation-Date: 2022-08-24 14:21+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -311,87 +311,111 @@ msgstr ""
 msgid "Tool-Mode"
 msgstr ""
 
-#: viaconstructor/setupdefaults.py:359
-msgid "Comments in output"
+#: viaconstructor/setupdefaults.py:361
+msgid "Offset X"
 msgstr ""
 
-#: viaconstructor/setupdefaults.py:360
-msgid "add comments to output"
+#: viaconstructor/setupdefaults.py:362
+msgid "Offset X (G54)"
 msgstr ""
 
-#: viaconstructor/setupdefaults.py:365
-msgid "Post-Command"
+#: viaconstructor/setupdefaults.py:369
+msgid "Offset Y"
 msgstr ""
 
-#: viaconstructor/setupdefaults.py:366
-msgid "Post-Command to do things after save like upload to cnc"
+#: viaconstructor/setupdefaults.py:370
+msgid "Offset Y (G54)"
 msgstr ""
 
-#: viaconstructor/setupdefaults.py:374
-msgid "minimal"
-msgstr ""
-
-#: viaconstructor/setupdefaults.py:375
-msgid "simple"
-msgstr ""
-
-#: viaconstructor/setupdefaults.py:376
-msgid "full"
+#: viaconstructor/setupdefaults.py:377
+msgid "Offset Z"
 msgstr ""
 
 #: viaconstructor/setupdefaults.py:378
-msgid "Path"
+msgid "Offset Z (G54)"
 msgstr ""
 
-#: viaconstructor/setupdefaults.py:379
-msgid "how to show the gcode path in the 3d-View"
+#: viaconstructor/setupdefaults.py:383
+msgid "Comments in output"
 msgstr ""
 
 #: viaconstructor/setupdefaults.py:384
-msgid "Ruler-Show"
+msgid "add comments to output"
 msgstr ""
 
-#: viaconstructor/setupdefaults.py:385
-msgid "showing ruler in 3D preview"
+#: viaconstructor/setupdefaults.py:389
+msgid "Post-Command"
 msgstr ""
 
 #: viaconstructor/setupdefaults.py:390
-msgid "Grid-Show"
-msgstr ""
-
-#: viaconstructor/setupdefaults.py:391
-msgid "showing grid in 3D preview"
+msgid "Post-Command to do things after save like upload to cnc"
 msgstr ""
 
 #: viaconstructor/setupdefaults.py:398
-msgid "Grid-Size"
+msgid "minimal"
 msgstr ""
 
 #: viaconstructor/setupdefaults.py:399
+msgid "simple"
+msgstr ""
+
+#: viaconstructor/setupdefaults.py:400
+msgid "full"
+msgstr ""
+
+#: viaconstructor/setupdefaults.py:402
+msgid "Path"
+msgstr ""
+
+#: viaconstructor/setupdefaults.py:403
+msgid "how to show the gcode path in the 3d-View"
+msgstr ""
+
+#: viaconstructor/setupdefaults.py:408
+msgid "Ruler-Show"
+msgstr ""
+
+#: viaconstructor/setupdefaults.py:409
+msgid "showing ruler in 3D preview"
+msgstr ""
+
+#: viaconstructor/setupdefaults.py:414
+msgid "Grid-Show"
+msgstr ""
+
+#: viaconstructor/setupdefaults.py:415
+msgid "showing grid in 3D preview"
+msgstr ""
+
+#: viaconstructor/setupdefaults.py:422
+msgid "Grid-Size"
+msgstr ""
+
+#: viaconstructor/setupdefaults.py:423
 msgid "size of the grid"
 msgstr ""
 
-#: viaconstructor/setupdefaults.py:404
+#: viaconstructor/setupdefaults.py:428
 msgid "Show as Polygon"
 msgstr ""
 
-#: viaconstructor/setupdefaults.py:405
+#: viaconstructor/setupdefaults.py:429
 msgid "showing as polygon in 3D preview"
 msgstr ""
 
-#: viaconstructor/setupdefaults.py:410
+#: viaconstructor/setupdefaults.py:434
 msgid "Show Object-ID's"
 msgstr ""
 
-#: viaconstructor/setupdefaults.py:411
+#: viaconstructor/setupdefaults.py:435
 msgid "shows id of each object"
 msgstr ""
 
-#: viaconstructor/setupdefaults.py:416
+#: viaconstructor/setupdefaults.py:440
 msgid "Show inputfile in 3d"
 msgstr ""
 
-#: viaconstructor/setupdefaults.py:417
+#: viaconstructor/setupdefaults.py:441
 msgid "Show inputfile in 3d if possible"
 msgstr ""
 
