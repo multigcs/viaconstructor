@@ -156,7 +156,6 @@ class fakeOffset:
 
 G21 (Metric/mm)
 G40 (No Offsets)
-G54 X0.0 Y0.0 Z0.0
 G90 (Absolute-Mode)
 G64 P0.05
 M05 (Spindle off)
