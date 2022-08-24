@@ -140,6 +140,7 @@ class fakeOffset:
                     "maschine": {
                         "mode": "mill",
                         "comments": True,
+                        "g54": False,
                     },
                 },
                 "tablewidget": "",

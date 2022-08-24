@@ -35,7 +35,7 @@ class PostProcessor:
         pass
 
     def machine_offsets(
-        self, offsets: tuple[float, float, float] = (0.0, 0.0, 0.0)
+        self, offsets: tuple[float, float, float] = (0.0, 0.0, 0.0), soft: bool = True
     ) -> None:
         pass
 
@@ -87,6 +87,14 @@ def machine_cmd_begin(project: dict, post: PostProcessor) -> None:
         post.comment("Generator: viaConstructor")
         post.comment(f"Filename: {project['filename_draw']}")
         post.comment(f"Tool-Mode: {project['setup']['maschine']['mode']}")
+        if (
+            project["setup"]["workpiece"]["offset_x"] != 0.0
+            or project["setup"]["workpiece"]["offset_y"] != 0.0
+            or project["setup"]["workpiece"]["offset_z"] != 0.0
+        ):
+            post.comment(
+                f"Offsets: {project['setup']['workpiece']['offset_x']}, {project['setup']['workpiece']['offset_y']}, {project['setup']['workpiece']['offset_z']}"
+            )
         post.comment("--------------------------------------------------")
     post.separation()
 
@@ -100,7 +108,8 @@ def machine_cmd_begin(project: dict, post: PostProcessor) -> None:
             project["setup"]["workpiece"]["offset_x"],
             project["setup"]["workpiece"]["offset_y"],
             project["setup"]["workpiece"]["offset_z"],
-        )
+        ),
+        soft=not project["setup"]["maschine"]["g54"],
     )
 
     post.absolute(True)

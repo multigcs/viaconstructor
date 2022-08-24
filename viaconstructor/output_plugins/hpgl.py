@@ -15,6 +15,8 @@ class PostProcessorHpgl(PostProcessor):
         self.z_pos: int = 0
         self.rate: int = 0
         self.toolrun: bool = False
+        self.offsets: tuple[float, float, float] = (0.0, 0.0, 0.0)
+        self.scale: float = 40.0
 
     def separation(self) -> None:
         if self.comments:
@@ -29,6 +31,11 @@ class PostProcessorHpgl(PostProcessor):
     def program_start(self) -> None:
         self.toolrun = False
         self.hpgl.append("PU")
+
+    def machine_offsets(
+        self, offsets: tuple[float, float, float] = (0.0, 0.0, 0.0), soft: bool = True
+    ) -> None:
+        self.offsets = offsets
 
     def program_end(self) -> None:
         self.toolrun = False
@@ -52,11 +59,11 @@ class PostProcessorHpgl(PostProcessor):
 
     def move(self, x_pos=None, y_pos=None, z_pos=None) -> None:
         if x_pos is not None:
-            self.x_pos = int(x_pos * 40)
+            self.x_pos = int((x_pos + self.offsets[0]) * self.scale)
         if y_pos is not None:
-            self.y_pos = int(y_pos * 40)
+            self.y_pos = int((y_pos + self.offsets[1]) * self.scale)
         if z_pos is not None:
-            self.z_pos = int(z_pos * 40)
+            self.z_pos = int((z_pos + self.offsets[2]) * self.scale)
         if x_pos is not None or y_pos is not None:
             self.hpgl.append("PU")
             self.hpgl.append(f"{int(self.x_pos)},{int(self.y_pos)}")
@@ -65,11 +72,11 @@ class PostProcessorHpgl(PostProcessor):
 
     def linear(self, x_pos=None, y_pos=None, z_pos=None) -> None:
         if x_pos is not None:
-            self.x_pos = int(x_pos * 40)
+            self.x_pos = int((x_pos + self.offsets[0]) * self.scale)
         if y_pos is not None:
-            self.y_pos = int(y_pos * 40)
+            self.y_pos = int((y_pos + self.offsets[1]) * self.scale)
         if z_pos is not None:
-            self.z_pos = int(z_pos * 40)
+            self.z_pos = int((z_pos + self.offsets[2]) * self.scale)
         if x_pos is not None or y_pos is not None:
             self.hpgl.append(f"P{'D' if self.toolrun else 'U'}")
             self.hpgl.append(f"{int(self.x_pos)},{int(self.y_pos)}")
@@ -120,14 +127,14 @@ class PostProcessorHpgl(PostProcessor):
         r_pos=None,  # pylint: disable=W0613
     ) -> None:
         if x_pos is not None:
-            self.x_pos = int(x_pos * 40)
+            self.x_pos = int((x_pos + self.offsets[0]) * self.scale)
         if y_pos is not None:
-            self.y_pos = int(y_pos * 40)
+            self.y_pos = int((y_pos + self.offsets[1]) * self.scale)
         if z_pos is not None:
-            self.z_pos = int(z_pos * 40)
+            self.z_pos = int((z_pos + self.offsets[2]) * self.scale)
         if x_pos is not None and y_pos is not None:
-            center_x = self.last_x + i_pos * 40
-            center_y = self.last_y + j_pos * 40
+            center_x = self.last_x + i_pos * self.scale
+            center_y = self.last_y + j_pos * self.scale
             self.arc_move(
                 self.last_x, self.last_y, self.x_pos, self.y_pos, center_x, center_y, 2
             )
@@ -144,14 +151,14 @@ class PostProcessorHpgl(PostProcessor):
         r_pos=None,  # pylint: disable=W0613
     ) -> None:
         if x_pos is not None:
-            self.x_pos = int(x_pos * 40)
+            self.x_pos = int((x_pos + self.offsets[0]) * self.scale)
         if y_pos is not None:
-            self.y_pos = int(y_pos * 40)
+            self.y_pos = int((y_pos + self.offsets[0]) * self.scale)
         if z_pos is not None:
-            self.z_pos = int(z_pos * 40)
+            self.z_pos = int((z_pos + self.offsets[0]) * self.scale)
         if x_pos is not None and y_pos is not None:
-            center_x = self.last_x + i_pos * 40
-            center_y = self.last_y + j_pos * 40
+            center_x = self.last_x + i_pos * self.scale
+            center_y = self.last_y + j_pos * self.scale
             self.arc_move(
                 self.last_x, self.last_y, self.x_pos, self.y_pos, center_x, center_y, 3
             )

@@ -379,6 +379,12 @@ def setup_defaults(_) -> dict:
                 "title": _("Tool-Mode"),
                 "tooltip": _("Tool-Mode"),
             },
+            "g54": {
+                "default": False,
+                "type": "bool",
+                "title": _("maschine supports g54"),
+                "tooltip": _("maschine supports g54"),
+            },
             "comments": {
                 "default": True,
                 "type": "bool",

@@ -418,8 +418,20 @@ def draw_object_faces(project: dict) -> None:
 
 def draw_line(p_1: dict, p_2: dict, options: str, project: dict) -> None:
     """callback function for Parser to draw the lines"""
-    p_from = (p_1["X"], p_1["Y"], p_1["Z"])
-    p_to = (p_2["X"], p_2["Y"], p_2["Z"])
+    if project["setup"]["maschine"]["g54"]:
+        p_from = (p_1["X"], p_1["Y"], p_1["Z"])
+        p_to = (p_2["X"], p_2["Y"], p_2["Z"])
+    else:
+        p_from = (
+            p_1["X"] - project["setup"]["workpiece"]["offset_x"],
+            p_1["Y"] - project["setup"]["workpiece"]["offset_y"],
+            p_1["Z"] - project["setup"]["workpiece"]["offset_z"],
+        )
+        p_to = (
+            p_2["X"] - project["setup"]["workpiece"]["offset_x"],
+            p_2["Y"] - project["setup"]["workpiece"]["offset_y"],
+            p_2["Z"] - project["setup"]["workpiece"]["offset_z"],
+        )
     line_width = project["setup"]["tool"]["diameter"]
     mode = project["setup"]["view"]["path"]
     draw_mill_line(p_from, p_to, line_width, mode, options)
@@ -432,6 +444,8 @@ def draw_maschinecode_path(project: dict) -> bool:
         if project["suffix"] in {"ngc", "gcode"}:
             GcodeParser(project["machine_cmd"]).draw(draw_line, (project,))
         elif project["suffix"] in {"hpgl", "hpg"}:
+            project["setup"]["maschine"]["g54"] = False
+            project["setup"]["workpiece"]["offset_z"] = 0.0
             HpglParser(project["machine_cmd"]).draw(draw_line, (project,))
     except Exception as error_string:  # pylint: disable=W0703:
         print(f"ERROR: parsing machine_cmd: {error_string}")
