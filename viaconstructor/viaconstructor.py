@@ -95,11 +95,15 @@ for reader in ("dxfread", "hpglread", "stlread", "svgread", "ttfread", "imgread"
         )
         reader_plugins[reader] = drawing_reader.DrawReader
     except Exception as reader_error:  # pylint: disable=W0703
-        print(f"ERRO while loading input plugin {reader}: {reader_error}")
+        sys.stderr.write(f"ERRO while loading input plugin {reader}: {reader_error}\n")
 
 
 DEBUG = False
 TIMESTAMP = 0
+
+
+def eprint(message, *args, **kwargs):  # pylint: disable=W0613
+    sys.stderr.write(f"{message}\n")
 
 
 def debug(message):
@@ -108,8 +112,8 @@ def debug(message):
         now = time.time()
         if TIMESTAMP == 0:
             TIMESTAMP = now
-        print(round(now - TIMESTAMP, 1))
-        print(f"{message} ", end="", flush=True)
+        eprint(round(now - TIMESTAMP, 1))
+        eprint(f"{message} ", end="", flush=True)
         TIMESTAMP = now
 
 
@@ -126,10 +130,11 @@ if lang:
         lang_translations = gettext.translation(
             "base", localedir=localedir, languages=[lang]
         )
+
         lang_translations.install()
         _ = lang_translations.gettext
     except FileNotFoundError:
-        print(f"WARNING: localedir not found {localedir}")
+        sys.stderr.write(f"WARNING: localedir not found {localedir}\n")
 
 
 class GLWidget(QGLWidget):
@@ -602,7 +607,7 @@ class ViaConstructor:
                 ezdxf.zoom.extents(msp)  # type: ignore
             doc.saveas(output_file)
         except Exception as error:  # pylint: disable=W0703
-            print(f"ERROR while saving dxf: {error}")
+            eprint(f"ERROR while saving dxf: {error}")
             return False
 
         return True
@@ -665,7 +670,7 @@ class ViaConstructor:
             self.project["suffix"] = output_plugin.suffix()
             self.project["axis"] = output_plugin.axis()
         else:
-            print(
+            eprint(
                 f"ERROR: Unknown maschine output plugin: {self.project['setup']['maschine']['plugin']}"
             )
             sys.exit(1)
@@ -768,7 +773,7 @@ class ViaConstructor:
             fd_machine_cmd.write("\n")
             if self.project["setup"]["maschine"]["postcommand"]:
                 cmd = f"{self.project['setup']['maschine']['postcommand']} '{filename}'"
-                print(f"executing postcommand: {cmd}")
+                eprint(f"executing postcommand: {cmd}")
                 os.system(f"{cmd} &")
             return True
         return False
@@ -777,7 +782,7 @@ class ViaConstructor:
         if self.status_bar:
             self.status_bar.showMessage(message)
         else:
-            print(f"STATUS: {message}")
+            eprint(f"STATUS: {message}")
 
     def _toolbar_save_machine_cmd(self) -> None:
         """save machine_cmd."""
@@ -1038,7 +1043,7 @@ class ViaConstructor:
         elif entry_type == "table":
             pass
         else:
-            print(f"Unknown setup-type: {entry_type}")
+            eprint(f"Unknown setup-type: {entry_type}")
             value = None
         self.project["objects"][obj_idx]["setup"][sname][ename] = value
         self.project["maxOuter"] = find_tool_offsets(self.project["objects"])
@@ -1139,7 +1144,7 @@ class ViaConstructor:
                         elif entry["type"] == "table":
                             pass
                         else:
-                            print(f"Unknown setup-type: {entry['type']}")
+                            eprint(f"Unknown setup-type: {entry['type']}")
         # self.project["objwidget"].expandAll()
         debug("update_table: done")
 
@@ -1230,7 +1235,7 @@ class ViaConstructor:
                                 ] = float(value)
                             col_idx += 1
                 else:
-                    print(f"Unknown setup-type: {entry['type']}")
+                    eprint(f"Unknown setup-type: {entry['type']}")
 
         if self.project["setup"]["mill"]["step"] >= 0.0:
             self.project["setup"]["mill"]["step"] = -0.05
@@ -1283,7 +1288,7 @@ class ViaConstructor:
     def _toolbar_exit(self) -> None:
         """exit button."""
         if os.environ.get("LINUXCNCVERSION"):
-            print(self.project["machine_cmd"])
+            eprint(self.project["machine_cmd"])
         sys.exit(0)
 
     def create_toolbar(self) -> None:
@@ -1373,7 +1378,7 @@ class ViaConstructor:
                             table.resizeColumnToContents(col_idx + idxf_offset)
 
                 else:
-                    print(f"Unknown setup-type: {entry['type']}")
+                    eprint(f"Unknown setup-type: {entry['type']}")
 
     def create_global_setup(self, tabwidget) -> None:
         for sname in self.project["setup_defaults"]:
@@ -1477,7 +1482,7 @@ class ViaConstructor:
                     vlayout.addWidget(table)
                     entry["widget"] = table
                 else:
-                    print(f"Unknown setup-type: {entry['type']}")
+                    eprint(f"Unknown setup-type: {entry['type']}")
 
     def udate_tabs_data(self) -> None:
         self.project["tabs"]["data"] = []
@@ -1582,7 +1587,7 @@ class ViaConstructor:
             self.project["setup"]["view"]["path"] = "minimal"
             self.project["setup"]["view"]["object_ids"] = False
 
-        print(f"ERROR: can not load file: {filename}")
+        eprint(f"ERROR: can not load file: {filename}")
         debug("load_drawing: error")
         return False
 
@@ -1841,12 +1846,12 @@ class ViaConstructor:
             # save and exit
             if self.args.dxf:
                 self.update_drawing()
-                print("saving dawing to file:", self.args.dxf)
+                eprint(f"saving dawing to file: {self.args.dxf}")
                 self.save_objects_as_dxf(self.args.dxf)
                 sys.exit(0)
             if self.args.output:
                 self.update_drawing()
-                print("saving machine_cmd to file:", self.args.output)
+                eprint(f"saving machine_cmd to file: {self.args.output}")
                 open(self.args.output, "w").write(self.project["machine_cmd"])
                 sys.exit(0)
 
