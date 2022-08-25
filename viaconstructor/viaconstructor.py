@@ -1292,120 +1292,122 @@ class ViaConstructor:
                     "machine_cmd",
                 ),
             }
-        toolbuttons.update({
-            _("Load setup from"): (
-                "load-setup.png",
-                "",
-                _("Load setup from"),
-                self._toolbar_load_setup_from,
-                True,
-                "setup",
-            ),
-            _("Load setup from machine_cmd"): (
-                "load-setup-gcode.png",
-                "",
-                _("Load-Setup from machine_cmd"),
-                self._toolbar_load_machine_cmd_setup,
-                False,  # os.path.isfile(self.project["filename_machine_cmd"]),
-                "setup",
-            ),
-            _("Save setup as default"): (
-                "save-setup.png",
-                "",
-                _("Save-Setup"),
-                self._toolbar_save_setup,
-                True,
-                "setup",
-            ),
-            _("Save setup as"): (
-                "save-setup-as.png",
-                "",
-                _("Save setup  as"),
-                self._toolbar_save_setup_as,
-                True,
-                "setup",
-            ),
-            _("View-Reset"): (
-                "view-reset.png",
-                "",
-                _("View-Reset"),
-                self._toolbar_view_reset,
-                True,
-                "view",
-            ),
-            _("2D-View"): (
-                "view-2d.png",
-                "",
-                _("2D-View"),
-                self._toolbar_view_2d,
-                True,
-                "view",
-            ),
-            _("Flip-X"): (
-                "flip-x.png",
-                "",
-                _("Flip-X workpiece"),
-                self._toolbar_flipx,
-                True,
-                "workpiece",
-            ),
-            _("Flip-Y"): (
-                "flip-y.png",
-                "",
-                _("Flip-Y workpiece"),
-                self._toolbar_flipy,
-                True,
-                "workpiece",
-            ),
-            _("Rotate"): (
-                "rotate.png",
-                "",
-                _("Rotate workpiece"),
-                self._toolbar_rotate,
-                True,
-                "workpiece",
-            ),
-            _("Scale"): (
-                "scale.png",
-                "",
-                _("Scale workpiece"),
-                self._toolbar_scale,
-                True,
-                "workpiece",
-            ),
-            _("Tab-Selector"): (
-                "tab-selector.png",
-                "",
-                _("Tab-Selector"),
-                self._toolbar_toggle_tab_selector,
-                True,
-                "tabs",
-            ),
-            _("Start-Selector"): (
-                "start.png",
-                "",
-                _("Start-Selector"),
-                self._toolbar_toggle_start_selector,
-                True,
-                "start",
-            ),
-            _("Repair-Selector"): (
-                "repair.png",
-                "",
-                _("Repair-Selector"),
-                self._toolbar_toggle_repair_selector,
-                True,
-                "repair",
-            ),
-            _("Delete-Selector"): (
-                "delete.png",
-                "",
-                _("Delete-Selector"),
-                self._toolbar_toggle_delete_selector,
-                True,
-                "delete",
-            ),
-        })
+        toolbuttons.update(
+            {
+                _("Load setup from"): (
+                    "load-setup.png",
+                    "",
+                    _("Load setup from"),
+                    self._toolbar_load_setup_from,
+                    True,
+                    "setup",
+                ),
+                _("Load setup from machine_cmd"): (
+                    "load-setup-gcode.png",
+                    "",
+                    _("Load-Setup from machine_cmd"),
+                    self._toolbar_load_machine_cmd_setup,
+                    False,  # os.path.isfile(self.project["filename_machine_cmd"]),
+                    "setup",
+                ),
+                _("Save setup as default"): (
+                    "save-setup.png",
+                    "",
+                    _("Save-Setup"),
+                    self._toolbar_save_setup,
+                    True,
+                    "setup",
+                ),
+                _("Save setup as"): (
+                    "save-setup-as.png",
+                    "",
+                    _("Save setup  as"),
+                    self._toolbar_save_setup_as,
+                    True,
+                    "setup",
+                ),
+                _("View-Reset"): (
+                    "view-reset.png",
+                    "",
+                    _("View-Reset"),
+                    self._toolbar_view_reset,
+                    True,
+                    "view",
+                ),
+                _("2D-View"): (
+                    "view-2d.png",
+                    "",
+                    _("2D-View"),
+                    self._toolbar_view_2d,
+                    True,
+                    "view",
+                ),
+                _("Flip-X"): (
+                    "flip-x.png",
+                    "",
+                    _("Flip-X workpiece"),
+                    self._toolbar_flipx,
+                    True,
+                    "workpiece",
+                ),
+                _("Flip-Y"): (
+                    "flip-y.png",
+                    "",
+                    _("Flip-Y workpiece"),
+                    self._toolbar_flipy,
+                    True,
+                    "workpiece",
+                ),
+                _("Rotate"): (
+                    "rotate.png",
+                    "",
+                    _("Rotate workpiece"),
+                    self._toolbar_rotate,
+                    True,
+                    "workpiece",
+                ),
+                _("Scale"): (
+                    "scale.png",
+                    "",
+                    _("Scale workpiece"),
+                    self._toolbar_scale,
+                    True,
+                    "workpiece",
+                ),
+                _("Tab-Selector"): (
+                    "tab-selector.png",
+                    "",
+                    _("Tab-Selector"),
+                    self._toolbar_toggle_tab_selector,
+                    True,
+                    "tabs",
+                ),
+                _("Start-Selector"): (
+                    "start.png",
+                    "",
+                    _("Start-Selector"),
+                    self._toolbar_toggle_start_selector,
+                    True,
+                    "start",
+                ),
+                _("Repair-Selector"): (
+                    "repair.png",
+                    "",
+                    _("Repair-Selector"),
+                    self._toolbar_toggle_repair_selector,
+                    True,
+                    "repair",
+                ),
+                _("Delete-Selector"): (
+                    "delete.png",
+                    "",
+                    _("Delete-Selector"),
+                    self._toolbar_toggle_delete_selector,
+                    True,
+                    "delete",
+                ),
+            }
+        )
         self.toolbar = QToolBar("top toolbar")
         self.main.addToolBar(self.toolbar)  # type: ignore
         section = ""
@@ -1441,7 +1443,51 @@ class ViaConstructor:
                 elif entry["type"] == "str":
                     entry["widget"].setText(self.project["setup"][sname][ename])
                 elif entry["type"] == "table":
-                    pass
+                    # add empty row if not exist
+                    first_element = list(entry["columns"].keys())[0]
+                    if (
+                        str(self.project["setup"][sname][ename][-1][first_element])
+                        != ""
+                    ):
+                        new_row = {}
+                        for key, default in entry["column_defaults"].items():
+                            new_row[key] = default
+                        self.project["setup"][sname][ename].append(new_row)
+
+                    table = entry["widget"]
+                    table.setRowCount(len(self.project["setup"][sname][ename]))
+                    idxf_offset = 0
+                    table.setColumnCount(len(entry["columns"]))
+                    if entry["selectable"]:
+                        table.setColumnCount(len(entry["columns"]) + 1)
+                        table.setHorizontalHeaderItem(0, QTableWidgetItem("Select"))
+                        idxf_offset = 1
+                    for col_idx, title in enumerate(entry["columns"]):
+                        table.setHorizontalHeaderItem(
+                            col_idx + idxf_offset, QTableWidgetItem(title)
+                        )
+                    for row_idx, row in enumerate(self.project["setup"][sname][ename]):
+                        if entry["selectable"]:
+                            button = QPushButton()
+                            button.setIcon(
+                                QIcon(
+                                    os.path.join(
+                                        self.module_root, "icons", "select.png"
+                                    )
+                                )
+                            )
+                            button.setToolTip(_("select this row"))
+                            button.clicked.connect(partial(self.table_select, sname, ename, row_idx))  # type: ignore
+                            table.setCellWidget(row_idx, 0, button)
+                            table.resizeColumnToContents(0)
+                        for col_idx, key in enumerate(entry["columns"]):
+                            table.setItem(
+                                row_idx,
+                                col_idx + idxf_offset,
+                                QTableWidgetItem(str(row[key])),
+                            )
+                            table.resizeColumnToContents(col_idx + idxf_offset)
+
                 else:
                     print(f"Unknown setup-type: {entry['type']}")
 
@@ -1498,6 +1544,17 @@ class ViaConstructor:
                     hlayout.addWidget(lineedit)
                     entry["widget"] = lineedit
                 elif entry["type"] == "table":
+                    # add empty row if not exist
+                    first_element = list(entry["columns"].keys())[0]
+                    if (
+                        str(self.project["setup"][sname][ename][-1][first_element])
+                        != ""
+                    ):
+                        new_row = {}
+                        for key, default in entry["column_defaults"].items():
+                            new_row[key] = default
+                        self.project["setup"][sname][ename].append(new_row)
+
                     table = QTableWidget()
                     label.setToolTip(entry.get("tooltip", f"{sname}/{ename}"))
                     table.setRowCount(len(self.project["setup"][sname][ename]))
