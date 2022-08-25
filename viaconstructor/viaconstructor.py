@@ -1288,7 +1288,7 @@ class ViaConstructor:
     def _toolbar_exit(self) -> None:
         """exit button."""
         if os.environ.get("LINUXCNCVERSION"):
-            eprint(self.project["machine_cmd"])
+            print(self.project["machine_cmd"])
         sys.exit(0)
 
     def create_toolbar(self) -> None:
