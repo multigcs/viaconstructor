@@ -694,7 +694,7 @@ def polylines2machine_cmd(project: dict, post: PostProcessor) -> str:
                             and "Z" in project["axis"]
                         ):
                             if project["setup"]["maschine"]["comments"]:
-                                post.comment(f"- Depth: {depth}mm -")
+                                post.comment(f"- Depth: {depth}{unit} -")
 
                         if not is_closed:
                             if (

@@ -23,7 +23,7 @@ class GcodeParser:
             "feedrate": "0",
             "tool": None,
             "spindle": {"dir": "OFF", "rpm": 0},
-            "position": {"X": 0, "Y": 0, "Z": 0},
+            "position": {"X": 0.0, "Y": 0.0, "Z": 0.0},
         }
 
         self.path: list[list] = []

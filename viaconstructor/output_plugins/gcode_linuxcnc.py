@@ -73,11 +73,15 @@ class PostProcessorGcodeLinuxCNC(PostProcessor):
         if not soft and offsets != (0.0, 0.0, 0.0):
             self.offsets_reset = True
             self.gcode.append(
-                f"G10 L2 P1 X{offsets[0] * self.scale} Y{offsets[1] * self.scale} Z{offsets[2] * self.scale} (workpiece offsets for G54)"
+                f"G10 L2 P1 X{offsets[0]} Y{offsets[1]} Z{offsets[2]} (workpiece offsets for G54)"
             )
             self.gcode.append("G54")
         if soft:
-            self.offsets = offsets
+            self.offsets = (
+                offsets[0] / self.scale,
+                offsets[1] / self.scale,
+                offsets[2] / self.scale,
+            )
 
     def program_end(self) -> None:
         if self.offsets_reset:

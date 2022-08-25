@@ -442,15 +442,19 @@ def draw_line(p_1: dict, p_2: dict, options: str, project: dict) -> None:
         p_from = (p_1["X"], p_1["Y"], p_1["Z"])
         p_to = (p_2["X"], p_2["Y"], p_2["Z"])
     else:
+        unit = project["setup"]["maschine"]["unit"]
+        unitscale = 1.0
+        if unit == "inch":
+            unitscale = 25.4
         p_from = (
-            p_1["X"] - project["setup"]["workpiece"]["offset_x"],
-            p_1["Y"] - project["setup"]["workpiece"]["offset_y"],
-            p_1["Z"] - project["setup"]["workpiece"]["offset_z"],
+            p_1["X"] - project["setup"]["workpiece"]["offset_x"] * unitscale,
+            p_1["Y"] - project["setup"]["workpiece"]["offset_y"] * unitscale,
+            p_1["Z"] - project["setup"]["workpiece"]["offset_z"] * unitscale,
         )
         p_to = (
-            p_2["X"] - project["setup"]["workpiece"]["offset_x"],
-            p_2["Y"] - project["setup"]["workpiece"]["offset_y"],
-            p_2["Z"] - project["setup"]["workpiece"]["offset_z"],
+            p_2["X"] - project["setup"]["workpiece"]["offset_x"] * unitscale,
+            p_2["Y"] - project["setup"]["workpiece"]["offset_y"] * unitscale,
+            p_2["Z"] - project["setup"]["workpiece"]["offset_z"] * unitscale,
         )
     line_width = project["setup"]["tool"]["diameter"]
     mode = project["setup"]["view"]["path"]
