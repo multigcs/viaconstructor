@@ -638,8 +638,12 @@ class ViaConstructor:
         debug("run_calculation: offsets")
 
         # create toolpath from objects
+        unit = psetup["maschine"]["unit"]
+        diameter = psetup["tool"]["diameter"]
+        if unit == "inch":
+            diameter *= 25.4
         self.project["offsets"] = objects2polyline_offsets(
-            psetup["tool"]["diameter"],
+            diameter,
             self.project["objects"],
             self.project["maxOuter"],
             psetup["mill"]["small_circles"],
@@ -946,6 +950,9 @@ class ViaConstructor:
         maschine_toolspeed = self.project["setup"]["maschine"]["tool_speed"]
         tool_number = self.project["setup"]["tool"]["number"]
         tool_diameter = self.project["setup"]["tool"]["diameter"]
+        unit = self.project["setup"]["maschine"]["unit"]
+        if unit == "inch":
+            tool_diameter *= 25.4
         tool_vc = self.project["setup"]["tool"]["materialtable"][material_idx]["vc"]
         tool_speed = tool_vc * 1000 / (tool_diameter * math.pi)
         tool_speed = int(min(tool_speed, maschine_toolspeed))

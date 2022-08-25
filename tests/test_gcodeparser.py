@@ -1759,6 +1759,7 @@ from viaconstructor.preview_plugins import gcode as gcodeparser
                 "absolute": True,
                 "feedrate": 1000.0,
                 "tool": 1,
+                "scale": 1.0,
                 "spindle": {"dir": "OFF", "rpm": 10000.0},
                 "position": {"X": 0.0, "Y": 0.0, "Z": 5.0},
             },

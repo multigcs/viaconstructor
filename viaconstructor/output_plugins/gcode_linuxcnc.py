@@ -12,6 +12,7 @@ class PostProcessorGcodeLinuxCNC(PostProcessor):
         self.speed: int = -1
         self.offsets: tuple[float, float, float] = (0.0, 0.0, 0.0)
         self.offsets_reset = False
+        self.scale: float = 1.0
 
     def separation(self) -> None:
         if self.comments:
@@ -29,11 +30,13 @@ class PostProcessorGcodeLinuxCNC(PostProcessor):
                 self.gcode.append("G21 (Metric/mm)")
             else:
                 self.gcode.append("G21")
+            self.scale = 1.0
         else:
             if self.comments:
                 self.gcode.append("G20 (Imperial/inches)")
             else:
                 self.gcode.append("G20")
+            self.scale = 1.0 / 25.4
 
     def absolute(self, active=True) -> None:
         if active:
@@ -70,7 +73,7 @@ class PostProcessorGcodeLinuxCNC(PostProcessor):
         if not soft and offsets != (0.0, 0.0, 0.0):
             self.offsets_reset = True
             self.gcode.append(
-                f"G10 L2 P1 X{offsets[0]} Y{offsets[1]} Z{offsets[2]} (workpiece offsets for G54)"
+                f"G10 L2 P1 X{offsets[0] * self.scale} Y{offsets[1] * self.scale} Z{offsets[2] * self.scale} (workpiece offsets for G54)"
             )
             self.gcode.append("G54")
         if soft:
@@ -88,13 +91,13 @@ class PostProcessorGcodeLinuxCNC(PostProcessor):
     def move(self, x_pos=None, y_pos=None, z_pos=None) -> None:
         line = []
         if x_pos is not None and self.x_pos != x_pos:
-            line.append(f"X{round(x_pos + self.offsets[0], 6)}")
+            line.append(f"X{round((x_pos + self.offsets[0]) * self.scale, 6)}")
             self.x_pos = x_pos
         if y_pos is not None and self.y_pos != y_pos:
-            line.append(f"Y{round(y_pos + self.offsets[1], 6)}")
+            line.append(f"Y{round((y_pos + self.offsets[1]) * self.scale, 6)}")
             self.y_pos = y_pos
         if z_pos is not None and self.z_pos != z_pos:
-            line.append(f"Z{round(z_pos + self.offsets[2], 6)}")
+            line.append(f"Z{round((z_pos + self.offsets[2]) * self.scale, 6)}")
             self.z_pos = z_pos
         if line:
             self.gcode.append("G00 " + " ".join(line))
@@ -141,13 +144,13 @@ class PostProcessorGcodeLinuxCNC(PostProcessor):
     def linear(self, x_pos=None, y_pos=None, z_pos=None) -> None:
         line = []
         if x_pos is not None and self.x_pos != x_pos:
-            line.append(f"X{round(x_pos + self.offsets[0], 6)}")
+            line.append(f"X{round((x_pos + self.offsets[0]) * self.scale, 6)}")
             self.x_pos = x_pos
         if y_pos is not None and self.y_pos != y_pos:
-            line.append(f"Y{round(y_pos + self.offsets[1], 6)}")
+            line.append(f"Y{round((y_pos + self.offsets[1]) * self.scale, 6)}")
             self.y_pos = y_pos
         if z_pos is not None and self.z_pos != z_pos:
-            line.append(f"Z{round(z_pos + self.offsets[2], 6)}")
+            line.append(f"Z{round((z_pos + self.offsets[2]) * self.scale, 6)}")
             self.z_pos = z_pos
         if line:
             self.gcode.append("G01 " + " ".join(line))
@@ -157,13 +160,13 @@ class PostProcessorGcodeLinuxCNC(PostProcessor):
     ) -> None:
         line = []
         if x_pos is not None and self.x_pos != x_pos:
-            line.append(f"X{round(x_pos + self.offsets[0], 6)}")
+            line.append(f"X{round((x_pos + self.offsets[0]) * self.scale, 6)}")
             self.x_pos = x_pos
         if y_pos is not None and self.y_pos != y_pos:
-            line.append(f"Y{round(y_pos + self.offsets[1], 6)}")
+            line.append(f"Y{round((y_pos + self.offsets[1]) * self.scale, 6)}")
             self.y_pos = y_pos
         if z_pos is not None and self.z_pos != z_pos:
-            line.append(f"Z{round(z_pos + self.offsets[2], 6)}")
+            line.append(f"Z{round((z_pos + self.offsets[2]) * self.scale, 6)}")
             self.z_pos = z_pos
         if i_pos is not None:
             line.append(f"I{round(i_pos, 5)}")
@@ -179,13 +182,13 @@ class PostProcessorGcodeLinuxCNC(PostProcessor):
     ) -> None:
         line = []
         if x_pos is not None and self.x_pos != x_pos:
-            line.append(f"X{round(x_pos + self.offsets[0], 6)}")
+            line.append(f"X{round((x_pos + self.offsets[0]) * self.scale, 6)}")
             self.x_pos = x_pos
         if y_pos is not None and self.y_pos != y_pos:
-            line.append(f"Y{round(y_pos + self.offsets[1], 6)}")
+            line.append(f"Y{round((y_pos + self.offsets[1]) * self.scale, 6)}")
             self.y_pos = y_pos
         if z_pos is not None and self.z_pos != z_pos:
-            line.append(f"Z{round(z_pos + self.offsets[2], 6)}")
+            line.append(f"Z{round((z_pos + self.offsets[2]) * self.scale, 6)}")
             self.z_pos = z_pos
         if i_pos is not None:
             line.append(f"I{round(i_pos, 5)}")

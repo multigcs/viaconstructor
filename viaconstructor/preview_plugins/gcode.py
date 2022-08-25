@@ -15,6 +15,7 @@ class GcodeParser:
             gcode = gcode.split("\n")
 
         self.state: dict = {
+            "scale": 1.0,
             "move_mode": "",
             "offsets": "OFF",
             "metric": "",
@@ -60,8 +61,10 @@ class GcodeParser:
                         pass
                 elif ldata["G"] == 20:
                     self.state["metric"] = "INCH"
+                    self.state["scale"] = 1.0 / 25.4
                 elif ldata["G"] == 21:
                     self.state["metric"] = "MM"
+                    self.state["scale"] = 1.0
                 elif ldata["G"] == 40:
                     self.state["offsets"] = "OFF"
                 elif ldata["G"] == 41:
@@ -146,14 +149,19 @@ class GcodeParser:
         self, cords: dict, fast: bool = False  # pylint: disable=W0613
     ) -> None:
         for axis in self.state["position"]:
-            if axis not in cords:
+            if axis in cords:
+                cords[axis] /= self.state["scale"]
+            else:
                 cords[axis] = self.state["position"][axis]
+
         self.path.append([self.state["position"], cords, self.state["spindle"]["dir"]])
         self.state["position"] = cords
 
     def arc_move_r(self, angle_dir, cords, radius) -> None:  # pylint: disable=W0613
         for axis in self.state["position"]:
-            if axis not in cords:
+            if axis in cords:
+                cords[axis] /= self.state["scale"]
+            else:
                 cords[axis] = self.state["position"][axis]
         last_pos = self.state["position"]
         diff_x = cords["X"] - last_pos["X"]
@@ -181,7 +189,9 @@ class GcodeParser:
 
     def arc_move_ij(self, angle_dir, cords, i, j, radius=None) -> None:
         for axis in self.state["position"]:
-            if axis not in cords:
+            if axis in cords:
+                cords[axis] /= self.state["scale"]
+            else:
                 cords[axis] = self.state["position"][axis]
 
         last_pos = self.state["position"]

@@ -139,6 +139,7 @@ class fakeOffset:
                     "view": {"path": "simple"},
                     "maschine": {
                         "mode": "mill",
+                        "unit": "mm",
                         "comments": True,
                         "g54": False,
                     },

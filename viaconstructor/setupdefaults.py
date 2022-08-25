@@ -393,6 +393,16 @@ def setup_defaults(_) -> dict:
                 "title": _("Tool-Mode"),
                 "tooltip": _("Tool-Mode"),
             },
+            "unit": {
+                "default": "mm",
+                "type": "select",
+                "options": (
+                    ("mm", _("mm")),
+                    ("inch", _("inch")),
+                ),
+                "title": _("Unit"),
+                "tooltip": _("Unit of the maschine"),
+            },
             "g54": {
                 "default": False,
                 "type": "bool",

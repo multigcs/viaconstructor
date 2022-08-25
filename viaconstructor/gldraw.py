@@ -144,7 +144,6 @@ def draw_grid(project: dict) -> None:
     """draws the grid"""
     min_max = project["minMax"]
     size = project["setup"]["view"]["grid_size"]
-    mill_depth = project["setup"]["mill"]["depth"]
     start_x = int(min_max[0] / size) * size - size
     end_x = int(min_max[2] / size) * size + size
     start_y = int(min_max[1] / size) * size - size
@@ -154,6 +153,13 @@ def draw_grid(project: dict) -> None:
     size_y = min_max[3] - min_max[1]
     center_y = min_max[1] + size_y / 2
     z_offset = -project["setup"]["workpiece"]["offset_z"]
+    mill_depth = project["setup"]["mill"]["depth"]
+    unit = project["setup"]["maschine"]["unit"]
+    unitscale = 1.0
+    if unit == "inch":
+        unitscale = 25.4
+        z_offset *= unitscale
+        mill_depth *= unitscale
 
     if project["setup"]["view"]["grid_show"]:
         # Grid-X
@@ -303,6 +309,15 @@ def draw_object_ids(project: dict) -> None:
 
 def draw_object_edges(project: dict, selected: int = -1) -> None:
     """draws the edges of an object"""
+    unit = project["setup"]["maschine"]["unit"]
+    depth = project["setup"]["mill"]["depth"]
+    tabs_height = project["setup"]["tabs"]["height"]
+    unitscale = 1.0
+    if unit == "inch":
+        unitscale = 25.4
+        depth *= unitscale
+        tabs_height *= unitscale
+
     for obj_idx, obj in project["objects"].items():
         if obj.get("layer", "").startswith("BREAKS:") or obj.get(
             "layer", ""
@@ -319,7 +334,7 @@ def draw_object_edges(project: dict, selected: int = -1) -> None:
             p_x = segment["start"][0]
             p_y = segment["start"][1]
             GL.glVertex3f(p_x, p_y, 0.0)
-            GL.glVertex3f(p_x, p_y, project["setup"]["mill"]["depth"])
+            GL.glVertex3f(p_x, p_y, depth)
         GL.glEnd()
         # top
         vertex_data = object2vertex(obj)
@@ -338,7 +353,7 @@ def draw_object_edges(project: dict, selected: int = -1) -> None:
         else:
             GL.glBegin(GL.GL_LINE_STRIP)
         for p_x, p_y in zip(vertex_data[0], vertex_data[1]):
-            GL.glVertex3f(p_x, p_y, project["setup"]["mill"]["depth"])
+            GL.glVertex3f(p_x, p_y, depth)
         GL.glEnd()
         # start points
         start = obj.get("start", ())
@@ -355,9 +370,7 @@ def draw_object_edges(project: dict, selected: int = -1) -> None:
     # tabs
     tabs = project.get("tabs", {}).get("data", ())
     if tabs:
-        tabs_depth = (
-            project["setup"]["mill"]["depth"] + project["setup"]["tabs"]["height"]
-        )
+        tabs_depth = depth + tabs_height
         GL.glLineWidth(5)
         GL.glColor4f(1.0, 1.0, 0.0, 1.0)
         GL.glBegin(GL.GL_LINES)
@@ -369,6 +382,13 @@ def draw_object_edges(project: dict, selected: int = -1) -> None:
 
 def draw_object_faces(project: dict) -> None:
     """draws the top and side faces of an object"""
+    unit = project["setup"]["maschine"]["unit"]
+    depth = project["setup"]["mill"]["depth"]
+    unitscale = 1.0
+    if unit == "inch":
+        unitscale = 25.4
+        depth *= unitscale
+
     # object faces (side)
     GL.glColor4f(0.11, 0.39, 0.63, 0.5)
     for obj in project["objects"].values():
@@ -382,11 +402,11 @@ def draw_object_faces(project: dict) -> None:
             p_y = segment["start"][1]
             GL.glBegin(GL.GL_TRIANGLE_STRIP)
             GL.glVertex3f(p_x, p_y, 0.0)
-            GL.glVertex3f(p_x, p_y, project["setup"]["mill"]["depth"])
+            GL.glVertex3f(p_x, p_y, depth)
             p_x = segment["end"][0]
             p_y = segment["end"][1]
             GL.glVertex3f(p_x, p_y, 0.0)
-            GL.glVertex3f(p_x, p_y, project["setup"]["mill"]["depth"])
+            GL.glVertex3f(p_x, p_y, depth)
             GL.glEnd()
 
     # object faces (top)

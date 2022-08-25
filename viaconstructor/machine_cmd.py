@@ -82,6 +82,13 @@ class PostProcessor:
 
 def machine_cmd_begin(project: dict, post: PostProcessor) -> None:
     """machine_cmd-header"""
+    unit = project["setup"]["maschine"]["unit"]
+    fast_move_z = project["setup"]["mill"]["fast_move_z"]
+    unitscale = 1.0
+    if unit == "inch":
+        unitscale = 25.4
+        fast_move_z *= unitscale
+
     if project["setup"]["maschine"]["comments"]:
         post.comment("--------------------------------------------------")
         post.comment("Generator: viaConstructor")
@@ -100,7 +107,7 @@ def machine_cmd_begin(project: dict, post: PostProcessor) -> None:
 
     post.program_start()
 
-    post.unit("mm")
+    post.unit(project["setup"]["maschine"]["unit"])
     post.tool_offsets("none")
 
     post.machine_offsets(
@@ -120,11 +127,11 @@ def machine_cmd_begin(project: dict, post: PostProcessor) -> None:
         post.tool(project["setup"]["tool"]["number"])
         post.spindle_cw(project["setup"]["tool"]["speed"])
         post.feedrate(project["setup"]["tool"]["rate_v"])
-        post.move(z_pos=project["setup"]["mill"]["fast_move_z"])
+        post.move(z_pos=fast_move_z)
     elif project["setup"]["maschine"]["mode"] == "laser_z" and "Z" in project["axis"]:
         post.spindle_off()
         post.feedrate(project["setup"]["tool"]["rate_v"])
-        post.move(z_pos=project["setup"]["mill"]["fast_move_z"])
+        post.move(z_pos=fast_move_z)
     else:
         post.spindle_off()
         post.feedrate(project["setup"]["tool"]["rate_h"])
@@ -133,11 +140,18 @@ def machine_cmd_begin(project: dict, post: PostProcessor) -> None:
 
 def machine_cmd_end(project: dict, post: PostProcessor) -> None:
     """machine_cmd-footer"""
+    unit = project["setup"]["maschine"]["unit"]
+    fast_move_z = project["setup"]["mill"]["fast_move_z"]
+    unitscale = 1.0
+    if unit == "inch":
+        unitscale = 25.4
+        fast_move_z *= unitscale
+
     post.separation()
     if project["setup"]["maschine"]["comments"]:
         post.comment("- end -")
     if project["setup"]["maschine"]["mode"] != "laser" and "Z" in project["axis"]:
-        post.move(z_pos=project["setup"]["mill"]["fast_move_z"])
+        post.move(z_pos=fast_move_z)
         post.spindle_off()
     if project["setup"]["mill"]["back_home"]:
         post.move(x_pos=0.0, y_pos=0.0)
@@ -537,6 +551,13 @@ def polylines2machine_cmd(project: dict, post: PostProcessor) -> str:
     machine_cmd_begin(project, post)
     tabs = project.get("tabs", {})
 
+    unit = project["setup"]["maschine"]["unit"]
+    fast_move_z = project["setup"]["mill"]["fast_move_z"]
+    unitscale = 1.0
+    if unit == "inch":
+        unitscale = 25.4
+        fast_move_z *= unitscale
+
     next_filter = ""
     order = 0
     was_pocket = False
@@ -563,7 +584,15 @@ def polylines2machine_cmd(project: dict, post: PostProcessor) -> str:
                     polyline = polylines[nearest_idx]
                     vertex_data = vertex_data_cache(polyline)
                     is_closed = polyline.is_closed()
+
                     max_depth = polyline.setup["mill"]["depth"]
+                    step = polyline.setup["mill"]["step"]
+                    if step >= -0.01:
+                        step = -0.01
+                    if unit == "inch":
+                        unitscale = 25.4
+                        max_depth *= unitscale
+                        step *= unitscale
 
                     if polyline.setup["tabs"]["active"]:
                         polyline.setup["tabs"]["data"] = tabs["data"]
@@ -606,7 +635,9 @@ def polylines2machine_cmd(project: dict, post: PostProcessor) -> str:
                         post.comment(f"Level: {level}")
                         post.comment(f"Order: {order}")
                         post.comment(f"Object: {nearest_idx}")
-                        post.comment(f"Distance: {round(obj_distance, 4)}mm")
+                        post.comment(
+                            f"Distance: {round(obj_distance * unitscale, 4)}{unit}"
+                        )
                         post.comment(f"Closed: {is_closed}")
                         post.comment(f"isPocket: {polyline.is_pocket != 0}")
                         if (
@@ -614,25 +645,21 @@ def polylines2machine_cmd(project: dict, post: PostProcessor) -> str:
                             and "Z" in project["axis"]
                         ):
                             post.comment(
-                                f"Depth: {polyline.setup['mill']['depth']}mm / {polyline.setup['mill']['step']}mm"
+                                f"Depth: {polyline.setup['mill']['depth']}{unit} / {polyline.setup['mill']['step']}{unit}"
                             )
                         post.comment(
-                            f"Tool-Diameter: {project['setup']['tool']['diameter']}mm"
+                            f"Tool-Diameter: {project['setup']['tool']['diameter']}{unit}"
                         )
                         if polyline.tool_offset:
                             post.comment(
-                                f"Tool-Offset: {project['setup']['tool']['diameter'] / 2.0}mm {polyline.tool_offset}"
+                                f"Tool-Offset: {project['setup']['tool']['diameter'] / 2.0}{unit} {polyline.tool_offset}"
                             )
                         post.comment(
                             "--------------------------------------------------"
                         )
 
-                    if polyline.setup["mill"]["step"] >= -0.01:
-                        polyline.setup["mill"]["step"] = -0.01
-
-                    depth = polyline.setup["mill"]["step"]
-                    if depth < polyline.setup["mill"]["depth"]:
-                        depth = polyline.setup["mill"]["depth"]
+                    depth = step
+                    depth = max(depth, max_depth)
 
                     if (
                         project["setup"]["maschine"]["mode"] == "mill"
@@ -643,7 +670,7 @@ def polylines2machine_cmd(project: dict, post: PostProcessor) -> str:
                             and is_pocket
                             and nearest_dist < project["setup"]["tool"]["diameter"]
                         ):
-                            post.move(z_pos=project["setup"]["mill"]["fast_move_z"])
+                            post.move(z_pos=fast_move_z)
                         elif helix_mode:
                             post.move(z_pos=0.0)
                         else:
@@ -660,8 +687,7 @@ def polylines2machine_cmd(project: dict, post: PostProcessor) -> str:
 
                     last_depth = 0.0
                     while True:
-                        if depth < polyline.setup["mill"]["depth"]:
-                            depth = polyline.setup["mill"]["depth"]
+                        depth = max(depth, max_depth)
 
                         if (
                             project["setup"]["maschine"]["mode"] != "laser"
@@ -675,7 +701,7 @@ def polylines2machine_cmd(project: dict, post: PostProcessor) -> str:
                                 project["setup"]["maschine"]["mode"] == "mill"
                                 and "Z" in project["axis"]
                             ):
-                                post.move(z_pos=project["setup"]["mill"]["fast_move_z"])
+                                post.move(z_pos=fast_move_z)
                             post.move(x_pos=points[0][0], y_pos=points[0][1])
 
                         if (
@@ -742,13 +768,13 @@ def polylines2machine_cmd(project: dict, post: PostProcessor) -> str:
 
                         zoffset = 0.0
                         if project["setup"]["maschine"]["mode"] == "laser_z":
-                            zoffset = polyline.setup["mill"]["step"]
-                        if depth <= polyline.setup["mill"]["depth"] - zoffset:
+                            zoffset = step
+                        if depth <= max_depth - zoffset:
                             if helix_mode:
                                 helix_mode = False
                                 continue
                             break
-                        depth += polyline.setup["mill"]["step"]
+                        depth += step
 
                         if (
                             project["setup"]["maschine"]["mode"] == "laser"
@@ -757,7 +783,7 @@ def polylines2machine_cmd(project: dict, post: PostProcessor) -> str:
                             break
 
                     # if project["setup"]["maschine"]["mode"] != "laser":
-                    #    post.move(z_pos=project["setup"]["mill"]["fast_move_z"])
+                    #    post.move(z_pos=fast_move_z)
 
                     if project["setup"]["maschine"]["mode"] != "mill":
                         post.spindle_off()
