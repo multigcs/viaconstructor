@@ -899,9 +899,7 @@ class ViaConstructor:
         GL.glEndList()
         self.info = f"{self.project['minMax'][2] - self.project['minMax'][0]}x{self.project['minMax'][3] - self.project['minMax'][1]}mm"
         if self.main:
-            self.main.setWindowTitle(
-                f"viaConstructor: {self.project['filename_draw']} - {self.info}"
-            )
+            self.main.setWindowTitle("viaConstructor")
         self.status_bar_message(f"{self.info} - calculate..done")
 
     def materials_select(self, material_idx) -> None:
@@ -1241,43 +1239,60 @@ class ViaConstructor:
 
     def _toolbar_exit(self) -> None:
         """exit button."""
+        if os.environ.get("LINUXCNCVERSION"):
+            print(self.project["machine_cmd"])
         sys.exit(0)
 
     def create_toolbar(self) -> None:
         """creates the_toolbar."""
-        toolbuttons = {
-            _("Load drawing"): (
-                "open.png",
-                "",
-                _("Load drawing"),
-                self._toolbar_load_drawing,
-                True,
-                "main",
-            ),
-            _("Save drawing as DXF"): (
-                "save.png",
-                "Ctrl+S",
-                _("Save drawing as DXF"),
-                self._toolbar_save_dxf,
-                True,
-                "main",
-            ),
-            _("Exit"): (
-                "exit.png",
-                "Ctrl+Q",
-                _("Exit application"),
-                self._toolbar_exit,
-                True,
-                "main",
-            ),
-            _("Save Machine-Commands"): (
-                "save-gcode.png",
-                "Ctrl+S",
-                _("Save machine commands"),
-                self._toolbar_save_machine_cmd,
-                True,
-                "machine_cmd",
-            ),
+
+        if os.environ.get("LINUXCNCVERSION"):
+            toolbuttons = {
+                _("Exit"): (
+                    "exit.png",
+                    "Ctrl+Q",
+                    _("Exit application"),
+                    self._toolbar_exit,
+                    True,
+                    "main",
+                ),
+            }
+        else:
+            toolbuttons = {
+                _("Load drawing"): (
+                    "open.png",
+                    "",
+                    _("Load drawing"),
+                    self._toolbar_load_drawing,
+                    True,
+                    "main",
+                ),
+                _("Save drawing as DXF"): (
+                    "save.png",
+                    "Ctrl+S",
+                    _("Save drawing as DXF"),
+                    self._toolbar_save_dxf,
+                    True,
+                    "main",
+                ),
+                _("Exit"): (
+                    "exit.png",
+                    "Ctrl+Q",
+                    _("Exit application"),
+                    self._toolbar_exit,
+                    True,
+                    "main",
+                ),
+                _("Save Machine-Commands"): (
+                    "save-gcode.png",
+                    "Ctrl+S",
+                    _("Save machine commands"),
+                    self._toolbar_save_machine_cmd,
+                    True,
+                    "machine_cmd",
+                ),
+            }
+        toolbuttons.update({
             _("Load setup from"): (
                 "load-setup.png",
                 "",
@@ -1390,7 +1405,7 @@ class ViaConstructor:
                 True,
                 "delete",
             ),
-        }
+        })
         self.toolbar = QToolBar("top toolbar")
         self.main.addToolBar(self.toolbar)  # type: ignore
         section = ""
@@ -1713,7 +1728,7 @@ class ViaConstructor:
         self.project["glwidget"] = GLWidget(self.project, self.update_drawing)
 
         self.main = QMainWindow()
-        self.main.setWindowTitle(f"viaConstructor: {self.project['filename_draw']}")
+        self.main.setWindowTitle("viaConstructor")
         self.main.setCentralWidget(self.project["window"])
 
         self.this_dir, self.this_filename = os.path.split(__file__)
