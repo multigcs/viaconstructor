@@ -590,7 +590,8 @@ class ViaConstructor:
                         )
             for vport in doc.viewports.get_config("*Active"):  # type: ignore
                 vport.dxf.grid_on = True
-            ezdxf.zoom.extents(msp)  # type: ignore
+            if hasattr(ezdxf, "zoom"):
+                ezdxf.zoom.extents(msp)  # type: ignore
             doc.saveas(output_file)
         except Exception as error:  # pylint: disable=W0703
             print(f"ERROR while saving dxf: {error}")
