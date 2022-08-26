@@ -4,7 +4,7 @@ import argparse
 
 from PIL import Image
 
-from ..calc import calc_distance  # pylint: disable=E0402
+from ..calc import lines_to_path  # pylint: disable=E0402
 from ..input_plugins_base import DrawReaderBase
 
 
@@ -40,30 +40,6 @@ class DrawReader(DrawReaderBase):
 
         print(f"Image-Size: {image_data.width}x{image_data.height}")
 
-        def get_next_line(end_point):
-            selected = -1
-            nearest = 1000000
-            reverse = 0
-            for idx, line in enumerate(lines):
-                dist = calc_distance(end_point, line[0])
-                if dist < nearest:
-                    selected = idx
-                    nearest = dist
-                    reverse = 0
-
-                dist = calc_distance(end_point, line[1])
-                if dist < nearest:
-                    selected = idx
-                    nearest = dist
-                    reverse = 1
-
-            if selected != -1:
-                line = lines.pop(selected)
-                if reverse:
-                    line = (line[1], line[0])
-                return (nearest, line)
-            return None
-
         scale = args.imgread_scale
         laser_on = False
         last = (0, 0)
@@ -88,33 +64,7 @@ class DrawReader(DrawReaderBase):
                 laser_on = False
                 lines.append((last, (x_pos, height - y_pos)))
 
-        # optimize / adding bridges
-        output_lines = []
-        if args.imgread_lines:
-            output_lines = lines
-        else:
-            last_line = lines.pop(0)
-            output_lines.append((last_line[0], last_line[1]))
-            while True:
-                check = get_next_line(last_line[1])
-                if check is None:
-                    break
-                dist = check[0]
-                next_line = check[1]
-                vdist = abs(last_line[0][1] - next_line[0][1])
-                if vdist == 1:
-                    if dist <= 3:
-                        output_lines.append((last_line[1], next_line[0]))
-                    elif last_line[0][0] <= next_line[0][0] <= last_line[1][0]:
-                        output_lines.append((last_line[1], next_line[0]))
-                    elif last_line[1][0] <= next_line[0][0] <= last_line[0][0]:
-                        output_lines.append((last_line[1], next_line[0]))
-                    elif next_line[0][0] <= last_line[1][0] <= next_line[1][0]:
-                        output_lines.append((last_line[1], next_line[0]))
-                    elif next_line[1][0] <= last_line[1][0] <= next_line[0][0]:
-                        output_lines.append((last_line[1], next_line[0]))
-                output_lines.append((next_line[0], next_line[1]))
-                last_line = next_line
+        output_lines = lines_to_path(lines, max_vdist=1, max_dist=3)
 
         for line in output_lines:
             self._add_line(

@@ -18,6 +18,61 @@ def rotate_list(rlist, idx):
     return rlist[idx:] + rlist[:idx]
 
 
+# ########## Line Functions ###########
+def get_next_line(end_point, lines):
+    selected = -1
+    nearest = 1000000
+    reverse = 0
+    for idx, line in enumerate(lines):
+        dist = calc_distance(end_point, line[0])
+        if dist < nearest:
+            selected = idx
+            nearest = dist
+            reverse = 0
+
+        dist = calc_distance(end_point, line[1])
+        if dist < nearest:
+            selected = idx
+            nearest = dist
+            reverse = 1
+
+    if selected != -1:
+        line = lines.pop(selected)
+        if reverse:
+            line = (line[1], line[0])
+        return (nearest, line)
+    return None
+
+
+def lines_to_path(lines, max_vdist, max_dist):
+    # optimize / adding bridges
+    lines = lines[0:]
+    output_lines = []
+    last_line = lines.pop(0)
+    output_lines.append((last_line[0], last_line[1]))
+    while True:
+        check = get_next_line(last_line[1], lines)
+        if check is None:
+            break
+        dist = check[0]
+        next_line = check[1]
+        vdist = abs(last_line[0][1] - next_line[0][1])
+        if vdist == max_vdist:
+            if dist <= max_dist:
+                output_lines.append((last_line[1], next_line[0]))
+            elif last_line[0][0] <= next_line[0][0] <= last_line[1][0]:
+                output_lines.append((last_line[1], next_line[0]))
+            elif last_line[1][0] <= next_line[0][0] <= last_line[0][0]:
+                output_lines.append((last_line[1], next_line[0]))
+            elif next_line[0][0] <= last_line[1][0] <= next_line[1][0]:
+                output_lines.append((last_line[1], next_line[0]))
+            elif next_line[1][0] <= last_line[1][0] <= next_line[0][0]:
+                output_lines.append((last_line[1], next_line[0]))
+        output_lines.append((next_line[0], next_line[1]))
+        last_line = next_line
+    return output_lines
+
+
 # ########## Point Functions ###########
 def lines_intersect(line1_start, line1_end, line2_start, line2_end):
     x_1, y_1 = line1_start
@@ -521,6 +576,11 @@ def do_pockets(  # pylint: disable=R0913
     """calculates multiple offset lines of an polyline"""
     abs_tool_radius = abs(tool_radius)
     if obj.inner_objects and obj.setup["pockets"]["islands"]:
+
+        vertex_data = vertex_data_cache(polyline)
+        points = vertex2points(vertex_data, no_bulge=True, scale=100.0)
+
+    elif obj.inner_objects and obj.setup["pockets"]["islands"]:
         subjs = []
         vertex_data = vertex_data_cache(polyline)
         points = vertex2points(vertex_data, no_bulge=True, scale=100.0)
