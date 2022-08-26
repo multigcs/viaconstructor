@@ -1113,6 +1113,7 @@ class ViaConstructor:
                             )
                         elif entry["type"] == "float":
                             spinbox = QDoubleSpinBox()
+                            spinbox.setDecimals(4)
                             spinbox.setMinimum(entry["min"])
                             spinbox.setMaximum(entry["max"])
                             spinbox.setValue(value)
@@ -1409,6 +1410,7 @@ class ViaConstructor:
                     entry["widget"] = combobox
                 elif entry["type"] == "float":
                     spinbox = QDoubleSpinBox()
+                    spinbox.setDecimals(4)
                     spinbox.setMinimum(entry["min"])
                     spinbox.setMaximum(entry["max"])
                     spinbox.setValue(self.project["setup"][sname][ename])

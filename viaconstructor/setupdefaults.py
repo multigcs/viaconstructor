@@ -303,6 +303,13 @@ def setup_defaults(_) -> dict:
                 "title": _("Pocket"),
                 "tooltip": _("do pocket operation on this object"),
             },
+            "zigzag": {
+                "default": False,
+                "type": "bool",
+                "per_object": True,
+                "title": _("Zickzack"),
+                "tooltip": _("Zickzack"),
+            },
             "islands": {
                 "default": True,
                 "type": "bool",

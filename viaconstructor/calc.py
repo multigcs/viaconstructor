@@ -48,6 +48,9 @@ def lines_to_path(lines, max_vdist, max_dist):
     # optimize / adding bridges
     lines = lines[0:]
     output_lines = []
+    if not lines:
+        return []
+
     last_line = lines.pop(0)
     output_lines.append((last_line[0], last_line[1]))
     while True:
@@ -57,7 +60,7 @@ def lines_to_path(lines, max_vdist, max_dist):
         dist = check[0]
         next_line = check[1]
         vdist = abs(last_line[0][1] - next_line[0][1])
-        if vdist == max_vdist:
+        if vdist <= max_vdist:
             if dist <= max_dist:
                 output_lines.append((last_line[1], next_line[0]))
             elif last_line[0][0] <= next_line[0][0] <= last_line[1][0]:
@@ -167,6 +170,19 @@ def point_of_line(p_1, p_2, line_pos):
         p_1[0] + (p_2[0] - p_1[0]) * line_pos,
         p_1[1] + (p_2[1] - p_1[1]) * line_pos,
     ]
+
+
+def points_to_boundingbox(points):
+    min_x = points[0][0]
+    min_y = points[0][1]
+    max_x = points[0][0]
+    max_y = points[0][1]
+    for point in points:
+        min_x = min(min_x, point[0])
+        min_y = min(min_y, point[1])
+        max_x = max(max_x, point[0])
+        max_y = max(max_y, point[1])
+    return (min_x, min_y, max_x, max_y)
 
 
 # ########## Object & Segments Functions ###########
@@ -547,10 +563,11 @@ def points2offsets(
     offset_idx,
     tool_offset,
     scale=1.0,
+    is_closed=True,
     is_pocket=0,
 ):
     vertex_data = points2vertex(points, scale=scale)
-    polyline_offset = cavc.Polyline(vertex_data, is_closed=obj.closed)
+    polyline_offset = cavc.Polyline(vertex_data, is_closed=is_closed)
     polyline_offset.level = len(obj.outer_objects)
     polyline_offset.tool_offset = tool_offset
     polyline_offset.layer = obj.layer
@@ -575,7 +592,82 @@ def do_pockets(  # pylint: disable=R0913
 ):
     """calculates multiple offset lines of an polyline"""
     abs_tool_radius = abs(tool_radius)
-    if obj.inner_objects and obj.setup["pockets"]["islands"]:
+
+    if obj.setup["pockets"]["zigzag"]:
+        vertex_data = vertex_data_cache(polyline)
+        points = vertex2points(vertex_data, no_bulge=True)
+        bounding = points_to_boundingbox(points)
+        lines = []
+
+        points_check = [points]
+        if obj.inner_objects and obj.setup["pockets"]["islands"]:
+            for idx in obj.inner_objects:
+                polyline_offset = polyline_offsets.get(f"{idx}.0")
+                vertex_data = vertex_data_cache(polyline_offset)
+                points_check.append(vertex2points(vertex_data, no_bulge=True))
+
+        # get bounding box
+        y_pos = bounding[1] + abs_tool_radius
+        while y_pos <= bounding[3] - abs_tool_radius:
+            intersects = set()
+            for points in points_check:
+                last = points[-1]
+                for point in points:
+                    intersect = lines_intersect(
+                        (bounding[0] - 1, y_pos), (bounding[2] + 1, y_pos), last, point
+                    )
+                    if intersect is not None:
+                        intersects.add(intersect[0])
+                    last = point
+            if len(intersects) > 1:
+                sortet_list = sorted(intersects, key=float)
+                point_inter = iter(sortet_list)
+                for point_x1, point_x2 in zip(point_inter, point_inter):
+                    lines.append(
+                        (
+                            (point_x1 + abs_tool_radius, y_pos),
+                            (point_x2 - abs_tool_radius, y_pos),
+                        )
+                    )
+            y_pos += abs_tool_radius
+
+        output_lines = lines_to_path(
+            lines, max_vdist=abs_tool_radius, max_dist=abs_tool_radius * 3
+        )
+        last = output_lines[0]
+        polyline = []
+        polyline.append(last[0])
+        polyline.append(last[1])
+        for line in output_lines[1:]:
+            if last[1] != line[0]:
+                offset_idx = points2offsets(
+                    obj,
+                    obj_idx,
+                    polyline,
+                    polyline_offsets,
+                    offset_idx,
+                    tool_offset,
+                    is_closed=False,
+                    is_pocket=1,
+                )
+                polyline = []
+                polyline.append(line[0])
+                polyline.append(line[1])
+            else:
+                polyline.append(line[1])
+            last = line
+        offset_idx = points2offsets(
+            obj,
+            obj_idx,
+            polyline,
+            polyline_offsets,
+            offset_idx,
+            tool_offset,
+            is_closed=False,
+            is_pocket=2,
+        )
+
+    elif obj.inner_objects and obj.setup["pockets"]["islands"]:
         subjs = []
         vertex_data = vertex_data_cache(polyline)
         points = vertex2points(vertex_data, no_bulge=True, scale=100.0)
@@ -607,6 +699,7 @@ def do_pockets(  # pylint: disable=R0913
                 offset_idx,
                 tool_offset,
                 scale=0.01,
+                is_closed=obj.closed,
                 is_pocket=2,
             )
 
@@ -630,6 +723,7 @@ def do_pockets(  # pylint: disable=R0913
                     offset_idx,
                     tool_offset,
                     scale=0.01,
+                    is_closed=obj.closed,
                     is_pocket=2,
                 )
 
@@ -838,6 +932,7 @@ def object2polyline_offsets(
                             offset_idx,
                             vertex_data,
                         )
+
         elif is_circle and small_circles:
             # adding holes that smaler as the tool
             center_x = obj.segments[0].center[0]
