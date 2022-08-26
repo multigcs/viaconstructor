@@ -576,11 +576,6 @@ def do_pockets(  # pylint: disable=R0913
     """calculates multiple offset lines of an polyline"""
     abs_tool_radius = abs(tool_radius)
     if obj.inner_objects and obj.setup["pockets"]["islands"]:
-
-        vertex_data = vertex_data_cache(polyline)
-        points = vertex2points(vertex_data, no_bulge=True, scale=100.0)
-
-    elif obj.inner_objects and obj.setup["pockets"]["islands"]:
         subjs = []
         vertex_data = vertex_data_cache(polyline)
         points = vertex2points(vertex_data, no_bulge=True, scale=100.0)
