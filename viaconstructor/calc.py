@@ -634,39 +634,39 @@ def do_pockets(  # pylint: disable=R0913
         output_lines = lines_to_path(
             lines, max_vdist=abs_tool_radius, max_dist=abs_tool_radius * 3
         )
-        last = output_lines[0]
-        polyline = []
-        polyline.append(last[0])
-        polyline.append(last[1])
-        for line in output_lines[1:]:
-            if last[1] != line[0]:
-                offset_idx = points2offsets(
-                    obj,
-                    obj_idx,
-                    polyline,
-                    polyline_offsets,
-                    offset_idx,
-                    tool_offset,
-                    is_closed=False,
-                    is_pocket=1,
-                )
-                polyline = []
-                polyline.append(line[0])
-                polyline.append(line[1])
-            else:
-                polyline.append(line[1])
-            last = line
-        offset_idx = points2offsets(
-            obj,
-            obj_idx,
-            polyline,
-            polyline_offsets,
-            offset_idx,
-            tool_offset,
-            is_closed=False,
-            is_pocket=2,
-        )
-
+        if output_lines:
+            last = output_lines[0]
+            polyline = []
+            polyline.append(last[0])
+            polyline.append(last[1])
+            for line in output_lines[1:]:
+                if last[1] != line[0]:
+                    offset_idx = points2offsets(
+                        obj,
+                        obj_idx,
+                        polyline,
+                        polyline_offsets,
+                        offset_idx,
+                        tool_offset,
+                        is_closed=False,
+                        is_pocket=1,
+                    )
+                    polyline = []
+                    polyline.append(line[0])
+                    polyline.append(line[1])
+                else:
+                    polyline.append(line[1])
+                last = line
+            offset_idx = points2offsets(
+                obj,
+                obj_idx,
+                polyline,
+                polyline_offsets,
+                offset_idx,
+                tool_offset,
+                is_closed=False,
+                is_pocket=2,
+            )
     elif obj.inner_objects and obj.setup["pockets"]["islands"]:
         subjs = []
         vertex_data = vertex_data_cache(polyline)
