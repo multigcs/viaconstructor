@@ -5,8 +5,8 @@ OpenSource CAM-Tool to generate gCode from DXF,SVG and HPGL-Files
 ## Known Issues:
 * beta - version
 * &gt;= Python-3.9
-* Linux-Only (there are problems with cavaliercontours and pyqt5 on Win and OS-X)
-* slow on big files
+* running on Linux and OS-X (there are problems with cavaliercontours and pyqt5 on Win)
+* slow on very big files
 
 ## Features:
  * 3D-Preview
