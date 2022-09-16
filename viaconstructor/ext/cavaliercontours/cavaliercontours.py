@@ -7,7 +7,7 @@ try:
     libname = module_root / "lib/libCavalierContours.so"
     c_lib = ctypes.CDLL(libname)
 except Exception:
-    libname = module_root / f"lib/libCavalierContours.{platform.python_implementation().lower()}-{''.join(platform.python_version_tuple()[:2])}-x86_64-{platform.system().lower()}-gnu.so"
+    libname = module_root / f"lib/libCavalierContours.x86_64-{platform.system().lower()}-gnu.so"
     c_lib = ctypes.CDLL(libname)
 
 class _PointStruct(ctypes.Structure):
