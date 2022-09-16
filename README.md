@@ -38,7 +38,7 @@ pip3 install viaconstructor
 
 ### get code
 ```
-git clone git@github.com:multigcs/viaconstructor.git
+git clone https://github.com/multigcs/viaconstructor.git
 cd viaconstructor
 pip3 install -r requirements.txt
 ```
