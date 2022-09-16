@@ -19,7 +19,7 @@ setup(
     license='LICENSE',
     description='python based cam-tool to convert dxf into gcode',
     long_description=open('README.md').read(),
-    install_requires=["PyQt5", "ezdxf", "PyOpenGL", "Pillow", "pygame", "pyclipper", "setproctitle", "freetype-py", "python-utils", "svgwrite", "matplotlib"],
+    install_requires=["PyQt5", "ezdxf", "PyOpenGL", "Pillow", "pygame", "pyclipper", "setproctitle", "freetype-py", "python-utils", "svgwrite", "matplotlib", "numpy"],
     include_package_data=True,
 )
 

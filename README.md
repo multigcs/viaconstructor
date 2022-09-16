@@ -58,6 +58,14 @@ pip3 install -r requirements.txt
 ./bin/dxfpreview tests/data/simple.dxf -o tests/data/simple.jpg
 ```
 
+### running on macos/osx
+```
+git clone https://github.com/multigcs/viaconstructor.git
+brew install python@3.10
+/usr/local/bin/python3 -m pip install -r requirements-install.txt
+/usr/local/bin/python3 -m viaconstructor tests/data/simple.dxf
+```
+
 ![gcodepreview](https://raw.githubusercontent.com/multigcs/viaconstructor/main/docs/gcodepreview.png)
 
 ![dxfpreview](https://raw.githubusercontent.com/multigcs/viaconstructor/main/docs/dxfpreview.png)
@@ -67,3 +75,5 @@ pip3 install -r requirements.txt
 ![overcut](https://raw.githubusercontent.com/multigcs/viaconstructor/main/docs/overcut-true.png)
 ![tabs](https://raw.githubusercontent.com/multigcs/viaconstructor/main/docs/tabs-true.png)
 ![pockets](https://raw.githubusercontent.com/multigcs/viaconstructor/main/docs/pockets-true.png)
+
+![osx](https://raw.githubusercontent.com/multigcs/viaconstructor/main/docs/osx.png)

@@ -6,3 +6,7 @@ pygame
 pyclipper
 setproctitle
 freetype-py
+python-utils
+svgwrite
+matplotlib
+numpy
