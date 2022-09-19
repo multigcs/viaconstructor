@@ -686,7 +686,7 @@ def polylines2machine_cmd(project: dict, post: PostProcessor) -> str:
                         depth = 0.0
                         post.move(z_pos=depth)
 
-                    lead_in_active = project["setup"]["maschine"]["lead_in"]
+                    lead_in_active = project["setup"]["machine"]["lead_in"]
                     if not is_closed:
                         lead_in_active = False
 
