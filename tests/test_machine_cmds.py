@@ -137,7 +137,7 @@ class fakeOffset:
                         "helix_mode": False,
                     },
                     "view": {"path": "simple"},
-                    "maschine": {
+                    "machine": {
                         "mode": "mill",
                         "unit": "mm",
                         "comments": True,
