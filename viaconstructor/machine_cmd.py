@@ -8,11 +8,14 @@ from .calc import (
     angle_of_line,
     calc_distance,
     found_next_offset_point,
+    inside_vertex,
     lines_intersect,
     rotate_list,
     vertex2points,
     vertex_data_cache,
 )
+
+TWO_PI = math.pi * 2
 
 
 class PostProcessor:
@@ -683,7 +686,41 @@ def polylines2machine_cmd(project: dict, post: PostProcessor) -> str:
                         depth = 0.0
                         post.move(z_pos=depth)
 
-                    post.move(x_pos=points[0][0], y_pos=points[0][1])
+                    lead_in_active = project["setup"]["maschine"]["lead_in"]
+                    if not is_closed:
+                        lead_in_active = False
+
+                    if lead_in_active:
+                        # lead-in
+                        # line to non workpeace side
+                        # start at new inside line
+                        lead_in_dist = project["setup"]["tool"]["diameter"]
+                        line_angle1 = angle_of_line(points[-1], points[0])
+                        line_angle2 = angle_of_line(points[0], points[1])
+                        adiff = line_angle2 - line_angle1
+                        line_angle = line_angle1 + adiff / 2.0
+                        lead_in_x = points[0][0] + lead_in_dist * math.sin(line_angle)
+                        lead_in_y = points[0][1] - lead_in_dist * math.cos(line_angle)
+                        inside = inside_vertex(vertex_data, (lead_in_x, lead_in_y))
+                        if polyline.tool_offset == "inside" and not inside:
+                            line_angle = line_angle1 + adiff / 2.0 + math.pi
+                            lead_in_x = points[0][0] + lead_in_dist * math.sin(
+                                line_angle
+                            )
+                            lead_in_y = points[0][1] - lead_in_dist * math.cos(
+                                line_angle
+                            )
+                        elif polyline.tool_offset == "outside" and inside:
+                            line_angle = line_angle1 + adiff / 2.0 + math.pi
+                            lead_in_x = points[0][0] + lead_in_dist * math.sin(
+                                line_angle
+                            )
+                            lead_in_y = points[0][1] - lead_in_dist * math.cos(
+                                line_angle
+                            )
+                        post.move(x_pos=lead_in_x, y_pos=lead_in_y)
+                    else:
+                        post.move(x_pos=points[0][0], y_pos=points[0][1])
 
                     last_depth = 0.0
                     while True:
@@ -720,6 +757,9 @@ def polylines2machine_cmd(project: dict, post: PostProcessor) -> str:
                             or "Z" not in project["axis"]
                         ):
                             post.spindle_cw(project["setup"]["tool"]["speed"], pause=0)
+
+                        if lead_in_active:
+                            post.move(x_pos=points[0][0], y_pos=points[0][1])
 
                         trav_distance = 0
                         last = points[0]

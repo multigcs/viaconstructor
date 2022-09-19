@@ -379,6 +379,12 @@ def setup_defaults(_) -> dict:
                 "title": _("Tool-Speed"),
                 "tooltip": _("maximum tool-speed"),
             },
+            "lead_in": {
+                "default": False,
+                "type": "bool",
+                "title": _("lead_in"),
+                "tooltip": _("lead_in support"),
+            },
             "plugin": {
                 "default": "gcode_linuxcnc",
                 "type": "select",
