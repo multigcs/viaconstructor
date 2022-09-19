@@ -154,7 +154,7 @@ def draw_grid(project: dict) -> None:
     center_y = min_max[1] + size_y / 2
     z_offset = -project["setup"]["workpiece"]["offset_z"]
     mill_depth = project["setup"]["mill"]["depth"]
-    unit = project["setup"]["maschine"]["unit"]
+    unit = project["setup"]["machine"]["unit"]
     unitscale = 1.0
     if unit == "inch":
         unitscale = 25.4
@@ -309,7 +309,7 @@ def draw_object_ids(project: dict) -> None:
 
 def draw_object_edges(project: dict, selected: int = -1) -> None:
     """draws the edges of an object"""
-    unit = project["setup"]["maschine"]["unit"]
+    unit = project["setup"]["machine"]["unit"]
     depth = project["setup"]["mill"]["depth"]
     tabs_height = project["setup"]["tabs"]["height"]
     unitscale = 1.0
@@ -382,7 +382,7 @@ def draw_object_edges(project: dict, selected: int = -1) -> None:
 
 def draw_object_faces(project: dict) -> None:
     """draws the top and side faces of an object"""
-    unit = project["setup"]["maschine"]["unit"]
+    unit = project["setup"]["machine"]["unit"]
     depth = project["setup"]["mill"]["depth"]
     unitscale = 1.0
     if unit == "inch":
@@ -438,11 +438,11 @@ def draw_object_faces(project: dict) -> None:
 
 def draw_line(p_1: dict, p_2: dict, options: str, project: dict) -> None:
     """callback function for Parser to draw the lines"""
-    if project["setup"]["maschine"]["g54"]:
+    if project["setup"]["machine"]["g54"]:
         p_from = (p_1["X"], p_1["Y"], p_1["Z"])
         p_to = (p_2["X"], p_2["Y"], p_2["Z"])
     else:
-        unit = project["setup"]["maschine"]["unit"]
+        unit = project["setup"]["machine"]["unit"]
         unitscale = 1.0
         if unit == "inch":
             unitscale = 25.4
@@ -461,14 +461,14 @@ def draw_line(p_1: dict, p_2: dict, options: str, project: dict) -> None:
     draw_mill_line(p_from, p_to, line_width, mode, options)
 
 
-def draw_maschinecode_path(project: dict) -> bool:
-    """draws the maschinecode path"""
+def draw_machinecode_path(project: dict) -> bool:
+    """draws the machinecode path"""
     GL.glLineWidth(2)
     try:
         if project["suffix"] in {"ngc", "gcode"}:
             GcodeParser(project["machine_cmd"]).draw(draw_line, (project,))
         elif project["suffix"] in {"hpgl", "hpg"}:
-            project["setup"]["maschine"]["g54"] = False
+            project["setup"]["machine"]["g54"] = False
             project["setup"]["workpiece"]["offset_z"] = 0.0
             HpglParser(project["machine_cmd"]).draw(draw_line, (project,))
     except Exception as error_string:  # pylint: disable=W0703:

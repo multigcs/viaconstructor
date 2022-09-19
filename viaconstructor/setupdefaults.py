@@ -362,7 +362,7 @@ def setup_defaults(_) -> dict:
                 "tooltip": _("type of the tab"),
             },
         },
-        "maschine": {
+        "machine": {
             "feedrate": {
                 "default": 1000,
                 "type": "int",
@@ -414,13 +414,13 @@ def setup_defaults(_) -> dict:
                     ("inch", _("inch")),
                 ),
                 "title": _("Unit"),
-                "tooltip": _("Unit of the maschine"),
+                "tooltip": _("Unit of the machine"),
             },
             "g54": {
                 "default": False,
                 "type": "bool",
-                "title": _("maschine supports g54"),
-                "tooltip": _("maschine supports g54"),
+                "title": _("machine supports g54"),
+                "tooltip": _("machine supports g54"),
             },
             "comments": {
                 "default": True,

@@ -67,7 +67,7 @@ from .calc import (
 )
 from .gldraw import (
     draw_grid,
-    draw_maschinecode_path,
+    draw_machinecode_path,
     draw_object_edges,
     draw_object_faces,
     draw_object_ids,
@@ -643,7 +643,7 @@ class ViaConstructor:
         debug("run_calculation: offsets")
 
         # create toolpath from objects
-        unit = psetup["maschine"]["unit"]
+        unit = psetup["machine"]["unit"]
         diameter = psetup["tool"]["diameter"]
         if unit == "inch":
             diameter *= 25.4
@@ -655,23 +655,23 @@ class ViaConstructor:
         )
 
         # create machine commands
-        debug("run_calculation: maschine_commands")
+        debug("run_calculation: machine_commands")
         output_plugin: Union[PostProcessorHpgl, PostProcessorGcodeLinuxCNC]
-        if self.project["setup"]["maschine"]["plugin"] == "gcode_linuxcnc":
+        if self.project["setup"]["machine"]["plugin"] == "gcode_linuxcnc":
             output_plugin = PostProcessorGcodeLinuxCNC(
-                self.project["setup"]["maschine"]["comments"]
+                self.project["setup"]["machine"]["comments"]
             )
             self.project["suffix"] = output_plugin.suffix()
             self.project["axis"] = output_plugin.axis()
-        elif self.project["setup"]["maschine"]["plugin"] == "hpgl":
+        elif self.project["setup"]["machine"]["plugin"] == "hpgl":
             output_plugin = PostProcessorHpgl(
-                self.project["setup"]["maschine"]["comments"]
+                self.project["setup"]["machine"]["comments"]
             )
             self.project["suffix"] = output_plugin.suffix()
             self.project["axis"] = output_plugin.axis()
         else:
             eprint(
-                f"ERROR: Unknown maschine output plugin: {self.project['setup']['maschine']['plugin']}"
+                f"ERROR: Unknown machine output plugin: {self.project['setup']['machine']['plugin']}"
             )
             sys.exit(1)
         self.project["machine_cmd"] = polylines2machine_cmd(self.project, output_plugin)
@@ -771,8 +771,8 @@ class ViaConstructor:
         with open(filename, "w") as fd_machine_cmd:
             fd_machine_cmd.write(self.project["machine_cmd"])
             fd_machine_cmd.write("\n")
-            if self.project["setup"]["maschine"]["postcommand"]:
-                cmd = f"{self.project['setup']['maschine']['postcommand']} '{filename}'"
+            if self.project["setup"]["machine"]["postcommand"]:
+                cmd = f"{self.project['setup']['machine']['postcommand']} '{filename}'"
                 eprint(f"executing postcommand: {cmd}")
                 os.system(f"{cmd} &")
             return True
@@ -802,10 +802,10 @@ class ViaConstructor:
         )
         if name[0] and self.machine_cmd_save(name[0]):
             self.status_bar_message(
-                f"{self.info} - save maschine-code..done ({name[0]})"
+                f"{self.info} - save machine-code..done ({name[0]})"
             )
         else:
-            self.status_bar_message(f"{self.info} - save maschine-code..cancel")
+            self.status_bar_message(f"{self.info} - save machine-code..cancel")
 
     def _toolbar_save_dxf(self) -> None:
         """save doawing as dxf."""
@@ -917,12 +917,12 @@ class ViaConstructor:
             self.project["glwidget"]
             and self.project["glwidget"].selector_mode != "repair"
         ):
-            debug("update_drawing: draw_maschinecode_path")
-            if not draw_maschinecode_path(self.project):
+            debug("update_drawing: draw_machinecode_path")
+            if not draw_machinecode_path(self.project):
                 self.status_bar_message(
-                    f"{self.info} - error while drawing maschine commands"
+                    f"{self.info} - error while drawing machine commands"
                 )
-            debug("update_drawing: draw_maschinecode_path done")
+            debug("update_drawing: draw_machinecode_path done")
 
         if self.project["setup"]["view"]["object_ids"]:
             debug("update_drawing: draw_object_ids")
@@ -951,16 +951,16 @@ class ViaConstructor:
         """calculates the milling feedrate and tool-speed for the selected material
         see: https://www.precifast.de/schnittgeschwindigkeit-beim-fraesen-berechnen/
         """
-        maschine_feedrate = self.project["setup"]["maschine"]["feedrate"]
-        maschine_toolspeed = self.project["setup"]["maschine"]["tool_speed"]
+        machine_feedrate = self.project["setup"]["machine"]["feedrate"]
+        machine_toolspeed = self.project["setup"]["machine"]["tool_speed"]
         tool_number = self.project["setup"]["tool"]["number"]
         tool_diameter = self.project["setup"]["tool"]["diameter"]
-        unit = self.project["setup"]["maschine"]["unit"]
+        unit = self.project["setup"]["machine"]["unit"]
         if unit == "inch":
             tool_diameter *= 25.4
         tool_vc = self.project["setup"]["tool"]["materialtable"][material_idx]["vc"]
         tool_speed = tool_vc * 1000 / (tool_diameter * math.pi)
-        tool_speed = int(min(tool_speed, maschine_toolspeed))
+        tool_speed = int(min(tool_speed, machine_toolspeed))
         tool_blades = 2
         for tool in self.project["setup"]["tool"]["tooltable"]:
             if tool["number"] == tool_number:
@@ -976,16 +976,16 @@ class ViaConstructor:
             fz_key
         ]
         feedrate = tool_speed * tool_blades * material_fz
-        feedrate = int(min(feedrate, maschine_feedrate))
+        feedrate = int(min(feedrate, machine_feedrate))
 
         info_test = []
         info_test.append("Some Milling and Tool Values will be changed:")
         info_test.append("")
         info_test.append(
-            f" Feedrate: {feedrate} {'(!MACHINE-LIMIT)' if feedrate == maschine_feedrate else ''}"
+            f" Feedrate: {feedrate} {'(!MACHINE-LIMIT)' if feedrate == machine_feedrate else ''}"
         )
         info_test.append(
-            f" Tool-Speed: {tool_speed} {'(!MACHINE-LIMIT)' if tool_speed == maschine_toolspeed else ''}"
+            f" Tool-Speed: {tool_speed} {'(!MACHINE-LIMIT)' if tool_speed == machine_toolspeed else ''}"
         )
         info_test.append("")
         ret = QMessageBox.question(
@@ -1267,7 +1267,7 @@ class ViaConstructor:
         ] = f"{'.'.join(self.project['filename_draw'].split('.')[:-1])}.{self.project['suffix']}"
         if os.path.isfile(self.project["filename_machine_cmd"]):
             self.status_bar_message(
-                f"{self.info} - loading setup from maschinecode: {self.project['filename_machine_cmd']}"
+                f"{self.info} - loading setup from machinecode: {self.project['filename_machine_cmd']}"
             )
             with open(self.project["filename_machine_cmd"], "r") as fd_machine_cmd:
                 gdata = fd_machine_cmd.read()
@@ -1279,12 +1279,10 @@ class ViaConstructor:
                             self.project["setup"][sname].update(ndata.get(sname, {}))
                         self.update_drawing()
                         self.status_bar_message(
-                            f"{self.info} - loading setup from maschinecode..done"
+                            f"{self.info} - loading setup from machinecode..done"
                         )
                         return
-        self.status_bar_message(
-            f"{self.info} - loading setup from maschinecode..failed"
-        )
+        self.status_bar_message(f"{self.info} - loading setup from machinecode..failed")
 
     def _toolbar_exit(self) -> None:
         """exit button."""
@@ -1901,8 +1899,8 @@ class ViaConstructor:
         left_gridlayout.addWidget(ltabwidget)
 
         tabwidget = QTabWidget()
-        tabwidget.addTab(self.project["glwidget"], "3D-View")
-        tabwidget.addTab(self.project["textwidget"], "Maschine-Output")
+        tabwidget.addTab(self.project["glwidget"], _("3D-View"))
+        tabwidget.addTab(self.project["textwidget"], _("Machine-Output"))
 
         right_gridlayout = QGridLayout()
         right_gridlayout.addWidget(tabwidget)
