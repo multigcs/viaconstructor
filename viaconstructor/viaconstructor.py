@@ -376,27 +376,30 @@ class GLWidget(QGLWidget):
                     if self.selector_mode == "tab":
                         self.project["tabs"]["data"].append(self.selection)
                         self.project["app"].update_tabs()
+                        self.selection = ()
                     elif self.selector_mode == "start":
                         obj_idx = self.selection[0]
                         segment_idx = self.selection[1]
                         new_point = self.selection[2]
                         obj = self.project["objects"][obj_idx]
                         segment = obj.segments[segment_idx]
-                        new_segment = VcSegment(
-                            {
-                                "type": "LINE",
-                                "object": segment.object,
-                                "layer": segment.layer,
-                                "start": new_point,
-                                "end": segment.end,
-                                "bulge": 0.0,
-                            }
-                        )
-                        segment.end = new_point
-                        obj.segments.insert(segment_idx + 1, new_segment)
+                        if new_point != segment.start and new_point != segment.end:
+                            new_segment = VcSegment(
+                                {
+                                    "type": "LINE",
+                                    "object": segment.object,
+                                    "layer": segment.layer,
+                                    "start": new_point,
+                                    "end": segment.end,
+                                    "bulge": segment.bulge / 2,
+                                }
+                            )
+                            segment.end = new_point
+                            segment.bulge = segment.bulge / 2
+                            obj.segments.insert(segment_idx + 1, new_segment)
                         self.project["objects"][obj_idx]["start"] = new_point
                         self.project["app"].update_starts()
-
+                        self.selection = ()
                     elif self.selector_mode == "delete":
                         pass
                     elif self.selector_mode == "repair":
@@ -436,17 +439,20 @@ class GLWidget(QGLWidget):
                         self.update_drawing()
                         self.update()
                         self.project["app"].update_tabs()
+                    self.selection = ()
                 elif self.selector_mode == "delete":
                     obj_idx = self.selection[2]
                     del self.project["objects"][obj_idx]
                     self.update_drawing()
                     self.update()
+                    self.selection = ()
                 elif self.selector_mode == "start":
-                    obj_idx = self.selection[2]
+                    obj_idx = self.selection[0]
                     self.project["objects"][obj_idx]["start"] = ()
                     self.update_drawing()
                     self.update()
                     self.project["app"].update_starts()
+                    self.selection = ()
 
     def mouseReleaseEvent(self, event) -> None:  # pylint: disable=C0103,W0613
         """mouse button released."""

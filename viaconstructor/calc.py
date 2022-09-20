@@ -478,9 +478,8 @@ def found_next_segment_point(mpos, objects):
                 inter = lines_intersect(check[0], check[1], segment.start, segment.end)
                 if inter:
                     length = calc_distance(segment.start, segment.end)
-                    if length > obj.setup["tabs"]["width"]:
+                    if length > 0.0:
                         angle = angle_of_line((last_x, last_y), (pos_x, pos_y))
-
                         if bulge != 0.0:
                             inter = get_half_bulge_point(
                                 (last_x, last_y), (pos_x, pos_y), bulge
