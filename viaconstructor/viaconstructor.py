@@ -1049,7 +1049,7 @@ class ViaConstructor:
         color = QColorDialog.getColor().getRgbF()
         self.project["setup"][section][name] = color
         button = self.project["setup_defaults"][section][name]["widget"]
-        rgb = f"{color[0] * 255},{color[1] * 255},{color[2] * 255}"
+        rgb = f"{color[0] * 255:1.0f},{color[1] * 255:1.0f},{color[2] * 255:1.0f}"
         button.setStyleSheet(f"background-color:rgb({rgb})")
         button.setText(rgb)
         self.global_changed(0)
