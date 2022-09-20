@@ -8,7 +8,11 @@ class fakeOffset:
     def __init__(self, data, closed, level, mill, tool_offset):
         self.level = level
         self.closed = closed
-        self.setup = {"mill": mill, "tabs": {"active": False}}
+        self.setup = {
+            "mill": mill,
+            "tabs": {"active": False},
+            "leads": {"active": False, "radius": 3.0},
+        }
         self.data = data
         self.tool_offset = tool_offset
         self.is_pocket = False
@@ -137,12 +141,12 @@ class fakeOffset:
                         "helix_mode": False,
                     },
                     "view": {"path": "simple"},
+                    "leads": {"active": False},
                     "machine": {
                         "mode": "mill",
                         "unit": "mm",
                         "comments": True,
                         "g54": False,
-                        "lead_in": False,
                     },
                 },
                 "tablewidget": "",

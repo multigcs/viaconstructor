@@ -684,7 +684,7 @@ def polylines2machine_cmd(project: dict, post: PostProcessor) -> str:
                         depth = 0.0
                         post.move(z_pos=depth)
 
-                    lead_in_active = project["setup"]["machine"]["lead_in"]
+                    lead_in_active = polyline.setup["leads"]["active"]
                     if not is_closed:
                         # only on closed contours
                         lead_in_active = False
@@ -693,37 +693,27 @@ def polylines2machine_cmd(project: dict, post: PostProcessor) -> str:
                         lead_in_active = False
 
                     if lead_in_active:
-                        lead_in_dist = project["setup"]["tool"]["diameter"] / 2.0
-
+                        lead_radius = polyline.setup["leads"]["radius"]
                         if polyline.setup["mill"]["reverse"]:
                             line_angle = angle_of_line(points[0], points[1])
-                            center_x = points[0][0] + lead_in_dist * math.sin(
-                                line_angle
-                            )
-                            center_y = points[0][1] - lead_in_dist * math.cos(
-                                line_angle
-                            )
-                            lead_in_x = center_x + lead_in_dist * math.sin(
+                            center_x = points[0][0] + lead_radius * math.sin(line_angle)
+                            center_y = points[0][1] - lead_radius * math.cos(line_angle)
+                            lead_in_x = center_x + lead_radius * math.sin(
                                 line_angle - HALF_PI
                             )
-                            lead_in_y = center_y - lead_in_dist * math.cos(
+                            lead_in_y = center_y - lead_radius * math.cos(
                                 line_angle - HALF_PI
                             )
                         else:
                             line_angle = angle_of_line(points[0], points[1]) + math.pi
-                            center_x = points[0][0] + lead_in_dist * math.sin(
-                                line_angle
-                            )
-                            center_y = points[0][1] - lead_in_dist * math.cos(
-                                line_angle
-                            )
-                            lead_in_x = center_x + lead_in_dist * math.sin(
+                            center_x = points[0][0] + lead_radius * math.sin(line_angle)
+                            center_y = points[0][1] - lead_radius * math.cos(line_angle)
+                            lead_in_x = center_x + lead_radius * math.sin(
                                 line_angle + HALF_PI
                             )
-                            lead_in_y = center_y - lead_in_dist * math.cos(
+                            lead_in_y = center_y - lead_radius * math.cos(
                                 line_angle + HALF_PI
                             )
-
                         post.move(x_pos=lead_in_x, y_pos=lead_in_y)
                     else:
                         post.move(x_pos=points[0][0], y_pos=points[0][1])

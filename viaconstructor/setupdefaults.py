@@ -362,6 +362,24 @@ def setup_defaults(_) -> dict:
                 "tooltip": _("type of the tab"),
             },
         },
+        "leads": {
+            "active": {
+                "default": False,
+                "type": "bool",
+                "title": _("activate leads"),
+                "tooltip": _("activate lead-in/lead-out support"),
+                "per_object": True,
+            },
+            "radius": {
+                "default": 3.0,
+                "type": "float",
+                "min": 0.1,
+                "max": 10000,
+                "title": _("Radius"),
+                "tooltip": _("radius of the leads"),
+                "per_object": True,
+            },
+        },
         "machine": {
             "feedrate": {
                 "default": 1000,
@@ -378,12 +396,6 @@ def setup_defaults(_) -> dict:
                 "max": 100000,
                 "title": _("Tool-Speed"),
                 "tooltip": _("maximum tool-speed"),
-            },
-            "lead_in": {
-                "default": False,
-                "type": "bool",
-                "title": _("lead_in"),
-                "tooltip": _("lead_in support"),
             },
             "plugin": {
                 "default": "gcode_linuxcnc",
