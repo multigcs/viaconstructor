@@ -5,7 +5,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
-"POT-Creation-Date: 2022-09-20 15:02+0200\n"
+"POT-Creation-Date: 2022-09-20 17:16+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -452,10 +452,18 @@ msgid "shows id of each object"
 msgstr ""
 
 #: viaconstructor/setupdefaults.py:497
-msgid "Show inputfile in 3d"
+msgid "arcs"
 msgstr ""
 
 #: viaconstructor/setupdefaults.py:498
+msgid "draw arcs / Interpolation"
+msgstr ""
+
+#: viaconstructor/setupdefaults.py:503
+msgid "Show inputfile in 3d"
+msgstr ""
+
+#: viaconstructor/setupdefaults.py:504
 msgid "Show inputfile in 3d if possible"
 msgstr ""
 

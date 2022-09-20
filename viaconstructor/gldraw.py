@@ -3,6 +3,7 @@
 import math
 from typing import Sequence
 
+import ezdxf
 from OpenGL import GL
 from OpenGL.GLU import (
     GLU_TESS_BEGIN,
@@ -22,7 +23,7 @@ from OpenGL.GLU import (
     gluTessVertex,
 )
 
-from .calc import angle_of_line, calc_distance, line_center_3d, object2vertex
+from .calc import angle_of_line, calc_distance, line_center_3d
 from .ext.HersheyFonts.HersheyFonts import HersheyFonts
 from .preview_plugins.gcode import GcodeParser
 from .preview_plugins.hpgl import HpglParser
@@ -307,11 +308,34 @@ def draw_object_ids(project: dict) -> None:
     GL.glEnd()
 
 
+def bulge_points(segment):
+    points = []
+    (
+        center,
+        start_angle,  # pylint: disable=W0612
+        end_angle,  # pylint: disable=W0612
+        radius,  # pylint: disable=W0612
+    ) = ezdxf.math.bulge_to_arc(segment.start, segment.end, segment.bulge)
+    while start_angle > end_angle:
+        start_angle -= math.pi
+    steps = abs(start_angle - end_angle) / 10
+    angle = start_angle + steps
+    if start_angle < end_angle:
+        while angle < end_angle:
+            ap_x = center[0] + radius * math.sin(angle + math.pi / 2)
+            ap_y = center[1] - radius * math.cos(angle + math.pi / 2)
+            points.append((ap_x, ap_y))
+            angle += steps
+
+    return points
+
+
 def draw_object_edges(project: dict, selected: int = -1) -> None:
     """draws the edges of an object"""
     unit = project["setup"]["machine"]["unit"]
     depth = project["setup"]["mill"]["depth"]
     tabs_height = project["setup"]["tabs"]["height"]
+    interpolate = project["setup"]["view"]["arcs"]
     unitscale = 1.0
     if unit == "inch":
         unitscale = 25.4
@@ -328,33 +352,52 @@ def draw_object_edges(project: dict, selected: int = -1) -> None:
             GL.glColor4f(1.0, 0.0, 0.0, 1.0)
         else:
             GL.glColor4f(1.0, 1.0, 1.0, 1.0)
+
         # side
         GL.glBegin(GL.GL_LINES)
-        for segment in obj["segments"]:
-            p_x = segment["start"][0]
-            p_y = segment["start"][1]
+        for segment in obj.segments:
+            p_x = segment.start[0]
+            p_y = segment.start[1]
             GL.glVertex3f(p_x, p_y, 0.0)
             GL.glVertex3f(p_x, p_y, depth)
         GL.glEnd()
+
         # top
-        vertex_data = object2vertex(obj)
-        closed = obj["closed"]
-        if closed:
-            GL.glBegin(GL.GL_LINE_LOOP)
-        else:
-            GL.glBegin(GL.GL_LINE_STRIP)
-        for p_x, p_y in zip(vertex_data[0], vertex_data[1]):
-            GL.glVertex3f(p_x, p_y, 0.0)
+        GL.glBegin(GL.GL_LINES)
+        for segment in obj.segments:
+            if segment.bulge != 0.0 and interpolate:
+                last_x = segment.start[0]
+                last_y = segment.start[1]
+                for point in bulge_points(segment):
+                    GL.glVertex3f(last_x, last_y, 0.0)
+                    GL.glVertex3f(point[0], point[1], 0.0)
+                    last_x = point[0]
+                    last_y = point[1]
+                GL.glVertex3f(last_x, last_y, 0.0)
+                GL.glVertex3f(segment.end[0], segment.end[1], 0.0)
+            else:
+                GL.glVertex3f(segment.start[0], segment.start[1], 0.0)
+                GL.glVertex3f(segment.end[0], segment.end[1], 0.0)
         GL.glEnd()
 
         # bottom
-        if closed:
-            GL.glBegin(GL.GL_LINE_LOOP)
-        else:
-            GL.glBegin(GL.GL_LINE_STRIP)
-        for p_x, p_y in zip(vertex_data[0], vertex_data[1]):
-            GL.glVertex3f(p_x, p_y, depth)
+        GL.glBegin(GL.GL_LINES)
+        for segment in obj.segments:
+            if segment.bulge != 0.0 and interpolate:
+                last_x = segment.start[0]
+                last_y = segment.start[1]
+                for point in bulge_points(segment):
+                    GL.glVertex3f(last_x, last_y, depth)
+                    GL.glVertex3f(point[0], point[1], depth)
+                    last_x = point[0]
+                    last_y = point[1]
+                GL.glVertex3f(last_x, last_y, depth)
+                GL.glVertex3f(segment.end[0], segment.end[1], depth)
+            else:
+                GL.glVertex3f(segment.start[0], segment.start[1], depth)
+                GL.glVertex3f(segment.end[0], segment.end[1], depth)
         GL.glEnd()
+
         # start points
         start = obj.get("start", ())
         if start:
@@ -367,6 +410,7 @@ def draw_object_edges(project: dict, selected: int = -1) -> None:
             GL.glVertex3f(start[0] - 1, start[1] + 1, depth)
             GL.glVertex3f(start[0] + 1, start[1] - 1, depth)
             GL.glEnd()
+
     # tabs
     tabs = project.get("tabs", {}).get("data", ())
     if tabs:
@@ -384,6 +428,7 @@ def draw_object_faces(project: dict) -> None:
     """draws the top and side faces of an object"""
     unit = project["setup"]["machine"]["unit"]
     depth = project["setup"]["mill"]["depth"]
+    interpolate = project["setup"]["view"]["arcs"]
     unitscale = 1.0
     if unit == "inch":
         unitscale = 25.4
@@ -396,17 +441,24 @@ def draw_object_faces(project: dict) -> None:
             "layer", ""
         ).startswith("_TABS"):
             continue
-        vertex_data = object2vertex(obj)
-        for segment in obj["segments"]:
-            p_x = segment["start"][0]
-            p_y = segment["start"][1]
+        for segment in obj.segments:
+            last_x = segment.start[0]
+            last_y = segment.start[1]
+            if segment.bulge != 0.0 and interpolate:
+                for point in bulge_points(segment):
+                    GL.glBegin(GL.GL_TRIANGLE_STRIP)
+                    GL.glVertex3f(last_x, last_y, 0.0)
+                    GL.glVertex3f(last_x, last_y, depth)
+                    GL.glVertex3f(point[0], point[1], 0.0)
+                    GL.glVertex3f(point[0], point[1], depth)
+                    GL.glEnd()
+                    last_x = point[0]
+                    last_y = point[1]
             GL.glBegin(GL.GL_TRIANGLE_STRIP)
-            GL.glVertex3f(p_x, p_y, 0.0)
-            GL.glVertex3f(p_x, p_y, depth)
-            p_x = segment["end"][0]
-            p_y = segment["end"][1]
-            GL.glVertex3f(p_x, p_y, 0.0)
-            GL.glVertex3f(p_x, p_y, depth)
+            GL.glVertex3f(last_x, last_y, 0.0)
+            GL.glVertex3f(last_x, last_y, depth)
+            GL.glVertex3f(segment.end[0], segment.end[1], 0.0)
+            GL.glVertex3f(segment.end[0], segment.end[1], depth)
             GL.glEnd()
 
     # object faces (top)
@@ -425,13 +477,20 @@ def draw_object_faces(project: dict) -> None:
             "layer", ""
         ).startswith("_TABS"):
             continue
-        if obj["closed"]:
-            vertex_data = object2vertex(obj)
+
+        if obj.closed:
             gluTessBeginContour(tess)
-            for pos, p_x in enumerate(vertex_data[0]):
-                p_xy = (p_x, vertex_data[1][pos], 0.0)
+            for segment in obj.segments:
+                p_xy = (segment.start[0], segment.start[1], 0.0)
+                gluTessVertex(tess, p_xy, p_xy)
+                if segment.bulge != 0.0 and interpolate:
+                    for point in bulge_points(segment):
+                        p_xy = (point[0], point[1], 0.0)
+                        gluTessVertex(tess, p_xy, p_xy)
+                p_xy = (segment.end[0], segment.end[1], 0.0)
                 gluTessVertex(tess, p_xy, p_xy)
             gluTessEndContour(tess)
+
     gluTessEndPolygon(tess)
     gluDeleteTess(tess)
 

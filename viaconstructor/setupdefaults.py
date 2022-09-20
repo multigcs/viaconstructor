@@ -491,6 +491,12 @@ def setup_defaults(_) -> dict:
                 "title": _("Show Object-ID's"),
                 "tooltip": _("shows id of each object"),
             },
+            "arcs": {
+                "default": True,
+                "type": "bool",
+                "title": _("arcs"),
+                "tooltip": _("draw arcs / Interpolation"),
+            },
             "3d_show": {
                 "default": False,
                 "type": "bool",
