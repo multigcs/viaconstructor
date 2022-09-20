@@ -16,7 +16,8 @@ from .calc import (
     vertex_data_cache,
 )
 
-TWO_PI = math.pi * 2
+TWO_PI = math.pi * 2.0
+HALF_PI = math.pi / 2.0
 
 
 class PostProcessor:
@@ -425,7 +426,7 @@ def segment2machine_cmd(
         if tab_list:
             for tab_dist in sorted(tab_list.keys()):
                 angle = (
-                    angle_of_line((last[0], last[1]), tab_list[tab_dist]) + math.pi / 2
+                    angle_of_line((last[0], last[1]), tab_list[tab_dist]) + HALF_PI
                 )
 
                 tab_start_x = last[0] + (tab_dist - (tab_width / 2)) * math.sin(angle)
@@ -689,48 +690,29 @@ def polylines2machine_cmd(project: dict, post: PostProcessor) -> str:
 
                     lead_in_active = project["setup"]["machine"]["lead_in"]
                     if not is_closed:
+                        # only on closed contours
+                        lead_in_active = False
+                    if not polyline.start:
+                        # only if a start point is set
                         lead_in_active = False
 
                     if lead_in_active:
-                        # lead-in
-                        # line to non workpeace side
-                        # start at new inside line
-                        lead_in_dist = project["setup"]["tool"]["diameter"]
-                        line_angle1 = angle_of_line(points[-1], points[0])
-                        line_angle2 = angle_of_line(points[0], points[1])
-                        adiff = line_angle2 - line_angle1
-                        line_angle = line_angle1 + adiff / 2.0
-                        lead_in_x = points[0][0] + lead_in_dist * math.sin(line_angle)
-                        lead_in_y = points[0][1] - lead_in_dist * math.cos(line_angle)
-                        inside = inside_vertex(vertex_data, (lead_in_x, lead_in_y))
-                        if polyline.tool_offset == "inside" and not inside:
-                            line_angle = line_angle1 + adiff / 2.0 + math.pi
-                            lead_in_x = points[0][0] + lead_in_dist * math.sin(
-                                line_angle
-                            )
-                            lead_in_y = points[0][1] - lead_in_dist * math.cos(
-                                line_angle
-                            )
-                        elif polyline.tool_offset == "outside" and inside:
-                            line_angle = line_angle1 + adiff / 2.0 + math.pi
-                            lead_in_x = points[0][0] + lead_in_dist * math.sin(
-                                line_angle
-                            )
-                            lead_in_y = points[0][1] - lead_in_dist * math.cos(
-                                line_angle
-                            )
+                        lead_in_dist = project["setup"]["tool"]["diameter"] / 2.0
+
+                        if polyline.setup["mill"]["reverse"]:
+                            line_angle = angle_of_line(points[0], points[1])
+                            center_x = points[0][0] + lead_in_dist * math.sin(line_angle)
+                            center_y = points[0][1] - lead_in_dist * math.cos(line_angle)
+                            lead_in_x = center_x + lead_in_dist * math.sin(line_angle - HALF_PI)
+                            lead_in_y = center_y - lead_in_dist * math.cos(line_angle - HALF_PI)
+                        else:
+                            line_angle = angle_of_line(points[0], points[1]) + math.pi
+                            center_x = points[0][0] + lead_in_dist * math.sin(line_angle)
+                            center_y = points[0][1] - lead_in_dist * math.cos(line_angle)
+                            lead_in_x = center_x + lead_in_dist * math.sin(line_angle + HALF_PI)
+                            lead_in_y = center_y - lead_in_dist * math.cos(line_angle + HALF_PI)
+
                         post.move(x_pos=lead_in_x, y_pos=lead_in_y)
-
-                        center = point_of_line((lead_in_x, lead_in_y), points[0], 0.5)
-
-                        post.arc_ccw(
-                            x_pos=points[0][0],
-                            y_pos=points[0][1],
-                            # z_pos=set_depth,
-                            i_pos=(center[0] - lead_in_x),
-                            j_pos=(center[1] - lead_in_y),
-                        )
-
                     else:
                         post.move(x_pos=points[0][0], y_pos=points[0][1])
 
@@ -771,7 +753,21 @@ def polylines2machine_cmd(project: dict, post: PostProcessor) -> str:
                             post.spindle_cw(project["setup"]["tool"]["speed"], pause=0)
 
                         if lead_in_active:
-                            post.move(x_pos=points[0][0], y_pos=points[0][1])
+                            if polyline.setup["mill"]["reverse"]:
+                                post.arc_cw(
+                                    x_pos=points[0][0],
+                                    y_pos=points[0][1],
+                                    i_pos=(center_x - lead_in_x),
+                                    j_pos=(center_y - lead_in_y),
+                                )
+                            else:
+                                post.arc_ccw(
+                                    x_pos=points[0][0],
+                                    y_pos=points[0][1],
+                                    i_pos=(center_x - lead_in_x),
+                                    j_pos=(center_y - lead_in_y),
+                                )
+                            lead_in_active = False
 
                         trav_distance = 0
                         last = points[0]
