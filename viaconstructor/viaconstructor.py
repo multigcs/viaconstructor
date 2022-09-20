@@ -741,47 +741,47 @@ class ViaConstructor:
 
     def _toolbar_toggle_tab_selector(self) -> None:
         """tab selector."""
-        title = "Tab-Selector"
+        title = _("Tab-Selector")
         if self.project["glwidget"].toggle_tab_selector():
             for toolbutton in self.toolbuttons.values():
                 if toolbutton[5]:
                     toolbutton[7].setChecked(False)
-            self.toolbuttons[_(title)][7].setChecked(True)
+            self.toolbuttons[title][7].setChecked(True)
         else:
-            self.toolbuttons[_(title)][7].setChecked(False)
+            self.toolbuttons[title][7].setChecked(False)
 
     def _toolbar_toggle_delete_selector(self) -> None:
         """delete selector."""
-        title = "Delete-Selector"
+        title = _("Delete-Selector")
         if self.project["glwidget"].toggle_delete_selector():
             for toolbutton in self.toolbuttons.values():
                 if toolbutton[5]:
                     toolbutton[7].setChecked(False)
-            self.toolbuttons[_(title)][7].setChecked(True)
+            self.toolbuttons[title][7].setChecked(True)
         else:
-            self.toolbuttons[_(title)][7].setChecked(False)
+            self.toolbuttons[title][7].setChecked(False)
 
     def _toolbar_toggle_start_selector(self) -> None:
         """start selector."""
-        title = "Start-Selector"
+        title = _("Start-Selector")
         if self.project["glwidget"].toggle_start_selector():
             for toolbutton in self.toolbuttons.values():
                 if toolbutton[5]:
                     toolbutton[7].setChecked(False)
-            self.toolbuttons[_(title)][7].setChecked(True)
+            self.toolbuttons[title][7].setChecked(True)
         else:
-            self.toolbuttons[_(title)][7].setChecked(False)
+            self.toolbuttons[title][7].setChecked(False)
 
     def _toolbar_toggle_repair_selector(self) -> None:
         """start selector."""
-        title = "Repair-Selector"
+        title = _("Repair-Selector")
         if self.project["glwidget"].toggle_repair_selector():
             for toolbutton in self.toolbuttons.values():
                 if toolbutton[5]:
                     toolbutton[7].setChecked(False)
-            self.toolbuttons[_(title)][7].setChecked(True)
+            self.toolbuttons[title][7].setChecked(True)
         else:
-            self.toolbuttons[_(title)][7].setChecked(False)
+            self.toolbuttons[title][7].setChecked(False)
 
     def _toolbar_view_reset(self) -> None:
         """center view."""

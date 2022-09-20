@@ -685,34 +685,57 @@ def polylines2machine_cmd(project: dict, post: PostProcessor) -> str:
                         post.move(z_pos=depth)
 
                     lead_in_active = polyline.setup["leads"]["active"]
+                    lead_out_active = polyline.setup["leads"]["active"]
                     if not is_closed:
                         # only on closed contours
                         lead_in_active = False
+                        lead_out_active = False
                     if not polyline.start:
                         # only if a start point is set
                         lead_in_active = False
+                        lead_out_active = False
 
                     if lead_in_active:
                         lead_radius = polyline.setup["leads"]["radius"]
                         if polyline.setup["mill"]["reverse"]:
                             line_angle = angle_of_line(points[0], points[1])
-                            center_x = points[0][0] + lead_radius * math.sin(line_angle)
-                            center_y = points[0][1] - lead_radius * math.cos(line_angle)
-                            lead_in_x = center_x + lead_radius * math.sin(
+                            lead_center_x = points[0][0] + lead_radius * math.sin(
+                                line_angle
+                            )
+                            lead_center_y = points[0][1] - lead_radius * math.cos(
+                                line_angle
+                            )
+                            lead_in_x = lead_center_x + lead_radius * math.sin(
                                 line_angle - HALF_PI
                             )
-                            lead_in_y = center_y - lead_radius * math.cos(
+                            lead_in_y = lead_center_y - lead_radius * math.cos(
                                 line_angle - HALF_PI
+                            )
+                            lead_out_x = lead_center_x + lead_radius * math.sin(
+                                line_angle + HALF_PI
+                            )
+                            lead_out_y = lead_center_y - lead_radius * math.cos(
+                                line_angle + HALF_PI
                             )
                         else:
                             line_angle = angle_of_line(points[0], points[1]) + math.pi
-                            center_x = points[0][0] + lead_radius * math.sin(line_angle)
-                            center_y = points[0][1] - lead_radius * math.cos(line_angle)
-                            lead_in_x = center_x + lead_radius * math.sin(
+                            lead_center_x = points[0][0] + lead_radius * math.sin(
+                                line_angle
+                            )
+                            lead_center_y = points[0][1] - lead_radius * math.cos(
+                                line_angle
+                            )
+                            lead_in_x = lead_center_x + lead_radius * math.sin(
                                 line_angle + HALF_PI
                             )
-                            lead_in_y = center_y - lead_radius * math.cos(
+                            lead_in_y = lead_center_y - lead_radius * math.cos(
                                 line_angle + HALF_PI
+                            )
+                            lead_out_x = lead_center_x + lead_radius * math.sin(
+                                line_angle - HALF_PI
+                            )
+                            lead_out_y = lead_center_y - lead_radius * math.cos(
+                                line_angle - HALF_PI
                             )
                         post.move(x_pos=lead_in_x, y_pos=lead_in_y)
                     else:
@@ -759,15 +782,15 @@ def polylines2machine_cmd(project: dict, post: PostProcessor) -> str:
                                 post.arc_cw(
                                     x_pos=points[0][0],
                                     y_pos=points[0][1],
-                                    i_pos=(center_x - lead_in_x),
-                                    j_pos=(center_y - lead_in_y),
+                                    i_pos=(lead_center_x - lead_in_x),
+                                    j_pos=(lead_center_y - lead_in_y),
                                 )
                             else:
                                 post.arc_ccw(
                                     x_pos=points[0][0],
                                     y_pos=points[0][1],
-                                    i_pos=(center_x - lead_in_x),
-                                    j_pos=(center_y - lead_in_y),
+                                    i_pos=(lead_center_x - lead_in_x),
+                                    j_pos=(lead_center_y - lead_in_y),
                                 )
                             lead_in_active = False
 
@@ -831,6 +854,23 @@ def polylines2machine_cmd(project: dict, post: PostProcessor) -> str:
                             or "Z" not in project["axis"]
                         ):
                             break
+
+                    if lead_out_active:
+                        if polyline.setup["mill"]["reverse"]:
+                            post.arc_cw(
+                                x_pos=lead_out_x,
+                                y_pos=lead_out_y,
+                                i_pos=(lead_center_x - points[0][0]),
+                                j_pos=(lead_center_y - points[0][1]),
+                            )
+                        else:
+                            post.arc_ccw(
+                                x_pos=lead_out_x,
+                                y_pos=lead_out_y,
+                                i_pos=(lead_center_x - points[0][0]),
+                                j_pos=(lead_center_y - points[0][1]),
+                            )
+                        lead_out_active = False
 
                     # if project["setup"]["machine"]["mode"] != "laser":
                     #    post.move(z_pos=fast_move_z)
