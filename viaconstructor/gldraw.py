@@ -429,13 +429,15 @@ def draw_object_faces(project: dict) -> None:
     unit = project["setup"]["machine"]["unit"]
     depth = project["setup"]["mill"]["depth"]
     interpolate = project["setup"]["view"]["arcs"]
+    color = project["setup"]["view"]["color"]
+    alpha = project["setup"]["view"]["alpha"]
     unitscale = 1.0
     if unit == "inch":
         unitscale = 25.4
         depth *= unitscale
 
     # object faces (side)
-    GL.glColor4f(0.11, 0.39, 0.63, 0.5)
+    GL.glColor4f(color[0], color[1], color[2], alpha)
     for obj in project["objects"].values():
         if obj.get("layer", "").startswith("BREAKS:") or obj.get(
             "layer", ""
@@ -462,7 +464,7 @@ def draw_object_faces(project: dict) -> None:
             GL.glEnd()
 
     # object faces (top)
-    GL.glColor4f(0.11, 0.39, 0.63, 0.5)
+    GL.glColor4f(color[0], color[1], color[2], alpha)
     tess = gluNewTess()
     gluTessProperty(tess, GLU_TESS_WINDING_RULE, GLU_TESS_WINDING_ODD)
     gluTessCallback(tess, GLU_TESS_BEGIN, GL.glBegin)

@@ -118,6 +118,7 @@ def setup_defaults(_) -> dict:
             "diameter": {
                 "default": 4.0,
                 "type": "float",
+                "step": 0.1,
                 "min": 0.0,
                 "max": 999.0,
                 "title": _("Diameter"),
@@ -502,6 +503,22 @@ def setup_defaults(_) -> dict:
                 "type": "bool",
                 "title": _("Show inputfile in 3d"),
                 "tooltip": _("Show inputfile in 3d if possible"),
+            },
+            "color": {
+                "default": (0.5, 0.5, 0.5),
+                "type": "color",
+                "title": _("color"),
+                "tooltip": _("color of the workpeace in 3d view"),
+            },
+            "alpha": {
+                "default": 0.6,
+                "type": "float",
+                "step": 0.1,
+                "decimals": 1,
+                "min": 0,
+                "max": 1.0,
+                "title": _("transparency"),
+                "tooltip": _("transparency of the workpeace in 3d view"),
             },
         },
     }

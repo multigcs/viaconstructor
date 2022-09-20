@@ -26,6 +26,7 @@ from PyQt5.QtWidgets import (  # pylint: disable=E0611
     QAction,
     QApplication,
     QCheckBox,
+    QColorDialog,
     QComboBox,
     QDoubleSpinBox,
     QFileDialog,
@@ -1044,6 +1045,15 @@ class ViaConstructor:
         elif section == "tool" and name == "materialtable":
             self.materials_select(row_idx)
 
+    def color_select(self, section, name) -> None:
+        color = QColorDialog.getColor().getRgbF()
+        self.project["setup"][section][name] = color
+        button = self.project["setup_defaults"][section][name]["widget"]
+        rgb = f"{color[0] * 255},{color[1] * 255},{color[2] * 255}"
+        button.setStyleSheet(f"background-color:rgb({rgb})")
+        button.setText(rgb)
+        self.global_changed(0)
+
     def object_changed(self, obj_idx, sname, ename, value) -> None:
         """object changed."""
         if self.project["status"] == "CHANGE":
@@ -1061,6 +1071,8 @@ class ViaConstructor:
         elif entry_type == "str":
             value = str(value)
         elif entry_type == "table":
+            pass
+        elif entry_type == "color":
             pass
         else:
             eprint(f"Unknown setup-type: {entry_type}")
@@ -1133,7 +1145,8 @@ class ViaConstructor:
                             )
                         elif entry["type"] == "float":
                             spinbox = QDoubleSpinBox()
-                            spinbox.setDecimals(4)
+                            spinbox.setDecimals(entry.get("decimals", 4))
+                            spinbox.setSingleStep(entry.get("step", 1.0))
                             spinbox.setMinimum(entry["min"])
                             spinbox.setMaximum(entry["max"])
                             spinbox.setValue(value)
@@ -1144,6 +1157,7 @@ class ViaConstructor:
                             )
                         elif entry["type"] == "int":
                             spinbox = QSpinBox()
+                            spinbox.setSingleStep(entry.get("step", 1))
                             spinbox.setMinimum(entry["min"])
                             spinbox.setMaximum(entry["max"])
                             spinbox.setValue(value)
@@ -1163,6 +1177,8 @@ class ViaConstructor:
                                 value_cell.index(), lineedit
                             )
                         elif entry["type"] == "table":
+                            pass
+                        elif entry["type"] == "color":
                             pass
                         else:
                             eprint(f"Unknown setup-type: {entry['type']}")
@@ -1255,6 +1271,8 @@ class ViaConstructor:
                                     key
                                 ] = float(value)
                             col_idx += 1
+                elif entry["type"] == "color":
+                    pass
                 else:
                     eprint(f"Unknown setup-type: {entry['type']}")
 
@@ -1396,6 +1414,8 @@ class ViaConstructor:
                             )
                             table.resizeColumnToContents(col_idx + idxf_offset)
 
+                elif entry["type"] == "color":
+                    pass
                 else:
                     eprint(f"Unknown setup-type: {entry['type']}")
 
@@ -1426,9 +1446,19 @@ class ViaConstructor:
                     combobox.currentTextChanged.connect(self.global_changed)  # type: ignore
                     hlayout.addWidget(combobox)
                     entry["widget"] = combobox
+                elif entry["type"] == "color":
+                    color = self.project["setup"][sname][ename]
+                    rgb = f"{color[0] * 255:1.0f},{color[1] * 255:1.0f},{color[2] * 255:1.0f}"
+                    button = QPushButton(rgb)
+                    button.setStyleSheet(f"background-color:rgb({rgb})")
+                    button.setToolTip(entry.get("tooltip", f"{sname}/{ename}"))
+                    button.clicked.connect(partial(self.color_select, sname, ename))  # type: ignore
+                    hlayout.addWidget(button)
+                    entry["widget"] = button
                 elif entry["type"] == "float":
                     spinbox = QDoubleSpinBox()
-                    spinbox.setDecimals(4)
+                    spinbox.setDecimals(entry.get("decimals", 4))
+                    spinbox.setSingleStep(entry.get("step", 1.0))
                     spinbox.setMinimum(entry["min"])
                     spinbox.setMaximum(entry["max"])
                     spinbox.setValue(self.project["setup"][sname][ename])
@@ -1438,6 +1468,7 @@ class ViaConstructor:
                     entry["widget"] = spinbox
                 elif entry["type"] == "int":
                     spinbox = QSpinBox()
+                    spinbox.setSingleStep(entry.get("step", 1))
                     spinbox.setMinimum(entry["min"])
                     spinbox.setMaximum(entry["max"])
                     spinbox.setValue(self.project["setup"][sname][ename])
