@@ -252,10 +252,10 @@ class GLWidget(QGLWidget):
                 GL.glLineWidth(5)
                 GL.glColor4f(0.0, 1.0, 1.0, 1.0)
                 GL.glBegin(GL.GL_LINES)
-                GL.glVertex3f(self.selection[0] - 1, self.selection[1] - 1, depth)
-                GL.glVertex3f(self.selection[0] + 1, self.selection[1] + 1, depth)
-                GL.glVertex3f(self.selection[0] - 1, self.selection[1] + 1, depth)
-                GL.glVertex3f(self.selection[0] + 1, self.selection[1] - 1, depth)
+                GL.glVertex3f(self.selection[2][0] - 1, self.selection[2][1] - 1, depth)
+                GL.glVertex3f(self.selection[2][0] + 1, self.selection[2][1] + 1, depth)
+                GL.glVertex3f(self.selection[2][0] - 1, self.selection[2][1] + 1, depth)
+                GL.glVertex3f(self.selection[2][0] + 1, self.selection[2][1] - 1, depth)
                 GL.glEnd()
             elif self.selector_mode == "repair":
                 if len(self.selection) > 4:
@@ -377,12 +377,26 @@ class GLWidget(QGLWidget):
                         self.project["tabs"]["data"].append(self.selection)
                         self.project["app"].update_tabs()
                     elif self.selector_mode == "start":
-                        obj_idx = self.selection[2]
-                        self.project["objects"][obj_idx]["start"] = (
-                            self.selection[0],
-                            self.selection[1],
+                        obj_idx = self.selection[0]
+                        segment_idx = self.selection[1]
+                        new_point = self.selection[2]
+                        obj = self.project["objects"][obj_idx]
+                        segment = obj.segments[segment_idx]
+                        new_segment = VcSegment(
+                            {
+                                "type": "LINE",
+                                "object": segment.object,
+                                "layer": segment.layer,
+                                "start": new_point,
+                                "end": segment.end,
+                                "bulge": 0.0,
+                            }
                         )
+                        segment.end = new_point
+                        obj.segments.insert(segment_idx + 1, new_segment)
+                        self.project["objects"][obj_idx]["start"] = new_point
                         self.project["app"].update_starts()
+
                     elif self.selector_mode == "delete":
                         pass
                     elif self.selector_mode == "repair":

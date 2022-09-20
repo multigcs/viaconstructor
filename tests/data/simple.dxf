@@ -1115,9 +1115,9 @@ AcDbViewportTableRecord
  21
 1
  12
-83.76546008596623
+83.76546008596624
  22
-44.59023294280884
+41.78245215780439
  13
 0
  23
@@ -2245,6 +2245,74 @@ CONTINUOUS
 390
 F
   0
+LAYER
+  5
+4A
+330
+2
+100
+AcDbSymbolTableRecord
+100
+AcDbLayerTableRecord
+  2
+Defpoints
+ 70
+    0
+ 62
+    7
+  6
+CONTINUOUS
+290
+0
+370
+   -3
+390
+F
+  0
+LAYER
+  5
+4B
+330
+2
+100
+AcDbSymbolTableRecord
+100
+AcDbLayerTableRecord
+  2
+_STARTS
+ 70
+    0
+ 62
+    1
+  6
+CONTINUOUS
+370
+   -3
+390
+F
+  0
+LAYER
+  5
+4C
+330
+2
+100
+AcDbSymbolTableRecord
+100
+AcDbLayerTableRecord
+  2
+_TABS
+ 70
+    0
+ 62
+    1
+  6
+CONTINUOUS
+370
+   -3
+390
+F
+  0
 ENDTAB
   0
 TABLE
@@ -2261,7 +2329,7 @@ AcDbSymbolTable
   0
 STYLE
   5
-4A
+4D
 330
 2
 100
@@ -2345,7 +2413,7 @@ ACAD
   0
 APPID
   5
-4B
+4E
 330
 9
 100
@@ -2377,7 +2445,7 @@ AcDbDimStyleTable
   0
 DIMSTYLE
 105
-4C
+4F
 330
 A
 100
@@ -2651,78 +2719,6 @@ ENTITIES
   0
 LINE
   5
-4D
-100
-AcDbEntity
-  8
-0
-  6
-ByLayer
- 62
-  256
-370
-   -1
-100
-AcDbLine
- 10
-20
- 20
-70
- 11
-80
- 21
-70
-  0
-LINE
-  5
-4E
-100
-AcDbEntity
-  8
-0
-  6
-ByLayer
- 62
-  256
-370
-   -1
-100
-AcDbLine
- 10
-20
- 20
-10
- 11
-20
- 21
-70
-  0
-LINE
-  5
-4F
-100
-AcDbEntity
-  8
-0
-  6
-ByLayer
- 62
-  256
-370
-   -1
-100
-AcDbLine
- 10
-10
- 20
-90
- 11
-120
- 21
-80
-  0
-LINE
-  5
 50
 100
 AcDbEntity
@@ -2737,13 +2733,13 @@ ByLayer
 100
 AcDbLine
  10
-120
+20
  20
-80
+70
  11
-110
+80
  21
--10
+70
   0
 LINE
   5
@@ -2761,6 +2757,78 @@ ByLayer
 100
 AcDbLine
  10
+20
+ 20
+10
+ 11
+20
+ 21
+70
+  0
+LINE
+  5
+52
+100
+AcDbEntity
+  8
+0
+  6
+ByLayer
+ 62
+  256
+370
+   -1
+100
+AcDbLine
+ 10
+10
+ 20
+90
+ 11
+120
+ 21
+80
+  0
+LINE
+  5
+53
+100
+AcDbEntity
+  8
+0
+  6
+ByLayer
+ 62
+  256
+370
+   -1
+100
+AcDbLine
+ 10
+120
+ 20
+80
+ 11
+110
+ 21
+-10
+  0
+LINE
+  5
+54
+100
+AcDbEntity
+  8
+0
+  6
+ByLayer
+ 62
+  256
+370
+   -1
+100
+AcDbLine
+ 10
 110
  20
 -10
@@ -2771,7 +2839,7 @@ AcDbLine
   0
 LINE
   5
-52
+55
 100
 AcDbEntity
   8
@@ -2795,7 +2863,7 @@ AcDbLine
   0
 LINE
   5
-53
+56
 100
 AcDbEntity
   8
@@ -2819,7 +2887,7 @@ AcDbLine
   0
 LINE
   5
-54
+57
 100
 AcDbEntity
   8

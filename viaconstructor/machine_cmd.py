@@ -10,6 +10,7 @@ from .calc import (
     found_next_offset_point,
     inside_vertex,
     lines_intersect,
+    point_of_line,
     rotate_list,
     vertex2points,
     vertex_data_cache,
@@ -719,6 +720,17 @@ def polylines2machine_cmd(project: dict, post: PostProcessor) -> str:
                                 line_angle
                             )
                         post.move(x_pos=lead_in_x, y_pos=lead_in_y)
+
+                        center = point_of_line((lead_in_x, lead_in_y), points[0], 0.5)
+
+                        post.arc_ccw(
+                            x_pos=points[0][0],
+                            y_pos=points[0][1],
+                            # z_pos=set_depth,
+                            i_pos=(center[0] - lead_in_x),
+                            j_pos=(center[1] - lead_in_y),
+                        )
+
                     else:
                         post.move(x_pos=points[0][0], y_pos=points[0][1])
 

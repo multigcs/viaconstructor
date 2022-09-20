@@ -460,7 +460,36 @@ def object2vertex(obj):
 
 
 # ########## Polyline Functions ###########
+
+
 def found_next_segment_point(mpos, objects):
+    for obj_idx, obj in objects.items():
+        for segment_idx, segment in enumerate(obj.segments):
+            last_x = segment.start[0]
+            last_y = segment.start[1]
+            pos_x = segment.end[0]
+            pos_y = segment.end[1]
+            bulge = segment.bulge
+            for check in (
+                ((mpos[0] - 5, mpos[1] - 5), (mpos[0] + 5, mpos[1] + 5)),
+                ((mpos[0] + 5, mpos[1] - 5), (mpos[0] - 5, mpos[1] + 5)),
+                ((mpos[0] - 5, mpos[1]), (mpos[0] + 5, mpos[1])),
+            ):
+                inter = lines_intersect(check[0], check[1], segment.start, segment.end)
+                if inter:
+                    length = calc_distance(segment.start, segment.end)
+                    if length > obj.setup["tabs"]["width"]:
+                        angle = angle_of_line((last_x, last_y), (pos_x, pos_y))
+
+                        if bulge != 0.0:
+                            inter = get_half_bulge_point(
+                                (last_x, last_y), (pos_x, pos_y), bulge
+                            )
+                        return (obj_idx, segment_idx, inter)
+    return ()
+
+
+def found_next_segment_point_old(mpos, objects):
     nearest = ()
     min_dist = None
     for obj_idx, obj in objects.items():
