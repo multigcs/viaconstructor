@@ -519,11 +519,15 @@ def draw_line(p_1: dict, p_2: dict, options: str, project: dict) -> None:
         )
     line_width = project["setup"]["tool"]["diameter"]
     mode = project["setup"]["view"]["path"]
+
+    project["simulation_data"].append((p_from, p_to, line_width, mode, options))
+
     draw_mill_line(p_from, p_to, line_width, mode, options)
 
 
 def draw_machinecode_path(project: dict) -> bool:
     """draws the machinecode path"""
+    project["simulation_data"] = []
     GL.glLineWidth(2)
     try:
         if project["suffix"] in {"ngc", "gcode"}:

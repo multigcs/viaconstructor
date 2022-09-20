@@ -52,6 +52,7 @@ from PyQt5.QtWidgets import (  # pylint: disable=E0611
 
 from .calc import (
     calc_distance,
+    calc_distance3d,
     clean_segments,
     find_tool_offsets,
     found_next_open_segment_point,
@@ -62,6 +63,7 @@ from .calc import (
     move_objects,
     objects2minmax,
     objects2polyline_offsets,
+    point_of_line3d,
     rotate_objects,
     scale_objects,
     segments2objects,
@@ -285,6 +287,50 @@ class GLWidget(QGLWidget):
                 GL.glVertex3f(self.selection[0][0], self.selection[0][1], depth)
                 GL.glVertex3f(self.selection[1][0], self.selection[1][1], depth)
                 GL.glEnd()
+
+        if self.project["simulation"] >= 0:
+            last_pos = self.project["simulation_last"]
+            sim_step = self.project["simulation"]
+            next_pos = self.project["simulation_data"][sim_step][1]
+            spindle = self.project["simulation_data"][sim_step][4]
+            dist = calc_distance3d(last_pos, next_pos)
+            if dist >= 1.0:
+                pdist = 1.0 / dist
+                next_pos = point_of_line3d(last_pos, next_pos, pdist)
+            else:
+                pdist = 1.0
+            self.project["simulation_last"] = next_pos
+
+            GL.glLineWidth(1)
+            if spindle == "OFF":
+                GL.glColor3f(0.11, 0.63, 0.36)
+            else:
+                GL.glColor3f(0.91, 0.0, 0.0)
+            astep = math.pi / 6
+            radius = self.project["setup"]["tool"]["diameter"] / 2.0
+            height = -self.project["setup"]["mill"]["depth"] + 5
+            GL.glBegin(GL.GL_QUAD_STRIP)
+            angle = 0.0
+            while angle < math.pi * 2:
+                x_pos = radius * math.cos(angle)
+                y_pos = radius * math.sin(angle)
+                GL.glVertex3f(
+                    next_pos[0] + x_pos, next_pos[1] + y_pos, next_pos[2] + height
+                )
+                GL.glVertex3f(next_pos[0] + x_pos, next_pos[1] + y_pos, next_pos[2])
+                angle = angle + astep
+            GL.glVertex3f(next_pos[0] + radius, next_pos[1], next_pos[2] + height)
+            GL.glVertex3f(next_pos[0] + radius, next_pos[1], next_pos[2])
+            GL.glEnd()
+
+            if pdist >= 1.0:
+                if (
+                    self.project["simulation"]
+                    < len(self.project["simulation_data"]) - 1
+                ):
+                    self.project["simulation"] += 1
+                else:
+                    self.project["simulation"] = -1
 
         GL.glPopMatrix()
 
@@ -583,6 +629,9 @@ class ViaConstructor:
             "table": None,
         },
         "textwidget": None,
+        "simulation": -1,
+        "simulation_last": (0.0, 0.0, 0.0),
+        "simulation_data": [],
     }
     info = ""
     save_tabs = "no"
@@ -750,6 +799,9 @@ class ViaConstructor:
             self.toolbuttons[title][7].setChecked(True)
         else:
             self.toolbuttons[title][7].setChecked(False)
+
+    def _toolbar_simulate(self) -> None:
+        self.project["simulation"] = 0
 
     def _toolbar_toggle_delete_selector(self) -> None:
         """delete selector."""
@@ -1875,6 +1927,16 @@ class ViaConstructor:
                     True,
                     True,
                     "delete",
+                    None,
+                ],
+                _("Simulate"): [
+                    "play.png",
+                    "",
+                    _("Simulate"),
+                    self._toolbar_simulate,
+                    True,
+                    False,
+                    "simulate",
                     None,
                 ],
             }

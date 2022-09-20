@@ -111,6 +111,11 @@ def calc_distance(p_1, p_2):
     return math.hypot(p_1[0] - p_2[0], p_1[1] - p_2[1])
 
 
+def calc_distance3d(p_1, p_2):
+    """gets the distance between two points in 3D."""
+    return math.hypot(p_1[0] - p_2[0], p_1[1] - p_2[1], p_1[2] - p_2[2])
+
+
 def is_between(p_1, p_2, p_3):
     """checks if a point is between 2 other points."""
     return round(calc_distance(p_1, p_3), 2) + round(
@@ -169,6 +174,14 @@ def point_of_line(p_1, p_2, line_pos):
     return [
         p_1[0] + (p_2[0] - p_1[0]) * line_pos,
         p_1[1] + (p_2[1] - p_1[1]) * line_pos,
+    ]
+
+
+def point_of_line3d(p_1, p_2, line_pos):
+    return [
+        p_1[0] + (p_2[0] - p_1[0]) * line_pos,
+        p_1[1] + (p_2[1] - p_1[1]) * line_pos,
+        p_1[2] + (p_2[2] - p_1[2]) * line_pos,
     ]
 
 
