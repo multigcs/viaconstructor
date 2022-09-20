@@ -33,7 +33,7 @@ $EXTMAX
  10
 120
  20
-90
+99.82387024260149
  30
 0
   9
@@ -1115,9 +1115,9 @@ AcDbViewportTableRecord
  21
 1
  12
-83.76546008596624
+219.2673131302382
  22
-41.78245215780439
+122.3962344162545
  13
 0
  23
@@ -1143,9 +1143,9 @@ AcDbViewportTableRecord
  37
 0
  40
-114.3167891037528
+279.905122042462
  41
-1.84093567251462
+1.846975088967971
  42
 50
  43
@@ -2245,74 +2245,6 @@ CONTINUOUS
 390
 F
   0
-LAYER
-  5
-4A
-330
-2
-100
-AcDbSymbolTableRecord
-100
-AcDbLayerTableRecord
-  2
-Defpoints
- 70
-    0
- 62
-    7
-  6
-CONTINUOUS
-290
-0
-370
-   -3
-390
-F
-  0
-LAYER
-  5
-4B
-330
-2
-100
-AcDbSymbolTableRecord
-100
-AcDbLayerTableRecord
-  2
-_STARTS
- 70
-    0
- 62
-    1
-  6
-CONTINUOUS
-370
-   -3
-390
-F
-  0
-LAYER
-  5
-4C
-330
-2
-100
-AcDbSymbolTableRecord
-100
-AcDbLayerTableRecord
-  2
-_TABS
- 70
-    0
- 62
-    1
-  6
-CONTINUOUS
-370
-   -3
-390
-F
-  0
 ENDTAB
   0
 TABLE
@@ -2329,7 +2261,7 @@ AcDbSymbolTable
   0
 STYLE
   5
-4D
+4A
 330
 2
 100
@@ -2413,7 +2345,7 @@ ACAD
   0
 APPID
   5
-4E
+4B
 330
 9
 100
@@ -2445,7 +2377,7 @@ AcDbDimStyleTable
   0
 DIMSTYLE
 105
-4F
+4C
 330
 A
 100
@@ -2719,7 +2651,7 @@ ENTITIES
   0
 LINE
   5
-50
+4D
 100
 AcDbEntity
   8
@@ -2740,6 +2672,78 @@ AcDbLine
 80
  21
 70
+  0
+LINE
+  5
+4E
+100
+AcDbEntity
+  8
+0
+  6
+ByLayer
+ 62
+  256
+370
+   -1
+100
+AcDbLine
+ 10
+80
+ 20
+70
+ 11
+20
+ 21
+10
+  0
+LINE
+  5
+4F
+100
+AcDbEntity
+  8
+0
+  6
+ByLayer
+ 62
+  256
+370
+   -1
+100
+AcDbLine
+ 10
+20
+ 20
+10
+ 11
+20
+ 21
+70
+  0
+LINE
+  5
+50
+100
+AcDbEntity
+  8
+0
+  6
+ByLayer
+ 62
+  256
+370
+   -1
+100
+AcDbLine
+ 10
+10
+ 20
+90
+ 11
+120
+ 21
+80
   0
 LINE
   5
@@ -2757,13 +2761,13 @@ ByLayer
 100
 AcDbLine
  10
-20
+120
  20
-10
+80
  11
-20
+110
  21
-70
+-10
   0
 LINE
   5
@@ -2781,13 +2785,13 @@ ByLayer
 100
 AcDbLine
  10
-10
+110
  20
-90
+-10
  11
-120
+0
  21
-80
+0
   0
 LINE
   5
@@ -2805,54 +2809,6 @@ ByLayer
 100
 AcDbLine
  10
-120
- 20
-80
- 11
-110
- 21
--10
-  0
-LINE
-  5
-54
-100
-AcDbEntity
-  8
-0
-  6
-ByLayer
- 62
-  256
-370
-   -1
-100
-AcDbLine
- 10
-110
- 20
--10
- 11
-0
- 21
-0
-  0
-LINE
-  5
-55
-100
-AcDbEntity
-  8
-0
-  6
-ByLayer
- 62
-  256
-370
-   -1
-100
-AcDbLine
- 10
 0
  20
 0
@@ -2860,54 +2816,6 @@ AcDbLine
 10
  21
 90
-  0
-LINE
-  5
-56
-100
-AcDbEntity
-  8
-0
-  6
-ByLayer
- 62
-  256
-370
-   -1
-100
-AcDbLine
- 10
-20
- 20
-10
- 11
-50
- 21
-40
-  0
-LINE
-  5
-57
-100
-AcDbEntity
-  8
-0
-  6
-ByLayer
- 62
-  256
-370
-   -1
-100
-AcDbLine
- 10
-50
- 20
-40
- 11
-80
- 21
-70
   0
 ENDSEC
   0

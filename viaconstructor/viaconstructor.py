@@ -383,7 +383,7 @@ class GLWidget(QGLWidget):
                         new_point = self.selection[2]
                         obj = self.project["objects"][obj_idx]
                         segment = obj.segments[segment_idx]
-                        if new_point != segment.start and new_point != segment.end:
+                        if new_point not in (segment.start, segment.end):
                             new_segment = VcSegment(
                                 {
                                     "type": "LINE",

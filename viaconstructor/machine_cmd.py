@@ -8,9 +8,7 @@ from .calc import (
     angle_of_line,
     calc_distance,
     found_next_offset_point,
-    inside_vertex,
     lines_intersect,
-    point_of_line,
     rotate_list,
     vertex2points,
     vertex_data_cache,
@@ -425,9 +423,7 @@ def segment2machine_cmd(
 
         if tab_list:
             for tab_dist in sorted(tab_list.keys()):
-                angle = (
-                    angle_of_line((last[0], last[1]), tab_list[tab_dist]) + HALF_PI
-                )
+                angle = angle_of_line((last[0], last[1]), tab_list[tab_dist]) + HALF_PI
 
                 tab_start_x = last[0] + (tab_dist - (tab_width / 2)) * math.sin(angle)
                 tab_start_y = last[1] - (tab_dist - (tab_width / 2)) * math.cos(angle)
@@ -701,16 +697,32 @@ def polylines2machine_cmd(project: dict, post: PostProcessor) -> str:
 
                         if polyline.setup["mill"]["reverse"]:
                             line_angle = angle_of_line(points[0], points[1])
-                            center_x = points[0][0] + lead_in_dist * math.sin(line_angle)
-                            center_y = points[0][1] - lead_in_dist * math.cos(line_angle)
-                            lead_in_x = center_x + lead_in_dist * math.sin(line_angle - HALF_PI)
-                            lead_in_y = center_y - lead_in_dist * math.cos(line_angle - HALF_PI)
+                            center_x = points[0][0] + lead_in_dist * math.sin(
+                                line_angle
+                            )
+                            center_y = points[0][1] - lead_in_dist * math.cos(
+                                line_angle
+                            )
+                            lead_in_x = center_x + lead_in_dist * math.sin(
+                                line_angle - HALF_PI
+                            )
+                            lead_in_y = center_y - lead_in_dist * math.cos(
+                                line_angle - HALF_PI
+                            )
                         else:
                             line_angle = angle_of_line(points[0], points[1]) + math.pi
-                            center_x = points[0][0] + lead_in_dist * math.sin(line_angle)
-                            center_y = points[0][1] - lead_in_dist * math.cos(line_angle)
-                            lead_in_x = center_x + lead_in_dist * math.sin(line_angle + HALF_PI)
-                            lead_in_y = center_y - lead_in_dist * math.cos(line_angle + HALF_PI)
+                            center_x = points[0][0] + lead_in_dist * math.sin(
+                                line_angle
+                            )
+                            center_y = points[0][1] - lead_in_dist * math.cos(
+                                line_angle
+                            )
+                            lead_in_x = center_x + lead_in_dist * math.sin(
+                                line_angle + HALF_PI
+                            )
+                            lead_in_y = center_y - lead_in_dist * math.cos(
+                                line_angle + HALF_PI
+                            )
 
                         post.move(x_pos=lead_in_x, y_pos=lead_in_y)
                     else:

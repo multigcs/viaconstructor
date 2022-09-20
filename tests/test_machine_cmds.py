@@ -142,6 +142,7 @@ class fakeOffset:
                         "unit": "mm",
                         "comments": True,
                         "g54": False,
+                        "lead_in": False,
                     },
                 },
                 "tablewidget": "",
