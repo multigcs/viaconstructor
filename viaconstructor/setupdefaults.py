@@ -1,21 +1,12 @@
 def setup_defaults(_) -> dict:
     return {
         "mill": {
-            "fast_move_z": {
-                "default": 5.0,
-                "type": "float",
-                "min": 0.0,
-                "max": 999.0,
-                "title": _("Fast-Move Z"),
-                "tooltip": _("the Z-Position for fast moves"),
-            },
-            "G64": {
-                "default": 0.020000,
-                "type": "float",
-                "min": 0.0,
-                "max": 0.1,
-                "title": _("G64-Value"),
-                "tooltip": _("value for the G64 command"),
+            "active": {
+                "default": True,
+                "type": "bool",
+                "per_object": True,
+                "title": _("Active"),
+                "tooltip": _("enable/disable this object"),
             },
             "depth": {
                 "default": -9.0,
@@ -35,19 +26,28 @@ def setup_defaults(_) -> dict:
                 "title": _("Step"),
                 "tooltip": _("the maximum depth in one move"),
             },
-            "active": {
-                "default": True,
-                "type": "bool",
-                "per_object": True,
-                "title": _("Active"),
-                "tooltip": _("enable/disable this object"),
-            },
             "helix_mode": {
                 "default": False,
                 "type": "bool",
                 "per_object": True,
                 "title": _("Helix"),
                 "tooltip": _("Helix"),
+            },
+            "fast_move_z": {
+                "default": 5.0,
+                "type": "float",
+                "min": 0.0,
+                "max": 999.0,
+                "title": _("Fast-Move Z"),
+                "tooltip": _("the Z-Position for fast moves"),
+            },
+            "G64": {
+                "default": 0.020000,
+                "type": "float",
+                "min": 0.0,
+                "max": 0.1,
+                "title": _("G64-Value"),
+                "tooltip": _("value for the G64 command"),
             },
             "reverse": {
                 "default": False,
