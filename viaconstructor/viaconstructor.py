@@ -1025,6 +1025,22 @@ class ViaConstructor:
         else:
             self.status_bar_message(f"{self.info} - ave setup as..cancel")
 
+    def toggle_layer(self, item):
+        layer = self.project["layerwidget"].item(item.row(), 0).text()
+        self.project["layers"][layer] = not self.project["layers"][layer]
+        self.update_layers()
+
+    def update_layers(self) -> None:
+        if "layerwidget" in self.project:
+            self.project["layerwidget"].setRowCount(len(self.project["layers"]))
+            row_idx = 0
+            for layer, enabled in self.project["layers"].items():
+                self.project["layerwidget"].setItem(row_idx, 0, QTableWidgetItem(layer))
+                self.project["layerwidget"].setItem(
+                    row_idx, 1, QTableWidgetItem("enabled" if enabled else "disabled")
+                )
+                row_idx += 1
+
     def update_drawing(self, draw_only=False) -> None:
         """update drawings."""
         if not self.draw_reader:
@@ -1076,6 +1092,7 @@ class ViaConstructor:
         if self.main:
             self.main.setWindowTitle("viaConstructor")
         self.status_bar_message(f"{self.info} - calculate..done")
+        self.update_layers()
 
     def materials_select(self, material_idx) -> None:
         """calculates the milling feedrate and tool-speed for the selected material
@@ -1680,13 +1697,17 @@ class ViaConstructor:
         self.project["segments"] = clean_segments(segments)
         debug("prepare_segments: segments2objects")
         self.project["objects"] = segments2objects(self.project["segments"])
-
+        self.project["layers"] = {}
         debug("prepare_segments: setup")
         for obj in self.project["objects"].values():
             obj["setup"] = {}
             for sect in ("tool", "mill", "pockets", "tabs", "leads"):
                 obj["setup"][sect] = deepcopy(self.project["setup"][sect])
             layer = obj.get("layer")
+            if layer.startswith("BREAKS:") or layer.startswith("_TABS"):
+                self.project["layers"][layer] = False
+            else:
+                self.project["layers"][layer] = True
             # experimental: get some milling data from layer name (https://groups.google.com/g/dxf2gcode-users/c/q3hPQkN2OCo)
             if layer:
                 if layer.startswith("IGNORE:"):
@@ -1755,12 +1776,13 @@ class ViaConstructor:
             debug("load_drawing: prepare_segments")
             self.prepare_segments()
             debug("load_drawing: done")
-            return True
 
-        # disable some options on big drawings for a better view
-        if len(self.project["objects"]) >= 50:
-            self.project["setup"]["view"]["path"] = "minimal"
-            self.project["setup"]["view"]["object_ids"] = False
+            # disable some options on big drawings for a better view
+            if len(self.project["objects"]) >= 50:
+                self.project["setup"]["view"]["path"] = "minimal"
+                self.project["setup"]["view"]["object_ids"] = False
+
+            return True
 
         eprint(f"ERROR: can not load file: {filename}")
         debug("load_drawing: error")
@@ -2088,8 +2110,14 @@ class ViaConstructor:
         left_gridlayout = QGridLayout()
         left_gridlayout.addWidget(QLabel("Objects-Settings:"))
 
+        self.project["layerwidget"] = QTableWidget()
+        self.project["layerwidget"].clicked.connect(self.toggle_layer)
+        self.project["layerwidget"].setRowCount(0)
+        self.project["layerwidget"].setColumnCount(2)
+
         ltabwidget = QTabWidget()
-        ltabwidget.addTab(self.project["objwidget"], "Objects")
+        ltabwidget.addTab(self.project["objwidget"], _("Objects"))
+        ltabwidget.addTab(self.project["layerwidget"], _("Layers"))
 
         left_gridlayout.addWidget(ltabwidget)
 
