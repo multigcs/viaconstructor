@@ -11,7 +11,7 @@ class fakeOffset:
         self.setup = {
             "mill": mill,
             "tabs": {"active": False},
-            "leads": {"active": False, "radius": 3.0},
+            "leads": {"in": False, "out": False},
         }
         self.data = data
         self.tool_offset = tool_offset

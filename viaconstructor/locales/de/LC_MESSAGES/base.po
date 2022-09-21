@@ -5,7 +5,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
-"POT-Creation-Date: 2022-09-20 21:42+0200\n"
+"POT-Creation-Date: 2022-09-21 09:57+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -291,195 +291,223 @@ msgstr ""
 msgid "type of the tab"
 msgstr ""
 
-#: viaconstructor/setupdefaults.py:370
-msgid "activate leads"
+#: viaconstructor/setupdefaults.py:371 viaconstructor/setupdefaults.py:391
+msgid "off"
 msgstr ""
 
-#: viaconstructor/setupdefaults.py:371
-msgid "activate lead-in/lead-out support"
+#: viaconstructor/setupdefaults.py:372 viaconstructor/setupdefaults.py:392
+msgid "arc"
 msgstr ""
 
-#: viaconstructor/setupdefaults.py:379
-msgid "Radius"
+#: viaconstructor/setupdefaults.py:373 viaconstructor/setupdefaults.py:393
+msgid "straight"
 msgstr ""
 
-#: viaconstructor/setupdefaults.py:380
-msgid "radius of the leads"
+#: viaconstructor/setupdefaults.py:375
+msgid "in-type"
 msgstr ""
 
-#: viaconstructor/setupdefaults.py:390
+#: viaconstructor/setupdefaults.py:376
+msgid "type of the lead-in's"
+msgstr ""
+
+#: viaconstructor/setupdefaults.py:383
+msgid "in-lenght"
+msgstr ""
+
+#: viaconstructor/setupdefaults.py:384
+msgid "lenght of the lead-in's"
+msgstr ""
+
+#: viaconstructor/setupdefaults.py:395
+msgid "out-type"
+msgstr ""
+
+#: viaconstructor/setupdefaults.py:396
+msgid "type of the lead-out's"
+msgstr ""
+
+#: viaconstructor/setupdefaults.py:403
+msgid "out-lenght"
+msgstr ""
+
+#: viaconstructor/setupdefaults.py:404
+msgid "lenght of the lead-out's"
+msgstr ""
+
+#: viaconstructor/setupdefaults.py:414
 msgid "Feedrate"
 msgstr ""
 
-#: viaconstructor/setupdefaults.py:391
+#: viaconstructor/setupdefaults.py:415
 msgid "maximum feedrate while milling"
 msgstr ""
 
-#: viaconstructor/setupdefaults.py:398
+#: viaconstructor/setupdefaults.py:422
 msgid "Tool-Speed"
 msgstr ""
 
-#: viaconstructor/setupdefaults.py:399
+#: viaconstructor/setupdefaults.py:423
 msgid "maximum tool-speed"
 msgstr ""
 
-#: viaconstructor/setupdefaults.py:405
+#: viaconstructor/setupdefaults.py:429
 msgid "gcode_linuxcnc"
 msgstr ""
 
-#: viaconstructor/setupdefaults.py:406
+#: viaconstructor/setupdefaults.py:430
 msgid "hpgl"
 msgstr ""
 
-#: viaconstructor/setupdefaults.py:408
+#: viaconstructor/setupdefaults.py:432
 msgid "Plugin"
 msgstr ""
 
-#: viaconstructor/setupdefaults.py:409
+#: viaconstructor/setupdefaults.py:433
 msgid "output plugin selection"
 msgstr ""
 
-#: viaconstructor/setupdefaults.py:415
+#: viaconstructor/setupdefaults.py:439
 msgid "mode"
 msgstr ""
 
-#: viaconstructor/setupdefaults.py:416
+#: viaconstructor/setupdefaults.py:440
 msgid "laser"
 msgstr ""
 
-#: viaconstructor/setupdefaults.py:417
+#: viaconstructor/setupdefaults.py:441
 msgid "laser+z"
 msgstr ""
 
-#: viaconstructor/setupdefaults.py:419 viaconstructor/setupdefaults.py:420
+#: viaconstructor/setupdefaults.py:443 viaconstructor/setupdefaults.py:444
 msgid "Tool-Mode"
 msgstr ""
 
-#: viaconstructor/setupdefaults.py:426
+#: viaconstructor/setupdefaults.py:450
 msgid "mm"
 msgstr ""
 
-#: viaconstructor/setupdefaults.py:427
+#: viaconstructor/setupdefaults.py:451
 msgid "inch"
 msgstr ""
 
-#: viaconstructor/setupdefaults.py:429
+#: viaconstructor/setupdefaults.py:453
 msgid "Unit"
 msgstr ""
 
-#: viaconstructor/setupdefaults.py:430
+#: viaconstructor/setupdefaults.py:454
 msgid "Unit of the machine"
 msgstr ""
 
-#: viaconstructor/setupdefaults.py:435 viaconstructor/setupdefaults.py:436
+#: viaconstructor/setupdefaults.py:459 viaconstructor/setupdefaults.py:460
 msgid "machine supports g54"
 msgstr ""
 
-#: viaconstructor/setupdefaults.py:441
+#: viaconstructor/setupdefaults.py:465
 msgid "Comments in output"
 msgstr ""
 
-#: viaconstructor/setupdefaults.py:442
+#: viaconstructor/setupdefaults.py:466
 msgid "add comments to output"
 msgstr ""
 
-#: viaconstructor/setupdefaults.py:447
+#: viaconstructor/setupdefaults.py:471
 msgid "Post-Command"
 msgstr ""
 
-#: viaconstructor/setupdefaults.py:448
+#: viaconstructor/setupdefaults.py:472
 msgid "Post-Command to do things after save like upload to cnc"
 msgstr ""
 
-#: viaconstructor/setupdefaults.py:456
+#: viaconstructor/setupdefaults.py:480
 msgid "minimal"
 msgstr ""
 
-#: viaconstructor/setupdefaults.py:457
+#: viaconstructor/setupdefaults.py:481
 msgid "simple"
 msgstr ""
 
-#: viaconstructor/setupdefaults.py:458
+#: viaconstructor/setupdefaults.py:482
 msgid "full"
 msgstr ""
 
-#: viaconstructor/setupdefaults.py:460
+#: viaconstructor/setupdefaults.py:484
 msgid "Path"
 msgstr ""
 
-#: viaconstructor/setupdefaults.py:461
+#: viaconstructor/setupdefaults.py:485
 msgid "how to show the gcode path in the 3d-View"
 msgstr ""
 
-#: viaconstructor/setupdefaults.py:466
+#: viaconstructor/setupdefaults.py:490
 msgid "Ruler-Show"
 msgstr ""
 
-#: viaconstructor/setupdefaults.py:467
+#: viaconstructor/setupdefaults.py:491
 msgid "showing ruler in 3D preview"
 msgstr ""
 
-#: viaconstructor/setupdefaults.py:472
+#: viaconstructor/setupdefaults.py:496
 msgid "Grid-Show"
 msgstr ""
 
-#: viaconstructor/setupdefaults.py:473
+#: viaconstructor/setupdefaults.py:497
 msgid "showing grid in 3D preview"
 msgstr ""
 
-#: viaconstructor/setupdefaults.py:480
+#: viaconstructor/setupdefaults.py:504
 msgid "Grid-Size"
 msgstr ""
 
-#: viaconstructor/setupdefaults.py:481
+#: viaconstructor/setupdefaults.py:505
 msgid "size of the grid"
 msgstr ""
 
-#: viaconstructor/setupdefaults.py:486
+#: viaconstructor/setupdefaults.py:510
 msgid "Show as Polygon"
 msgstr ""
 
-#: viaconstructor/setupdefaults.py:487
+#: viaconstructor/setupdefaults.py:511
 msgid "showing as polygon in 3D preview"
 msgstr ""
 
-#: viaconstructor/setupdefaults.py:492
+#: viaconstructor/setupdefaults.py:516
 msgid "Show Object-ID's"
 msgstr ""
 
-#: viaconstructor/setupdefaults.py:493
+#: viaconstructor/setupdefaults.py:517
 msgid "shows id of each object"
 msgstr ""
 
-#: viaconstructor/setupdefaults.py:498
+#: viaconstructor/setupdefaults.py:522
 msgid "arcs"
 msgstr ""
 
-#: viaconstructor/setupdefaults.py:499
+#: viaconstructor/setupdefaults.py:523
 msgid "draw arcs / Interpolation"
 msgstr ""
 
-#: viaconstructor/setupdefaults.py:504
+#: viaconstructor/setupdefaults.py:528
 msgid "Show inputfile in 3d"
 msgstr ""
 
-#: viaconstructor/setupdefaults.py:505
+#: viaconstructor/setupdefaults.py:529
 msgid "Show inputfile in 3d if possible"
 msgstr ""
 
-#: viaconstructor/setupdefaults.py:510
+#: viaconstructor/setupdefaults.py:534
 msgid "color"
 msgstr ""
 
-#: viaconstructor/setupdefaults.py:511
+#: viaconstructor/setupdefaults.py:535
 msgid "color of the workpeace in 3d view"
 msgstr ""
 
-#: viaconstructor/setupdefaults.py:520
+#: viaconstructor/setupdefaults.py:544
 msgid "transparency"
 msgstr ""
 
-#: viaconstructor/setupdefaults.py:521
+#: viaconstructor/setupdefaults.py:545
 msgid "transparency of the workpeace in 3d view"
 msgstr ""
 
