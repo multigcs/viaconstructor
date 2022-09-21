@@ -132,6 +132,14 @@ def setup_defaults(_) -> dict:
                 "title": _("Speed"),
                 "tooltip": _("setting the Tool-Speed in RPM"),
             },
+            "pause": {
+                "default": 1,
+                "type": "int",
+                "min": 0,
+                "max": 60,
+                "title": _("Pause"),
+                "tooltip": _("tool spin up time (G04 Pn)"),
+            },
             "tooltable": {
                 "type": "table",
                 "selectable": True,

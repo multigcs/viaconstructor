@@ -128,7 +128,9 @@ def machine_cmd_begin(project: dict, post: PostProcessor) -> None:
             post.g64(project["setup"]["mill"]["G64"])
         post.spindle_off()
         post.tool(project["setup"]["tool"]["number"])
-        post.spindle_cw(project["setup"]["tool"]["speed"])
+        post.spindle_cw(
+            project["setup"]["tool"]["speed"], project["setup"]["tool"]["pause"]
+        )
         post.feedrate(project["setup"]["tool"]["rate_v"])
         post.move(z_pos=fast_move_z)
     elif project["setup"]["machine"]["mode"] == "laser_z" and "Z" in project["axis"]:
@@ -285,7 +287,10 @@ def segment2machine_cmd(
                     project["setup"]["machine"]["mode"] != "mill"
                     or "Z" not in project["axis"]
                 ):
-                    post.spindle_cw(project["setup"]["tool"]["speed"], pause=0)
+                    post.spindle_cw(
+                        project["setup"]["tool"]["speed"],
+                        project["setup"]["tool"]["pause"],
+                    )
                 break
 
         post.arc_ccw(
@@ -400,7 +405,10 @@ def segment2machine_cmd(
                     project["setup"]["machine"]["mode"] != "mill"
                     or "Z" not in project["axis"]
                 ):
-                    post.spindle_cw(project["setup"]["tool"]["speed"], pause=0)
+                    post.spindle_cw(
+                        project["setup"]["tool"]["speed"],
+                        project["setup"]["tool"]["pause"],
+                    )
                 break
 
         post.arc_cw(
@@ -455,7 +463,10 @@ def segment2machine_cmd(
                     project["setup"]["machine"]["mode"] != "mill"
                     or "Z" not in project["axis"]
                 ):
-                    post.spindle_cw(project["setup"]["tool"]["speed"], pause=0)
+                    post.spindle_cw(
+                        project["setup"]["tool"]["speed"],
+                        project["setup"]["tool"]["pause"],
+                    )
 
         post.linear(x_pos=point[0], y_pos=point[1], z_pos=set_depth)
 
@@ -816,7 +827,10 @@ def polylines2machine_cmd(project: dict, post: PostProcessor) -> str:
                             project["setup"]["machine"]["mode"] != "mill"
                             or "Z" not in project["axis"]
                         ):
-                            post.spindle_cw(project["setup"]["tool"]["speed"], pause=0)
+                            post.spindle_cw(
+                                project["setup"]["tool"]["speed"],
+                                project["setup"]["tool"]["pause"],
+                            )
 
                         if lead_in_active != "off":
 

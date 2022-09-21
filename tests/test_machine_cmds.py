@@ -126,6 +126,7 @@ class fakeOffset:
                         "diameter": 4.0,
                         "number": 1,
                         "speed": 10000,
+                        "pause": 1,
                         "rate_h": 10000,
                         "rate_v": 1000,
                     },
