@@ -2007,7 +2007,7 @@ class ViaConstructor:
                     self._toolbar_toggle_tab_selector,
                     True,
                     True,
-                    "edit",
+                    "settings",
                     None,
                 ],
                 _("Start-Selector"): [
@@ -2017,7 +2017,7 @@ class ViaConstructor:
                     self._toolbar_toggle_start_selector,
                     True,
                     True,
-                    "edit",
+                    "settings",
                     None,
                 ],
                 _("Repair-Selector"): [
