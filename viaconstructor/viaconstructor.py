@@ -170,6 +170,7 @@ class GLWidget(QGLWidget):
     mouse_pos_y = 0
     selector_mode = ""
     selection = ()
+    selection_set = ()
     size_x = 0
     size_y = 0
 
@@ -280,6 +281,16 @@ class GLWidget(QGLWidget):
                 GL.glVertex3f(self.selection[0] - 1, self.selection[1] + 1, depth)
                 GL.glVertex3f(self.selection[0] + 1, self.selection[1] - 1, depth)
                 GL.glEnd()
+            elif self.selector_mode == "oselect":
+                depth = 0.1
+                GL.glLineWidth(5)
+                GL.glColor4f(0.0, 1.0, 0.0, 1.0)
+                GL.glBegin(GL.GL_LINES)
+                GL.glVertex3f(self.selection[0] - 1, self.selection[1] - 1, depth)
+                GL.glVertex3f(self.selection[0] + 1, self.selection[1] + 1, depth)
+                GL.glVertex3f(self.selection[0] - 1, self.selection[1] + 1, depth)
+                GL.glVertex3f(self.selection[0] + 1, self.selection[1] - 1, depth)
+                GL.glEnd()
             else:
                 depth = self.project["setup"]["mill"]["depth"] - 0.1
                 GL.glLineWidth(5)
@@ -337,6 +348,7 @@ class GLWidget(QGLWidget):
 
     def toggle_tab_selector(self) -> bool:
         self.selection = ()
+        self.selection_set = ()
         if self.selector_mode == "":
             self.selector_mode = "tab"
             self.view_2d()
@@ -348,6 +360,7 @@ class GLWidget(QGLWidget):
 
     def toggle_start_selector(self) -> bool:
         self.selection = ()
+        self.selection_set = ()
         if self.selector_mode == "":
             self.selector_mode = "start"
             self.view_2d()
@@ -359,6 +372,7 @@ class GLWidget(QGLWidget):
 
     def toggle_repair_selector(self) -> bool:
         self.selection = ()
+        self.selection_set = ()
         if self.selector_mode == "":
             self.selector_mode = "repair"
             self.view_2d()
@@ -370,11 +384,24 @@ class GLWidget(QGLWidget):
 
     def toggle_delete_selector(self) -> bool:
         self.selection = ()
+        self.selection_set = ()
         if self.selector_mode == "":
             self.selector_mode = "delete"
             self.view_2d()
             return True
         if self.selector_mode == "delete":
+            self.selector_mode = ""
+            self.view_reset()
+        return False
+
+    def toggle_object_selector(self) -> bool:
+        self.selection = ()
+        self.selection_set = ()
+        if self.selector_mode == "":
+            self.selector_mode = "oselect"
+            self.view_2d()
+            return True
+        if self.selector_mode == "oselect":
             self.selector_mode = ""
             self.view_reset()
         return False
@@ -449,7 +476,11 @@ class GLWidget(QGLWidget):
                         self.project["app"].update_starts()
                         self.selection = ()
                     elif self.selector_mode == "delete":
-                        pass
+                        self.selection_set = self.selection
+                        self.project["app"].update_table()
+                    elif self.selector_mode == "oselect":
+                        self.selection_set = self.selection
+                        self.project["app"].update_table()
                     elif self.selector_mode == "repair":
                         obj_idx = self.selection[2]
                         self.project["segments_org"].append(
@@ -491,9 +522,12 @@ class GLWidget(QGLWidget):
                 elif self.selector_mode == "delete":
                     obj_idx = self.selection[2]
                     del self.project["objects"][obj_idx]
+                    self.project["app"].update_table()
                     self.update_drawing()
                     self.update()
                     self.selection = ()
+                elif self.selector_mode == "oselect":
+                    pass
                 elif self.selector_mode == "start":
                     obj_idx = self.selection[0]
                     self.project["objects"][obj_idx]["start"] = ()
@@ -559,11 +593,17 @@ class GLWidget(QGLWidget):
             self.selection = found_next_segment_point(
                 (self.mouse_pos_x, self.mouse_pos_y), self.project["objects"]
             )
+        elif self.selector_mode == "oselect":
+            (self.mouse_pos_x, self.mouse_pos_y) = self.mouse_pos_to_real_pos(
+                event.pos()
+            )
+            self.selection = found_next_segment_point(
+                (self.mouse_pos_x, self.mouse_pos_y), self.project["objects"]
+            )
         elif self.selector_mode == "repair":
             (self.mouse_pos_x, self.mouse_pos_y) = self.mouse_pos_to_real_pos(
                 event.pos()
             )
-
             self.selection = found_next_open_segment_point(
                 (self.mouse_pos_x, self.mouse_pos_y), self.project["objects"]
             )
@@ -815,6 +855,17 @@ class ViaConstructor:
         else:
             self.toolbuttons[title][7].setChecked(False)
 
+    def _toolbar_toggle_object_selector(self) -> None:
+        """delete selector."""
+        title = _("Object-Selector")
+        if self.project["glwidget"].toggle_object_selector():
+            for toolbutton in self.toolbuttons.values():
+                if toolbutton[5]:
+                    toolbutton[7].setChecked(False)
+            self.toolbuttons[title][7].setChecked(True)
+        else:
+            self.toolbuttons[title][7].setChecked(False)
+
     def _toolbar_toggle_start_selector(self) -> None:
         """start selector."""
         title = _("Start-Selector")
@@ -1006,9 +1057,10 @@ class ViaConstructor:
         selected = -1
         if (
             self.project["glwidget"]
-            and self.project["glwidget"].selector_mode == "delete"
+            and self.project["glwidget"].selection_set
+            and self.project["glwidget"].selector_mode in {"delete", "oselect"}
         ):
-            selected = self.project["glwidget"].selection[2]
+            selected = self.project["glwidget"].selection_set[2]
 
         debug("update_drawing: draw_object_edges")
         draw_object_edges(self.project, selected=selected)
@@ -1137,6 +1189,14 @@ class ViaConstructor:
     def update_table(self) -> None:
         """update objects table."""
 
+        selected = -1
+        if (
+            self.project["glwidget"]
+            and self.project["glwidget"].selection_set
+            and self.project["glwidget"].selector_mode in {"delete", "oselect"}
+        ):
+            selected = self.project["glwidget"].selection_set[2]
+
         debug("update_table: clear")
         self.project["objmodel"].clear()
         self.project["objmodel"].setHorizontalHeaderLabels(["Object", "Value"])
@@ -1235,6 +1295,13 @@ class ViaConstructor:
                             pass
                         else:
                             eprint(f"Unknown setup-type: {entry['type']}")
+
+            index = self.project["objmodel"].indexFromItem(obj_root)
+            if obj_idx == selected:
+                self.project["objwidget"].expand(index)
+            else:
+                self.project["objwidget"].collapse(index)
+
         # self.project["objwidget"].expandAll()
         debug("update_table: done")
 
@@ -1890,6 +1957,16 @@ class ViaConstructor:
                     "workpiece",
                     None,
                 ],
+                _("Object-Selector"): [
+                    "select.png",
+                    "",
+                    _("Object-Selector"),
+                    self._toolbar_toggle_object_selector,
+                    True,
+                    True,
+                    "object",
+                    None,
+                ],
                 _("Tab-Selector"): [
                     "tab-selector.png",
                     "",
@@ -1897,7 +1974,7 @@ class ViaConstructor:
                     self._toolbar_toggle_tab_selector,
                     True,
                     True,
-                    "tabs",
+                    "edit",
                     None,
                 ],
                 _("Start-Selector"): [
@@ -1907,7 +1984,7 @@ class ViaConstructor:
                     self._toolbar_toggle_start_selector,
                     True,
                     True,
-                    "start",
+                    "edit",
                     None,
                 ],
                 _("Repair-Selector"): [
@@ -1917,7 +1994,7 @@ class ViaConstructor:
                     self._toolbar_toggle_repair_selector,
                     True,
                     True,
-                    "repair",
+                    "edit",
                     None,
                 ],
                 _("Delete-Selector"): [
@@ -1927,7 +2004,7 @@ class ViaConstructor:
                     self._toolbar_toggle_delete_selector,
                     True,
                     True,
-                    "delete",
+                    "edit",
                     None,
                 ],
                 _("Simulate"): [
