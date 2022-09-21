@@ -5,7 +5,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
-"POT-Creation-Date: 2022-09-21 16:43+0200\n"
+"POT-Creation-Date: 2022-09-21 21:43+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -519,155 +519,159 @@ msgstr ""
 msgid "transparency of the workpeace in 3d view"
 msgstr ""
 
-#: viaconstructor/viaconstructor.py:817
+#: viaconstructor/viaconstructor.py:818
 msgid "Scale-Factor:"
 msgstr ""
 
-#: viaconstructor/viaconstructor.py:817
+#: viaconstructor/viaconstructor.py:818
 msgid "Workpiece-Scale"
 msgstr ""
 
-#: viaconstructor/viaconstructor.py:835 viaconstructor/viaconstructor.py:2003
-#: viaconstructor/viaconstructor.py:2006
+#: viaconstructor/viaconstructor.py:836 viaconstructor/viaconstructor.py:1724
+#: viaconstructor/viaconstructor.py:1727
 msgid "Tab-Selector"
 msgstr ""
 
-#: viaconstructor/viaconstructor.py:853 viaconstructor/viaconstructor.py:2033
-#: viaconstructor/viaconstructor.py:2036
+#: viaconstructor/viaconstructor.py:854 viaconstructor/viaconstructor.py:1754
+#: viaconstructor/viaconstructor.py:1757
 msgid "Delete-Selector"
 msgstr ""
 
-#: viaconstructor/viaconstructor.py:864 viaconstructor/viaconstructor.py:1993
-#: viaconstructor/viaconstructor.py:1996
+#: viaconstructor/viaconstructor.py:865 viaconstructor/viaconstructor.py:1714
+#: viaconstructor/viaconstructor.py:1717
 msgid "Object-Selector"
 msgstr ""
 
-#: viaconstructor/viaconstructor.py:875 viaconstructor/viaconstructor.py:2013
-#: viaconstructor/viaconstructor.py:2016
+#: viaconstructor/viaconstructor.py:876 viaconstructor/viaconstructor.py:1734
+#: viaconstructor/viaconstructor.py:1737
 msgid "Start-Selector"
 msgstr ""
 
-#: viaconstructor/viaconstructor.py:886 viaconstructor/viaconstructor.py:2023
-#: viaconstructor/viaconstructor.py:2026
+#: viaconstructor/viaconstructor.py:887 viaconstructor/viaconstructor.py:1744
+#: viaconstructor/viaconstructor.py:1747
 msgid "Repair-Selector"
 msgstr ""
 
-#: viaconstructor/viaconstructor.py:1553 viaconstructor/viaconstructor.py:1669
-msgid "select this row"
-msgstr ""
-
-#: viaconstructor/viaconstructor.py:1837 viaconstructor/viaconstructor.py:1870
+#: viaconstructor/viaconstructor.py:1538 viaconstructor/viaconstructor.py:1571
 msgid "Exit"
 msgstr ""
 
-#: viaconstructor/viaconstructor.py:1840 viaconstructor/viaconstructor.py:1873
+#: viaconstructor/viaconstructor.py:1541 viaconstructor/viaconstructor.py:1574
 msgid "Exit application"
 msgstr ""
 
-#: viaconstructor/viaconstructor.py:1850 viaconstructor/viaconstructor.py:1853
+#: viaconstructor/viaconstructor.py:1551 viaconstructor/viaconstructor.py:1554
 msgid "Load drawing"
 msgstr ""
 
-#: viaconstructor/viaconstructor.py:1860 viaconstructor/viaconstructor.py:1863
+#: viaconstructor/viaconstructor.py:1561 viaconstructor/viaconstructor.py:1564
 msgid "Save drawing as DXF"
 msgstr ""
 
-#: viaconstructor/viaconstructor.py:1880
+#: viaconstructor/viaconstructor.py:1581
 msgid "Save Machine-Commands"
 msgstr ""
 
-#: viaconstructor/viaconstructor.py:1883
+#: viaconstructor/viaconstructor.py:1584
 msgid "Save machine commands"
 msgstr ""
 
-#: viaconstructor/viaconstructor.py:1893 viaconstructor/viaconstructor.py:1896
+#: viaconstructor/viaconstructor.py:1594 viaconstructor/viaconstructor.py:1597
 msgid "Load setup from"
 msgstr ""
 
-#: viaconstructor/viaconstructor.py:1903
+#: viaconstructor/viaconstructor.py:1604
 msgid "Load setup from machine_cmd"
 msgstr ""
 
-#: viaconstructor/viaconstructor.py:1906
+#: viaconstructor/viaconstructor.py:1607
 msgid "Load-Setup from machine_cmd"
 msgstr ""
 
-#: viaconstructor/viaconstructor.py:1913
+#: viaconstructor/viaconstructor.py:1614
 msgid "Save setup as default"
 msgstr ""
 
-#: viaconstructor/viaconstructor.py:1916
+#: viaconstructor/viaconstructor.py:1617
 msgid "Save-Setup"
 msgstr ""
 
-#: viaconstructor/viaconstructor.py:1923
+#: viaconstructor/viaconstructor.py:1624 viaconstructor/viaconstructor.py:1627
 msgid "Save setup as"
 msgstr ""
 
-#: viaconstructor/viaconstructor.py:1926
-msgid "Save setup  as"
+#: viaconstructor/viaconstructor.py:1634 viaconstructor/viaconstructor.py:1637
+msgid "Load setup from drawing"
 msgstr ""
 
-#: viaconstructor/viaconstructor.py:1933 viaconstructor/viaconstructor.py:1936
+#: viaconstructor/viaconstructor.py:1644 viaconstructor/viaconstructor.py:1647
+msgid "Save setup to drawing"
+msgstr ""
+
+#: viaconstructor/viaconstructor.py:1654 viaconstructor/viaconstructor.py:1657
 msgid "View-Reset"
 msgstr ""
 
-#: viaconstructor/viaconstructor.py:1943 viaconstructor/viaconstructor.py:1946
+#: viaconstructor/viaconstructor.py:1664 viaconstructor/viaconstructor.py:1667
 msgid "2D-View"
 msgstr ""
 
-#: viaconstructor/viaconstructor.py:1953
+#: viaconstructor/viaconstructor.py:1674
 msgid "Flip-X"
 msgstr ""
 
-#: viaconstructor/viaconstructor.py:1956
+#: viaconstructor/viaconstructor.py:1677
 msgid "Flip-X workpiece"
 msgstr ""
 
-#: viaconstructor/viaconstructor.py:1963
+#: viaconstructor/viaconstructor.py:1684
 msgid "Flip-Y"
 msgstr ""
 
-#: viaconstructor/viaconstructor.py:1966
+#: viaconstructor/viaconstructor.py:1687
 msgid "Flip-Y workpiece"
 msgstr ""
 
-#: viaconstructor/viaconstructor.py:1973
+#: viaconstructor/viaconstructor.py:1694
 msgid "Rotate"
 msgstr ""
 
-#: viaconstructor/viaconstructor.py:1976
+#: viaconstructor/viaconstructor.py:1697
 msgid "Rotate workpiece"
 msgstr ""
 
-#: viaconstructor/viaconstructor.py:1983
+#: viaconstructor/viaconstructor.py:1704
 msgid "Scale"
 msgstr ""
 
-#: viaconstructor/viaconstructor.py:1986
+#: viaconstructor/viaconstructor.py:1707
 msgid "Scale workpiece"
 msgstr ""
 
-#: viaconstructor/viaconstructor.py:2043 viaconstructor/viaconstructor.py:2046
+#: viaconstructor/viaconstructor.py:1764 viaconstructor/viaconstructor.py:1767
 msgid "Simulate"
 msgstr ""
 
-#: viaconstructor/viaconstructor.py:2126
+#: viaconstructor/viaconstructor.py:1846 viaconstructor/viaconstructor.py:1962
+msgid "select this row"
+msgstr ""
+
+#: viaconstructor/viaconstructor.py:2198
 msgid "Objects"
 msgstr ""
 
-#: viaconstructor/viaconstructor.py:2127
+#: viaconstructor/viaconstructor.py:2199
 msgid "Layers"
 msgstr ""
 
-#: viaconstructor/viaconstructor.py:2132
+#: viaconstructor/viaconstructor.py:2204
 msgid "3D-View"
 msgstr ""
 
-#: viaconstructor/viaconstructor.py:2133
+#: viaconstructor/viaconstructor.py:2205
 msgid "Machine-Output"
 msgstr ""
 
-#: viaconstructor/viaconstructor.py:2143
+#: viaconstructor/viaconstructor.py:2215
 msgid "Global-Settings:"
 msgstr ""

@@ -34,6 +34,9 @@ class DrawReader(DrawReaderBase):
     MIN_DIST = 0.0001
 
     can_save_tabs = True
+    can_save_setup = True
+    can_load_setup = True
+    cam_setup = ""
 
     @staticmethod
     def arg_parser(parser) -> None:
@@ -64,6 +67,10 @@ class DrawReader(DrawReaderBase):
         self.segments: list[dict] = []
         self.model_space = self.doc.modelspace()
 
+        for element in self.model_space:
+            if element.dxf.layer == "_CAMCFG" and element.dxftype() == "MTEXT":
+                self.cam_setup = element.text.replace("\\P", "\n")
+
         try:
             with MTextExplode(self.model_space) as xpl:
                 for mtext in self.model_space.query("MTEXT"):
@@ -72,6 +79,8 @@ class DrawReader(DrawReaderBase):
             print("WARNING: please install newer version of ezdxf")
 
         for element in self.model_space:
+            if element.dxf.layer == "_CAMCFG":
+                continue
             dxftype = element.dxftype()
             if dxftype in self.VTYPES:
                 for v_element in element.virtual_entities():  # type: ignore
@@ -392,6 +401,31 @@ class DrawReader(DrawReaderBase):
 
         try:
             self.doc.saveas(self.filename)
+        except Exception as save_error:  # pylint: disable=W0703
+            print(
+                f"ERROR while saving tabs to dxf file ({self.filename}): {save_error}"
+            )
+
+    def save_setup(self, setup: str) -> None:
+        delete_layers = []
+        for layer in self.doc.layers:
+            if layer.dxf.name.startswith("_CAMCFG"):
+                delete_layers.append(layer.dxf.name)
+
+        for layer_name in delete_layers:
+            for element in self.model_space:
+                if element.dxf.layer == layer_name:
+                    element.destroy()
+            self.doc.layers.remove(layer_name)
+
+        tabs_layer = self.doc.layers.add("_CAMCFG")
+        tabs_layer.color = 1
+        self.model_space.add_mtext(
+            setup, dxfattribs={"style": "OpenSans", "layer": "_CAMCFG"}
+        )
+        try:
+            self.doc.saveas(self.filename)
+            self.cam_setup = setup
         except Exception as save_error:  # pylint: disable=W0703
             print(
                 f"ERROR while saving tabs to dxf file ({self.filename}): {save_error}"

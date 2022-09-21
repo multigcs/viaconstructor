@@ -4,10 +4,13 @@ from .vc_types import VcSegment
 
 class DrawReaderBase:
     can_save_tabs = False
+    can_save_setup = False
+    can_load_setup = False
     min_max: list[float] = [0.0, 0.0, 0.0, 0.0]
     size: list[float] = []
     segments: list[VcSegment] = []
     filename: str = ""
+    cam_setup: str = ""
 
     @staticmethod
     def arg_parser(parser) -> None:
@@ -21,6 +24,12 @@ class DrawReaderBase:
 
     def save_starts(self, objects: dict) -> None:
         pass
+
+    def save_setup(self, setup: str) -> None:
+        pass
+
+    def load_setup(self) -> str:
+        return self.cam_setup
 
     def get_segments(self) -> list[VcSegment]:
         return self.segments
