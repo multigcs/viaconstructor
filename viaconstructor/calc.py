@@ -208,6 +208,8 @@ def get_half_bulge_point(last: tuple, point: tuple, bulge: float) -> tuple:
         end_angle,  # pylint: disable=W0612
         radius,  # pylint: disable=W0612
     ) = ezdxf.math.bulge_to_arc(last, point, bulge)
+    while start_angle > end_angle:
+        start_angle -= math.pi
     half_angle = start_angle + (end_angle - start_angle) / 2
     (start, end, bulge) = ezdxf.math.arc_to_bulge(  # pylint: disable=W0612
         center,
@@ -486,16 +488,18 @@ def found_next_point_on_segment(mpos, objects):
             for check in (
                 ((mpos[0] - 5, mpos[1] - 5), (mpos[0] + 5, mpos[1] + 5)),
                 ((mpos[0] + 5, mpos[1] - 5), (mpos[0] - 5, mpos[1] + 5)),
-                ((mpos[0] - 5, mpos[1]), (mpos[0] + 5, mpos[1])),
+                # ((mpos[0] - 5, mpos[1]), (mpos[0] + 5, mpos[1])),
             ):
                 inter = lines_intersect(check[0], check[1], segment.start, segment.end)
                 if inter:
                     length = calc_distance(segment.start, segment.end)
                     if length > 0.0:
                         if bulge != 0.0:
+
                             inter = get_half_bulge_point(
                                 (last_x, last_y), (pos_x, pos_y), bulge
                             )
+
                         return (obj_idx, segment_idx, inter)
     return ()
 
