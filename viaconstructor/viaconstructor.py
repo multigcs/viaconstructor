@@ -56,6 +56,7 @@ from .calc import (
     clean_segments,
     find_tool_offsets,
     found_next_open_segment_point,
+    found_next_point_on_segment,
     found_next_segment_point,
     found_next_tab_point,
     line_center_2d,
@@ -548,7 +549,7 @@ class GLWidget(QGLWidget):
             (self.mouse_pos_x, self.mouse_pos_y) = self.mouse_pos_to_real_pos(
                 event.pos()
             )
-            self.selection = found_next_segment_point(
+            self.selection = found_next_point_on_segment(
                 (self.mouse_pos_x, self.mouse_pos_y), self.project["objects"]
             )
         elif self.selector_mode == "delete":

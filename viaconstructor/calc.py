@@ -475,7 +475,7 @@ def object2vertex(obj):
 # ########## Polyline Functions ###########
 
 
-def found_next_segment_point(mpos, objects):
+def found_next_point_on_segment(mpos, objects):
     for obj_idx, obj in objects.items():
         for segment_idx, segment in enumerate(obj.segments):
             last_x = segment.start[0]
@@ -500,17 +500,24 @@ def found_next_segment_point(mpos, objects):
     return ()
 
 
-def found_next_segment_point_old(mpos, objects):
+def found_next_segment_point(mpos, objects):
     nearest = ()
     min_dist = None
     for obj_idx, obj in objects.items():
         for segment in obj.segments:
+            pos_x = segment.end[0]
+            pos_y = segment.end[1]
+            dist = calc_distance(mpos, (pos_x, pos_y))
+            if min_dist is None or dist < min_dist:
+                min_dist = dist
+                nearest = (pos_x, pos_y, obj_idx)
             pos_x = segment.start[0]
             pos_y = segment.start[1]
             dist = calc_distance(mpos, (pos_x, pos_y))
             if min_dist is None or dist < min_dist:
                 min_dist = dist
                 nearest = (pos_x, pos_y, obj_idx)
+
     return nearest
 
 
