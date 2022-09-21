@@ -347,10 +347,11 @@ def draw_object_edges(project: dict, selected: int = -1) -> None:
             "layer", ""
         ).startswith("_TABS"):
             continue
-        GL.glLineWidth(1)
         if obj_idx == selected:
+            GL.glLineWidth(5)
             GL.glColor4f(1.0, 0.0, 0.0, 1.0)
         else:
+            GL.glLineWidth(1)
             GL.glColor4f(1.0, 1.0, 1.0, 1.0)
 
         # side
