@@ -1030,6 +1030,13 @@ class ViaConstructor:
         self.project["layers"][layer] = not self.project["layers"][layer]
         self.update_layers()
 
+        for obj in self.project["objects"].values():
+            layer = obj.get("layer")
+            if layer in self.project["layers"]:
+                obj["setup"]["mill"]["active"] = self.project["layers"][layer]
+
+        self.global_changed(0)
+
     def update_layers(self) -> None:
         if "layerwidget" in self.project:
             self.project["layerwidget"].setRowCount(len(self.project["layers"]))
