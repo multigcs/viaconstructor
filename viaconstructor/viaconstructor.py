@@ -842,7 +842,11 @@ class ViaConstructor:
             self.toolbuttons[title][7].setChecked(False)
 
     def _toolbar_simulate(self) -> None:
-        self.project["simulation"] = 0
+        if self.project["simulation"] == -1:
+            self.project["simulation"] = 0
+            self.project["simulation_last"] = (0.0, 0.0, 0.0)
+        else:
+            self.project["simulation"] = -1
 
     def _toolbar_toggle_delete_selector(self) -> None:
         """delete selector."""
