@@ -75,5 +75,6 @@ brew install python@3.10
 ![overcut](https://raw.githubusercontent.com/multigcs/viaconstructor/main/docs/overcut-true.png)
 ![tabs](https://raw.githubusercontent.com/multigcs/viaconstructor/main/docs/tabs-true.png)
 ![pockets](https://raw.githubusercontent.com/multigcs/viaconstructor/main/docs/pockets-true.png)
+![leads](https://raw.githubusercontent.com/multigcs/viaconstructor/main/docs/leads.png)
 
 ![osx](https://raw.githubusercontent.com/multigcs/viaconstructor/main/docs/osx.png)
