@@ -143,6 +143,7 @@ def draw_text(
 
 def draw_grid(project: dict) -> None:
     """draws the grid"""
+    GL.glNormal3f(0, 0, 1)
     min_max = project["minMax"]
     size = project["setup"]["view"]["grid_size"]
     start_x = int(min_max[0] / size) * size - size
@@ -292,6 +293,7 @@ def draw_grid(project: dict) -> None:
 
 def draw_object_ids(project: dict) -> None:
     """draws the object id's as text"""
+    GL.glNormal3f(0, 0, 1)
     GL.glLineWidth(2)
     GL.glColor3f(0.63, 0.36, 0.11)
     GL.glBegin(GL.GL_LINES)
@@ -342,6 +344,7 @@ def draw_object_edges(project: dict, selected: int = -1) -> None:
         depth *= unitscale
         tabs_height *= unitscale
 
+    GL.glNormal3f(0, 0, 1)
     for obj_idx, obj in project["objects"].items():
         if obj.get("layer", "").startswith("BREAKS:") or obj.get(
             "layer", ""
@@ -425,6 +428,34 @@ def draw_object_edges(project: dict, selected: int = -1) -> None:
         GL.glEnd()
 
 
+def add_triangle(p_1, p_2, p_3, inv=False):
+    point_a = (
+        p_2[0] - p_1[0],
+        p_2[1] - p_1[1],
+        p_2[2] - p_1[2],
+    )
+    point_b = (
+        p_3[0] - p_1[0],
+        p_3[1] - p_1[1],
+        p_3[2] - p_1[2],
+    )
+    normal = (
+        point_a[1] * point_b[2] - point_a[2] * point_b[1],
+        point_a[2] * point_b[0] - point_a[0] * point_b[2],
+        point_a[0] * point_b[1] - point_a[1] * point_b[0],
+    )
+    factor = max(abs(normal[0]), abs(normal[1]), abs(normal[2]))
+    if inv:
+        factor *= -1
+    if factor != 0:
+        GL.glNormal3f(normal[0] / factor, normal[1] / factor, normal[2] / factor)
+    else:
+        GL.glNormal3f(0, 0, 0)
+    GL.glVertex3fv(p_1)
+    GL.glVertex3fv(p_2)
+    GL.glVertex3fv(p_3)
+
+
 def draw_object_faces(project: dict) -> None:
     """draws the top and side faces of an object"""
     unit = project["setup"]["machine"]["unit"]
@@ -437,8 +468,10 @@ def draw_object_faces(project: dict) -> None:
         unitscale = 25.4
         depth *= unitscale
 
-    # object faces (side)
     GL.glColor4f(color[0], color[1], color[2], alpha)
+
+    # object faces (side)
+    GL.glBegin(GL.GL_TRIANGLES)
     for obj in project["objects"].values():
         if obj.get("layer", "").startswith("BREAKS:") or obj.get(
             "layer", ""
@@ -449,23 +482,36 @@ def draw_object_faces(project: dict) -> None:
             last_y = segment.start[1]
             if segment.bulge != 0.0 and interpolate:
                 for point in bulge_points(segment):
-                    GL.glBegin(GL.GL_TRIANGLE_STRIP)
-                    GL.glVertex3f(last_x, last_y, 0.0)
-                    GL.glVertex3f(last_x, last_y, depth)
-                    GL.glVertex3f(point[0], point[1], 0.0)
-                    GL.glVertex3f(point[0], point[1], depth)
-                    GL.glEnd()
+                    add_triangle(
+                        (last_x, last_y, 0.0),
+                        (last_x, last_y, depth),
+                        (point[0], point[1], 0.0),
+                        (obj.tool_offset == "inside"),
+                    )
+                    add_triangle(
+                        (point[0], point[1], 0.0),
+                        (last_x, last_y, depth),
+                        (point[0], point[1], depth),
+                        (obj.tool_offset == "inside"),
+                    )
                     last_x = point[0]
                     last_y = point[1]
-            GL.glBegin(GL.GL_TRIANGLE_STRIP)
-            GL.glVertex3f(last_x, last_y, 0.0)
-            GL.glVertex3f(last_x, last_y, depth)
-            GL.glVertex3f(segment.end[0], segment.end[1], 0.0)
-            GL.glVertex3f(segment.end[0], segment.end[1], depth)
-            GL.glEnd()
+            add_triangle(
+                (last_x, last_y, 0.0),
+                (last_x, last_y, depth),
+                (segment.end[0], segment.end[1], 0.0),
+                (obj.tool_offset == "inside"),
+            )
+            add_triangle(
+                (segment.end[0], segment.end[1], 0.0),
+                (last_x, last_y, depth),
+                (segment.end[0], segment.end[1], depth),
+                (obj.tool_offset == "inside"),
+            )
+    GL.glEnd()
 
     # object faces (top)
-    GL.glColor4f(color[0], color[1], color[2], alpha)
+    GL.glNormal3f(0, 0, 1)
     tess = gluNewTess()
     gluTessProperty(tess, GLU_TESS_WINDING_RULE, GLU_TESS_WINDING_ODD)
     gluTessCallback(tess, GLU_TESS_BEGIN, GL.glBegin)
@@ -480,7 +526,6 @@ def draw_object_faces(project: dict) -> None:
             "layer", ""
         ).startswith("_TABS"):
             continue
-
         if obj.closed:
             gluTessBeginContour(tess)
             for segment in obj.segments:
@@ -493,7 +538,36 @@ def draw_object_faces(project: dict) -> None:
                 p_xy = (segment.end[0], segment.end[1], 0.0)
                 gluTessVertex(tess, p_xy, p_xy)
             gluTessEndContour(tess)
+    gluTessEndPolygon(tess)
+    gluDeleteTess(tess)
 
+    GL.glNormal3f(0, 0, -1)
+    tess = gluNewTess()
+    gluTessProperty(tess, GLU_TESS_WINDING_RULE, GLU_TESS_WINDING_ODD)
+    gluTessCallback(tess, GLU_TESS_BEGIN, GL.glBegin)
+    gluTessCallback(tess, GLU_TESS_VERTEX, GL.glVertex)
+    gluTessCallback(tess, GLU_TESS_END, GL.glEnd)
+    gluTessCallback(
+        tess, GLU_TESS_COMBINE, lambda _points, _vertices, _weights: _points
+    )
+    gluTessBeginPolygon(tess, 0)
+    for obj in project["objects"].values():
+        if obj.get("layer", "").startswith("BREAKS:") or obj.get(
+            "layer", ""
+        ).startswith("_TABS"):
+            continue
+        if obj.closed:
+            gluTessBeginContour(tess)
+            for segment in obj.segments:
+                p_xy = (segment.start[0], segment.start[1], depth)
+                gluTessVertex(tess, p_xy, p_xy)
+                if segment.bulge != 0.0 and interpolate:
+                    for point in bulge_points(segment):
+                        p_xy = (point[0], point[1], depth)
+                        gluTessVertex(tess, p_xy, p_xy)
+                p_xy = (segment.end[0], segment.end[1], depth)
+                gluTessVertex(tess, p_xy, p_xy)
+            gluTessEndContour(tess)
     gluTessEndPolygon(tess)
     gluDeleteTess(tess)
 

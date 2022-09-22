@@ -210,11 +210,19 @@ class GLWidget(QGLWidget):
         GL.glClearDepth(1.0)
         GL.glEnable(GL.GL_DEPTH_TEST)
         GL.glDisable(GL.GL_CULL_FACE)
-        GL.glEnable(GL.GL_NORMALIZE)
+        GL.glEnable(GL.GL_RESCALE_NORMAL)
         GL.glDepthFunc(GL.GL_LEQUAL)
         GL.glDepthMask(GL.GL_TRUE)
         GL.glEnable(GL.GL_BLEND)
         GL.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA)
+        GL.glEnable(GL.GL_COLOR_MATERIAL)
+        GL.glColorMaterial(GL.GL_FRONT_AND_BACK, GL.GL_AMBIENT_AND_DIFFUSE)
+        GL.glEnable(GLWidget.GL_MULTISAMPLE)
+        GL.glLight(GL.GL_LIGHT0, GL.GL_POSITION, (0, 0, 0, 1))
+        GL.glLightfv(GL.GL_LIGHT0, GL.GL_AMBIENT, (0.1, 0.1, 0.1, 1))
+        GL.glLightfv(GL.GL_LIGHT0, GL.GL_DIFFUSE, (1, 1, 1, 1))
+        GL.glEnable(GL.GL_LIGHTING)
+        GL.glEnable(GL.GL_LIGHT0)
 
     def resizeGL(self, width, hight) -> None:  # pylint: disable=C0103
         """glresize function."""
@@ -224,6 +232,7 @@ class GLWidget(QGLWidget):
         self.initializeGL()
 
     def draw_tool(self, tool_pos, spindle) -> None:  # pylint: disable=C0103
+        GL.glNormal3f(0, 0, 1)
         GL.glLineWidth(1)
         if spindle == "OFF":
             GL.glColor3f(0.11, 0.63, 0.36)
@@ -327,14 +336,16 @@ class GLWidget(QGLWidget):
         if not min_max:
             return
 
+        GL.glNormal3f(0, 0, 1)
+
         self.size_x = max(min_max[2] - min_max[0], 0.1)
         self.size_y = max(min_max[3] - min_max[1], 0.1)
         self.scale = min(1.0 / self.size_x, 1.0 / self.size_y) / 1.4
 
         GL.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT)
         GL.glMatrixMode(GL.GL_MODELVIEW)
+
         GL.glPushMatrix()
-        GL.glEnable(GLWidget.GL_MULTISAMPLE)
         GL.glTranslatef(-self.trans_x, -self.trans_y, self.trans_z - 1.2)
         GL.glScalef(self.scale_xyz, self.scale_xyz, self.scale_xyz)
         GL.glRotatef(self.rot_x, 0.0, 1.0, 0.0)
@@ -346,8 +357,10 @@ class GLWidget(QGLWidget):
             0.0,
         )
         GL.glScalef(self.scale, self.scale, self.scale)
+
         GL.glCallList(self.project["gllist"])
 
+        GL.glNormal3f(0, 0, 1)
         if self.selection:
             if self.selector_mode == "start":
                 # depth = self.project["setup"]["mill"]["depth"] - 0.1
