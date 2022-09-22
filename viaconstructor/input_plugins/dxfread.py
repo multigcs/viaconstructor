@@ -71,6 +71,7 @@ class DrawReader(DrawReaderBase):
             with MTextExplode(self.model_space) as xpl:
                 for mtext in self.model_space.query("MTEXT"):
                     if mtext.dxf.layer == "_CAMCFG":
+                        # read setup data from dxf
                         self.cam_setup = mtext.text.replace("\\P", "\n")
                     else:
                         xpl.explode(mtext)

@@ -14,6 +14,10 @@ from ..vc_types import VcSegment
 class DrawReader(DrawReaderBase):
     MIN_DIST = 0.0001
 
+    can_save_setup = True
+    can_load_setup = True
+    cam_setup = ""
+
     def __init__(
         self, filename: str, args: argparse.Namespace = None
     ):  # pylint: disable=W0613
@@ -26,6 +30,21 @@ class DrawReader(DrawReaderBase):
             attributes,  # pylint: disable=W0612
             svg_attributes,
         ) = svgpathtools.svg2paths2(self.filename)
+
+        # read setup data from svg
+        rawdata = open(self.filename, "r").read()
+        setupdata = []
+        setupflag = False
+        for line in rawdata.split("\n"):
+            if line == "<!-- viaconstructor:setup":
+                setupflag = True
+            elif line == "-->":
+                setupflag = False
+            elif setupflag:
+                setupdata.append(line)
+
+        if setupdata:
+            self.cam_setup = "\n".join(setupdata).strip()
 
         height = 0.0
         size_attr = svg_attributes.get("-viewBox", "").split()
@@ -176,6 +195,24 @@ class DrawReader(DrawReaderBase):
                         }
                     )
                 )
+
+    def save_setup(self, setup: str) -> None:
+        rawdata = open(self.filename, "r").read()
+        svgdata = []
+        setupflag = False
+        for line in rawdata.split("\n"):
+            if line == "<!-- viaconstructor:setup":
+                setupflag = True
+            elif line == "-->":
+                setupflag = False
+            elif not setupflag:
+                svgdata.append(line)
+
+        svgdata.append("<!-- viaconstructor:setup")
+        svgdata.append(setup)
+        svgdata.append("-->")
+        open(self.filename, "w").write("\n".join(svgdata).strip())
+        self.cam_setup = setup
 
     @staticmethod
     def suffix() -> list[str]:
