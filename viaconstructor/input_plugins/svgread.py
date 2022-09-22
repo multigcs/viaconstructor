@@ -2,6 +2,8 @@
 
 import argparse
 import math
+import shutil
+import time
 
 import ezdxf
 
@@ -17,6 +19,8 @@ class DrawReader(DrawReaderBase):
     can_save_setup = True
     can_load_setup = True
     cam_setup = ""
+
+    backup_ok = False
 
     def __init__(
         self, filename: str, args: argparse.Namespace = None
@@ -197,6 +201,15 @@ class DrawReader(DrawReaderBase):
                 )
 
     def save_setup(self, setup: str) -> None:
+
+        if not self.backup_ok:
+            try:
+                shutil.copy2(self.filename, f"{self.filename}.{int(time.time())}")
+                self.backup_ok = True
+            except Exception as error:  # pylint: disable=W0703
+                print(f"ERROR: can not make backup of file: {self.filename}: {error}")
+                return
+
         rawdata = open(self.filename, "r").read()
         svgdata = []
         setupflag = False
@@ -211,8 +224,13 @@ class DrawReader(DrawReaderBase):
         svgdata.append("<!-- viaconstructor:setup")
         svgdata.append(setup)
         svgdata.append("-->")
-        open(self.filename, "w").write("\n".join(svgdata).strip())
-        self.cam_setup = setup
+        try:
+            open(self.filename, "w").write("\n".join(svgdata).strip())
+            self.cam_setup = setup
+        except Exception as save_error:  # pylint: disable=W0703
+            print(
+                f"ERROR while saving setup to svg file ({self.filename}): {save_error}"
+            )
 
     @staticmethod
     def suffix() -> list[str]:

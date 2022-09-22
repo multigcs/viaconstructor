@@ -2,6 +2,8 @@
 
 import argparse
 import math
+import shutil
+import time
 
 import ezdxf
 
@@ -37,6 +39,8 @@ class DrawReader(DrawReaderBase):
     can_save_setup = True
     can_load_setup = True
     cam_setup = ""
+
+    backup_ok = False
 
     @staticmethod
     def arg_parser(parser) -> None:
@@ -356,6 +360,15 @@ class DrawReader(DrawReaderBase):
         return last
 
     def save_tabs(self, tabs: list) -> None:
+
+        if not self.backup_ok:
+            try:
+                shutil.copy2(self.filename, f"/{self.filename}.{int(time.time())}")
+                self.backup_ok = True
+            except Exception as error:  # pylint: disable=W0703,W0621
+                print(f"ERROR: can not make backup of file: {self.filename}: {error}")
+                return
+
         delete_layers = []
         for layer in self.doc.layers:
             if layer.dxf.name.startswith("BREAKS:") or layer.dxf.name.startswith(
@@ -381,6 +394,15 @@ class DrawReader(DrawReaderBase):
             )
 
     def save_starts(self, objects: dict) -> None:
+
+        if not self.backup_ok:
+            try:
+                shutil.copy2(self.filename, f"/{self.filename}.{int(time.time())}")
+                self.backup_ok = True
+            except Exception as error:  # pylint: disable=W0703,W0621
+                print(f"ERROR: can not make backup of file: {self.filename}: {error}")
+                return
+
         delete_layers = []
         for layer in self.doc.layers:
             if layer.dxf.name.startswith("_STARTS"):
@@ -407,6 +429,15 @@ class DrawReader(DrawReaderBase):
             )
 
     def save_setup(self, setup: str) -> None:
+
+        if not self.backup_ok:
+            try:
+                shutil.copy2(self.filename, f"/{self.filename}.{int(time.time())}")
+                self.backup_ok = True
+            except Exception as error:  # pylint: disable=W0703,W0621
+                print(f"ERROR: can not make backup of file: {self.filename}: {error}")
+                return
+
         delete_layers = []
         for layer in self.doc.layers:
             if layer.dxf.name.startswith("_CAMCFG"):
@@ -428,7 +459,7 @@ class DrawReader(DrawReaderBase):
             self.cam_setup = setup
         except Exception as save_error:  # pylint: disable=W0703
             print(
-                f"ERROR while saving tabs to dxf file ({self.filename}): {save_error}"
+                f"ERROR while saving setup to dxf file ({self.filename}): {save_error}"
             )
 
     @staticmethod
