@@ -159,4 +159,4 @@ class DrawReader(DrawReaderBase):
 
     @staticmethod
     def suffix() -> list[str]:
-        return ["hpgl"]
+        return ["hpgl", "plt", "hpg", "hp2", "pl2", "pm"]
