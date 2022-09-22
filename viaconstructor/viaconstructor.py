@@ -300,18 +300,30 @@ class GLWidget(QGLWidget):
                 GL.glVertex3f(self.selection[1][0], self.selection[1][1], depth)
                 GL.glEnd()
 
-        if self.project["simulation"] >= 0:
+        if self.project["simulation"] or self.project["simulation_pos"] != 0:
             last_pos = self.project["simulation_last"]
-            sim_step = self.project["simulation"]
+            sim_step = self.project["simulation_pos"]
             next_pos = self.project["simulation_data"][sim_step][1]
             spindle = self.project["simulation_data"][sim_step][4]
             dist = calc_distance3d(last_pos, next_pos)
-            if dist >= 1.0:
-                pdist = 1.0 / dist
-                next_pos = point_of_line3d(last_pos, next_pos, pdist)
-            else:
-                pdist = 1.0
-            self.project["simulation_last"] = next_pos
+
+            if self.project["simulation"]:
+
+                if dist >= 1.0:
+                    pdist = 1.0 / dist
+                    next_pos = point_of_line3d(last_pos, next_pos, pdist)
+                else:
+                    pdist = 1.0
+                self.project["simulation_last"] = next_pos
+                if pdist >= 1.0:
+                    if (
+                        self.project["simulation_pos"]
+                        < len(self.project["simulation_data"]) - 1
+                    ):
+                        self.project["simulation_pos"] += 1
+                    else:
+                        self.project["simulation_pos"] = 0
+                        self.project["simulation"] = False
 
             GL.glLineWidth(1)
             if spindle == "OFF":
@@ -327,22 +339,27 @@ class GLWidget(QGLWidget):
                 x_pos = radius * math.cos(angle)
                 y_pos = radius * math.sin(angle)
                 GL.glVertex3f(
-                    next_pos[0] + x_pos, next_pos[1] + y_pos, next_pos[2] + height
+                    self.project["simulation_last"][0] + x_pos,
+                    self.project["simulation_last"][1] + y_pos,
+                    self.project["simulation_last"][2] + height,
                 )
-                GL.glVertex3f(next_pos[0] + x_pos, next_pos[1] + y_pos, next_pos[2])
+                GL.glVertex3f(
+                    self.project["simulation_last"][0] + x_pos,
+                    self.project["simulation_last"][1] + y_pos,
+                    self.project["simulation_last"][2],
+                )
                 angle = angle + astep
-            GL.glVertex3f(next_pos[0] + radius, next_pos[1], next_pos[2] + height)
-            GL.glVertex3f(next_pos[0] + radius, next_pos[1], next_pos[2])
+            GL.glVertex3f(
+                self.project["simulation_last"][0] + radius,
+                self.project["simulation_last"][1],
+                self.project["simulation_last"][2] + height,
+            )
+            GL.glVertex3f(
+                self.project["simulation_last"][0] + radius,
+                self.project["simulation_last"][1],
+                self.project["simulation_last"][2],
+            )
             GL.glEnd()
-
-            if pdist >= 1.0:
-                if (
-                    self.project["simulation"]
-                    < len(self.project["simulation_data"]) - 1
-                ):
-                    self.project["simulation"] += 1
-                else:
-                    self.project["simulation"] = -1
 
         GL.glPopMatrix()
 
@@ -670,7 +687,8 @@ class ViaConstructor:
             "table": None,
         },
         "textwidget": None,
-        "simulation": -1,
+        "simulation": False,
+        "simulation_pos": 0,
         "simulation_last": (0.0, 0.0, 0.0),
         "simulation_data": [],
     }
@@ -842,12 +860,13 @@ class ViaConstructor:
         else:
             self.toolbuttons[title][7].setChecked(False)
 
-    def _toolbar_simulate(self) -> None:
-        if self.project["simulation"] == -1:
-            self.project["simulation"] = 0
-            self.project["simulation_last"] = (0.0, 0.0, 0.0)
-        else:
-            self.project["simulation"] = -1
+    def _toolbar_simulate_stop(self) -> None:
+        self.project["simulation"] = False
+        self.project["simulation_pos"] = 0
+        self.project["simulation_last"] = (0.0, 0.0, 0.0)
+
+    def _toolbar_simulate_play(self) -> None:
+        self.project["simulation"] = not self.project["simulation"]
 
     def _toolbar_toggle_delete_selector(self) -> None:
         """delete selector."""
@@ -1761,14 +1780,24 @@ class ViaConstructor:
                     "edit",
                     None,
                 ],
-                _("Simulate"): [
+                _("Start simulation"): [
                     "play.png",
                     "",
-                    _("Simulate"),
-                    self._toolbar_simulate,
+                    _("start/pause simulation"),
+                    self._toolbar_simulate_play,
                     True,
                     False,
-                    "simulate",
+                    "simulation",
+                    None,
+                ],
+                _("Stop simulation"): [
+                    "stop.png",
+                    "",
+                    _("stop/reset simulation"),
+                    self._toolbar_simulate_stop,
+                    True,
+                    False,
+                    "simulation",
                     None,
                 ],
             }
