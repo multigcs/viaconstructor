@@ -401,28 +401,29 @@ class GLWidget(QGLWidget):
         if self.project["simulation"] or self.project["simulation_pos"] != 0:
             last_pos = self.project["simulation_last"]
             sim_step = self.project["simulation_pos"]
-            next_pos = self.project["simulation_data"][sim_step][1]
-            spindle = self.project["simulation_data"][sim_step][4]
+            if sim_step < len(self.project["simulation_data"]):
+                next_pos = self.project["simulation_data"][sim_step][1]
+                spindle = self.project["simulation_data"][sim_step][4]
 
-            if self.project["simulation"]:
-                dist = calc_distance3d(last_pos, next_pos)
-                if dist >= 1.0:
-                    pdist = 1.0 / dist
-                    next_pos = point_of_line3d(last_pos, next_pos, pdist)
-                else:
-                    pdist = 1.0
-                self.project["simulation_last"] = next_pos
-                if pdist >= 1.0:
-                    if (
-                        self.project["simulation_pos"]
-                        < len(self.project["simulation_data"]) - 1
-                    ):
-                        self.project["simulation_pos"] += 1
+                if self.project["simulation"]:
+                    dist = calc_distance3d(last_pos, next_pos)
+                    if dist >= 1.0:
+                        pdist = 1.0 / dist
+                        next_pos = point_of_line3d(last_pos, next_pos, pdist)
                     else:
-                        self.project["simulation_pos"] = 0
-                        self.project["simulation"] = False
+                        pdist = 1.0
+                    self.project["simulation_last"] = next_pos
+                    if pdist >= 1.0:
+                        if (
+                            self.project["simulation_pos"]
+                            < len(self.project["simulation_data"]) - 1
+                        ):
+                            self.project["simulation_pos"] += 1
+                        else:
+                            self.project["simulation_pos"] = 0
+                            self.project["simulation"] = False
 
-            self.draw_tool(self.project["simulation_last"], spindle)
+                self.draw_tool(self.project["simulation_last"], spindle)
 
         GL.glPopMatrix()
 
