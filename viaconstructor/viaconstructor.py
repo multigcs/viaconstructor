@@ -223,6 +223,104 @@ class GLWidget(QGLWidget):
         GL.glViewport(0, 0, width, hight)
         self.initializeGL()
 
+    def draw_tool(self, tool_pos, spindle) -> None:  # pylint: disable=C0103
+        GL.glLineWidth(1)
+        if spindle == "OFF":
+            GL.glColor3f(0.11, 0.63, 0.36)
+        else:
+            GL.glColor3f(0.91, 0.0, 0.0)
+        astep = math.pi / 6
+        radius = self.project["setup"]["tool"]["diameter"] / 2.0
+        height = -self.project["setup"]["mill"]["depth"] + 5
+
+        if spindle != "OFF" or self.project["setup"]["machine"]["mode"] == "mill":
+            GL.glBegin(GL.GL_QUAD_STRIP)
+            angle = 0.0
+            while angle < math.pi * 2:
+                x_pos = radius * math.cos(angle)
+                y_pos = radius * math.sin(angle)
+                GL.glVertex3f(
+                    tool_pos[0] + x_pos,
+                    tool_pos[1] + y_pos,
+                    tool_pos[2] + height,
+                )
+                GL.glVertex3f(
+                    tool_pos[0] + x_pos,
+                    tool_pos[1] + y_pos,
+                    tool_pos[2],
+                )
+                angle = angle + astep
+            GL.glVertex3f(
+                tool_pos[0] + radius,
+                tool_pos[1],
+                tool_pos[2] + height,
+            )
+            GL.glVertex3f(
+                tool_pos[0] + radius,
+                tool_pos[1],
+                tool_pos[2],
+            )
+            GL.glEnd()
+
+        GL.glColor3f(0.5, 0.5, 0.5)
+        GL.glBegin(GL.GL_QUAD_STRIP)
+        angle = 0.0
+        while angle < math.pi * 2:
+            x_pos = (radius + 0.5) * math.cos(angle)
+            y_pos = (radius + 0.5) * math.sin(angle)
+            GL.glVertex3f(
+                tool_pos[0] + x_pos,
+                tool_pos[1] + y_pos,
+                tool_pos[2] + height + 5,
+            )
+            GL.glVertex3f(
+                tool_pos[0] + x_pos,
+                tool_pos[1] + y_pos,
+                tool_pos[2] + height,
+            )
+            angle = angle + astep
+        GL.glVertex3f(
+            tool_pos[0] + (radius + 0.5),
+            tool_pos[1],
+            tool_pos[2] + height + 5,
+        )
+        GL.glVertex3f(
+            tool_pos[0] + (radius + 0.5),
+            tool_pos[1],
+            tool_pos[2] + height,
+        )
+        GL.glEnd()
+
+        # simple animation
+        if spindle != "OFF" and self.project["setup"]["machine"]["mode"] == "mill":
+            GL.glColor3f(1.0, 1.0, 1.0)
+            GL.glBegin(GL.GL_LINES)
+            angle = -self.project["simulation_cnt"] / 2
+            x_pos = radius * math.cos(angle)
+            y_pos = radius * math.sin(angle)
+            GL.glVertex3f(
+                tool_pos[0] + x_pos,
+                tool_pos[1] + y_pos,
+                tool_pos[2] + height,
+            )
+            GL.glVertex3f(
+                tool_pos[0] + x_pos,
+                tool_pos[1] + y_pos,
+                tool_pos[2],
+            )
+            GL.glVertex3f(
+                tool_pos[0] - x_pos,
+                tool_pos[1] - y_pos,
+                tool_pos[2] + height,
+            )
+            GL.glVertex3f(
+                tool_pos[0] - x_pos,
+                tool_pos[1] - y_pos,
+                tool_pos[2],
+            )
+            GL.glEnd()
+            self.project["simulation_cnt"] += 1
+
     def paintGL(self) -> None:  # pylint: disable=C0103
         """glpaint function."""
         min_max = self.project["minMax"]
@@ -324,41 +422,7 @@ class GLWidget(QGLWidget):
                         self.project["simulation_pos"] = 0
                         self.project["simulation"] = False
 
-            GL.glLineWidth(1)
-            if spindle == "OFF":
-                GL.glColor3f(0.11, 0.63, 0.36)
-            else:
-                GL.glColor3f(0.91, 0.0, 0.0)
-            astep = math.pi / 6
-            radius = self.project["setup"]["tool"]["diameter"] / 2.0
-            height = -self.project["setup"]["mill"]["depth"] + 5
-            GL.glBegin(GL.GL_QUAD_STRIP)
-            angle = 0.0
-            while angle < math.pi * 2:
-                x_pos = radius * math.cos(angle)
-                y_pos = radius * math.sin(angle)
-                GL.glVertex3f(
-                    self.project["simulation_last"][0] + x_pos,
-                    self.project["simulation_last"][1] + y_pos,
-                    self.project["simulation_last"][2] + height,
-                )
-                GL.glVertex3f(
-                    self.project["simulation_last"][0] + x_pos,
-                    self.project["simulation_last"][1] + y_pos,
-                    self.project["simulation_last"][2],
-                )
-                angle = angle + astep
-            GL.glVertex3f(
-                self.project["simulation_last"][0] + radius,
-                self.project["simulation_last"][1],
-                self.project["simulation_last"][2] + height,
-            )
-            GL.glVertex3f(
-                self.project["simulation_last"][0] + radius,
-                self.project["simulation_last"][1],
-                self.project["simulation_last"][2],
-            )
-            GL.glEnd()
+            self.draw_tool(self.project["simulation_last"], spindle)
 
         GL.glPopMatrix()
 
@@ -690,6 +754,7 @@ class ViaConstructor:
         "simulation_pos": 0,
         "simulation_last": (0.0, 0.0, 0.0),
         "simulation_data": [],
+        "simulation_cnt": 0,
     }
     info = ""
     save_tabs = "no"
