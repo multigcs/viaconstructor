@@ -67,14 +67,13 @@ class DrawReader(DrawReaderBase):
         self.segments: list[dict] = []
         self.model_space = self.doc.modelspace()
 
-        for element in self.model_space:
-            if element.dxf.layer == "_CAMCFG" and element.dxftype() == "MTEXT":
-                self.cam_setup = element.text.replace("\\P", "\n")
-
         try:
             with MTextExplode(self.model_space) as xpl:
                 for mtext in self.model_space.query("MTEXT"):
-                    xpl.explode(mtext)
+                    if mtext.dxf.layer == "_CAMCFG":
+                        self.cam_setup = mtext.text.replace("\\P", "\n")
+                    else:
+                        xpl.explode(mtext)
         except Exception as error:  # pylint: disable=W0703
             print(f"WARNING: can not explore MText: {error}")
 
@@ -421,7 +420,7 @@ class DrawReader(DrawReaderBase):
         tabs_layer = self.doc.layers.add("_CAMCFG")
         tabs_layer.color = 1
         self.model_space.add_mtext(
-            setup, dxfattribs={"style": "OpenSans", "layer": "_CAMCFG"}
+            setup, dxfattribs={"style": "DejaVu Sans", "layer": "_CAMCFG"}
         )
         try:
             self.doc.saveas(self.filename)
