@@ -305,10 +305,9 @@ class GLWidget(QGLWidget):
             sim_step = self.project["simulation_pos"]
             next_pos = self.project["simulation_data"][sim_step][1]
             spindle = self.project["simulation_data"][sim_step][4]
-            dist = calc_distance3d(last_pos, next_pos)
 
             if self.project["simulation"]:
-
+                dist = calc_distance3d(last_pos, next_pos)
                 if dist >= 1.0:
                     pdist = 1.0 / dist
                     next_pos = point_of_line3d(last_pos, next_pos, pdist)
