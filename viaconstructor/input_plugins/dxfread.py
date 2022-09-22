@@ -19,7 +19,7 @@ try:
 
         SUPPORT_TEXT = True
     except Exception as error:  # pylint: disable=W0703
-        print("for text support, please install matplotlib: {error}")
+        print(f"WARNING: for text support, please install matplotlib: {error}")
         SUPPORT_TEXT = False
 
 except Exception as error:  # pylint: disable=W0703
@@ -58,7 +58,7 @@ class DrawReader(DrawReaderBase):
             try:
                 if self.doc.units != 0:
                     self.scale = ezdxf.units.conversion_factor(self.doc.units, ezdxf.units.MM)  # type: ignore
-            except Exception as error:  # pylint: disable=W0703
+            except Exception as error:  # pylint: disable=W0703,W0621
                 print("UNKNOWN UNITS")
                 print(f"WARNING: please install newer version of ezdxf: {error}")
         else:
