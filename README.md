@@ -66,15 +66,23 @@ brew install python@3.10
 /usr/local/bin/python3 -m viaconstructor tests/data/simple.dxf
 ```
 
-![gcodepreview](https://raw.githubusercontent.com/multigcs/viaconstructor/main/docs/gcodepreview.png)
+## Screenshots
 
-![dxfpreview](https://raw.githubusercontent.com/multigcs/viaconstructor/main/docs/dxfpreview.png)
-
-
+### Helix
 ![helix](https://raw.githubusercontent.com/multigcs/viaconstructor/main/docs/helix-true.png)
+
+### Overcut
 ![overcut](https://raw.githubusercontent.com/multigcs/viaconstructor/main/docs/overcut-true.png)
+
+### Tabs
 ![tabs](https://raw.githubusercontent.com/multigcs/viaconstructor/main/docs/tabs-true.png)
+
+### Pockets
 ![pockets](https://raw.githubusercontent.com/multigcs/viaconstructor/main/docs/pockets-true.png)
+
+### Lead-In/Lead-Out
 ![leads](https://raw.githubusercontent.com/multigcs/viaconstructor/main/docs/leads.png)
 
+### OSX
 ![osx](https://raw.githubusercontent.com/multigcs/viaconstructor/main/docs/osx.png)
+
