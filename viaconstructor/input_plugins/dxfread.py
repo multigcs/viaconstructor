@@ -18,12 +18,12 @@ try:
         from ezdxf.addons import text2path
 
         SUPPORT_TEXT = True
-    except Exception:  # pylint: disable=W0703
-        print("for text support, please install matplotlib")
+    except Exception as error:  # pylint: disable=W0703
+        print("for text support, please install matplotlib: {error}")
         SUPPORT_TEXT = False
 
-except Exception:  # pylint: disable=W0703
-    print("WARNING: please install newer version of ezdxf")
+except Exception as error:  # pylint: disable=W0703
+    print(f"WARNING: please install newer version of ezdxf: {error}")
     SUPPORT_TEXT = False
 
 
@@ -58,9 +58,9 @@ class DrawReader(DrawReaderBase):
             try:
                 if self.doc.units != 0:
                     self.scale = ezdxf.units.conversion_factor(self.doc.units, ezdxf.units.MM)  # type: ignore
-            except Exception:  # pylint: disable=W0703
+            except Exception as error:  # pylint: disable=W0703
                 print("UNKNOWN UNITS")
-                print("WARNING: please install newer version of ezdxf")
+                print(f"WARNING: please install newer version of ezdxf: {error}")
         else:
             self.scale = args.dxfread_scale
 
@@ -75,8 +75,8 @@ class DrawReader(DrawReaderBase):
             with MTextExplode(self.model_space) as xpl:
                 for mtext in self.model_space.query("MTEXT"):
                     xpl.explode(mtext)
-        except Exception:  # pylint: disable=W0703
-            print("WARNING: please install newer version of ezdxf")
+        except Exception as error:  # pylint: disable=W0703
+            print(f"WARNING: can not explore MText: {error}")
 
         for element in self.model_space:
             if element.dxf.layer == "_CAMCFG":
