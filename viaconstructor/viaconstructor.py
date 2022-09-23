@@ -247,14 +247,13 @@ class GLWidget(QGLWidget):
         if spindle != "OFF" and self.project["setup"]["machine"]["mode"] == "mill":
             GL.glRotatef(angle, 0.0, 0.0, 1.0)
 
-        # shaft
         if self.project["setup"]["machine"]["mode"] == "mill":
-            # blades
             climp = 0.4 * radius
             blade_h = 1.0 * radius
             asteps = 10
             rots = (height + climp) / climp / asteps
 
+            # shaft
             GL.glColor4f(0.5, 0.5, 0.5, 1.0)
             GL.glBegin(GL.GL_TRIANGLE_STRIP)
             z_pos = 0.0
@@ -273,6 +272,24 @@ class GLWidget(QGLWidget):
             GL.glVertex3f(x_pos, y_pos, height + shaft_height)
             GL.glEnd()
 
+            GL.glBegin(GL.GL_TRIANGLE_STRIP)
+            z_pos = 0.0
+            angle = 0.0
+            while angle < math.pi * 2:
+                x_pos = radius / 3 * math.cos(angle)
+                y_pos = radius / 3 * math.sin(angle)
+                GL.glNormal3f(x_pos / radius / 2, y_pos / radius / 2, 0)
+                GL.glVertex3f(x_pos, y_pos, 1.0)
+                GL.glVertex3f(x_pos, y_pos, height)
+                angle += math.pi / 10
+            x_pos = radius / 3 * math.cos(angle)
+            y_pos = radius / 3 * math.sin(angle)
+            GL.glNormal3f(x_pos / radius / 2, y_pos / radius / 2, 0)
+            GL.glVertex3f(x_pos, y_pos, 1.0)
+            GL.glVertex3f(x_pos, y_pos, height)
+            GL.glEnd()
+
+            # blades
             start_angle = 0.0
             while start_angle < math.pi * 2:
                 GL.glNormal3f(0, 0, -1)
@@ -319,7 +336,7 @@ class GLWidget(QGLWidget):
 
                 start_angle += math.pi * 2 / blades
         else:
-
+            # shaft
             GL.glColor4f(0.5, 0.5, 0.5, 1.0)
             GL.glBegin(GL.GL_TRIANGLE_STRIP)
             z_pos = 0.0
@@ -338,11 +355,11 @@ class GLWidget(QGLWidget):
             GL.glVertex3f(x_pos, y_pos, height + shaft_height)
             GL.glEnd()
 
+            # laser
             if spindle != "OFF":
                 GL.glColor4f(1.0, 0.0, 0.0, 0.5)
             else:
                 GL.glColor4f(1.0, 1.0, 1.0, 0.2)
-
             GL.glBegin(GL.GL_TRIANGLE_STRIP)
             z_pos = 0.0
             angle = 0.0
