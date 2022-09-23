@@ -1657,6 +1657,62 @@ class ViaConstructor:
                         return
         self.status_bar_message(f"{self.info} - loading setup from machinecode..failed")
 
+    def _toolbar_save_tooltabe(self) -> None:
+        """save tooltabe as."""
+        if self.project["setup"]["machine"]["unit"] == "inch":
+            unit = "imperial"
+        else:
+            unit = "metric"
+
+        self.status_bar_message(f"{self.info} - save setup as..")
+        file_dialog = QFileDialog(self.main)
+        file_dialog.setNameFilters(["camotics (*.json)", "linuxcnc (*.tbl)"])
+        name = file_dialog.getSaveFileName(
+            self.main,
+            "Save Tooltabe",
+            "tooltabe.json",
+            "camotics (*.json);;linuxcnc (*.tbl)",
+        )
+        if name[0]:
+            if name[0].endswith(".json"):
+                tooltable = {}
+                for tool in self.project["setup"]["tool"]["tooltable"]:
+                    number = str(tool["number"])
+                    if number == "99":
+                        continue
+                    tooltable[number] = {
+                        "units": unit,
+                        "shape": "cylindrical",
+                        "length": tool["lenght"],
+                        "diameter": tool["diameter"],
+                        "description": f"{tool['name']} / blades:{tool['blades']}",
+                    }
+                tooldata = json.dumps(tooltable, indent=4, sort_keys=True)
+
+            elif name[0].endswith(".tbl"):
+                tooltable_tbl = []
+                for tool in self.project["setup"]["tool"]["tooltable"]:
+                    number = str(tool["number"])
+                    if number == "99":
+                        continue
+                    tooltable_tbl.append(
+                        f"T{number} P{number} Z{0.0} D{tool['diameter']} ;{tool['name']} / blades:{tool['blades']}"
+                    )
+                tooltable_tbl.append("")
+                tooldata = "\n".join(tooltable_tbl)
+
+            try:
+                open(name[0], "w").write(tooldata)
+                self.status_bar_message(
+                    f"{self.info} - save tooltabe as..done ({name[0]})"
+                )
+            except Exception as save_error:  # pylint: disable=W0703
+                self.status_bar_message(
+                    f"{self.info} - ave tooltabe as..failed ({save_error})"
+                )
+        else:
+            self.status_bar_message(f"{self.info} - ave tooltabe as..cancel")
+
     def _toolbar_exit(self) -> None:
         """exit button."""
         if os.environ.get("LINUXCNCVERSION"):
@@ -1793,6 +1849,16 @@ class ViaConstructor:
                     can_save_setup,
                     False,
                     "project",
+                    None,
+                ],
+                _("save tooltabe as"): [
+                    "save-tooltable.png",
+                    "",
+                    _("save tooltabe as"),
+                    self._toolbar_save_tooltabe,
+                    True,
+                    False,
+                    "tooltable",
                     None,
                 ],
                 _("View-Reset"): [
