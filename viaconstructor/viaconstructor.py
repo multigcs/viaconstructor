@@ -36,6 +36,7 @@ from PyQt5.QtWidgets import (  # pylint: disable=E0611
     QLabel,
     QLineEdit,
     QMainWindow,
+    QMenuBar,
     QMessageBox,
     QPlainTextEdit,
     QPushButton,
@@ -826,6 +827,8 @@ class ViaConstructor:
     status_bar: Optional[QWidget] = None
     main: Optional[QMainWindow] = None
     toolbar: Optional[QToolBar] = None
+    menubar: Optional[QMenuBar] = None
+    toolbuttons: dict = {}
 
     module_root = Path(__file__).resolve().parent
 
@@ -981,11 +984,11 @@ class ViaConstructor:
         title = _("Tab-Selector")
         if self.project["glwidget"].toggle_tab_selector():
             for toolbutton in self.toolbuttons.values():
-                if toolbutton[5]:
-                    toolbutton[7].setChecked(False)
-            self.toolbuttons[title][7].setChecked(True)
+                if toolbutton[6]:
+                    toolbutton[9].setChecked(False)
+            self.toolbuttons[title][9].setChecked(True)
         else:
-            self.toolbuttons[title][7].setChecked(False)
+            self.toolbuttons[title][9].setChecked(False)
 
     def _toolbar_simulate_stop(self) -> None:
         self.project["simulation"] = False
@@ -1000,44 +1003,44 @@ class ViaConstructor:
         title = _("Delete-Selector")
         if self.project["glwidget"].toggle_delete_selector():
             for toolbutton in self.toolbuttons.values():
-                if toolbutton[5]:
-                    toolbutton[7].setChecked(False)
-            self.toolbuttons[title][7].setChecked(True)
+                if toolbutton[6]:
+                    toolbutton[9].setChecked(False)
+            self.toolbuttons[title][9].setChecked(True)
         else:
-            self.toolbuttons[title][7].setChecked(False)
+            self.toolbuttons[title][9].setChecked(False)
 
     def _toolbar_toggle_object_selector(self) -> None:
         """delete selector."""
         title = _("Object-Selector")
         if self.project["glwidget"].toggle_object_selector():
             for toolbutton in self.toolbuttons.values():
-                if toolbutton[5]:
-                    toolbutton[7].setChecked(False)
-            self.toolbuttons[title][7].setChecked(True)
+                if toolbutton[6]:
+                    toolbutton[9].setChecked(False)
+            self.toolbuttons[title][9].setChecked(True)
         else:
-            self.toolbuttons[title][7].setChecked(False)
+            self.toolbuttons[title][9].setChecked(False)
 
     def _toolbar_toggle_start_selector(self) -> None:
         """start selector."""
         title = _("Start-Selector")
         if self.project["glwidget"].toggle_start_selector():
             for toolbutton in self.toolbuttons.values():
-                if toolbutton[5]:
-                    toolbutton[7].setChecked(False)
-            self.toolbuttons[title][7].setChecked(True)
+                if toolbutton[6]:
+                    toolbutton[9].setChecked(False)
+            self.toolbuttons[title][9].setChecked(True)
         else:
-            self.toolbuttons[title][7].setChecked(False)
+            self.toolbuttons[title][9].setChecked(False)
 
     def _toolbar_toggle_repair_selector(self) -> None:
         """start selector."""
         title = _("Repair-Selector")
         if self.project["glwidget"].toggle_repair_selector():
             for toolbutton in self.toolbuttons.values():
-                if toolbutton[5]:
-                    toolbutton[7].setChecked(False)
-            self.toolbuttons[title][7].setChecked(True)
+                if toolbutton[6]:
+                    toolbutton[9].setChecked(False)
+            self.toolbuttons[title][9].setChecked(True)
         else:
-            self.toolbuttons[title][7].setChecked(False)
+            self.toolbuttons[title][9].setChecked(False)
 
     def _toolbar_view_reset(self) -> None:
         """center view."""
@@ -1115,6 +1118,7 @@ class ViaConstructor:
             self.global_changed(0)
             self.update_drawing()
 
+            self.create_menubar()
             self.create_toolbar()
 
             self.status_bar_message(f"{self.info} - load drawing..done ({name[0]})")
@@ -1797,13 +1801,7 @@ class ViaConstructor:
             print(self.project["machine_cmd"])
         sys.exit(0)
 
-    def create_toolbar(self) -> None:
-        """creates the_toolbar."""
-        if self.toolbar is None:
-            self.toolbar = QToolBar("top toolbar")
-            self.main.addToolBar(self.toolbar)  # type: ignore
-        self.toolbar.clear()
-
+    def create_actions(self) -> None:
         if self.draw_reader is not None:
             can_save_setup = self.draw_reader.can_save_setup
             can_load_setup = self.draw_reader.can_load_setup
@@ -1811,298 +1809,356 @@ class ViaConstructor:
             can_save_setup = False
             can_load_setup = False
 
-        if os.environ.get("LINUXCNCVERSION"):
-            self.toolbuttons = {
-                _("Exit"): [
-                    "exit.png",
-                    "Ctrl+Q",
-                    _("Exit application"),
-                    self._toolbar_exit,
-                    True,
-                    False,
-                    "main",
-                    None,
-                ],
-            }
-        else:
-            self.toolbuttons = {
-                _("Load drawing"): [
-                    "open.png",
-                    "",
-                    _("Load drawing"),
-                    self._toolbar_load_drawing,
-                    True,
-                    False,
-                    "main",
-                    None,
-                ],
-                _("Save drawing as DXF"): [
-                    "save.png",
-                    "Ctrl+S",
-                    _("Save drawing as DXF"),
-                    self._toolbar_save_dxf,
-                    True,
-                    False,
-                    "main",
-                    None,
-                ],
-                _("Exit"): [
-                    "exit.png",
-                    "Ctrl+Q",
-                    _("Exit application"),
-                    self._toolbar_exit,
-                    True,
-                    False,
-                    "main",
-                    None,
-                ],
-                _("Save Machine-Commands"): [
-                    "save-gcode.png",
-                    "Ctrl+S",
-                    _("Save machine commands"),
-                    self._toolbar_save_machine_cmd,
-                    True,
-                    False,
-                    "machine_cmd",
-                    None,
-                ],
-            }
-        self.toolbuttons.update(
-            {
-                _("Load setup from"): [
-                    "load-setup.png",
-                    "",
-                    _("Load setup from"),
-                    self._toolbar_load_setup_from,
-                    True,
-                    False,
-                    "setup",
-                    None,
-                ],
-                _("Load setup from machine_cmd"): [
-                    "load-setup-gcode.png",
-                    "",
-                    _("Load-Setup from machine_cmd"),
-                    self._toolbar_load_machine_cmd_setup,
-                    False,  # os.path.isfile(self.project["filename_machine_cmd"]),
-                    False,
-                    "setup",
-                    None,
-                ],
-                _("Save setup as default"): [
-                    "save-setup.png",
-                    "",
-                    _("Save-Setup"),
-                    self._toolbar_save_setup,
-                    True,
-                    False,
-                    "setup",
-                    None,
-                ],
-                _("Save setup as"): [
-                    "save-setup-as.png",
-                    "",
-                    _("Save setup as"),
-                    self._toolbar_save_setup_as,
-                    True,
-                    False,
-                    "setup",
-                    None,
-                ],
-                _("Load setup from drawing"): [
-                    "load-setup.png",
-                    "",
-                    _("Load setup from drawing"),
-                    self._toolbar_load_setup_from_drawing,
-                    can_load_setup,
-                    False,
-                    "project",
-                    None,
-                ],
-                _("Save setup to drawing"): [
-                    "save-setup-as.png",
-                    "",
-                    _("Save setup to drawing"),
-                    self._toolbar_save_setup_to_drawing,
-                    can_save_setup,
-                    False,
-                    "project",
-                    None,
-                ],
-                _("load tooltable as"): [
-                    "load-tooltable.png",
-                    "",
-                    _("load tooltable as"),
-                    self._toolbar_load_tooltable,
-                    True,
-                    False,
-                    "tooltable",
-                    None,
-                ],
-                _("save tooltable as"): [
-                    "save-tooltable.png",
-                    "",
-                    _("save tooltable as"),
-                    self._toolbar_save_tooltable,
-                    True,
-                    False,
-                    "tooltable",
-                    None,
-                ],
-                _("View-Reset"): [
-                    "view-reset.png",
-                    "",
-                    _("View-Reset"),
-                    self._toolbar_view_reset,
-                    True,
-                    False,
-                    "view",
-                    None,
-                ],
-                _("2D-View"): [
-                    "view-2d.png",
-                    "",
-                    _("2D-View"),
-                    self._toolbar_view_2d,
-                    True,
-                    False,
-                    "view",
-                    None,
-                ],
-                _("Flip-X"): [
-                    "flip-x.png",
-                    "",
-                    _("Flip-X workpiece"),
-                    self._toolbar_flipx,
-                    True,
-                    False,
-                    "workpiece",
-                    None,
-                ],
-                _("Flip-Y"): [
-                    "flip-y.png",
-                    "",
-                    _("Flip-Y workpiece"),
-                    self._toolbar_flipy,
-                    True,
-                    False,
-                    "workpiece",
-                    None,
-                ],
-                _("Rotate"): [
-                    "rotate.png",
-                    "",
-                    _("Rotate workpiece"),
-                    self._toolbar_rotate,
-                    True,
-                    False,
-                    "workpiece",
-                    None,
-                ],
-                _("Scale"): [
-                    "scale.png",
-                    "",
-                    _("Scale workpiece"),
-                    self._toolbar_scale,
-                    True,
-                    False,
-                    "workpiece",
-                    None,
-                ],
-                _("Object-Selector"): [
-                    "select.png",
-                    "",
-                    _("Object-Selector"),
-                    self._toolbar_toggle_object_selector,
-                    True,
-                    True,
-                    "object",
-                    None,
-                ],
-                _("Tab-Selector"): [
-                    "tab-selector.png",
-                    "",
-                    _("Tab-Selector"),
-                    self._toolbar_toggle_tab_selector,
-                    True,
-                    True,
-                    "settings",
-                    None,
-                ],
-                _("Start-Selector"): [
-                    "start.png",
-                    "",
-                    _("Start-Selector"),
-                    self._toolbar_toggle_start_selector,
-                    True,
-                    True,
-                    "settings",
-                    None,
-                ],
-                _("Repair-Selector"): [
-                    "repair.png",
-                    "",
-                    _("Repair-Selector"),
-                    self._toolbar_toggle_repair_selector,
-                    True,
-                    True,
-                    "edit",
-                    None,
-                ],
-                _("Delete-Selector"): [
-                    "delete.png",
-                    "",
-                    _("Delete-Selector"),
-                    self._toolbar_toggle_delete_selector,
-                    True,
-                    True,
-                    "edit",
-                    None,
-                ],
-                _("Start simulation"): [
-                    "play.png",
-                    "",
-                    _("start/pause simulation"),
-                    self._toolbar_simulate_play,
-                    True,
-                    False,
-                    "simulation",
-                    None,
-                ],
-                _("Stop simulation"): [
-                    "stop.png",
-                    "",
-                    _("stop/reset simulation"),
-                    self._toolbar_simulate_stop,
-                    True,
-                    False,
-                    "simulation",
-                    None,
-                ],
-            }
-        )
+        self.toolbuttons = {
+            _("Load drawing"): [
+                "open.png",
+                "",
+                _("Load drawing"),
+                self._toolbar_load_drawing,
+                not os.environ.get("LINUXCNCVERSION"),
+                True,
+                False,
+                _("File"),
+                "",
+                None,
+            ],
+            _("Save drawing as DXF"): [
+                "save.png",
+                "Ctrl+S",
+                _("Save drawing as DXF"),
+                self._toolbar_save_dxf,
+                not os.environ.get("LINUXCNCVERSION"),
+                True,
+                False,
+                _("File"),
+                "",
+                None,
+            ],
+            _("Exit"): [
+                "exit.png",
+                "Ctrl+Q",
+                _("Exit application"),
+                self._toolbar_exit,
+                True,
+                True,
+                False,
+                _("File"),
+                "exit",
+                None,
+            ],
+            _("Save Machine-Commands"): [
+                "save-gcode.png",
+                "Ctrl+S",
+                _("Save machine commands"),
+                self._toolbar_save_machine_cmd,
+                True,
+                True,
+                False,
+                _("Machine"),
+                "cmd",
+                None,
+            ],
+            _("Save setup as default"): [
+                "save-setup.png",
+                "",
+                _("Save-Setup"),
+                self._toolbar_save_setup,
+                True,
+                True,
+                False,
+                _("Setup"),
+                "default",
+                None,
+            ],
+            _("Load setup from"): [
+                "load-setup.png",
+                "",
+                _("Load setup from"),
+                self._toolbar_load_setup_from,
+                False,
+                True,
+                False,
+                _("Setup"),
+                "file",
+                None,
+            ],
+            _("Save setup as"): [
+                "save-setup-as.png",
+                "",
+                _("Save setup as"),
+                self._toolbar_save_setup_as,
+                False,
+                True,
+                False,
+                _("Setup"),
+                "file",
+                None,
+            ],
+            _("Load setup from drawing"): [
+                "load-setup.png",
+                "",
+                _("Load setup from drawing"),
+                self._toolbar_load_setup_from_drawing,
+                False,
+                can_load_setup,
+                False,
+                _("Setup"),
+                "drawing",
+                None,
+            ],
+            _("Save setup to drawing"): [
+                "save-setup-as.png",
+                "",
+                _("Save setup to drawing"),
+                self._toolbar_save_setup_to_drawing,
+                False,
+                can_save_setup,
+                False,
+                _("Setup"),
+                "drawing",
+                None,
+            ],
+            _("load tooltable from"): [
+                "load-tooltable.png",
+                "",
+                _("load tooltable from"),
+                self._toolbar_load_tooltable,
+                False,
+                True,
+                False,
+                _("Tooltable"),
+                "",
+                None,
+            ],
+            _("save tooltable as"): [
+                "save-tooltable.png",
+                "",
+                _("save tooltable as"),
+                self._toolbar_save_tooltable,
+                False,
+                True,
+                False,
+                _("Tooltable"),
+                "",
+                None,
+            ],
+            _("View-Reset"): [
+                "view-reset.png",
+                "",
+                _("View-Reset"),
+                self._toolbar_view_reset,
+                True,
+                True,
+                False,
+                _("View"),
+                "",
+                None,
+            ],
+            _("2D-View"): [
+                "view-2d.png",
+                "",
+                _("2D-View"),
+                self._toolbar_view_2d,
+                True,
+                True,
+                False,
+                _("View"),
+                "",
+                None,
+            ],
+            _("Flip-X"): [
+                "flip-x.png",
+                "",
+                _("Flip-X workpiece"),
+                self._toolbar_flipx,
+                True,
+                True,
+                False,
+                _("Workpiece"),
+                "",
+                None,
+            ],
+            _("Flip-Y"): [
+                "flip-y.png",
+                "",
+                _("Flip-Y workpiece"),
+                self._toolbar_flipy,
+                True,
+                True,
+                False,
+                _("Workpiece"),
+                "",
+                None,
+            ],
+            _("Rotate"): [
+                "rotate.png",
+                "",
+                _("Rotate workpiece"),
+                self._toolbar_rotate,
+                True,
+                True,
+                False,
+                _("Workpiece"),
+                "",
+                None,
+            ],
+            _("Scale"): [
+                "scale.png",
+                "",
+                _("Scale workpiece"),
+                self._toolbar_scale,
+                True,
+                True,
+                False,
+                _("Workpiece"),
+                "",
+                None,
+            ],
+            _("Object-Selector"): [
+                "select.png",
+                "",
+                _("Object-Selector"),
+                self._toolbar_toggle_object_selector,
+                True,
+                True,
+                True,
+                _("Mouse"),
+                "sel",
+                None,
+            ],
+            _("Tab-Selector"): [
+                "tab-selector.png",
+                "",
+                _("Tab-Selector"),
+                self._toolbar_toggle_tab_selector,
+                True,
+                True,
+                True,
+                _("Mouse"),
+                "set",
+                None,
+            ],
+            _("Start-Selector"): [
+                "start.png",
+                "",
+                _("Start-Selector"),
+                self._toolbar_toggle_start_selector,
+                True,
+                True,
+                True,
+                _("Mouse"),
+                "set",
+                None,
+            ],
+            _("Repair-Selector"): [
+                "repair.png",
+                "",
+                _("Repair-Selector"),
+                self._toolbar_toggle_repair_selector,
+                True,
+                True,
+                True,
+                _("Mouse"),
+                "edit",
+                None,
+            ],
+            _("Delete-Selector"): [
+                "delete.png",
+                "",
+                _("Delete-Selector"),
+                self._toolbar_toggle_delete_selector,
+                True,
+                True,
+                True,
+                _("Mouse"),
+                "edit",
+                None,
+            ],
+            _("Start simulation"): [
+                "play.png",
+                "",
+                _("start/pause simulation"),
+                self._toolbar_simulate_play,
+                True,
+                True,
+                False,
+                _("Simulation"),
+                "",
+                None,
+            ],
+            _("Stop simulation"): [
+                "stop.png",
+                "",
+                _("stop/reset simulation"),
+                self._toolbar_simulate_stop,
+                True,
+                True,
+                False,
+                _("Simulation"),
+                "",
+                None,
+            ],
+        }
 
+    def create_toolbar(self) -> None:
+        """creates the_toolbar."""
+        if self.toolbar is None:
+            self.toolbar = QToolBar("top toolbar")
+            self.main.addToolBar(self.toolbar)  # type: ignore
+        self.toolbar.clear()
+        self.create_actions()
         section = ""
+        section_sub = ""
         for title, toolbutton in self.toolbuttons.items():
-            icon = os.path.join(self.module_root, "icons", toolbutton[0])
-            if toolbutton[6] != section:
-                self.toolbar.addSeparator()
-                section = toolbutton[6]
             if toolbutton[4]:
+                icon = os.path.join(self.module_root, "icons", toolbutton[0])
+                if toolbutton[7] != section or toolbutton[8] != section_sub:
+                    section = toolbutton[7]
+                    section_sub = toolbutton[8]
+                    self.toolbar.addSeparator()
                 action = QAction(
                     QIcon(icon),
                     title,
                     self.main,
                 )
-                if toolbutton[5]:
+                if toolbutton[6]:
                     action.setCheckable(True)
                 action.triggered.connect(toolbutton[3])  # type: ignore
-
                 if toolbutton[1]:
                     action.setShortcut(toolbutton[1])
                 action.setStatusTip(toolbutton[2])
                 self.toolbar.addAction(action)
-                toolbutton[7] = action
+                toolbutton[9] = action
+
+    def create_menubar(self) -> None:
+        if self.menubar is None:
+            self.menubar = QMenuBar(self.main)
+            self.main.setMenuBar(self.menubar)  # type: ignore
+        self.menubar.clear()
+        self.create_actions()
+        self.menus = {}
+        section = ""
+        section_sub = ""
+        for title, toolbutton in self.toolbuttons.items():
+            if toolbutton[5]:
+                icon = os.path.join(self.module_root, "icons", toolbutton[0])
+                if toolbutton[7] != section:
+                    section = toolbutton[7]
+                    section_sub = toolbutton[8]
+                    self.menus[section] = self.menubar.addMenu(section)
+                elif toolbutton[8] != section_sub:
+                    section_sub = toolbutton[8]
+                    self.menus[section].addSeparator()
+                action = QAction(
+                    QIcon(icon),
+                    title,
+                    self.main,
+                )
+                action.triggered.connect(toolbutton[3])  # type: ignore
+                if toolbutton[1]:
+                    action.setShortcut(toolbutton[1])
+                action.setStatusTip(toolbutton[2])
+                self.menus[section].addAction(action)
 
     def update_global_setup(self) -> None:
         for sname in self.project["setup_defaults"]:
@@ -2484,6 +2540,7 @@ class ViaConstructor:
 
         self.this_dir, self.this_filename = os.path.split(__file__)
 
+        self.create_menubar()
         self.create_toolbar()
 
         self.status_bar = QStatusBar()
