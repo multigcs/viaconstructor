@@ -124,6 +124,14 @@ def setup_defaults(_) -> dict:
                 "title": _("Diameter"),
                 "tooltip": _("setting the Tool-Diameter to calculate the Offsets"),
             },
+            "blades": {
+                "default": 2,
+                "type": "int",
+                "min": 1,
+                "max": 100,
+                "title": _("Blades"),
+                "tooltip": _("number ob blades"),
+            },
             "speed": {
                 "default": 10000,
                 "type": "int",

@@ -232,103 +232,135 @@ class GLWidget(QGLWidget):
         self.initializeGL()
 
     def draw_tool(self, tool_pos, spindle) -> None:  # pylint: disable=C0103
-        GL.glNormal3f(0, 0, 1)
-        GL.glLineWidth(1)
-        if spindle == "OFF":
-            GL.glColor3f(0.11, 0.63, 0.36)
-        else:
-            GL.glColor3f(0.91, 0.0, 0.0)
-        astep = math.pi / 6
+        blades = self.project["setup"]["tool"]["blades"]
         radius = self.project["setup"]["tool"]["diameter"] / 2.0
-        height = -self.project["setup"]["mill"]["depth"] + 5
+        height = max(
+            -self.project["setup"]["mill"]["depth"] + 5,
+            self.project["setup"]["tool"]["diameter"] * 3,
+        )
+        shaft_height = height * 2
+        angle = -self.project["simulation_cnt"]
+        self.project["simulation_cnt"] += 15
 
-        if spindle != "OFF" or self.project["setup"]["machine"]["mode"] == "mill":
-            GL.glBegin(GL.GL_QUAD_STRIP)
+        GL.glPushMatrix()
+        GL.glTranslatef(tool_pos[0], tool_pos[1], tool_pos[2])
+        if spindle != "OFF" and self.project["setup"]["machine"]["mode"] == "mill":
+            GL.glRotatef(angle, 0.0, 0.0, 1.0)
+
+        # shaft
+        if self.project["setup"]["machine"]["mode"] == "mill":
+            # blades
+            climp = 0.4 * radius
+            blade_h = 1.0 * radius
+            asteps = 10
+            rots = (height + climp) / climp / asteps
+
+            GL.glColor4f(0.5, 0.5, 0.5, 1.0)
+            GL.glBegin(GL.GL_TRIANGLE_STRIP)
+            z_pos = 0.0
             angle = 0.0
             while angle < math.pi * 2:
                 x_pos = radius * math.cos(angle)
                 y_pos = radius * math.sin(angle)
-                GL.glVertex3f(
-                    tool_pos[0] + x_pos,
-                    tool_pos[1] + y_pos,
-                    tool_pos[2] + height,
-                )
-                GL.glVertex3f(
-                    tool_pos[0] + x_pos,
-                    tool_pos[1] + y_pos,
-                    tool_pos[2],
-                )
-                angle = angle + astep
-            GL.glVertex3f(
-                tool_pos[0] + radius,
-                tool_pos[1],
-                tool_pos[2] + height,
-            )
-            GL.glVertex3f(
-                tool_pos[0] + radius,
-                tool_pos[1],
-                tool_pos[2],
-            )
-            GL.glEnd()
-
-        GL.glColor3f(0.5, 0.5, 0.5)
-        GL.glBegin(GL.GL_QUAD_STRIP)
-        angle = 0.0
-        while angle < math.pi * 2:
-            x_pos = (radius + 0.5) * math.cos(angle)
-            y_pos = (radius + 0.5) * math.sin(angle)
-            GL.glVertex3f(
-                tool_pos[0] + x_pos,
-                tool_pos[1] + y_pos,
-                tool_pos[2] + height + 5,
-            )
-            GL.glVertex3f(
-                tool_pos[0] + x_pos,
-                tool_pos[1] + y_pos,
-                tool_pos[2] + height,
-            )
-            angle = angle + astep
-        GL.glVertex3f(
-            tool_pos[0] + (radius + 0.5),
-            tool_pos[1],
-            tool_pos[2] + height + 5,
-        )
-        GL.glVertex3f(
-            tool_pos[0] + (radius + 0.5),
-            tool_pos[1],
-            tool_pos[2] + height,
-        )
-        GL.glEnd()
-
-        # simple animation
-        if spindle != "OFF" and self.project["setup"]["machine"]["mode"] == "mill":
-            GL.glColor3f(1.0, 1.0, 1.0)
-            GL.glBegin(GL.GL_LINES)
-            angle = -self.project["simulation_cnt"] / 2
+                GL.glNormal3f(x_pos / radius, y_pos / radius, 0)
+                GL.glVertex3f(x_pos, y_pos, height)
+                GL.glVertex3f(x_pos, y_pos, height + shaft_height)
+                angle += math.pi / 10
             x_pos = radius * math.cos(angle)
             y_pos = radius * math.sin(angle)
-            GL.glVertex3f(
-                tool_pos[0] + x_pos,
-                tool_pos[1] + y_pos,
-                tool_pos[2] + height,
-            )
-            GL.glVertex3f(
-                tool_pos[0] + x_pos,
-                tool_pos[1] + y_pos,
-                tool_pos[2],
-            )
-            GL.glVertex3f(
-                tool_pos[0] - x_pos,
-                tool_pos[1] - y_pos,
-                tool_pos[2] + height,
-            )
-            GL.glVertex3f(
-                tool_pos[0] - x_pos,
-                tool_pos[1] - y_pos,
-                tool_pos[2],
-            )
+            GL.glNormal3f(x_pos / radius, y_pos / radius, 0)
+            GL.glVertex3f(x_pos, y_pos, height)
+            GL.glVertex3f(x_pos, y_pos, height + shaft_height)
             GL.glEnd()
-            self.project["simulation_cnt"] += 1
+
+            start_angle = 0.0
+            while start_angle < math.pi * 2:
+                GL.glNormal3f(0, 0, -1)
+                GL.glBegin(GL.GL_TRIANGLE_STRIP)
+                z_pos = 0.0
+                angle = start_angle
+                while angle < math.pi * rots + start_angle:
+                    x_pos = radius * math.cos(angle)
+                    y_pos = radius * math.sin(angle)
+                    GL.glNormal3f(x_pos / radius, y_pos / radius, -0.5)
+                    GL.glVertex3f(0, 0, z_pos)
+                    GL.glVertex3f(x_pos, y_pos, z_pos)
+                    z_pos = z_pos + climp
+                    angle += math.pi / asteps
+                GL.glEnd()
+
+                GL.glNormal3f(0, 0, 1)
+                GL.glBegin(GL.GL_TRIANGLE_STRIP)
+                z_pos = blade_h
+                angle = start_angle
+                while angle < math.pi * rots + start_angle:
+                    x_pos = radius * math.cos(angle)
+                    y_pos = radius * math.sin(angle)
+                    GL.glNormal3f(x_pos / radius, y_pos / radius, 0.5)
+                    GL.glVertex3f(0, 0, z_pos)
+                    GL.glVertex3f(x_pos, y_pos, z_pos)
+                    z_pos = z_pos + climp
+                    angle += math.pi / asteps
+                GL.glEnd()
+
+                GL.glNormal3f(0, 0, 1)
+                GL.glBegin(GL.GL_TRIANGLE_STRIP)
+                z_pos = 0.0
+                angle = start_angle
+                while angle < math.pi * rots + start_angle:
+                    x_pos = radius * math.cos(angle)
+                    y_pos = radius * math.sin(angle)
+                    GL.glNormal3f(x_pos / radius, y_pos / radius, 0)
+                    GL.glVertex3f(x_pos, y_pos, z_pos + blade_h)
+                    GL.glVertex3f(x_pos, y_pos, z_pos)
+                    z_pos = z_pos + climp
+                    angle += math.pi / asteps
+                GL.glEnd()
+
+                start_angle += math.pi * 2 / blades
+        else:
+
+            GL.glColor4f(0.5, 0.5, 0.5, 1.0)
+            GL.glBegin(GL.GL_TRIANGLE_STRIP)
+            z_pos = 0.0
+            angle = 0.0
+            while angle < math.pi * 2:
+                x_pos = (radius + 2) * math.cos(angle)
+                y_pos = (radius + 2) * math.sin(angle)
+                GL.glNormal3f(x_pos / (radius + 2), y_pos / (radius + 2), 0)
+                GL.glVertex3f(x_pos, y_pos, height)
+                GL.glVertex3f(x_pos, y_pos, height + shaft_height)
+                angle += math.pi / 10
+            x_pos = (radius + 2) * math.cos(angle)
+            y_pos = (radius + 2) * math.sin(angle)
+            GL.glNormal3f(x_pos / (radius + 2), y_pos / (radius + 2), 0)
+            GL.glVertex3f(x_pos, y_pos, height)
+            GL.glVertex3f(x_pos, y_pos, height + shaft_height)
+            GL.glEnd()
+
+            if spindle != "OFF":
+                GL.glColor4f(1.0, 0.0, 0.0, 0.5)
+            else:
+                GL.glColor4f(1.0, 1.0, 1.0, 0.2)
+
+            GL.glBegin(GL.GL_TRIANGLE_STRIP)
+            z_pos = 0.0
+            angle = 0.0
+            while angle < math.pi * 2:
+                x_pos = radius * math.cos(angle)
+                y_pos = radius * math.sin(angle)
+                GL.glNormal3f(x_pos / radius, y_pos / radius, 0)
+                GL.glVertex3f(x_pos, y_pos, 0)
+                GL.glVertex3f(x_pos, y_pos, height)
+                angle += math.pi / 10
+            x_pos = radius * math.cos(angle)
+            y_pos = radius * math.sin(angle)
+            GL.glNormal3f(x_pos / radius, y_pos / radius, 0)
+            GL.glVertex3f(x_pos, y_pos, 0)
+            GL.glVertex3f(x_pos, y_pos, height)
+            GL.glEnd()
+
+        GL.glPopMatrix()
 
     def paintGL(self) -> None:  # pylint: disable=C0103
         """glpaint function."""
@@ -1236,7 +1268,6 @@ class ViaConstructor:
         """
         machine_feedrate = self.project["setup"]["machine"]["feedrate"]
         machine_toolspeed = self.project["setup"]["machine"]["tool_speed"]
-        tool_number = self.project["setup"]["tool"]["number"]
         tool_diameter = self.project["setup"]["tool"]["diameter"]
         unit = self.project["setup"]["machine"]["unit"]
         if unit == "inch":
@@ -1244,11 +1275,7 @@ class ViaConstructor:
         tool_vc = self.project["setup"]["tool"]["materialtable"][material_idx]["vc"]
         tool_speed = tool_vc * 1000 / (tool_diameter * math.pi)
         tool_speed = int(min(tool_speed, machine_toolspeed))
-        tool_blades = 2
-        for tool in self.project["setup"]["tool"]["tooltable"]:
-            if tool["number"] == tool_number:
-                tool_blades = tool["blades"]
-                break
+        tool_blades = self.project["setup"]["tool"]["blades"]
         if tool_diameter <= 4.0:
             fz_key = "fz4"
         elif tool_diameter <= 8.0:
@@ -1295,6 +1322,9 @@ class ViaConstructor:
         )
         self.project["setup"]["tool"]["number"] = int(
             self.project["setup"]["tool"]["tooltable"][tool_idx]["number"]
+        )
+        self.project["setup"]["tool"]["blades"] = int(
+            self.project["setup"]["tool"]["tooltable"][tool_idx]["blades"]
         )
         self.update_global_setup()
         self.update_table()
