@@ -1657,8 +1657,68 @@ class ViaConstructor:
                         return
         self.status_bar_message(f"{self.info} - loading setup from machinecode..failed")
 
-    def _toolbar_save_tooltabe(self) -> None:
-        """save tooltabe as."""
+    def _toolbar_load_tooltable(self) -> None:
+        """load tooltable."""
+        self.status_bar_message(f"{self.info} - load tooltable..")
+        file_dialog = QFileDialog(self.main)
+        file_dialog.setNameFilters(["camotics (*.json)", "linuxcnc (*.tbl)"])
+        name = file_dialog.getOpenFileName(
+            self.main,
+            "Load tooltable",
+            "",
+            "tooltables (*.json *.tbl);;linuxcnc (*.tbl);;camotics (*.json)",
+        )
+        if name[0]:
+            try:
+                tooldata = open(name[0], "r").read()
+            except Exception as save_error:  # pylint: disable=W0703
+                self.status_bar_message(
+                    f"{self.info} - load tooltable ..failed ({save_error})"
+                )
+
+            if name[0].endswith(".json"):
+                for number, tool in json.loads(tooldata).items():
+                    new_tool = {
+                        "name": tool["description"] or f"Tool-{number}",
+                        "number": int(number),
+                        "diameter": tool["diameter"],
+                        "lenght": tool["length"],
+                        "blades": 2,
+                    }
+                    self.project["setup"]["tool"]["tooltable"].insert(-1, new_tool)
+            else:
+                for tool in tooldata.split("\n"):
+                    if tool and tool[0] == "T":
+                        new_tool = {
+                            "name": "",
+                            "number": 1,
+                            "diameter": 1.0,
+                            "lenght": 10.0,
+                            "blades": 2,
+                        }
+                        for value in tool.split(";")[0].split():
+                            if value[0] == "T":
+                                if not new_tool["name"]:
+                                    new_tool["name"] = f"T{value[1:]}"
+                                new_tool["number"] = int(value[1:])
+                            elif value[0] == "D":
+                                new_tool["diameter"] = float(value[1:])
+                        if ";" in tool:
+                            new_tool["name"] = tool.split(";")[1]
+                        self.project["setup"]["tool"]["tooltable"].insert(-1, new_tool)
+
+            self.project["status"] = "CHANGE"
+            self.update_global_setup()
+            self.update_table()
+            self.global_changed(0)
+            self.update_drawing()
+            self.project["status"] = "READY"
+            self.status_bar_message(f"{self.info} - load tooltable..done ({name[0]})")
+        else:
+            self.status_bar_message(f"{self.info} - load tooltable..cancel")
+
+    def _toolbar_save_tooltable(self) -> None:
+        """save tooltable as."""
         if self.project["setup"]["machine"]["unit"] == "inch":
             unit = "imperial"
         else:
@@ -1669,9 +1729,9 @@ class ViaConstructor:
         file_dialog.setNameFilters(["camotics (*.json)", "linuxcnc (*.tbl)"])
         name = file_dialog.getSaveFileName(
             self.main,
-            "Save Tooltabe",
-            "tooltabe.json",
-            "camotics (*.json);;linuxcnc (*.tbl)",
+            "Save tooltable",
+            "tooltable.tbl",
+            "tooltables (*.json *.tbl);;linuxcnc (*.tbl);;camotics (*.json)",
         )
         if name[0]:
             if name[0].endswith(".json"):
@@ -1704,14 +1764,14 @@ class ViaConstructor:
             try:
                 open(name[0], "w").write(tooldata)
                 self.status_bar_message(
-                    f"{self.info} - save tooltabe as..done ({name[0]})"
+                    f"{self.info} - save tooltable as..done ({name[0]})"
                 )
             except Exception as save_error:  # pylint: disable=W0703
                 self.status_bar_message(
-                    f"{self.info} - ave tooltabe as..failed ({save_error})"
+                    f"{self.info} - save tooltable as..failed ({save_error})"
                 )
         else:
-            self.status_bar_message(f"{self.info} - ave tooltabe as..cancel")
+            self.status_bar_message(f"{self.info} - save tooltable as..cancel")
 
     def _toolbar_exit(self) -> None:
         """exit button."""
@@ -1851,11 +1911,21 @@ class ViaConstructor:
                     "project",
                     None,
                 ],
-                _("save tooltabe as"): [
+                _("load tooltable as"): [
+                    "load-tooltable.png",
+                    "",
+                    _("load tooltable as"),
+                    self._toolbar_load_tooltable,
+                    True,
+                    False,
+                    "tooltable",
+                    None,
+                ],
+                _("save tooltable as"): [
                     "save-tooltable.png",
                     "",
-                    _("save tooltabe as"),
-                    self._toolbar_save_tooltabe,
+                    _("save tooltable as"),
+                    self._toolbar_save_tooltable,
                     True,
                     False,
                     "tooltable",
