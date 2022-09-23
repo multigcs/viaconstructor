@@ -1676,6 +1676,24 @@ class ViaConstructor:
                     f"{self.info} - load tooltable ..failed ({save_error})"
                 )
 
+            ret = QMessageBox.question(
+                self.main,  # type: ignore
+                "Ask",
+                "Replacing the tooltable ?",
+                QMessageBox.Yes | QMessageBox.No,
+            )
+            if ret == QMessageBox.Yes:
+                self.save_starts = "yes"
+                self.project["setup"]["tool"]["tooltable"] = [
+                    {
+                        "blades": 1,
+                        "diameter": 1.0,
+                        "lenght": 1.0,
+                        "name": "",
+                        "number": 99,
+                    }
+                ]
+
             if name[0].endswith(".json"):
                 for number, tool in json.loads(tooldata).items():
                     new_tool = {
