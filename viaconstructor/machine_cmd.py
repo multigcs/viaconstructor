@@ -710,10 +710,10 @@ def polylines2machine_cmd(project: dict, post: PostProcessor) -> str:
                         lead_in_lenght = polyline.setup["leads"]["in_lenght"]
                         line_angle = angle_of_line(points[0], points[1])
                         if lead_in_active == "straight":
-                            lead_in_x = points[0][0] + lead_in_lenght * math.sin(
+                            lead_in_x = points[0][0] - lead_in_lenght * math.sin(
                                 line_angle
                             )
-                            lead_in_y = points[0][1] - lead_in_lenght * math.cos(
+                            lead_in_y = points[0][1] + lead_in_lenght * math.cos(
                                 line_angle
                             )
                         else:
@@ -755,10 +755,10 @@ def polylines2machine_cmd(project: dict, post: PostProcessor) -> str:
                         lead_out_lenght = polyline.setup["leads"]["out_lenght"]
                         line_angle = angle_of_line(points[0], points[1])
                         if lead_out_active == "straight":
-                            lead_out_x = points[0][0] + lead_out_lenght * math.sin(
+                            lead_out_x = points[0][0] - lead_out_lenght * math.sin(
                                 line_angle
                             )
-                            lead_out_y = points[0][1] - lead_out_lenght * math.cos(
+                            lead_out_y = points[0][1] + lead_out_lenght * math.cos(
                                 line_angle
                             )
                         else:
