@@ -189,7 +189,8 @@ class GLWidget(QGLWidget):
         self.setMouseTracking(True)
         if platform.system().lower() == "darwin":
             self.retina = not call(
-                "system_profiler SPDisplaysDataType 2>/dev/null | grep -i 'retina' >/dev/null", shell=True
+                "system_profiler SPDisplaysDataType 2>/dev/null | grep -i 'retina' >/dev/null",
+                shell=True,
             )
         self.wheel_scale = 0.005 if self.retina else 0.1
 
