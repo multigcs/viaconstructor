@@ -187,7 +187,7 @@ class GLWidget(QGLWidget):
         self.startTimer(40)
         self.update_drawing = update_drawing
         self.setMouseTracking(True)
-        if platform.system().lower() == "darwin" or True:
+        if platform.system().lower() == "darwin":
             self.retina = not call(
                 "system_profiler SPDisplaysDataType 2>/dev/null | grep -i 'retina' >/dev/null", shell=True
             )
