@@ -22,6 +22,9 @@ class PostProcessor:
     def separation(self) -> None:
         pass
 
+    def raw(self, cmd) -> None:
+        pass
+
     def g64(self, value) -> None:
         pass
 
@@ -560,15 +563,15 @@ def polylines2machine_cmd(project: dict, post: PostProcessor) -> str:
     milling: set = set()
     last_pos: list = [0, 0]
     polylines = project["offsets"]
-    machine_cmd_begin(project, post)
     tabs = project.get("tabs", {})
-
     unit = project["setup"]["machine"]["unit"]
     fast_move_z = project["setup"]["mill"]["fast_move_z"]
     unitscale = 1.0
     if unit == "inch":
         unitscale = 25.4
         fast_move_z *= unitscale
+
+    machine_cmd_begin(project, post)
 
     next_filter = ""
     order = 0
@@ -939,9 +942,6 @@ def polylines2machine_cmd(project: dict, post: PostProcessor) -> str:
                                     j_pos=(lead_out_center_y - points[0][1]),
                                 )
                         lead_out_active = "off"
-
-                    # if project["setup"]["machine"]["mode"] != "laser":
-                    #    post.move(z_pos=fast_move_z)
 
                     if project["setup"]["machine"]["mode"] != "mill":
                         post.spindle_off()

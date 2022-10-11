@@ -22,6 +22,10 @@ class PostProcessorHpgl(PostProcessor):
         if self.comments:
             self.hpgl.append("")
 
+    def raw(self, cmd) -> None:
+        if cmd:
+            self.hpgl.append(cmd)
+
     def absolute(self, active=True) -> None:
         if active:
             self.hpgl.append("PA")

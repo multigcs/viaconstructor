@@ -182,11 +182,11 @@ def setup_defaults(_) -> dict:
                     },
                 ],
                 "columns": {
-                    "name": "str",
-                    "number": "int",
-                    "diameter": "float",
-                    "lenght": "float",
-                    "blades": "int",
+                    "name": {"type": "str"},
+                    "number": {"type": "int"},
+                    "diameter": {"type": "float"},
+                    "lenght": {"type": "float"},
+                    "blades": {"type": "int"},
                 },
                 "column_defaults": {
                     "name": "",
@@ -255,11 +255,11 @@ def setup_defaults(_) -> dict:
                     },
                 ],
                 "columns": {
-                    "name": "str",
-                    "vc": "int",
-                    "fz4": "float",
-                    "fz8": "float",
-                    "fz12": "float",
+                    "name": {"type": "str"},
+                    "vc": {"type": "int"},
+                    "fz4": {"type": "float"},
+                    "fz8": {"type": "float"},
+                    "fz12": {"type": "float"},
                 },
                 "column_defaults": {
                     "name": "",

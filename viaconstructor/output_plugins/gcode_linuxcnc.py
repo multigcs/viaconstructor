@@ -18,6 +18,10 @@ class PostProcessorGcodeLinuxCNC(PostProcessor):
         if self.comments:
             self.gcode.append("")
 
+    def raw(self, cmd) -> None:
+        if cmd:
+            self.gcode.append(cmd)
+
     def g64(self, value) -> None:
         self.gcode.append(f"G64 P{value}")
 

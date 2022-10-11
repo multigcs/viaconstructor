@@ -16,6 +16,8 @@ from typing import Optional, Union
 
 import ezdxf
 import setproctitle
+
+# from PyQt5 import QtCore
 from PyQt5.QtGui import (  # pylint: disable=E0611
     QIcon,
     QStandardItem,
@@ -1277,7 +1279,7 @@ class ViaConstructor:
             draw_object_faces(self.project)
         debug("update_drawing: draw_object_edges done")
         GL.glEndList()
-        self.info = f"{self.project['minMax'][2] - self.project['minMax'][0]}x{self.project['minMax'][3] - self.project['minMax'][1]}mm"
+        self.info = f"{round(self.project['minMax'][2] - self.project['minMax'][0], 2)}x{round(self.project['minMax'][3] - self.project['minMax'][1], 2)}mm"
         if self.main:
             self.main.setWindowTitle("viaConstructor")
         self.status_bar_message(f"{self.info} - calculate..done")
@@ -1588,21 +1590,21 @@ class ViaConstructor:
                             if entry["widget"].item(row_idx, col_idx + 1) is None:
                                 print("TABLE_ERROR")
                                 continue
-                            if col_type == "str":
+                            if col_type["type"] == "str":
                                 value = (
                                     entry["widget"].item(row_idx, col_idx + 1).text()
                                 )
                                 self.project["setup"][sname][ename][row_idx][key] = str(
                                     value
                                 )
-                            elif col_type == "int":
+                            elif col_type["type"] == "int":
                                 value = (
                                     entry["widget"].item(row_idx, col_idx + 1).text()
                                 )
                                 self.project["setup"][sname][ename][row_idx][key] = int(
                                     value
                                 )
-                            elif col_type == "float":
+                            elif col_type["type"] == "float":
                                 value = (
                                     entry["widget"].item(row_idx, col_idx + 1).text()
                                 )
@@ -2176,8 +2178,10 @@ class ViaConstructor:
                 elif entry["type"] == "table":
                     # add empty row if not exist
                     first_element = list(entry["columns"].keys())[0]
+
                     if (
-                        str(self.project["setup"][sname][ename][-1][first_element])
+                        entry.get("column_defaults") is not None
+                        and str(self.project["setup"][sname][ename][-1][first_element])
                         != ""
                     ):
                         new_row = {}
@@ -2292,7 +2296,8 @@ class ViaConstructor:
                     # add empty row if not exist
                     first_element = list(entry["columns"].keys())[0]
                     if (
-                        str(self.project["setup"][sname][ename][-1][first_element])
+                        entry.get("column_defaults") is not None
+                        and str(self.project["setup"][sname][ename][-1][first_element])
                         != ""
                     ):
                         new_row = {}
@@ -2328,11 +2333,14 @@ class ViaConstructor:
                             table.setCellWidget(row_idx, 0, button)
                             table.resizeColumnToContents(0)
                         for col_idx, key in enumerate(entry["columns"]):
+                            item = QTableWidgetItem(str(row[key]))
                             table.setItem(
                                 row_idx,
                                 col_idx + idxf_offset,
-                                QTableWidgetItem(str(row[key])),
+                                item,
                             )
+                            # if entry["columns"][key].get("ro", False):
+                            #    item.setFlags(QtCore.Qt.ItemIsEditable)
                             table.resizeColumnToContents(col_idx + idxf_offset)
                     table.itemChanged.connect(self.global_changed)  # type: ignore
                     vlayout.addWidget(table)
