@@ -6,12 +6,14 @@ import importlib
 import json
 import math
 import os
+import platform
 import re
 import sys
 import time
 from copy import deepcopy
 from functools import partial
 from pathlib import Path
+from subprocess import call
 from typing import Optional, Union
 
 import ezdxf
@@ -176,6 +178,8 @@ class GLWidget(QGLWidget):
     selection_set = ()
     size_x = 0
     size_y = 0
+    retina = False
+    wheel_scale = 0.1
 
     def __init__(self, project: dict, update_drawing):
         """init function."""
@@ -185,6 +189,12 @@ class GLWidget(QGLWidget):
         self.startTimer(40)
         self.update_drawing = update_drawing
         self.setMouseTracking(True)
+        if platform.system().lower() == "darwin":
+            self.retina = not call(
+                "system_profiler SPDisplaysDataType 2>/dev/null | grep -i 'retina' >/dev/null",
+                shell=True,
+            )
+        self.wheel_scale = 0.005 if self.retina else 0.1
 
     def initializeGL(self) -> None:  # pylint: disable=C0103
         """glinit function."""
@@ -229,8 +239,12 @@ class GLWidget(QGLWidget):
 
     def resizeGL(self, width, hight) -> None:  # pylint: disable=C0103
         """glresize function."""
-        self.screen_w = width
-        self.screen_h = hight
+        if self.retina:
+            self.screen_w = width / 2
+            self.screen_h = hight / 2
+        else:
+            self.screen_w = width
+            self.screen_h = hight
         GL.glViewport(0, 0, width, hight)
         self.initializeGL()
 
@@ -783,9 +797,9 @@ class GLWidget(QGLWidget):
     def wheelEvent(self, event) -> None:  # pylint: disable=C0103,W0613
         """mouse wheel moved."""
         if event.angleDelta().y() > 0:
-            self.scale_xyz += 0.1
+            self.scale_xyz += self.wheel_scale
         else:
-            self.scale_xyz -= 0.1
+            self.scale_xyz -= self.wheel_scale
 
 
 class ViaConstructor:
