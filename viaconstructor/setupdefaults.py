@@ -16,6 +16,7 @@ def setup_defaults(_) -> dict:
                 "per_object": True,
                 "title": _("Depth"),
                 "tooltip": _("the end depth for milling"),
+                "unit": "LINEARMEASURE",
             },
             "step": {
                 "default": -9.0,
@@ -25,6 +26,7 @@ def setup_defaults(_) -> dict:
                 "per_object": True,
                 "title": _("Step"),
                 "tooltip": _("the maximum depth in one move"),
+                "unit": "LINEARMEASURE",
             },
             "passes": {
                 "default": 1,
@@ -49,6 +51,7 @@ def setup_defaults(_) -> dict:
                 "max": 999.0,
                 "title": _("Fast-Move Z"),
                 "tooltip": _("the Z-Position for fast moves"),
+                "unit": "LINEARMEASURE",
             },
             "G64": {
                 "default": 0.020000,
@@ -107,6 +110,7 @@ def setup_defaults(_) -> dict:
                 "max": 10000,
                 "title": _("Feed-Rate(Horizontal)"),
                 "tooltip": _("the Horizotal Feetrate"),
+                "unit": "mm/min",
             },
             "rate_v": {
                 "default": 100,
@@ -115,6 +119,7 @@ def setup_defaults(_) -> dict:
                 "max": 10000,
                 "title": _("Feed-Rate(Vertical)"),
                 "tooltip": _("the Vertical Feetrate"),
+                "unit": "mm/min",
             },
             "number": {
                 "default": 1,
@@ -132,6 +137,7 @@ def setup_defaults(_) -> dict:
                 "max": 999.0,
                 "title": _("Diameter"),
                 "tooltip": _("setting the Tool-Diameter to calculate the Offsets"),
+                "unit": "LINEARMEASURE",
             },
             "blades": {
                 "default": 2,
@@ -148,6 +154,7 @@ def setup_defaults(_) -> dict:
                 "max": 100000,
                 "title": _("Speed"),
                 "tooltip": _("setting the Tool-Speed in RPM"),
+                "unit": "RPM",
             },
             "pause": {
                 "default": 1,
@@ -156,6 +163,7 @@ def setup_defaults(_) -> dict:
                 "max": 60,
                 "title": _("Pause"),
                 "tooltip": _("tool spin up time (G04 Pn)"),
+                "unit": "s",
             },
             "tooltable": {
                 "type": "table",
@@ -303,6 +311,7 @@ def setup_defaults(_) -> dict:
                 "max": 100000.0,
                 "title": _("Offset X"),
                 "tooltip": _("Offset X (G54)"),
+                "unit": "LINEARMEASURE",
             },
             "offset_y": {
                 "default": 0.0,
@@ -311,6 +320,7 @@ def setup_defaults(_) -> dict:
                 "max": 100000.0,
                 "title": _("Offset Y"),
                 "tooltip": _("Offset Y (G54)"),
+                "unit": "LINEARMEASURE",
             },
             "offset_z": {
                 "default": 0.0,
@@ -319,6 +329,7 @@ def setup_defaults(_) -> dict:
                 "max": 100000.0,
                 "title": _("Offset Z"),
                 "tooltip": _("Offset Z (G54)"),
+                "unit": "LINEARMEASURE",
             },
         },
         "pockets": {
@@ -367,6 +378,7 @@ def setup_defaults(_) -> dict:
                 "title": _("Width"),
                 "tooltip": _("width of the tabs"),
                 "per_object": True,
+                "unit": "LINEARMEASURE",
             },
             "height": {
                 "default": 2,
@@ -376,6 +388,7 @@ def setup_defaults(_) -> dict:
                 "title": _("Height"),
                 "tooltip": _("height of the tabs"),
                 "per_object": True,
+                "unit": "LINEARMEASURE",
             },
             "type": {
                 "default": "rectangle",
@@ -408,6 +421,7 @@ def setup_defaults(_) -> dict:
                 "title": _("in-lenght"),
                 "tooltip": _("lenght of the lead-in's"),
                 "per_object": True,
+                "unit": "LINEARMEASURE",
             },
             "out": {
                 "default": "off",
@@ -428,6 +442,7 @@ def setup_defaults(_) -> dict:
                 "title": _("out-lenght"),
                 "tooltip": _("lenght of the lead-out's"),
                 "per_object": True,
+                "unit": "LINEARMEASURE",
             },
         },
         "machine": {

@@ -21,6 +21,7 @@ import setproctitle
 
 # from PyQt5 import QtCore
 from PyQt5.QtGui import (  # pylint: disable=E0611
+    QFont,
     QIcon,
     QStandardItem,
     QStandardItemModel,
@@ -2249,10 +2250,12 @@ class ViaConstructor:
             tabwidget.addTab(vcontainer, sname)
             for ename, entry in self.project["setup_defaults"][sname].items():
                 container = QWidget()
+
                 hlayout = QHBoxLayout(container)
                 label = QLabel(entry.get("title", ename))
                 hlayout.addWidget(label)
                 vlayout.addWidget(container)
+                hlayout.addStretch(1)
                 if entry["type"] == "bool":
                     checkbox = QCheckBox(entry.get("title", ename))
                     checkbox.setChecked(self.project["setup"][sname][ename])
@@ -2361,6 +2364,14 @@ class ViaConstructor:
                     entry["widget"] = table
                 else:
                     eprint(f"Unknown setup-type: {entry['type']}")
+
+                unit = entry.get("unit", "")
+                if unit == "LINEARMEASURE":
+                    unit = self.project["setup"]["machine"]["unit"]
+
+                ulabel = QLabel(unit)
+                ulabel.setFont(QFont("Arial", 9))
+                hlayout.addWidget(ulabel)
 
     def udate_tabs_data(self) -> None:
         self.project["tabs"]["data"] = []
