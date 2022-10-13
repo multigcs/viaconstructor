@@ -26,6 +26,15 @@ def setup_defaults(_) -> dict:
                 "title": _("Step"),
                 "tooltip": _("the maximum depth in one move"),
             },
+            "passes": {
+                "default": 1,
+                "type": "int",
+                "min": 1,
+                "max": 99,
+                "per_object": True,
+                "title": _("Passes"),
+                "tooltip": _("Passes / in Laser-Mode"),
+            },
             "helix_mode": {
                 "default": False,
                 "type": "bool",

@@ -797,6 +797,7 @@ def polylines2machine_cmd(project: dict, post: PostProcessor) -> str:
                                 )
 
                     last_depth = 0.0
+                    passes = 1
                     while True:
                         depth = max(depth, max_depth)
 
@@ -915,10 +916,12 @@ def polylines2machine_cmd(project: dict, post: PostProcessor) -> str:
                         depth += step
 
                         if (
-                            project["setup"]["machine"]["mode"] == "laser"
+                            (project["setup"]["machine"]["mode"] == "laser" and polyline.setup["mill"]["passes"] == passes)
                             or "Z" not in project["axis"]
                         ):
                             break
+
+                        passes += 1
 
                     if lead_out_active != "off":
                         if lead_out_active == "straight":
