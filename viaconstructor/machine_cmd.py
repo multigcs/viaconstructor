@@ -916,9 +916,9 @@ def polylines2machine_cmd(project: dict, post: PostProcessor) -> str:
                         depth += step
 
                         if (
-                            (project["setup"]["machine"]["mode"] == "laser" and polyline.setup["mill"]["passes"] == passes)
-                            or "Z" not in project["axis"]
-                        ):
+                            project["setup"]["machine"]["mode"] == "laser"
+                            and polyline.setup["mill"]["passes"] == passes
+                        ) or "Z" not in project["axis"]:
                             break
 
                         passes += 1
