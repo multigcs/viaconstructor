@@ -4,7 +4,7 @@ import argparse
 
 import freetype
 
-from ..calc import quadratic_bezier  # pylint: disable=E0402
+from ..calc import point_of_line, quadratic_bezier  # pylint: disable=E0402
 from ..input_plugins_base import DrawReaderBase
 
 
@@ -15,7 +15,7 @@ class DrawReader(DrawReaderBase):
             "--ttfread-text",
             help="ttfread: text for the Truetype reader",
             type=str,
-            default="ViaConstructor",
+            default="Via",
         )
         parser.add_argument(
             "--ttfread-height",
@@ -127,10 +127,35 @@ class DrawReader(DrawReaderBase):
             curv_pos += 0.1
 
     def cubic_to(self, point_a, point_b, point_c, ctx):
-        print(
-            f"UNSUPPORTED 2nd Cubic Bezier: {point_a.x},{point_a.y} {point_b.x},{point_b.y} {point_c.x},{point_c.y}: {ctx}"
-        )
+        start = ctx["last"]
+        curv_pos = 0.0
+        while curv_pos <= 1.0:
+            ctrl1 = (
+                point_a.x * ctx["scale"][0] + ctx["pos"][0],
+                point_a.y * ctx["scale"][1] + ctx["pos"][1],
+            )
+            ctrl2 = (
+                point_b.x * ctx["scale"][0] + ctx["pos"][0],
+                point_b.y * ctx["scale"][1] + ctx["pos"][1],
+            )
+            nextp = (
+                point_c.x * ctx["scale"][0] + ctx["pos"][0],
+                point_c.y * ctx["scale"][1] + ctx["pos"][1],
+            )
+
+            ctrl3ab = point_of_line(start, ctrl1, curv_pos)
+            ctrl3bc = point_of_line(ctrl1, ctrl2, curv_pos)
+            ctrl3 = point_of_line(ctrl3ab, ctrl3bc, curv_pos)
+            ctrl4ab = point_of_line(ctrl1, ctrl2, curv_pos)
+            ctrl4bc = point_of_line(ctrl2, nextp, curv_pos)
+            ctrl4 = point_of_line(ctrl4ab, ctrl4bc, curv_pos)
+            point = point_of_line(ctrl3, ctrl4, curv_pos)
+
+            ctx["max"] = max(ctx["max"], point[0])
+            self._add_line(ctx["last"], point)
+            ctx["last"] = point
+            curv_pos += 0.1
 
     @staticmethod
     def suffix() -> list[str]:
-        return ["ttf"]
+        return ["ttf", "otf"]
