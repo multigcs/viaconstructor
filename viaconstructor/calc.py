@@ -275,8 +275,14 @@ def find_outer_objects(objects, point, exclude=None):
 
 def find_tool_offsets(objects):
     """check if object is inside an other closed  objects."""
+
+    part_l = len(objects)
+    part_n = 0
     max_outer = 0
     for obj_idx, obj in objects.items():
+        print(f"set offsets: {round((part_n + 1) * 100 / part_l, 1)}%", end="\r")
+        part_n += 1
+
         outer = find_outer_objects(objects, obj.segments[0].start, [obj_idx])
         obj.outer_objects = outer
         if obj.closed:
@@ -293,7 +299,17 @@ def find_tool_offsets(objects):
 
         for outer_idx in outer:
             objects[outer_idx]["inner_objects"].append(obj_idx)
+    print("")
+
     return max_outer
+
+
+def num_unused_segments(segments):
+    part_l = 0
+    for segment in segments:
+        if segment.object is None:
+            part_l += 1
+    return part_l
 
 
 def segments2objects(segments):
@@ -303,9 +319,14 @@ def segments2objects(segments):
     obj_idx = 0
     max_distance = 0.01
 
+    part_l = num_unused_segments(segments)
+
     while True:
         found = False
         last = None
+
+        part_n = part_l - num_unused_segments(test_segments)
+        print(f"combining segments: {round((part_n + 1) * 100 / part_l, 1)}%", end="\r")
 
         # create new object
         obj = VcObject(
@@ -389,6 +410,7 @@ def segments2objects(segments):
 
         if not found:
             break
+    print("")
     return objects
 
 
@@ -1024,12 +1046,19 @@ def objects2polyline_offsets(diameter, objects, max_outer, small_circles=False):
     """calculates the offset line(s) of all objects"""
     polyline_offsets = {}
 
+    part_l = len(objects)
+    part_n = 0
     for level in range(max_outer, -1, -1):
         for obj_idx, obj in objects.items():
             if not obj.setup["mill"]["active"]:
                 continue
             if len(obj.outer_objects) != level:
                 continue
+
+            print(
+                f"calc offset path: {round((part_n + 1) * 100 / part_l, 1)}%", end="\r"
+            )
+            part_n += 1
 
             obj_copy = deepcopy(obj)
             do_reverse = 0
@@ -1045,7 +1074,7 @@ def objects2polyline_offsets(diameter, objects, max_outer, small_circles=False):
             object2polyline_offsets(
                 diameter, obj_copy, obj_idx, max_outer, polyline_offsets, small_circles
             )
-
+    print("")
     return polyline_offsets
 
 

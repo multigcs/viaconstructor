@@ -129,7 +129,7 @@ docker-run-shell:
 	docker run --net=host -e DISPLAY=:0  --privileged --name viaconstructor -v $(CURDIR):/usr/src/viaconstructor -t -i viaconstructor /bin/bash
 
 gettext:
-	/usr/bin/pygettext3 -d base -o viaconstructor/locales/base.pot viaconstructor/viaconstructor.py viaconstructor/setupdefaults.py
+	/usr/bin/pygettext3 --no-location -d base -o viaconstructor/locales/base.pot viaconstructor/viaconstructor.py viaconstructor/setupdefaults.py
 	@for lang in de ; do \
 		echo "updating lang $$lang" ; \
 		msgmerge --update viaconstructor/locales/$$lang/LC_MESSAGES/base.po viaconstructor/locales/base.pot ; \

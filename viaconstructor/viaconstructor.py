@@ -1291,14 +1291,15 @@ class ViaConstructor:
         debug("update_drawing: draw_object_edges")
         draw_object_edges(self.project, selected=selected)
         if self.project["setup"]["view"]["polygon_show"]:
+            debug("update_drawing: draw_object_faces")
             draw_object_faces(self.project)
-        debug("update_drawing: draw_object_edges done")
         GL.glEndList()
         self.info = f"{round(self.project['minMax'][2] - self.project['minMax'][0], 2)}x{round(self.project['minMax'][3] - self.project['minMax'][1], 2)}mm"
         if self.main:
             self.main.setWindowTitle("viaConstructor")
         self.status_bar_message(f"{self.info} - calculate..done")
         self.update_layers()
+        debug("update_drawing: done")
 
     def materials_select(self, material_idx) -> None:
         """calculates the milling feedrate and tool-speed for the selected material

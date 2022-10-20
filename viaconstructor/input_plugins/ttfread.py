@@ -41,7 +41,9 @@ class DrawReader(DrawReaderBase):
             "scale": (scale, scale),
         }
 
-        for char in args.ttfread_text:  # type: ignore
+        part_l = len(args.ttfread_text)
+        for part_n, char in enumerate(args.ttfread_text):  # type: ignore
+            print(f"loading file: {round((part_n + 1) * 100 / part_l, 1)}%", end="\r")
             if char == " ":
                 ctx["pos"][0] += 500 * scale  # type: ignore
                 continue
@@ -63,6 +65,7 @@ class DrawReader(DrawReaderBase):
             )
             ctx["pos"][0] = ctx["max"]  # type: ignore
             ctx["max"] = 0
+        print("")
 
         self.min_max = [0.0, 0.0, 10.0, 10.0]
         for seg_idx, segment in enumerate(self.segments):

@@ -35,7 +35,10 @@ class DrawReader(DrawReaderBase):
         draw = False
         absolute = True
         hpgl = hpgl.replace(";", "\n")
-        for line in hpgl.split("\n"):
+        lines = hpgl.split("\n")
+        part_l = len(lines)
+        for part_n, line in enumerate(lines):
+            print(f"loading file: {round((part_n + 1) * 100 / part_l, 1)}%", end="\r")
             line = line.strip()
             if line[0:2] in {"IN", "LT", "CO", "CI", "IP", "SC", "CT", "SP"}:
                 line = ""
@@ -138,6 +141,7 @@ class DrawReader(DrawReaderBase):
                         last_x = new_x
                         last_y = new_y
                     is_x = not is_x
+        print("")
 
         self.min_max = [0.0, 0.0, 10.0, 10.0]
         for seg_idx, segment in enumerate(self.segments):

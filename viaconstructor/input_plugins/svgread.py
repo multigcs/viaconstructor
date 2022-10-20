@@ -58,8 +58,9 @@ class DrawReader(DrawReaderBase):
             height_attr = svg_attributes.get("height")
             if height_attr and height_attr.endswith("mm"):
                 height = float(height_attr[0:-2])
-
-        for path in paths:
+        part_l = len(paths)
+        for part_n, path in enumerate(paths):
+            print(f"loading file: {round((part_n + 1) * 100 / part_l, 1)}%", end="\r")
             # check if circle
             if (  # pylint: disable=R0916
                 len(path) == 2
@@ -111,6 +112,7 @@ class DrawReader(DrawReaderBase):
                         (last_x, height - last_y),
                         (path[0].start.real, height - path[0].start.imag),
                     )
+        print("")
 
         self.min_max = [0.0, 0.0, 10.0, 10.0]
         for seg_idx, segment in enumerate(self.segments):

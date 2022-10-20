@@ -82,7 +82,9 @@ class DrawReader(DrawReaderBase):
         except Exception as error:  # pylint: disable=W0703
             print(f"WARNING: can not explore MText: {error}")
 
-        for element in self.model_space:
+        part_l = len(self.model_space)
+        for part_n, element in enumerate(self.model_space):
+            print(f"loading file: {round((part_n + 1) * 100 / part_l, 1)}%", end="\r")
             if element.dxf.layer == "_CAMCFG":
                 continue
             dxftype = element.dxftype()
@@ -91,6 +93,7 @@ class DrawReader(DrawReaderBase):
                     self.add_entity(v_element)
             else:
                 self.add_entity(element)
+        print("")
 
         self.min_max = [0.0, 0.0, 10.0, 10.0]
         for seg_idx, segment in enumerate(self.segments):
