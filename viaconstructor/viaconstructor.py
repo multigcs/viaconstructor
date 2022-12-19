@@ -841,7 +841,7 @@ class ViaConstructor:
     save_tabs = "no"
     save_starts = "no"
     draw_reader: Optional[DrawReaderBase] = None
-    status_bar: Optional[QWidget] = None
+    status_bar: Optional[QStatusBar] = None
     main: Optional[QMainWindow] = None
     toolbar: Optional[QToolBar] = None
     menubar: Optional[QMenuBar] = None
@@ -1341,9 +1341,9 @@ class ViaConstructor:
             self.main,  # type: ignore
             "Warning",
             "\n".join(info_test),
-            QMessageBox.Ok | QMessageBox.Cancel,
+            QMessageBox.Ok | QMessageBox.Cancel,  # type: ignore
         )
-        if ret != QMessageBox.Ok:
+        if ret != QMessageBox.Ok:  # type: ignore
             return
 
         self.project["status"] = "CHANGE"
@@ -1483,16 +1483,18 @@ class ViaConstructor:
                                 value_cell.index(), combobox
                             )
                         elif entry["type"] == "float":
-                            spinbox = QDoubleSpinBox()
-                            spinbox.setDecimals(entry.get("decimals", 4))
-                            spinbox.setSingleStep(entry.get("step", 1.0))
-                            spinbox.setMinimum(entry["min"])
-                            spinbox.setMaximum(entry["max"])
-                            spinbox.setValue(value)
-                            spinbox.setToolTip(entry.get("tooltip", f"{sname}/{ename}"))
-                            spinbox.valueChanged.connect(partial(self.object_changed, obj_idx, sname, ename))  # type: ignore
+                            dspinbox = QDoubleSpinBox()
+                            dspinbox.setDecimals(entry.get("decimals", 4))
+                            dspinbox.setSingleStep(entry.get("step", 1.0))
+                            dspinbox.setMinimum(entry["min"])
+                            dspinbox.setMaximum(entry["max"])
+                            dspinbox.setValue(value)
+                            dspinbox.setToolTip(
+                                entry.get("tooltip", f"{sname}/{ename}")
+                            )
+                            dspinbox.valueChanged.connect(partial(self.object_changed, obj_idx, sname, ename))  # type: ignore
                             self.project["objwidget"].setIndexWidget(
-                                value_cell.index(), spinbox
+                                value_cell.index(), dspinbox
                             )
                         elif entry["type"] == "int":
                             spinbox = QSpinBox()
@@ -1547,9 +1549,9 @@ class ViaConstructor:
                 self.main,  # type: ignore
                 "Warning",
                 "\n".join(info_test),
-                QMessageBox.Yes | QMessageBox.No,
+                QMessageBox.Yes | QMessageBox.No,  # type: ignore
             )
-            if ret == QMessageBox.Yes:
+            if ret == QMessageBox.Yes:  # type: ignore
                 self.save_starts = "yes"
             else:
                 self.save_starts = "no"
@@ -1572,9 +1574,9 @@ class ViaConstructor:
                 self.main,  # type: ignore
                 "Warning",
                 "\n".join(info_test),
-                QMessageBox.Yes | QMessageBox.No,
+                QMessageBox.Yes | QMessageBox.No,  # type: ignore
             )
-            if ret == QMessageBox.Yes:
+            if ret == QMessageBox.Yes:  # type: ignore
                 self.save_tabs = "yes"
             else:
                 self.save_tabs = "no"
@@ -1702,9 +1704,9 @@ class ViaConstructor:
                 self.main,  # type: ignore
                 "Ask",
                 "Replacing the tooltable ?",
-                QMessageBox.Yes | QMessageBox.No,
+                QMessageBox.Yes | QMessageBox.No,  # type: ignore
             )
-            if ret == QMessageBox.Yes:
+            if ret == QMessageBox.Yes:  # type: ignore
                 self.save_starts = "yes"
                 self.project["setup"]["tool"]["tooltable"] = [
                     {
@@ -2283,16 +2285,16 @@ class ViaConstructor:
                     hlayout.addWidget(button)
                     entry["widget"] = button
                 elif entry["type"] == "float":
-                    spinbox = QDoubleSpinBox()
-                    spinbox.setDecimals(entry.get("decimals", 4))
-                    spinbox.setSingleStep(entry.get("step", 1.0))
-                    spinbox.setMinimum(entry["min"])
-                    spinbox.setMaximum(entry["max"])
-                    spinbox.setValue(self.project["setup"][sname][ename])
-                    spinbox.setToolTip(entry.get("tooltip", f"{sname}/{ename}"))
-                    spinbox.valueChanged.connect(self.global_changed)  # type: ignore
-                    hlayout.addWidget(spinbox)
-                    entry["widget"] = spinbox
+                    dspinbox = QDoubleSpinBox()
+                    dspinbox.setDecimals(entry.get("decimals", 4))
+                    dspinbox.setSingleStep(entry.get("step", 1.0))
+                    dspinbox.setMinimum(entry["min"])
+                    dspinbox.setMaximum(entry["max"])
+                    dspinbox.setValue(self.project["setup"][sname][ename])
+                    dspinbox.setToolTip(entry.get("tooltip", f"{sname}/{ename}"))
+                    dspinbox.valueChanged.connect(self.global_changed)  # type: ignore
+                    hlayout.addWidget(dspinbox)
+                    entry["widget"] = dspinbox
                 elif entry["type"] == "int":
                     spinbox = QSpinBox()
                     spinbox.setSingleStep(entry.get("step", 1))

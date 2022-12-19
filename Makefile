@@ -25,7 +25,7 @@ help_gen: pyvenv
 docindex: pyvenv
 	pyvenv/bin/markdown_py README.md | sed "s|https://raw.githubusercontent.com/multigcs/viaconstructor/main/docs/|./|g" > docs/readme.html
 
-pyvenv-update: pyvenv
+pyvenv-update: pyvenv pip-compile
 	pyvenv/bin/python -m pip install -r requirements-dev.txt
 	pyvenv/bin/python -m pip install -r requirements.txt
 
@@ -37,8 +37,8 @@ pyvenv:
 	@echo "# for testing: pyvenv/bin/python -m gcodepreview tests/data/simple.ngc"
 
 pip-compile: pyvenv
-	pyvenv/bin/pip-compile requirements-dev.in
-	pyvenv/bin/pip-compile requirements.in
+	pyvenv/bin/pip-compile --generate-hashes --allow-unsafe requirements-dev.in
+	pyvenv/bin/pip-compile --generate-hashes --allow-unsafe requirements.in
 
 isort: pyvenv
 	pyvenv/bin/python -m isort --profile black */*py viaconstructor/*/*.py

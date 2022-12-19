@@ -8,6 +8,6 @@ mypy==0.941
 markdown==3.3.7
 pdoc3==0.10.0
 isort==5.10.1
-stdeb
-twine
-appimage-builder
+stdeb==0.10.0
+twine==4.0.2
+appimage-builder==1.1.0
