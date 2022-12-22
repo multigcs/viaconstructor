@@ -125,10 +125,10 @@ class DrawReader(DrawReaderBase):
     def add_entity(self, element, offset: tuple = (0, 0)):
         dxftype = element.dxftype()
 
+        layer = element.dxf.layer
+
         if self.color_layers:
-            layer = f"color{element.dxf.color}"
-        else:
-            layer = element.dxf.layer
+            layer = f"{layer}-c{element.dxf.color}"
 
         if dxftype in self.VTYPES:
             for v_element in element.virtual_entities():  # type: ignore
