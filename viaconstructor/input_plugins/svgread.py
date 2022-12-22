@@ -19,8 +19,18 @@ class DrawReader(DrawReaderBase):
     can_save_setup = True
     can_load_setup = True
     cam_setup = ""
+    as_lines = False
 
     backup_ok = False
+
+    @staticmethod
+    def arg_parser(parser) -> None:
+        parser.add_argument(
+            "--svgread-as-lines",
+            help="dxfread: using different colors as different layers",
+            type=bool,
+            default=False,
+        )
 
     def __init__(
         self, filename: str, args: argparse.Namespace = None
@@ -34,6 +44,9 @@ class DrawReader(DrawReaderBase):
             attributes,  # pylint: disable=W0612
             svg_attributes,
         ) = svgpathtools.svg2paths2(self.filename)
+
+        if args is not None:
+            self.as_lines = args.svgread_as_lines
 
         # read setup data from svg
         rawdata = open(self.filename, "r").read()
@@ -63,7 +76,8 @@ class DrawReader(DrawReaderBase):
             print(f"loading file: {round((part_n + 1) * 100 / part_l, 1)}%", end="\r")
             # check if circle
             if (  # pylint: disable=R0916
-                len(path) == 2
+                not self.as_lines
+                and len(path) == 2
                 and isinstance(path[0], svgpathtools.path.Arc)
                 and isinstance(path[1], svgpathtools.path.Arc)
                 and path.start == path.end
@@ -81,7 +95,7 @@ class DrawReader(DrawReaderBase):
             else:
                 # print("##path", path)
                 for segment in path:
-                    if isinstance(segment, svgpathtools.path.Line):
+                    if isinstance(segment, svgpathtools.path.Line) or self.as_lines:
                         self._add_line(
                             (segment.start.real, height - segment.start.imag),
                             (segment.end.real, height - segment.end.imag),
@@ -91,7 +105,7 @@ class DrawReader(DrawReaderBase):
                     else:
                         last_x = segment.start.real
                         last_y = segment.start.imag
-                        nump = int(segment.length() / 3) + 1
+                        nump = int(segment.length() / 10) + 1
                         for point_n in range(0, nump):
                             pos = segment.point(point_n / nump)
                             self._add_line(
