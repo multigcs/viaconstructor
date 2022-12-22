@@ -38,6 +38,7 @@ class DrawReader(DrawReaderBase):
     can_save_tabs = True
     can_save_setup = True
     can_load_setup = True
+    color_layers = False
     cam_setup = ""
 
     backup_ok = False
@@ -49,6 +50,12 @@ class DrawReader(DrawReaderBase):
             help="dxfread: set scale to fixed value (0.0==AUTO)",
             type=float,
             default=0.0,
+        )
+        parser.add_argument(
+            "--color_layers",
+            help="dxfread: using different colors as different layers",
+            type=bool,
+            default=False,
         )
 
     def __init__(
@@ -67,6 +74,8 @@ class DrawReader(DrawReaderBase):
                 print(f"WARNING: please install newer version of ezdxf: {error}")
         else:
             self.scale = args.dxfread_scale
+        if args is not None:
+            self.color_layers = args.color_layers
 
         self.segments: list[dict] = []
         self.model_space = self.doc.modelspace()
@@ -115,6 +124,12 @@ class DrawReader(DrawReaderBase):
 
     def add_entity(self, element, offset: tuple = (0, 0)):
         dxftype = element.dxftype()
+
+        if self.color_layers:
+            layer = f"color{element.dxf.color}"
+        else:
+            layer = element.dxf.layer
+
         if dxftype in self.VTYPES:
             for v_element in element.virtual_entities():  # type: ignore
                 self.add_entity(v_element)
@@ -127,7 +142,7 @@ class DrawReader(DrawReaderBase):
             text_offset = (offset[0] + pos[0], offset[1] + pos[1])
             text_offset = (offset[0] + pos[0], offset[1] + pos[1])
             for path in paths:
-                self._add_path(path, text_offset, pscale=scale, layer=element.dxf.layer)
+                self._add_path(path, text_offset, pscale=scale, layer=layer)
 
         elif dxftype == "LINE":
             dist = calc_distance(
@@ -140,7 +155,7 @@ class DrawReader(DrawReaderBase):
                         {
                             "type": dxftype,
                             "object": None,
-                            "layer": element.dxf.layer,
+                            "layer": layer,
                             "start": (
                                 (element.dxf.start.x + offset[0]) * self.scale,
                                 (element.dxf.start.y + offset[1]) * self.scale,
@@ -156,7 +171,7 @@ class DrawReader(DrawReaderBase):
 
         elif dxftype in self.PTYPES:
             path = make_path(element)
-            self._add_path(path, offset, layer=element.dxf.layer)
+            self._add_path(path, offset, layer=layer)
 
         elif dxftype in {"ARC", "CIRCLE"}:
             if dxftype == "CIRCLE":
@@ -204,7 +219,7 @@ class DrawReader(DrawReaderBase):
                                 {
                                     "type": dxftype,
                                     "object": None,
-                                    "layer": element.dxf.layer,
+                                    "layer": layer,
                                     "start": (
                                         (start.x + offset[0]) * self.scale,
                                         (start.y + offset[1]) * self.scale,
@@ -239,7 +254,7 @@ class DrawReader(DrawReaderBase):
                             {
                                 "type": dxftype,
                                 "object": None,
-                                "layer": element.dxf.layer,
+                                "layer": layer,
                                 "start": (
                                     (start.x + offset[0]) * self.scale,
                                     (start.y + offset[1]) * self.scale,
