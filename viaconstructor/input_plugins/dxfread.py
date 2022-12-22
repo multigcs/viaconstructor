@@ -39,6 +39,9 @@ class DrawReader(DrawReaderBase):
     can_save_setup = True
     can_load_setup = True
     color_layers = False
+    select_layers = []
+    filtered_layers = []
+    selected_layers = []
     cam_setup = ""
 
     backup_ok = False
@@ -52,10 +55,17 @@ class DrawReader(DrawReaderBase):
             default=0.0,
         )
         parser.add_argument(
-            "--color_layers",
+            "--dxfread-color-layers",
             help="dxfread: using different colors as different layers",
             type=bool,
             default=False,
+        )
+        parser.add_argument(
+            "--dxfread-select-layers",
+            help="dxfread: selecting layers by name",
+            type=str,
+            default=[],
+            action="append",
         )
 
     def __init__(
@@ -74,8 +84,15 @@ class DrawReader(DrawReaderBase):
                 print(f"WARNING: please install newer version of ezdxf: {error}")
         else:
             self.scale = args.dxfread_scale
+
         if args is not None:
-            self.color_layers = args.color_layers
+            self.color_layers = args.dxfread_color_layers
+            self.select_layers = []
+            for layer_name in args.dxfread_select_layers:
+                if "," in layer_name:
+                    self.select_layers += layer_name.split(",")
+                else:
+                    self.select_layers.append(layer_name)
 
         self.segments: list[dict] = []
         self.model_space = self.doc.modelspace()
@@ -122,6 +139,11 @@ class DrawReader(DrawReaderBase):
         self.size.append(self.min_max[2] - self.min_max[0])
         self.size.append(self.min_max[3] - self.min_max[1])
 
+        if self.filtered_layers:
+            print(f"dxfread: filtered layers: {', '.join(self.filtered_layers)}")
+        if self.selected_layers:
+            print(f"dxfread: selected layers: {', '.join(self.selected_layers)}")
+
     def add_entity(self, element, offset: tuple = (0, 0)):
         dxftype = element.dxftype()
 
@@ -129,6 +151,14 @@ class DrawReader(DrawReaderBase):
 
         if self.color_layers:
             layer = f"{layer}-c{element.dxf.color}"
+
+        if self.select_layers and layer not in self.select_layers:
+            if layer not in self.filtered_layers:
+                self.filtered_layers.append(layer)
+            return
+        else:
+            if layer not in self.selected_layers:
+                self.selected_layers.append(layer)
 
         if dxftype in self.VTYPES:
             for v_element in element.virtual_entities():  # type: ignore
