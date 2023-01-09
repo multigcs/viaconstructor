@@ -103,7 +103,7 @@ def angle_of_line(p_1, p_2):
 
 def fuzy_match(p_1, p_2, max_distance=0.01):
     """checks if  two points are matching / rounded."""
-    return calc_distance(p_1, p_2) < max_distance
+    return math.hypot(p_1[0] - p_2[0], p_1[1] - p_2[1]) < max_distance
 
 
 def calc_distance(p_1, p_2):
@@ -118,9 +118,9 @@ def calc_distance3d(p_1, p_2):
 
 def is_between(p_1, p_2, p_3):
     """checks if a point is between 2 other points."""
-    return round(calc_distance(p_1, p_3), 2) + round(
-        calc_distance(p_1, p_2), 2
-    ) == round(calc_distance(p_2, p_3), 2)
+    return round(math.hypot(p_1[0] - p_3[0], p_1[1] - p_3[1]), 2) + round(
+        math.hypot(p_1[0] - p_2[0], p_1[1] - p_2[1]), 2
+    ) == round(math.hypot(p_2[0] - p_3[0], p_2[1] - p_3[1]), 2)
 
 
 def line_center_2d(p_1, p_2):
@@ -316,7 +316,6 @@ def segments2objects(segments):
     test_segments = deepcopy(segments)
     objects = {}
     obj_idx = 0
-    max_distance = 0.01
 
     part_l = num_unused_segments(segments)
     last_percent = -1
@@ -362,7 +361,7 @@ def segments2objects(segments):
                 for seg_idx, segment in enumerate(test_segments):
                     if segment["object"] is None and obj.layer == segment.layer:
                         # add matching segment
-                        if fuzy_match(last.end, segment.start, max_distance):
+                        if fuzy_match(last.end, segment.start):
                             segment.object = obj_idx
                             obj.segments.append(segment)
                             last = segment
@@ -370,7 +369,7 @@ def segments2objects(segments):
                             rev += 1
                             test_segments.pop(seg_idx)
                             break
-                        if fuzy_match(last.end, segment.end, max_distance):
+                        if fuzy_match(last.end, segment.end):
                             # reverse segment direction
                             end = segment.end
                             segment.end = segment.start
@@ -385,9 +384,7 @@ def segments2objects(segments):
                             break
 
                 if not found_next:
-                    obj.closed = fuzy_match(
-                        obj.segments[0].start, obj.segments[-1].end, max_distance
-                    )
+                    obj.closed = fuzy_match(obj.segments[0].start, obj.segments[-1].end)
                     if obj.closed:
                         break
 
@@ -435,7 +432,9 @@ def inside_vertex(vertex_data, point):
     point_0 = point[0]
     point_1 = point[1]
     for end_x, end_y in zip(vertex_data[0], vertex_data[1]):
-        angle += angle_2d((start_x - point_0, start_y - point_1), (end_x - point_0, end_y - point_1))
+        angle += angle_2d(
+            (start_x - point_0, start_y - point_1), (end_x - point_0, end_y - point_1)
+        )
         start_x = end_x
         start_y = end_y
     return bool(abs(angle) >= math.pi)
@@ -1056,9 +1055,7 @@ def objects2polyline_offsets(diameter, objects, max_outer, small_circles=False):
 
             percent = round((part_n + 1) * 100 / part_l, 1)
             if int(percent) != int(last_percent):
-                print(
-                    f"calc offset path: {percent}%", end="\r"
-                )
+                print(f"calc offset path: {percent}%", end="\r")
             last_percent = int(percent)
             part_n += 1
 
