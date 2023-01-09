@@ -101,9 +101,9 @@ def angle_of_line(p_1, p_2):
     return math.atan2(p_2[1] - p_1[1], p_2[0] - p_1[0])
 
 
-def fuzy_match(p_1, p_2, max_distance=0.01):
+def fuzy_match(p_1, p_2):
     """checks if  two points are matching / rounded."""
-    return math.hypot(p_1[0] - p_2[0], p_1[1] - p_2[1]) < max_distance
+    return math.hypot(p_1[0] - p_2[0], p_1[1] - p_2[1]) < 0.01
 
 
 def calc_distance(p_1, p_2):
@@ -139,7 +139,7 @@ def line_center_3d(p_1, p_2):
 
 
 def calc_face(p_1, p_2):
-    """gets the face og a line in 2D."""
+    """gets the face of a line in 2D."""
     angle = angle_of_line(p_1, p_2) + math.pi
     center_x = (p_1[0] + p_2[0]) / 2
     center_y = (p_1[1] + p_2[1]) / 2
