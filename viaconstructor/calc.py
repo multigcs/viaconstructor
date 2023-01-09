@@ -237,14 +237,13 @@ def clean_segments(segments: list) -> list:
 def is_inside_polygon(obj, point):
     """checks if a point is inside an polygon."""
     angle = 0.0
-    p_1 = [0, 0]
-    p_2 = [0, 0]
+    point_0 = point[0]
+    point_1 = point[1]
     for segment in obj.segments:
-        p_1[0] = segment.start[0] - point[0]
-        p_1[1] = segment.start[1] - point[1]
-        p_2[0] = segment.end[0] - point[0]
-        p_2[1] = segment.end[1] - point[1]
-        angle += angle_2d(p_1, p_2)
+        angle += angle_2d(
+            (segment.start[0] - point_0, segment.start[1] - point_1),
+            (segment.end[0] - point_0, segment.end[1] - point_1),
+        )
     return bool(abs(angle) >= math.pi)
 
 
