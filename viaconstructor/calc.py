@@ -1046,7 +1046,7 @@ def objects2polyline_offsets(diameter, objects, max_outer, small_circles=False):
 
     part_l = len(objects)
     part_n = 0
-    last_percent = 0
+    last_percent = -1
     for level in range(max_outer, -1, -1):
         for obj_idx, obj in objects.items():
             if not obj.setup["mill"]["active"]:
