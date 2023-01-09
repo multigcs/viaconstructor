@@ -427,18 +427,14 @@ def vertex_data_cache(offset):
 def inside_vertex(vertex_data, point):
     """checks if a point is inside an polygon in vertex format."""
     angle = 0.0
-    p_1 = [0, 0]
-    p_2 = [0, 0]
     start_x = vertex_data[0][-1]
     start_y = vertex_data[1][-1]
+    point_0 = point[0]
+    point_1 = point[1]
     for end_x, end_y in zip(vertex_data[0], vertex_data[1]):
-        p_1[0] = start_x - point[0]
-        p_1[1] = start_y - point[1]
-        p_2[0] = end_x - point[0]
-        p_2[1] = end_y - point[1]
+        angle += angle_2d((start_x - point_0, start_y - point_1), (end_x - point_0, end_y - point_1))
         start_x = end_x
         start_y = end_y
-        angle += angle_2d(p_1, p_2)
     return bool(abs(angle) >= math.pi)
 
 
