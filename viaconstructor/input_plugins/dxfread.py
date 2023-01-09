@@ -156,9 +156,8 @@ class DrawReader(DrawReaderBase):
             if layer not in self.filtered_layers:
                 self.filtered_layers.append(layer)
             return
-        else:
-            if layer not in self.selected_layers:
-                self.selected_layers.append(layer)
+        if layer not in self.selected_layers:
+            self.selected_layers.append(layer)
 
         if dxftype in self.VTYPES:
             for v_element in element.virtual_entities():  # type: ignore
