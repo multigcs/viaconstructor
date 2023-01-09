@@ -319,13 +319,16 @@ def segments2objects(segments):
     max_distance = 0.01
 
     part_l = num_unused_segments(segments)
-
+    last_percent = -1
     while True:
         found = False
         last = None
 
         part_n = part_l - num_unused_segments(test_segments)
-        print(f"combining segments: {round((part_n + 1) * 100 / part_l, 1)}%", end="\r")
+        percent = round((part_n + 1) * 100 / part_l, 1)
+        if int(percent) != int(last_percent):
+            print(f"combining segments: {percent}%", end="\r")
+        last_percent = int(percent)
 
         # create new object
         obj = VcObject(
@@ -1043,6 +1046,7 @@ def objects2polyline_offsets(diameter, objects, max_outer, small_circles=False):
 
     part_l = len(objects)
     part_n = 0
+    last_percent = 0
     for level in range(max_outer, -1, -1):
         for obj_idx, obj in objects.items():
             if not obj.setup["mill"]["active"]:
@@ -1050,9 +1054,12 @@ def objects2polyline_offsets(diameter, objects, max_outer, small_circles=False):
             if len(obj.outer_objects) != level:
                 continue
 
-            print(
-                f"calc offset path: {round((part_n + 1) * 100 / part_l, 1)}%", end="\r"
-            )
+            percent = round((part_n + 1) * 100 / part_l, 1)
+            if int(percent) != int(last_percent):
+                print(
+                    f"calc offset path: {percent}%", end="\r"
+                )
+            last_percent = int(percent)
             part_n += 1
 
             obj_copy = deepcopy(obj)
