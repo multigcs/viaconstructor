@@ -101,6 +101,16 @@ def setup_defaults(_) -> dict:
                 "title": _("Offset"),
                 "tooltip": _("tool offset"),
             },
+            "objectorder": {
+                "default": "nearest",
+                "type": "select",
+                "options": (
+                    ("nearest", _("nearest")),
+                    ("unordered", _("unordered")),
+                ),
+                "title": _("Object-Order"),
+                "tooltip": _("how order the objects"),
+            },
         },
         "tool": {
             "rate_h": {

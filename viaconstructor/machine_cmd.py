@@ -481,12 +481,24 @@ def get_nearest_free_object(
     milling: set,
     is_pocket: bool,
     next_filter: str,
+    objectorder: str,
 ) -> tuple:
     found: bool = False
     nearest_dist: Union[None, float] = None
     nearest_idx: int = 0
     nearest_point = 0
     for offset_num, offset in polylines.items():
+        # no order
+        if (
+            objectorder == "unordered" and offset_num not in milling
+        ):  # pylint: disable=R0916
+            vertex_data = vertex_data_cache(offset)
+            dist = calc_distance(last_pos, (vertex_data[0][0], vertex_data[1][0]))
+            nearest_dist = dist
+            nearest_idx = offset_num
+            nearest_point = 0
+            found = True
+            break
         if offset_num not in milling and (  # pylint: disable=R0916
             (
                 next_filter == ""
@@ -566,6 +578,7 @@ def polylines2machine_cmd(project: dict, post: PostProcessor) -> str:
     tabs = project.get("tabs", {})
     unit = project["setup"]["machine"]["unit"]
     fast_move_z = project["setup"]["mill"]["fast_move_z"]
+    objectorder = project["setup"]["mill"]["objectorder"]
     unitscale = 1.0
     if unit == "inch":
         unitscale = 25.4
@@ -585,7 +598,13 @@ def polylines2machine_cmd(project: dict, post: PostProcessor) -> str:
                     nearest_point,
                     nearest_dist,
                 ) = get_nearest_free_object(
-                    polylines, level, last_pos, milling, is_pocket, next_filter
+                    polylines,
+                    level,
+                    last_pos,
+                    milling,
+                    is_pocket,
+                    next_filter,
+                    objectorder,
                 )
                 next_filter = ""
                 if found:

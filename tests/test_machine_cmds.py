@@ -140,6 +140,7 @@ class fakeOffset:
                         "reverse": False,
                         "step": -4.0,
                         "helix_mode": False,
+                        "objectorder": "",
                     },
                     "view": {"path": "simple"},
                     "leads": {"active": False},
