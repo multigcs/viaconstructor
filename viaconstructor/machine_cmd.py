@@ -589,6 +589,9 @@ def polylines2machine_cmd(project: dict, post: PostProcessor) -> str:
     next_filter = ""
     order = 0
     was_pocket = False
+    polylines_len = len(polylines.keys())
+    polylines_n = 0
+    last_percent = -1
     for level in range(project["maxOuter"], -1, -1):
         for is_pocket in (True, False):
             while True:
@@ -608,6 +611,12 @@ def polylines2machine_cmd(project: dict, post: PostProcessor) -> str:
                 )
                 next_filter = ""
                 if found:
+                    percent = round((polylines_n + 1) * 100 / polylines_len, 1)
+                    if int(percent) != int(last_percent):
+                        print(f"generating machine commands: {percent}%", end="\r")
+                    last_percent = int(percent)
+                    polylines_n += 1
+
                     if "." in nearest_idx and nearest_idx.split(".")[-1] == "1":
                         # get parent after last pocket line
                         next_filter = f"{nearest_idx.split('.')[0]}.0"
@@ -979,4 +988,5 @@ def polylines2machine_cmd(project: dict, post: PostProcessor) -> str:
                 was_pocket = is_pocket
 
     machine_cmd_end(project, post)
+    print("")
     return post.get()

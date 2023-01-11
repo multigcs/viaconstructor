@@ -5,7 +5,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
-"POT-Creation-Date: 2022-10-20 10:56+0200\n"
+"POT-Creation-Date: 2023-01-11 13:51+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -91,6 +91,18 @@ msgid "Offset"
 msgstr ""
 
 msgid "tool offset"
+msgstr ""
+
+msgid "nearest"
+msgstr ""
+
+msgid "unordered"
+msgstr ""
+
+msgid "Object-Order"
+msgstr ""
+
+msgid "how order the objects"
 msgstr ""
 
 msgid "Feed-Rate(Horizontal)"
