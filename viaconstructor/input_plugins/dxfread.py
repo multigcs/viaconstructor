@@ -4,6 +4,7 @@ import argparse
 import math
 import os
 import shutil
+import tempfile
 import time
 
 import ezdxf
@@ -87,10 +88,12 @@ class DrawReader(DrawReaderBase):
         ):
             print("INFO: converting svg to dxf with inkscape")
             print("    you can disable this with: --dxfread-no-svg 1")
+            _fd, tmp_path = tempfile.mkstemp()
             os.system(
-                f"cd /usr/share/inkscape/extensions/ ; python3 dxf_outlines.py --output='/tmp/test.dxf' '{os.path.realpath(self.filename)}'"
+                f"cd /usr/share/inkscape/extensions/ ; python3 dxf_outlines.py --output='{tmp_path}' '{os.path.realpath(self.filename)}'"
             )
-            self.doc = ezdxf.readfile("/tmp/test.dxf")
+            self.doc = ezdxf.readfile(tmp_path)
+            os.remove(tmp_path)
         else:
             self.doc = ezdxf.readfile(self.filename)
 
