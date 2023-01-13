@@ -75,5 +75,5 @@ class DrawReader(DrawReaderBase):
         self._calc_size()
 
     @staticmethod
-    def suffix() -> list[str]:
+    def suffix(args: argparse.Namespace = None) -> list[str]:  # pylint: disable=W0613
         return ["jpg", "bmp", "png", "gif", "tif"]

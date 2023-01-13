@@ -160,5 +160,5 @@ class DrawReader(DrawReaderBase):
             curv_pos += 0.1
 
     @staticmethod
-    def suffix() -> list[str]:
+    def suffix(args: argparse.Namespace = None) -> list[str]:  # pylint: disable=W0613
         return ["ttf", "otf"]

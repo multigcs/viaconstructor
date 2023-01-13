@@ -2,6 +2,7 @@
 
 import argparse
 import math
+import os
 import shutil
 import time
 
@@ -67,13 +68,32 @@ class DrawReader(DrawReaderBase):
             default=[],
             action="append",
         )
+        if os.path.isfile("/usr/share/inkscape/extensions/dxf_outlines.py"):
+            parser.add_argument(
+                "--dxfread-no-svg",
+                help="dxfread: disable svg support (inkscape converter)",
+                type=str,
+                default=[],
+                action="append",
+            )
 
     def __init__(
         self, filename: str, args: argparse.Namespace = None
     ):  # pylint: disable=W0613
         """converting dxf into single segments."""
         self.filename = filename
-        self.doc = ezdxf.readfile(self.filename)
+        if self.filename.lower().endswith(".svg") and os.path.isfile(
+            "/usr/share/inkscape/extensions/dxf_outlines.py"
+        ):
+            print("INFO: converting svg to dxf with inkscape")
+            print("    you can disable this with: --dxfread-no-svg 1")
+            os.system(
+                f"cd /usr/share/inkscape/extensions/ ; python3 dxf_outlines.py --output='/tmp/test.dxf' '{os.path.realpath(self.filename)}'"
+            )
+            self.doc = ezdxf.readfile("/tmp/test.dxf")
+        else:
+            self.doc = ezdxf.readfile(self.filename)
+
         if args is None or args.dxfread_scale == 0.0:
             self.scale = 1.0
             try:
@@ -510,5 +530,9 @@ class DrawReader(DrawReaderBase):
             )
 
     @staticmethod
-    def suffix() -> list[str]:
+    def suffix(args: argparse.Namespace = None) -> list[str]:
+        if not args.dxfread_no_svg and os.path.isfile(
+            "/usr/share/inkscape/extensions/dxf_outlines.py"
+        ):
+            return ["svg", "dxf"]
         return ["dxf"]

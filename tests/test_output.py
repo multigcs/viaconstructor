@@ -22,7 +22,7 @@ import pytest
 )
 def test_DxfReader(filename, cfg):
     os.system(
-        f"pyvenv/bin/python -m viaconstructor -s tests/data/{cfg} tests/data/{filename} -o tests/data/{filename}-{cfg}.out"
+        f"pyvenv/bin/python -m viaconstructor -s tests/data/{cfg} tests/data/{filename} --dxfread-no-svg 1 -o tests/data/{filename}-{cfg}.out"
     )
     result = open(f"tests/data/{filename}-{cfg}.out", "r").read()
     if not os.path.isfile(f"tests/data/{filename}-{cfg}.check"):

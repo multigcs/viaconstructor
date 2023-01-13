@@ -162,5 +162,5 @@ class DrawReader(DrawReaderBase):
         self.size.append(self.min_max[3] - self.min_max[1])
 
     @staticmethod
-    def suffix() -> list[str]:
+    def suffix(args: argparse.Namespace = None) -> list[str]:  # pylint: disable=W0613
         return ["hpgl", "plt", "hpg", "hp2", "pl2", "pm"]

@@ -1,4 +1,4 @@
-"""dxf reading."""
+"""svg reading."""
 
 import argparse
 import math
@@ -74,58 +74,63 @@ class DrawReader(DrawReaderBase):
         part_l = len(paths)
         for part_n, path in enumerate(paths):
             print(f"loading file: {round((part_n + 1) * 100 / part_l, 1)}%", end="\r")
-            # check if circle
-            if (  # pylint: disable=R0916
-                not self.as_lines
-                and len(path) == 2
-                and isinstance(path[0], svgpathtools.path.Arc)
-                and isinstance(path[1], svgpathtools.path.Arc)
-                and path.start == path.end
-                and path[0].radius.real == path[0].radius.imag
-                and path[1].radius.real == path[1].radius.imag
-                and path[0].rotation == 0.0
-                and path[1].rotation == 0.0
-                and path[0].delta == -180.0
-                and path[1].delta == -180.0
-            ):
-                self.add_arc(
-                    (path[0].center.real, height - path[0].center.imag),
-                    path[0].radius.real,
-                )
-            else:
-                # print("##path", path)
-                for segment in path:
-                    if isinstance(segment, svgpathtools.path.Line) or self.as_lines:
-                        self._add_line(
-                            (segment.start.real, height - segment.start.imag),
-                            (segment.end.real, height - segment.end.imag),
-                        )
-                        last_x = segment.end.real
-                        last_y = segment.end.imag
-                    else:
-                        last_x = segment.start.real
-                        last_y = segment.start.imag
-                        nump = int(segment.length() / 10) + 1
-                        for point_n in range(0, nump):
-                            pos = segment.point(point_n / nump)
-                            self._add_line(
-                                (last_x, height - last_y), (pos.real, height - pos.imag)
-                            )
-                            last_x = pos.real
-                            last_y = pos.imag
 
+            try:
+                # check if circle
+                if (  # pylint: disable=R0916
+                    not self.as_lines
+                    and len(path) == 2
+                    and isinstance(path[0], svgpathtools.path.Arc)
+                    and isinstance(path[1], svgpathtools.path.Arc)
+                    and path.start == path.end
+                    and path[0].radius.real == path[0].radius.imag
+                    and path[1].radius.real == path[1].radius.imag
+                    and path[0].rotation == 0.0
+                    and path[1].rotation == 0.0
+                    and path[0].delta == -180.0
+                    and path[1].delta == -180.0
+                ):
+                    self.add_arc(
+                        (path[0].center.real, height - path[0].center.imag),
+                        path[0].radius.real,
+                    )
+                else:
+                    # print("##path", path)
+                    for segment in path:
+                        if isinstance(segment, svgpathtools.path.Line) or self.as_lines:
+                            self._add_line(
+                                (segment.start.real, height - segment.start.imag),
+                                (segment.end.real, height - segment.end.imag),
+                            )
+                            last_x = segment.end.real
+                            last_y = segment.end.imag
+                        else:
+                            last_x = segment.start.real
+                            last_y = segment.start.imag
+                            nump = int(segment.length() / 10) + 1
+                            for point_n in range(0, nump):
+                                pos = segment.point(point_n / nump)
+                                self._add_line(
+                                    (last_x, height - last_y),
+                                    (pos.real, height - pos.imag),
+                                )
+                                last_x = pos.real
+                                last_y = pos.imag
+
+                            self._add_line(
+                                (last_x, height - last_y),
+                                (segment.end.real, height - segment.end.imag),
+                            )
+                            last_x = segment.end.real
+                            last_y = segment.end.imag
+
+                    if path.iscontinuous():
                         self._add_line(
                             (last_x, height - last_y),
-                            (segment.end.real, height - segment.end.imag),
+                            (path[0].start.real, height - path[0].start.imag),
                         )
-                        last_x = segment.end.real
-                        last_y = segment.end.imag
-
-                if path.iscontinuous():
-                    self._add_line(
-                        (last_x, height - last_y),
-                        (path[0].start.real, height - path[0].start.imag),
-                    )
+            except Exception as error:  # pylint: disable=W0703
+                print("SVG ERROR:", error)
         print("")
 
         self.min_max = [0.0, 0.0, 10.0, 10.0]
@@ -249,5 +254,5 @@ class DrawReader(DrawReaderBase):
             )
 
     @staticmethod
-    def suffix() -> list[str]:
+    def suffix(args: argparse.Namespace = None) -> list[str]:  # pylint: disable=W0613
         return ["svg"]

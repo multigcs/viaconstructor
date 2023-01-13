@@ -102,5 +102,5 @@ class DrawReader(DrawReaderBase):
         GL.glEnd()
 
     @staticmethod
-    def suffix() -> list[str]:
+    def suffix(args: argparse.Namespace = None) -> list[str]:  # pylint: disable=W0613
         return ["stl"]

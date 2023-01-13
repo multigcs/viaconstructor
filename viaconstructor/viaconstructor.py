@@ -1409,7 +1409,8 @@ class ViaConstructor:
             eprint(f"Unknown setup-type: {entry_type}")
             value = None
         self.project["objects"][obj_idx]["setup"][sname][ename] = value
-        self.project["maxOuter"] = find_tool_offsets(self.project["objects"])
+        if not self.args.laser:
+            self.project["maxOuter"] = find_tool_offsets(self.project["objects"])
         self.update_drawing()
 
     def update_table(self) -> None:
@@ -2430,8 +2431,9 @@ class ViaConstructor:
                                 obj["setup"]["tool"]["rate_v"] = int(value)
         debug("prepare_segments: udate_tabs_data")
         self.udate_tabs_data()
-        debug("prepare_segments: find_tool_offsets")
-        self.project["maxOuter"] = find_tool_offsets(self.project["objects"])
+        if not self.args.laser:
+            debug("prepare_segments: find_tool_offsets")
+            self.project["maxOuter"] = find_tool_offsets(self.project["objects"])
         debug("prepare_segments: done")
 
     def load_drawing(self, filename: str) -> bool:
@@ -2446,7 +2448,7 @@ class ViaConstructor:
         self.project["objects"] = {}
         self.project["offsets"] = {}
         self.project["gllist"] = []
-        self.project["maxOuter"] = []
+        self.project["maxOuter"] = 0
         self.project["minMax"] = []
         self.project["table"] = []
         self.project["status"] = "INIT"
@@ -2460,7 +2462,7 @@ class ViaConstructor:
         debug("load_drawing: start")
         suffix = filename.split(".")[-1].lower()
         for reader_plugin in reader_plugins.values():
-            if suffix in reader_plugin.suffix():
+            if suffix in reader_plugin.suffix(self.args):
                 self.draw_reader = reader_plugin(filename, self.args)
                 if reader_plugin.can_save_tabs:
                     self.save_tabs = "ask"
@@ -2519,6 +2521,13 @@ class ViaConstructor:
             type=str,
             default=None,
         )
+        parser.add_argument(
+            "-l",
+            "--laser",
+            help="laser mode / no offsets / no order",
+            type=str,
+            default=None,
+        )
 
         for reader_plugin in reader_plugins.values():
             reader_plugin.arg_parser(parser)
@@ -2535,6 +2544,10 @@ class ViaConstructor:
 
         if os.path.isfile(self.args.setup):
             self.setup_load(self.args.setup)
+
+        if self.args.laser:
+            self.project["setup"]["view"]["polygon_show"] = False
+            self.project["setup"]["mill"]["offset"] = "none"
 
         # load drawing #
         debug("main: load drawing")
