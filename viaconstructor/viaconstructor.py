@@ -67,6 +67,7 @@ from .calc import (
     found_next_tab_point,
     line_center_2d,
     mirror_objects,
+    move_object,
     move_objects,
     objects2minmax,
     objects2polyline_offsets,
@@ -96,6 +97,12 @@ except ImportError:
     QMessageBox.critical(None, "OpenGL", "PyOpenGL must be installed.")  # type: ignore
     sys.exit(1)
 
+try:
+    from nest2D import Box, Item, Point, SVGWriter, nest
+
+    HAVE_NEST = True
+except ImportError:
+    HAVE_NEST = False
 
 reader_plugins: dict = {}
 for reader in ("dxfread", "hpglread", "stlread", "svgread", "ttfread", "imgread"):
@@ -974,6 +981,67 @@ class ViaConstructor:
 
     def _toolbar_rotate(self) -> None:
         rotate_objects(self.project["objects"], self.project["minMax"])
+        self.project["minMax"] = objects2minmax(self.project["objects"])
+        self.udate_tabs_data()
+        self.update_drawing()
+
+    def _toolbar_nest(self) -> None:
+        int_scale = 200000
+        obj_dist = 10
+        items = []
+        for obj_data in self.project["objects"].values():
+            if not obj_data.outer_objects and obj_data.closed:
+                itemdata = []
+                for segment in obj_data.segments:
+                    itemdata.append(
+                        Point(
+                            int(segment.start[0]) * int_scale,
+                            int(segment.start[1]) * int_scale,
+                        )
+                    )
+
+                segment = obj_data.segments[0]
+                itemdata.append(
+                    Point(
+                        int(segment.start[0]) * int_scale,
+                        int(segment.start[1]) * int_scale,
+                    )
+                )
+                itemdata.reverse()
+                item = Item(itemdata)
+                items.append(item)
+
+        min_max = objects2minmax(self.project["objects"])
+        box_width = min_max[2] - min_max[0]
+        box_height = min_max[3] - min_max[1]
+        box = Box(int(box_width) * int_scale, int(box_height) * int_scale)
+        pgrp = nest(items, box, obj_dist * int_scale)
+
+        svg_writer = SVGWriter()
+        print(pgrp)
+        svg_writer.write_packgroup(pgrp)
+        print("save")
+        svg_writer.save()
+
+        # pgrp[0].reverse()
+
+        obj_n = 0
+        for obj_data in self.project["objects"].values():
+            if not obj_data.outer_objects and obj_data.closed:
+                print(
+                    obj_n,
+                    pgrp[0][obj_n].translation.x,
+                    pgrp[0][obj_n].translation.y,
+                    pgrp[0][obj_n].rotation,
+                )
+                move_object(
+                    obj_data,
+                    float(pgrp[0][obj_n].translation.x) / int_scale,
+                    float(pgrp[0][obj_n].translation.y) / int_scale,
+                )
+                # move_object(obj_data, 100, 100)
+                obj_n += 1
+
         self.project["minMax"] = objects2minmax(self.project["objects"])
         self.udate_tabs_data()
         self.update_drawing()
@@ -2032,6 +2100,18 @@ class ViaConstructor:
                 True,
                 False,
                 _("Workpiece"),
+                "",
+                None,
+            ],
+            _("Nesting"): [
+                "nesting.png",
+                "",
+                _("nesting workpiece"),
+                self._toolbar_nest,
+                HAVE_NEST is not None,
+                True,
+                False,
+                _("Nesting"),
                 "",
                 None,
             ],

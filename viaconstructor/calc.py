@@ -1106,16 +1106,21 @@ def objects2minmax(objects):
     return (min_x, min_y, max_x, max_y)
 
 
+def move_object(obj: VcObject, xoff: float, yoff: float) -> None:
+    """moves an object"""
+    for segment in obj.segments:
+        for ptype in ("start", "end", "center"):
+            if ptype in segment:
+                segment[ptype] = (
+                    segment[ptype][0] + xoff,
+                    segment[ptype][1] + yoff,
+                )
+
+
 def move_objects(objects: dict, xoff: float, yoff: float) -> None:
     """moves an object"""
     for obj in objects.values():
-        for segment in obj.segments:
-            for ptype in ("start", "end", "center"):
-                if ptype in segment:
-                    segment[ptype] = (
-                        segment[ptype][0] + xoff,
-                        segment[ptype][1] + yoff,
-                    )
+        move_object(obj, xoff, yoff)
 
 
 def mirror_objects(

@@ -5,7 +5,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
-"POT-Creation-Date: 2023-01-11 13:51+0100\n"
+"POT-Creation-Date: 2023-01-13 16:43+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -526,6 +526,12 @@ msgid "Scale"
 msgstr ""
 
 msgid "Scale workpiece"
+msgstr ""
+
+msgid "Nesting"
+msgstr ""
+
+msgid "nesting workpiece"
 msgstr ""
 
 msgid "Mouse"
