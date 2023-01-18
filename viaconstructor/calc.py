@@ -1106,6 +1106,34 @@ def objects2minmax(objects):
     return (min_x, min_y, max_x, max_y)
 
 
+def rotate_point(
+    origin_x: float, origin_y: float, point_x: float, point_y: float, angle: float
+) -> tuple:
+    new_x = (
+        origin_x
+        + math.cos(angle) * (point_x - origin_x)
+        - math.sin(angle) * (point_y - origin_y)
+    )
+    new_y = (
+        origin_y
+        + math.sin(angle) * (point_x - origin_x)
+        + math.cos(angle) * (point_y - origin_y)
+    )
+    return (new_x, new_y)
+
+
+def rotate_object(
+    obj: VcObject, origin_x: float, origin_y: float, angle: float
+) -> None:
+    """rotates an object"""
+    for segment in obj.segments:
+        for ptype in ("start", "end", "center"):
+            if ptype in segment:
+                segment[ptype] = rotate_point(
+                    origin_x, origin_y, segment[ptype][0], segment[ptype][1], angle
+                )
+
+
 def move_object(obj: VcObject, xoff: float, yoff: float) -> None:
     """moves an object"""
     for segment in obj.segments:

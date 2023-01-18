@@ -72,6 +72,7 @@ from .calc import (
     objects2minmax,
     objects2polyline_offsets,
     point_of_line3d,
+    rotate_object,
     rotate_objects,
     scale_objects,
     segments2objects,
@@ -986,8 +987,8 @@ class ViaConstructor:
         self.update_drawing()
 
     def _toolbar_nest(self) -> None:
-        int_scale = 200000
-        obj_dist = 10
+        int_scale = 100000
+        obj_dist = 5
         items = []
         for obj_data in self.project["objects"].values():
             if not obj_data.outer_objects and obj_data.closed:
@@ -1008,6 +1009,7 @@ class ViaConstructor:
                     )
                 )
                 itemdata.reverse()
+                print("########## add")
                 item = Item(itemdata)
                 items.append(item)
 
@@ -1034,6 +1036,7 @@ class ViaConstructor:
                     pgrp[0][obj_n].translation.y,
                     pgrp[0][obj_n].rotation,
                 )
+                rotate_object(obj_data, 0.0, 0.0, pgrp[0][obj_n].rotation)
                 move_object(
                     obj_data,
                     float(pgrp[0][obj_n].translation.x) / int_scale,
