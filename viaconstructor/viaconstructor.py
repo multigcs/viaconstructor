@@ -102,7 +102,7 @@ try:
     from .ext.nest2D.nest2D import Box, Item, Point, SVGWriter, nest
 
     HAVE_NEST = True
-except ImportError as e:
+except ImportError:
     HAVE_NEST = False
 
 reader_plugins: dict = {}
@@ -1042,7 +1042,14 @@ class ViaConstructor:
                     float(pgrp[0][obj_n].translation.x) / int_scale,
                     float(pgrp[0][obj_n].translation.y) / int_scale,
                 )
-                # move_object(obj_data, 100, 100)
+                for inner in obj_data.inner_objects:
+                    obj_data = self.project["objects"][inner]
+                    rotate_object(obj_data, 0.0, 0.0, pgrp[0][obj_n].rotation)
+                    move_object(
+                        obj_data,
+                        float(pgrp[0][obj_n].translation.x) / int_scale,
+                        float(pgrp[0][obj_n].translation.y) / int_scale,
+                    )
                 obj_n += 1
 
         self.project["minMax"] = objects2minmax(self.project["objects"])
