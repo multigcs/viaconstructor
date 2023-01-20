@@ -2111,7 +2111,7 @@ class ViaConstructor:
                 "",
                 _("nesting workpiece"),
                 self._toolbar_nest,
-                HAVE_NEST is not None,
+                HAVE_NEST,
                 True,
                 False,
                 _("Nesting"),
