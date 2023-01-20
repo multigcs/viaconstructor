@@ -989,9 +989,9 @@ class ViaConstructor:
     def _toolbar_nest(self) -> None:
         int_scale = 100000
         obj_dist = max(self.project["setup"]["tool"]["diameter"] * 3, 1.0)
-        print("#obj_dist", obj_dist)
         items = []
-        for obj_data in self.project["objects"].values():
+        mapping = {}
+        for obj_idx, obj_data in self.project["objects"].items():
             if not obj_data.outer_objects and obj_data.closed:
                 itemdata = []
                 for segment in obj_data.segments:
@@ -1010,50 +1010,44 @@ class ViaConstructor:
                     )
                 )
                 itemdata.reverse()
-                print("########## add")
                 item = Item(itemdata)
+                mapping[obj_idx] = item
+                # print("########## add", item, item.area)
                 items.append(item)
 
         min_max = objects2minmax(self.project["objects"])
-        box_width = min_max[2] - min_max[0]
-        box_height = min_max[3] - min_max[1]
+        box_width = (min_max[2] - min_max[0]) * 1.5
+        box_height = (min_max[3] - min_max[1]) * 1.5
         box = Box(int(box_width) * int_scale, int(box_height) * int_scale)
         pgrp = nest(items, box, int(obj_dist * int_scale))
 
         svg_writer = SVGWriter()
-        print("## pgrp ##", len(pgrp), pgrp)
+        # print("## pgrp ##", len(pgrp), pgrp)
         svg_writer.write_packgroup(pgrp)
-        print("save")
         svg_writer.save()
 
-        # pgrp[0].reverse()
-
-        pgrp_all = sum(pgrp, [])
-        obj_n = 0
-        for obj_data in self.project["objects"].values():
-            if not obj_data.outer_objects and obj_data.closed:
-                if obj_n < len(pgrp_all):
-                    print(
-                        obj_n,
-                        pgrp_all[obj_n].translation.x,
-                        pgrp_all[obj_n].translation.y,
-                        pgrp_all[obj_n].rotation,
-                    )
-                    rotate_object(obj_data, 0.0, 0.0, pgrp_all[obj_n].rotation)
-                    move_object(
-                        obj_data,
-                        float(pgrp_all[obj_n].translation.x) / int_scale,
-                        float(pgrp_all[obj_n].translation.y) / int_scale,
-                    )
-                    for inner in obj_data.inner_objects:
-                        obj_data = self.project["objects"][inner]
-                        rotate_object(obj_data, 0.0, 0.0, pgrp_all[obj_n].rotation)
+        for igrp in pgrp:
+            for item in igrp:
+                # print("item:", item)
+                for key, value in mapping.items():
+                    if value.area == item.area:
+                        obj_data = self.project["objects"][key]
+                        rotation = item.rotation
+                        translation = item.translation
+                        rotate_object(obj_data, 0.0, 0.0, rotation)
                         move_object(
                             obj_data,
-                            float(pgrp_all[obj_n].translation.x) / int_scale,
-                            float(pgrp_all[obj_n].translation.y) / int_scale,
+                            float(translation.x) / int_scale,
+                            float(translation.y) / int_scale,
                         )
-                obj_n += 1
+                        for inner in obj_data.inner_objects:
+                            inner_obj_data = self.project["objects"][inner]
+                            rotate_object(inner_obj_data, 0.0, 0.0, rotation)
+                            move_object(
+                                inner_obj_data,
+                                float(translation.x) / int_scale,
+                                float(translation.y) / int_scale,
+                            )
 
         self.project["minMax"] = objects2minmax(self.project["objects"])
         self.udate_tabs_data()
