@@ -99,10 +99,10 @@ except ImportError:
     sys.exit(1)
 
 try:
-    from nest2D import Box, Item, Point, SVGWriter, nest
+    from .ext.nest2D.nest2D import Box, Item, Point, SVGWriter, nest
 
     HAVE_NEST = True
-except ImportError:
+except ImportError as e:
     HAVE_NEST = False
 
 reader_plugins: dict = {}
