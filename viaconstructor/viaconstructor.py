@@ -988,7 +988,8 @@ class ViaConstructor:
 
     def _toolbar_nest(self) -> None:
         int_scale = 100000
-        obj_dist = 5
+        obj_dist = max(self.project["setup"]["tool"]["diameter"] * 3, 1.0)
+        print("#obj_dist", obj_dist)
         items = []
         for obj_data in self.project["objects"].values():
             if not obj_data.outer_objects and obj_data.closed:
@@ -1017,7 +1018,7 @@ class ViaConstructor:
         box_width = min_max[2] - min_max[0]
         box_height = min_max[3] - min_max[1]
         box = Box(int(box_width) * int_scale, int(box_height) * int_scale)
-        pgrp = nest(items, box, obj_dist * int_scale)
+        pgrp = nest(items, box, int(obj_dist * int_scale))
 
         svg_writer = SVGWriter()
         print("## pgrp ##", len(pgrp), pgrp)
