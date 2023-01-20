@@ -1020,36 +1020,37 @@ class ViaConstructor:
         pgrp = nest(items, box, obj_dist * int_scale)
 
         svg_writer = SVGWriter()
-        print(pgrp)
+        print("## pgrp ##", len(pgrp), pgrp)
         svg_writer.write_packgroup(pgrp)
         print("save")
         svg_writer.save()
 
         # pgrp[0].reverse()
 
+        pgrp_all = sum(pgrp, [])
         obj_n = 0
         for obj_data in self.project["objects"].values():
             if not obj_data.outer_objects and obj_data.closed:
-                if obj_n < len(pgrp[0]):
+                if obj_n < len(pgrp_all):
                     print(
                         obj_n,
-                        pgrp[0][obj_n].translation.x,
-                        pgrp[0][obj_n].translation.y,
-                        pgrp[0][obj_n].rotation,
+                        pgrp_all[obj_n].translation.x,
+                        pgrp_all[obj_n].translation.y,
+                        pgrp_all[obj_n].rotation,
                     )
-                    rotate_object(obj_data, 0.0, 0.0, pgrp[0][obj_n].rotation)
+                    rotate_object(obj_data, 0.0, 0.0, pgrp_all[obj_n].rotation)
                     move_object(
                         obj_data,
-                        float(pgrp[0][obj_n].translation.x) / int_scale,
-                        float(pgrp[0][obj_n].translation.y) / int_scale,
+                        float(pgrp_all[obj_n].translation.x) / int_scale,
+                        float(pgrp_all[obj_n].translation.y) / int_scale,
                     )
                     for inner in obj_data.inner_objects:
                         obj_data = self.project["objects"][inner]
-                        rotate_object(obj_data, 0.0, 0.0, pgrp[0][obj_n].rotation)
+                        rotate_object(obj_data, 0.0, 0.0, pgrp_all[obj_n].rotation)
                         move_object(
                             obj_data,
-                            float(pgrp[0][obj_n].translation.x) / int_scale,
-                            float(pgrp[0][obj_n].translation.y) / int_scale,
+                            float(pgrp_all[obj_n].translation.x) / int_scale,
+                            float(pgrp_all[obj_n].translation.y) / int_scale,
                         )
                 obj_n += 1
 
