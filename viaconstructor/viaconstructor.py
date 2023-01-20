@@ -1030,26 +1030,27 @@ class ViaConstructor:
         obj_n = 0
         for obj_data in self.project["objects"].values():
             if not obj_data.outer_objects and obj_data.closed:
-                print(
-                    obj_n,
-                    pgrp[0][obj_n].translation.x,
-                    pgrp[0][obj_n].translation.y,
-                    pgrp[0][obj_n].rotation,
-                )
-                rotate_object(obj_data, 0.0, 0.0, pgrp[0][obj_n].rotation)
-                move_object(
-                    obj_data,
-                    float(pgrp[0][obj_n].translation.x) / int_scale,
-                    float(pgrp[0][obj_n].translation.y) / int_scale,
-                )
-                for inner in obj_data.inner_objects:
-                    obj_data = self.project["objects"][inner]
+                if obj_n < len(pgrp[0]):
+                    print(
+                        obj_n,
+                        pgrp[0][obj_n].translation.x,
+                        pgrp[0][obj_n].translation.y,
+                        pgrp[0][obj_n].rotation,
+                    )
                     rotate_object(obj_data, 0.0, 0.0, pgrp[0][obj_n].rotation)
                     move_object(
                         obj_data,
                         float(pgrp[0][obj_n].translation.x) / int_scale,
                         float(pgrp[0][obj_n].translation.y) / int_scale,
                     )
+                    for inner in obj_data.inner_objects:
+                        obj_data = self.project["objects"][inner]
+                        rotate_object(obj_data, 0.0, 0.0, pgrp[0][obj_n].rotation)
+                        move_object(
+                            obj_data,
+                            float(pgrp[0][obj_n].translation.x) / int_scale,
+                            float(pgrp[0][obj_n].translation.y) / int_scale,
+                        )
                 obj_n += 1
 
         self.project["minMax"] = objects2minmax(self.project["objects"])
