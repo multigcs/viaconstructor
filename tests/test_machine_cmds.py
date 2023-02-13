@@ -26,8 +26,8 @@ class fakeOffset:
 
 
 @pytest.mark.parametrize(
-    "project, expected",
-    (
+    ("project", "expected"),
+    [
         (
             {
                 "filename_draw": "/tmp/t.dxf",
@@ -244,7 +244,7 @@ G00 X0.000000 Y0.000000
 M02
 """,
         ),
-    ),
+    ],
 )
 def test_polylines2machine_cmd(project, expected):
     result = machine_cmd.polylines2machine_cmd(project, PostProcessorGcodeLinuxCNC())

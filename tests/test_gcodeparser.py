@@ -4,8 +4,15 @@ from viaconstructor.preview_plugins import gcode as gcodeparser
 
 
 @pytest.mark.parametrize(
-    "gcode, expected, expected_state, expected_minmax, expected_size, expected_len",
     (
+        "gcode",
+        "expected",
+        "expected_state",
+        "expected_minmax",
+        "expected_size",
+        "expected_len",
+    ),
+    [
         (
             [
                 "(--------------------------------------------------)",
@@ -1767,7 +1774,7 @@ from viaconstructor.preview_plugins import gcode as gcodeparser
             [114.0, 64.0, 14.0],
             302,
         ),
-    ),
+    ],
 )
 def test_GcodeParser_get_path(
     gcode, expected, expected_state, expected_minmax, expected_size, expected_len

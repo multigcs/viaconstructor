@@ -5,11 +5,11 @@ from viaconstructor.vc_types import VcObject, VcSegment
 
 
 @pytest.mark.parametrize(
-    "rlist, idx, expected",
-    (
+    ("rlist", "idx", "expected"),
+    [
         ([1, 2, 3, 4], 2, [3, 4, 1, 2]),
         ([1, 2, 3, 4], 3, [4, 1, 2, 3]),
-    ),
+    ],
 )
 def test_rotate_list(rlist, idx, expected):
     result = calc.rotate_list(rlist, idx)
@@ -17,11 +17,11 @@ def test_rotate_list(rlist, idx, expected):
 
 
 @pytest.mark.parametrize(
-    "p1, p2, expected",
-    (
+    ("p1", "p2", "expected"),
+    [
         ((123, 345), (678, 890), 0.7763075047323885),
         ((678, 890), (123, 345), -2.3652851488574047),
-    ),
+    ],
 )
 def test_angle_of_line(p1, p2, expected):
     result = calc.angle_of_line(p1, p2)
@@ -29,75 +29,75 @@ def test_angle_of_line(p1, p2, expected):
 
 
 @pytest.mark.parametrize(
-    "p1, p2, expected",
-    (
+    ("p1", "p2", "expected"),
+    [
         ((123.001, 345.002), (123.002, 345.001), True),
         ((123.09, 345.02), (123.02, 345.01), False),
         ((123.01, 345.09), (123.02, 345.01), False),
-    ),
+    ],
 )
 def test_fuzy_match(p1, p2, expected):
     assert calc.fuzy_match(p1, p2) == expected
 
 
 @pytest.mark.parametrize(
-    "p1, p2, expected",
-    (
+    ("p1", "p2", "expected"),
+    [
         ((123, 345), (678, 890), 777.8495998584816),
         ((678, 890), (123, 345), 777.8495998584816),
-    ),
+    ],
 )
 def test_calc_distance(p1, p2, expected):
     assert round(calc.calc_distance(p1, p2), 5) == round(expected, 5)
 
 
 @pytest.mark.parametrize(
-    "p1, p2, p3, expected",
-    (
+    ("p1", "p2", "p3", "expected"),
+    [
         ((200, 200), (100, 100), (300, 300), True),
         ((200.01, 200), (100, 100), (300, 300), False),
-    ),
+    ],
 )
 def test_is_between(p1, p2, p3, expected):
     assert calc.is_between(p1, p2, p3) == expected
 
 
 @pytest.mark.parametrize(
-    "p1, p2, expected",
-    (
+    ("p1", "p2", "expected"),
+    [
         ((100, 100, 0), (200, 200, 0), (150, 150, 0)),
         ((210, 200, 0), (100, 100, 100), (155, 150, 50)),
-    ),
+    ],
 )
 def test_line_center_3d(p1, p2, expected):
     assert calc.line_center_3d(p1, p2) == expected
 
 
 @pytest.mark.parametrize(
-    "p1, p2, expected",
-    (
+    ("p1", "p2", "expected"),
+    [
         ((100, 100, 0), (200, 200, 0), (150.00707106781186, 149.99292893218814)),
         ((210, 200, 0), (100, 100, 100), (154.99327327206004, 150.00739940073396)),
-    ),
+    ],
 )
 def test_calc_face(p1, p2, expected):
     assert calc.calc_face(p1, p2) == expected
 
 
 @pytest.mark.parametrize(
-    "p1, p2, expected",
-    (
+    ("p1", "p2", "expected"),
+    [
         ((123, 345), (678, 890), -0.30853603576416455),
         ((678, 890), (123, 345), 0.30853603576416455),
-    ),
+    ],
 )
 def test_angle_2d(p1, p2, expected):
     assert calc.angle_2d(p1, p2) == expected
 
 
 @pytest.mark.parametrize(
-    "segments, expected",
-    (
+    ("segments", "expected"),
+    [
         (
             [
                 VcSegment(
@@ -173,15 +173,15 @@ def test_angle_2d(p1, p2, expected):
                 ),
             ],
         ),
-    ),
+    ],
 )
 def test_clean_segments(segments, expected):
     assert str(calc.clean_segments(segments)) == str(expected)
 
 
 @pytest.mark.parametrize(
-    "obj, point, expected",
-    (
+    ("obj", "point", "expected"),
+    [
         (
             VcObject(
                 {
@@ -244,15 +244,15 @@ def test_clean_segments(segments, expected):
             (10.0, 90.0, 0.0),
             False,
         ),
-    ),
+    ],
 )
 def test_is_inside_polygon(obj, point, expected):
     assert calc.is_inside_polygon(obj, point) == expected
 
 
 @pytest.mark.parametrize(
-    "obj, expected",
-    (
+    ("obj", "expected"),
+    [
         (
             VcObject(
                 {
@@ -323,15 +323,15 @@ def test_is_inside_polygon(obj, point, expected):
                 }
             ),
         ),
-    ),
+    ],
 )
 def test_reverse_object(obj, expected):
     assert str(calc.reverse_object(obj)) == str(expected)
 
 
 @pytest.mark.parametrize(
-    "objects, point, exclude, expected",
-    (
+    ("objects", "point", "exclude", "expected"),
+    [
         (
             {
                 0: VcObject(
@@ -395,15 +395,15 @@ def test_reverse_object(obj, expected):
             [0],
             [1],
         ),
-    ),
+    ],
 )
 def test_find_outer_objects(objects, point, exclude, expected):
     assert calc.find_outer_objects(objects, point, exclude) == expected
 
 
 @pytest.mark.parametrize(
-    "objects, expected",
-    (
+    ("objects", "expected"),
+    [
         (
             {
                 0: VcObject(
@@ -475,15 +475,15 @@ def test_find_outer_objects(objects, point, exclude, expected):
             },
             1,
         ),
-    ),
+    ],
 )
 def test_find_tool_offsets(objects, expected):
     assert calc.find_tool_offsets(objects) == expected
 
 
 @pytest.mark.parametrize(
-    "objects, expected",
-    (
+    ("objects", "expected"),
+    [
         (
             [
                 VcSegment(
@@ -654,29 +654,29 @@ def test_find_tool_offsets(objects, expected):
                 ),
             },
         ),
-    ),
+    ],
 )
 def test_segments2objects(objects, expected):
     assert str(calc.segments2objects(objects)) == str(expected)
 
 
 @pytest.mark.parametrize(
-    "vertex_data, point, expected",
-    (
+    ("vertex_data", "point", "expected"),
+    [
         (
             [[40.0, 60.0, 60.0, 40.0], [30.0, 30.0, 10.0, 10.0], [0.0, 0.0, 0.0, 0.0]],
             (49.199999999999996, 20.800000000000004, 0.0),
             True,
         ),
-    ),
+    ],
 )
 def test_inside_vertex(vertex_data, point, expected):
     assert calc.inside_vertex(vertex_data, point) == expected
 
 
 @pytest.mark.parametrize(
-    "obj, expected, expected_minmax",
-    (
+    ("obj", "expected", "expected_minmax"),
+    [
         (
             VcObject(
                 {
@@ -757,7 +757,7 @@ def test_inside_vertex(vertex_data, point, expected):
             ),
             (40.0, 10.0, 60.0, 30.0),
         ),
-    ),
+    ],
 )
 def test_object2vertex(obj, expected, expected_minmax):
     assert calc.object2vertex(obj) == expected
@@ -765,8 +765,8 @@ def test_object2vertex(obj, expected, expected_minmax):
 
 
 @pytest.mark.parametrize(
-    "diameter, objects, max_outer, small_circles, expected",
-    (
+    ("diameter", "objects", "max_outer", "small_circles", "expected"),
+    [
         (
             4.0,
             {
@@ -943,13 +943,13 @@ def test_object2vertex(obj, expected, expected_minmax):
                 -0.408369,
             ],
         ),
-    ),
+    ],
 )
 def test_objects2polyline_offsets(
     diameter, objects, max_outer, small_circles, expected
 ):
     result = []
-    for idx, line in calc.objects2polyline_offsets(
+    for _idx, line in calc.objects2polyline_offsets(
         diameter, objects, max_outer, small_circles
     ).items():
         for axis in line.vertex_data().tolist():

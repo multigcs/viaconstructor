@@ -653,7 +653,7 @@ def polylines2machine_cmd(project: dict, post: PostProcessor) -> str:
                         bulges = list(vertex_data[2])
                         bulges.reverse()
                         bulges = rotate_list(bulges, 1)
-                        for num, point in enumerate(bulges):
+                        for num, _point in enumerate(bulges):
                             bulges[num] = -bulges[num]
                         points = vertex2points((x_start, y_start, bulges))
                     else:
@@ -663,6 +663,7 @@ def polylines2machine_cmd(project: dict, post: PostProcessor) -> str:
 
                     # get object distance
                     obj_distance = 0
+                    point = [0, 0]
                     last = points[0]
                     for point in points:
                         obj_distance += calc_distance(point, last)

@@ -168,7 +168,7 @@ class DrawReader(DrawReaderBase):
         if steps > 0:
             astep = adiff / steps
             angle = start_angle
-            for step_n in range(0, steps):  # pylint: disable=W0612
+            for _step_n in range(0, steps):  # pylint: disable=W0612
                 (start, end, bulge) = ezdxf.math.arc_to_bulge(
                     center,
                     angle / 180 * math.pi,

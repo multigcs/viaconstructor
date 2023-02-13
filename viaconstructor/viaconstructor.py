@@ -2468,7 +2468,7 @@ class ViaConstructor:
         self.project["tabs"]["data"] = []
         for obj in self.project["objects"].values():
             layer = obj.get("layer")
-            if layer.startswith("BREAKS:") or layer.startswith("_TABS"):
+            if layer.startswith(("BREAKS:", "_TABS")):
                 obj["setup"]["mill"]["active"] = False
                 for segment in obj["segments"]:
                     self.project["tabs"]["data"].append(
@@ -2492,7 +2492,7 @@ class ViaConstructor:
             for sect in ("tool", "mill", "pockets", "tabs", "leads"):
                 obj["setup"][sect] = deepcopy(self.project["setup"][sect])
             layer = obj.get("layer")
-            if layer.startswith("BREAKS:") or layer.startswith("_TABS"):
+            if layer.startswith(("BREAKS:", "_TABS")):
                 self.project["layers"][layer] = False
             else:
                 self.project["layers"][layer] = True

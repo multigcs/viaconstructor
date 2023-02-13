@@ -3,14 +3,14 @@ VERSION ?= $(shell grep "version=" setup.py | cut -d"'" -f2)
 DOCKERBASE ?= fedora
 
 
-all: isort black lint pytest help_gen gettext docindex done
+all: ruff isort black lint pytest help_gen gettext docindex done
 
 done:
 	@echo "-------------------------"
 	@echo "ALL RIGHT !"
 	@echo "-------------------------"
 
-check: isort_check black_check lint pytest_check
+check: ruff isort_check black_check lint pytest_check
 
 format: isort black
 
@@ -36,12 +36,19 @@ pyvenv:
 	@echo "# for testing: pyvenv/bin/python -m viaconstructor tests/data/simple.dxf"
 	@echo "# for testing: pyvenv/bin/python -m gcodepreview tests/data/simple.ngc"
 
-pip-compile: pyvenv
+pip-compile: pyvenv requirements-dev.txt requirements.txt
+
+requirements-dev.txt: requirements-dev.in
 	pyvenv/bin/pip-compile --generate-hashes --allow-unsafe requirements-dev.in
+
+requirements.txt: requirements.in
 	pyvenv/bin/pip-compile --generate-hashes --allow-unsafe requirements.in
 
 isort: pyvenv
 	pyvenv/bin/python -m isort --profile black */*py viaconstructor/*/*.py
+
+ruff: pyvenv
+	pyvenv/bin/python -m ruff check viaconstructor/*.py viaconstructor/*/*.py tests/*.py
 
 isort_check: pyvenv
 	pyvenv/bin/python -m isort --check --profile black */*py viaconstructor/*/*.py
