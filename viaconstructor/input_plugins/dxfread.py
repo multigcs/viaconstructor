@@ -119,6 +119,9 @@ class DrawReader(DrawReaderBase):
 
         self.segments: list[dict] = []
         self.model_space = self.doc.modelspace()
+        self.layer_colors = {}
+        for layer in self.doc.layers:
+            self.layer_colors[layer.dxf.name] = layer.dxf.color
 
         try:
             with MTextExplode(self.model_space) as xpl:
@@ -169,11 +172,13 @@ class DrawReader(DrawReaderBase):
 
     def add_entity(self, element, offset: tuple = (0, 0)):
         dxftype = element.dxftype()
-
         layer = element.dxf.layer
+        color = element.dxf.color
+        if color == 256:
+            color = self.layer_colors[layer]
 
         if self.color_layers:
-            layer = f"{layer}-c{element.dxf.color}"
+            layer = f"{layer}-c{color}"
 
         if self.select_layers and layer not in self.select_layers:
             if layer not in self.filtered_layers:
@@ -194,7 +199,9 @@ class DrawReader(DrawReaderBase):
             text_offset = (offset[0] + pos[0], offset[1] + pos[1])
             text_offset = (offset[0] + pos[0], offset[1] + pos[1])
             for path in paths:
-                self._add_path(path, text_offset, pscale=scale, layer=layer)
+                self._add_path(
+                    path, text_offset, pscale=scale, layer=layer, color=color
+                )
 
         elif dxftype == "LINE":
             dist = calc_distance(
@@ -208,6 +215,7 @@ class DrawReader(DrawReaderBase):
                             "type": dxftype,
                             "object": None,
                             "layer": layer,
+                            "color": color,
                             "start": (
                                 (element.dxf.start.x + offset[0]) * self.scale,
                                 (element.dxf.start.y + offset[1]) * self.scale,
@@ -223,7 +231,7 @@ class DrawReader(DrawReaderBase):
 
         elif dxftype in self.PTYPES:
             path = make_path(element)
-            self._add_path(path, offset, layer=layer)
+            self._add_path(path, offset, layer=layer, color=color)
 
         elif dxftype in {"ARC", "CIRCLE"}:
             if dxftype == "CIRCLE":
@@ -272,6 +280,7 @@ class DrawReader(DrawReaderBase):
                                     "type": dxftype,
                                     "object": None,
                                     "layer": layer,
+                                    "color": color,
                                     "start": (
                                         (start.x + offset[0]) * self.scale,
                                         (start.y + offset[1]) * self.scale,
@@ -307,6 +316,7 @@ class DrawReader(DrawReaderBase):
                                 "type": dxftype,
                                 "object": None,
                                 "layer": layer,
+                                "color": color,
                                 "start": (
                                     (start.x + offset[0]) * self.scale,
                                     (start.y + offset[1]) * self.scale,
@@ -331,7 +341,7 @@ class DrawReader(DrawReaderBase):
             for attrib in element.dxf.__dict__:
                 print(f"  element.dxf.{attrib} = {getattr(element.dxf, attrib)}")
 
-    def _add_path(self, path, offset, pscale=1.0, layer="0") -> list[float]:
+    def _add_path(self, path, offset, pscale=1.0, layer="0", color=256) -> list[float]:
         last = path.start
         for command in path:
             if command.type == Command.LINE_TO:
@@ -344,6 +354,7 @@ class DrawReader(DrawReaderBase):
                                 "type": "LINE",
                                 "object": None,
                                 "layer": layer,
+                                "color": color,
                                 "start": (
                                     (last[0] * pscale + offset[0]) * self.scale,
                                     (last[1] * pscale + offset[1]) * self.scale,
@@ -388,6 +399,7 @@ class DrawReader(DrawReaderBase):
                                     "type": "LINE",
                                     "object": None,
                                     "layer": layer,
+                                    "color": color,
                                     "start": (
                                         (last[0] * pscale + offset[0]) * self.scale,
                                         (last[1] * pscale + offset[1]) * self.scale,
@@ -411,6 +423,7 @@ class DrawReader(DrawReaderBase):
                                 "type": "LINE",
                                 "object": None,
                                 "layer": layer,
+                                "color": color,
                                 "start": (
                                     (last[0] * pscale + offset[0]) * self.scale,
                                     (last[1] * pscale + offset[1]) * self.scale,

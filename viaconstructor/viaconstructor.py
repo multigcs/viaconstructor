@@ -633,6 +633,7 @@ class GLWidget(QGLWidget):
                                     "type": "LINE",
                                     "object": segment.object,
                                     "layer": segment.layer,
+                                    "color": segment.color,
                                     "start": new_point,
                                     "end": segment.end,
                                     "bulge": segment.bulge / 2,
@@ -658,6 +659,7 @@ class GLWidget(QGLWidget):
                                     "type": "LINE",
                                     "object": None,
                                     "layer": self.project["objects"][obj_idx]["layer"],
+                                    "color": self.project["objects"][obj_idx]["color"],
                                     "start": (self.selection[0], self.selection[1]),
                                     "end": (self.selection[4], self.selection[5]),
                                     "bulge": 0.0,
@@ -868,7 +870,7 @@ class ViaConstructor:
                         msp.add_line(
                             segment.start,
                             segment.end,
-                            dxfattribs={"layer": segment.layer},
+                            dxfattribs={"layer": segment.layer, "color": segment.color},
                         )
                     else:
                         (
@@ -884,7 +886,7 @@ class ViaConstructor:
                             radius=radius,
                             start_angle=start_angle * 180 / math.pi,
                             end_angle=end_angle * 180 / math.pi,
-                            dxfattribs={"layer": segment.layer},
+                            dxfattribs={"layer": segment.layer, "color": segment.color},
                         )
             for vport in doc.viewports.get_config("*Active"):  # type: ignore
                 vport.dxf.grid_on = True

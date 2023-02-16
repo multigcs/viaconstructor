@@ -24,6 +24,7 @@ from OpenGL.GLU import (
 )
 
 from .calc import angle_of_line, calc_distance, line_center_3d
+from .dxfcolors import dxfcolors
 from .ext.HersheyFonts.HersheyFonts import HersheyFonts
 from .preview_plugins.gcode import GcodeParser
 from .preview_plugins.hpgl import HpglParser
@@ -362,6 +363,10 @@ def draw_object_edges(project: dict, selected: int = -1) -> None:
             ).startswith("_TABS"):
                 continue
 
+            color = (1.0, 1.0, 1.0)
+            if obj.color in dxfcolors:
+                color = dxfcolors[obj.color]
+
             odepth = obj["setup"]["mill"]["depth"]
             if odepth > depth:
                 continue
@@ -370,8 +375,9 @@ def draw_object_edges(project: dict, selected: int = -1) -> None:
                 GL.glLineWidth(5)
                 GL.glColor4f(1.0, 0.0, 0.0, 1.0)
             else:
-                GL.glLineWidth(1)
-                GL.glColor4f(1.0, 1.0, 1.0, 1.0)
+                GL.glLineWidth(2)
+                # GL.glColor4f(1.0, 1.0, 1.0, 1.0)
+                GL.glColor3f(*color)
 
             # side
             GL.glBegin(GL.GL_LINES)

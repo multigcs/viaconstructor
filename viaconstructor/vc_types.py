@@ -2,6 +2,7 @@ class VcSegment:
     type = ""
     object = None
     layer = ""
+    color = 256
     start = ()
     end = ()
     bulge = 0.0
@@ -11,6 +12,7 @@ class VcSegment:
         self.type = data.get("type", "")
         self.object = data.get("object", None)
         self.layer = data.get("layer", "0")
+        self.color = data.get("color", 256)
         self.start = data.get("start", (0, 0))
         self.end = data.get("end", (0, 0))
         self.bulge = data.get("bulge", 0.0)
@@ -24,6 +26,7 @@ class VcSegment:
             "type": self.type,
             "object": self.object,
             "layer": self.layer,
+            "color": self.color,
             "start": self.start,
             "end": self.end,
             "bulge": self.bulge,
@@ -55,6 +58,7 @@ class VcObject:
     outer_objects: list = []
     inner_objects: list = []
     layer = ""
+    color = 256
     setup: dict = {}
     start = ()
 
@@ -66,6 +70,7 @@ class VcObject:
         self.outer_objects = data.get("outer_objects", [])
         self.inner_objects = data.get("inner_objects", [])
         self.layer = data.get("layer", "")
+        self.color = data.get("color", 256)
         self.setup = data.get("setup", "")
         self.start = data.get("start", ())
 
