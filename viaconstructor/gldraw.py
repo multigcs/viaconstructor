@@ -344,76 +344,93 @@ def draw_object_edges(project: dict, selected: int = -1) -> None:
         depth *= unitscale
         tabs_height *= unitscale
 
-    GL.glNormal3f(0, 0, 1)
-    for obj_idx, obj in project["objects"].items():
+    depths = []
+    for obj in project["objects"].values():
         if obj.get("layer", "").startswith("BREAKS:") or obj.get(
             "layer", ""
         ).startswith("_TABS"):
             continue
-        if obj_idx == selected:
-            GL.glLineWidth(5)
-            GL.glColor4f(1.0, 0.0, 0.0, 1.0)
-        else:
-            GL.glLineWidth(1)
-            GL.glColor4f(1.0, 1.0, 1.0, 1.0)
+        odepth = obj["setup"]["mill"]["depth"]
+        if odepth not in depths:
+            depths.append(odepth)
+    depths.sort()
+    for depth in depths:
+        GL.glNormal3f(0, 0, 1)
+        for obj_idx, obj in project["objects"].items():
+            if obj.get("layer", "").startswith("BREAKS:") or obj.get(
+                "layer", ""
+            ).startswith("_TABS"):
+                continue
 
-        # side
-        GL.glBegin(GL.GL_LINES)
-        for segment in obj.segments:
-            p_x = segment.start[0]
-            p_y = segment.start[1]
-            GL.glVertex3f(p_x, p_y, 0.0)
-            GL.glVertex3f(p_x, p_y, depth)
-        GL.glEnd()
+            odepth = obj["setup"]["mill"]["depth"]
+            if odepth > depth:
+                continue
 
-        # top
-        GL.glBegin(GL.GL_LINES)
-        for segment in obj.segments:
-            if segment.bulge != 0.0 and interpolate:
-                last_x = segment.start[0]
-                last_y = segment.start[1]
-                for point in bulge_points(segment):
-                    GL.glVertex3f(last_x, last_y, 0.0)
-                    GL.glVertex3f(point[0], point[1], 0.0)
-                    last_x = point[0]
-                    last_y = point[1]
-                GL.glVertex3f(last_x, last_y, 0.0)
-                GL.glVertex3f(segment.end[0], segment.end[1], 0.0)
+            if obj_idx == selected:
+                GL.glLineWidth(5)
+                GL.glColor4f(1.0, 0.0, 0.0, 1.0)
             else:
-                GL.glVertex3f(segment.start[0], segment.start[1], 0.0)
-                GL.glVertex3f(segment.end[0], segment.end[1], 0.0)
-        GL.glEnd()
+                GL.glLineWidth(1)
+                GL.glColor4f(1.0, 1.0, 1.0, 1.0)
 
-        # bottom
-        GL.glBegin(GL.GL_LINES)
-        for segment in obj.segments:
-            if segment.bulge != 0.0 and interpolate:
-                last_x = segment.start[0]
-                last_y = segment.start[1]
-                for point in bulge_points(segment):
-                    GL.glVertex3f(last_x, last_y, depth)
-                    GL.glVertex3f(point[0], point[1], depth)
-                    last_x = point[0]
-                    last_y = point[1]
-                GL.glVertex3f(last_x, last_y, depth)
-                GL.glVertex3f(segment.end[0], segment.end[1], depth)
-            else:
-                GL.glVertex3f(segment.start[0], segment.start[1], depth)
-                GL.glVertex3f(segment.end[0], segment.end[1], depth)
-        GL.glEnd()
-
-        # start points
-        start = obj.get("start", ())
-        if start:
-            depth = 0.1
-            GL.glLineWidth(5)
-            GL.glColor4f(1.0, 1.0, 0.0, 1.0)
+            # side
             GL.glBegin(GL.GL_LINES)
-            GL.glVertex3f(start[0] - 1, start[1] - 1, depth)
-            GL.glVertex3f(start[0] + 1, start[1] + 1, depth)
-            GL.glVertex3f(start[0] - 1, start[1] + 1, depth)
-            GL.glVertex3f(start[0] + 1, start[1] - 1, depth)
+            for segment in obj.segments:
+                p_x = segment.start[0]
+                p_y = segment.start[1]
+                GL.glVertex3f(p_x, p_y, 0.0)
+                GL.glVertex3f(p_x, p_y, depth)
             GL.glEnd()
+
+            # top
+            GL.glBegin(GL.GL_LINES)
+            for segment in obj.segments:
+                if segment.bulge != 0.0 and interpolate:
+                    last_x = segment.start[0]
+                    last_y = segment.start[1]
+                    for point in bulge_points(segment):
+                        GL.glVertex3f(last_x, last_y, 0.0)
+                        GL.glVertex3f(point[0], point[1], 0.0)
+                        last_x = point[0]
+                        last_y = point[1]
+                    GL.glVertex3f(last_x, last_y, 0.0)
+                    GL.glVertex3f(segment.end[0], segment.end[1], 0.0)
+                else:
+                    GL.glVertex3f(segment.start[0], segment.start[1], 0.0)
+                    GL.glVertex3f(segment.end[0], segment.end[1], 0.0)
+            GL.glEnd()
+
+            # bottom
+            if odepth == depth:
+                GL.glBegin(GL.GL_LINES)
+                for segment in obj.segments:
+                    if segment.bulge != 0.0 and interpolate:
+                        last_x = segment.start[0]
+                        last_y = segment.start[1]
+                        for point in bulge_points(segment):
+                            GL.glVertex3f(last_x, last_y, depth)
+                            GL.glVertex3f(point[0], point[1], depth)
+                            last_x = point[0]
+                            last_y = point[1]
+                        GL.glVertex3f(last_x, last_y, depth)
+                        GL.glVertex3f(segment.end[0], segment.end[1], depth)
+                    else:
+                        GL.glVertex3f(segment.start[0], segment.start[1], depth)
+                        GL.glVertex3f(segment.end[0], segment.end[1], depth)
+                GL.glEnd()
+
+            # start points
+            start = obj.get("start", ())
+            if start:
+                depth = 0.1
+                GL.glLineWidth(5)
+                GL.glColor4f(1.0, 1.0, 0.0, 1.0)
+                GL.glBegin(GL.GL_LINES)
+                GL.glVertex3f(start[0] - 1, start[1] - 1, depth)
+                GL.glVertex3f(start[0] + 1, start[1] + 1, depth)
+                GL.glVertex3f(start[0] - 1, start[1] + 1, depth)
+                GL.glVertex3f(start[0] + 1, start[1] - 1, depth)
+                GL.glEnd()
 
     # tabs
     tabs = project.get("tabs", {}).get("data", ())
@@ -468,108 +485,142 @@ def draw_object_faces(project: dict) -> None:
         unitscale = 25.4
         depth *= unitscale
 
-    GL.glColor4f(color[0], color[1], color[2], alpha)
-
-    # object faces (side)
-    GL.glBegin(GL.GL_TRIANGLES)
+    depths = []
     for obj in project["objects"].values():
         if obj.get("layer", "").startswith("BREAKS:") or obj.get(
             "layer", ""
         ).startswith("_TABS"):
             continue
-        for segment in obj.segments:
-            last_x = segment.start[0]
-            last_y = segment.start[1]
-            if segment.bulge != 0.0 and interpolate:
-                for point in bulge_points(segment):
-                    add_triangle(
-                        (last_x, last_y, 0.0),
-                        (last_x, last_y, depth),
-                        (point[0], point[1], 0.0),
-                        (obj.tool_offset == "inside"),
-                    )
-                    add_triangle(
-                        (point[0], point[1], 0.0),
-                        (last_x, last_y, depth),
-                        (point[0], point[1], depth),
-                        (obj.tool_offset == "inside"),
-                    )
-                    last_x = point[0]
-                    last_y = point[1]
-            add_triangle(
-                (last_x, last_y, 0.0),
-                (last_x, last_y, depth),
-                (segment.end[0], segment.end[1], 0.0),
-                (obj.tool_offset == "inside"),
-            )
-            add_triangle(
-                (segment.end[0], segment.end[1], 0.0),
-                (last_x, last_y, depth),
-                (segment.end[0], segment.end[1], depth),
-                (obj.tool_offset == "inside"),
-            )
-    GL.glEnd()
+        odepth = obj["setup"]["mill"]["depth"]
+        if odepth not in depths:
+            depths.append(odepth)
+    depths.append(0.0)
+    depths.sort()
 
-    # object faces (top)
-    GL.glNormal3f(0, 0, 1)
-    tess = gluNewTess()
-    gluTessProperty(tess, GLU_TESS_WINDING_RULE, GLU_TESS_WINDING_ODD)
-    gluTessCallback(tess, GLU_TESS_BEGIN, GL.glBegin)
-    gluTessCallback(tess, GLU_TESS_VERTEX, GL.glVertex)
-    gluTessCallback(tess, GLU_TESS_END, GL.glEnd)
-    gluTessCallback(
-        tess, GLU_TESS_COMBINE, lambda _points, _vertices, _weights: _points
-    )
-    gluTessBeginPolygon(tess, 0)
-    for obj in project["objects"].values():
-        if obj.get("layer", "").startswith("BREAKS:") or obj.get(
-            "layer", ""
-        ).startswith("_TABS"):
-            continue
-        if obj.closed:
-            gluTessBeginContour(tess)
+    for depth in depths:
+
+        GL.glColor4f(color[0], color[1], color[2], alpha)
+        # object faces (side)
+        GL.glBegin(GL.GL_TRIANGLES)
+        for obj in project["objects"].values():
+            if obj.get("layer", "").startswith("BREAKS:") or obj.get(
+                "layer", ""
+            ).startswith("_TABS"):
+                continue
+
+            odepth = obj["setup"]["mill"]["depth"]
+            if odepth > depth:
+                continue
+
+            depth *= unitscale
+
             for segment in obj.segments:
-                p_xy = (segment.start[0], segment.start[1], 0.0)
-                gluTessVertex(tess, p_xy, p_xy)
+                last_x = segment.start[0]
+                last_y = segment.start[1]
                 if segment.bulge != 0.0 and interpolate:
                     for point in bulge_points(segment):
-                        p_xy = (point[0], point[1], 0.0)
-                        gluTessVertex(tess, p_xy, p_xy)
-                p_xy = (segment.end[0], segment.end[1], 0.0)
-                gluTessVertex(tess, p_xy, p_xy)
-            gluTessEndContour(tess)
-    gluTessEndPolygon(tess)
-    gluDeleteTess(tess)
+                        add_triangle(
+                            (last_x, last_y, 0.0),
+                            (last_x, last_y, depth),
+                            (point[0], point[1], 0.0),
+                            (obj.tool_offset == "inside"),
+                        )
+                        add_triangle(
+                            (point[0], point[1], 0.0),
+                            (last_x, last_y, depth),
+                            (point[0], point[1], depth),
+                            (obj.tool_offset == "inside"),
+                        )
+                        last_x = point[0]
+                        last_y = point[1]
+                add_triangle(
+                    (last_x, last_y, 0.0),
+                    (last_x, last_y, depth),
+                    (segment.end[0], segment.end[1], 0.0),
+                    (obj.tool_offset == "inside"),
+                )
+                add_triangle(
+                    (segment.end[0], segment.end[1], 0.0),
+                    (last_x, last_y, depth),
+                    (segment.end[0], segment.end[1], depth),
+                    (obj.tool_offset == "inside"),
+                )
+        GL.glEnd()
 
-    GL.glNormal3f(0, 0, -1)
-    tess = gluNewTess()
-    gluTessProperty(tess, GLU_TESS_WINDING_RULE, GLU_TESS_WINDING_ODD)
-    gluTessCallback(tess, GLU_TESS_BEGIN, GL.glBegin)
-    gluTessCallback(tess, GLU_TESS_VERTEX, GL.glVertex)
-    gluTessCallback(tess, GLU_TESS_END, GL.glEnd)
-    gluTessCallback(
-        tess, GLU_TESS_COMBINE, lambda _points, _vertices, _weights: _points
-    )
-    gluTessBeginPolygon(tess, 0)
-    for obj in project["objects"].values():
-        if obj.get("layer", "").startswith("BREAKS:") or obj.get(
-            "layer", ""
-        ).startswith("_TABS"):
-            continue
-        if obj.closed:
-            gluTessBeginContour(tess)
-            for segment in obj.segments:
-                p_xy = (segment.start[0], segment.start[1], depth)
-                gluTessVertex(tess, p_xy, p_xy)
-                if segment.bulge != 0.0 and interpolate:
-                    for point in bulge_points(segment):
-                        p_xy = (point[0], point[1], depth)
-                        gluTessVertex(tess, p_xy, p_xy)
-                p_xy = (segment.end[0], segment.end[1], depth)
-                gluTessVertex(tess, p_xy, p_xy)
-            gluTessEndContour(tess)
-    gluTessEndPolygon(tess)
-    gluDeleteTess(tess)
+        # object faces (top)
+        GL.glNormal3f(0, 0, 1)
+        tess = gluNewTess()
+        gluTessProperty(tess, GLU_TESS_WINDING_RULE, GLU_TESS_WINDING_ODD)
+        gluTessCallback(tess, GLU_TESS_BEGIN, GL.glBegin)
+        gluTessCallback(tess, GLU_TESS_VERTEX, GL.glVertex)
+        gluTessCallback(tess, GLU_TESS_END, GL.glEnd)
+        gluTessCallback(
+            tess, GLU_TESS_COMBINE, lambda _points, _vertices, _weights: _points
+        )
+        gluTessBeginPolygon(tess, 0)
+        for obj in project["objects"].values():
+            if obj.get("layer", "").startswith("BREAKS:") or obj.get(
+                "layer", ""
+            ).startswith("_TABS"):
+                continue
+
+            odepth = obj["setup"]["mill"]["depth"]
+            if odepth > depth:
+                continue
+
+            depth *= unitscale
+
+            if obj.closed:
+                gluTessBeginContour(tess)
+                for segment in obj.segments:
+                    p_xy = (segment.start[0], segment.start[1], depth)
+                    gluTessVertex(tess, p_xy, p_xy)
+                    if segment.bulge != 0.0 and interpolate:
+                        for point in bulge_points(segment):
+                            p_xy = (point[0], point[1], depth)
+                            gluTessVertex(tess, p_xy, p_xy)
+                    p_xy = (segment.end[0], segment.end[1], depth)
+                    gluTessVertex(tess, p_xy, p_xy)
+                gluTessEndContour(tess)
+        gluTessEndPolygon(tess)
+        gluDeleteTess(tess)
+
+        """
+        GL.glNormal3f(0, 0, -1)
+        tess = gluNewTess()
+        gluTessProperty(tess, GLU_TESS_WINDING_RULE, GLU_TESS_WINDING_ODD)
+        gluTessCallback(tess, GLU_TESS_BEGIN, GL.glBegin)
+        gluTessCallback(tess, GLU_TESS_VERTEX, GL.glVertex)
+        gluTessCallback(tess, GLU_TESS_END, GL.glEnd)
+        gluTessCallback(
+            tess, GLU_TESS_COMBINE, lambda _points, _vertices, _weights: _points
+        )
+        gluTessBeginPolygon(tess, 0)
+        for obj in project["objects"].values():
+            if obj.get("layer", "").startswith("BREAKS:") or obj.get(
+                "layer", ""
+            ).startswith("_TABS"):
+                continue
+
+            odepth = obj["setup"]["mill"]["depth"]
+            if odepth == depth:
+                continue
+
+            if obj.closed:
+                gluTessBeginContour(tess)
+                for segment in obj.segments:
+                    p_xy = (segment.start[0], segment.start[1], depth)
+                    gluTessVertex(tess, p_xy, p_xy)
+                    if segment.bulge != 0.0 and interpolate:
+                        for point in bulge_points(segment):
+                            p_xy = (point[0], point[1], depth)
+                            gluTessVertex(tess, p_xy, p_xy)
+                    p_xy = (segment.end[0], segment.end[1], depth)
+                    gluTessVertex(tess, p_xy, p_xy)
+                gluTessEndContour(tess)
+        gluTessEndPolygon(tess)
+        gluDeleteTess(tess)
+        """
 
 
 def draw_line(p_1: dict, p_2: dict, options: str, project: dict) -> None:
