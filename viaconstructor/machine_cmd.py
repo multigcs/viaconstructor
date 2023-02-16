@@ -82,7 +82,7 @@ class PostProcessor:
     ) -> None:
         pass
 
-    def get(self) -> str:
+    def get(self, numbers=False) -> str:  # pylint: disable=W0613
         return ""
 
 
@@ -990,4 +990,4 @@ def polylines2machine_cmd(project: dict, post: PostProcessor) -> str:
 
     machine_cmd_end(project, post)
     print("")
-    return post.get()
+    return post.get(numbers=project["setup"]["machine"].get("numbers", False))

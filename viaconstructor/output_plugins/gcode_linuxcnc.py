@@ -207,8 +207,20 @@ class PostProcessorGcodeLinuxCNC(PostProcessor):
         if line:
             self.gcode.append("G03 " + " ".join(line))
 
-    def get(self) -> str:
-        return "\n".join(self.gcode)
+    def get(self, numbers=False) -> str:
+        output = []
+        if numbers:
+            line_number = 1
+            nlen = len(str(len(self.gcode))) + 1
+            for line in self.gcode:
+                if not line or line[0] in {" ", "("}:
+                    output.append(line)
+                else:
+                    output.append(f"N{str(line_number).zfill(nlen)} {line}")
+                    line_number += 1
+        else:
+            output = self.gcode
+        return "\n".join(output)
 
     @staticmethod
     def suffix() -> str:

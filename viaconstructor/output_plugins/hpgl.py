@@ -169,7 +169,7 @@ class PostProcessorHpgl(PostProcessor):
             self.last_x = self.x_pos
             self.last_y = self.y_pos
 
-    def get(self) -> str:
+    def get(self, numbers=False) -> str:  # pylint: disable=W0613
         output = ""
         last_word = ""
         for cmd in self.hpgl:

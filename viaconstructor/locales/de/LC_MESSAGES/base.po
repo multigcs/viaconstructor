@@ -5,7 +5,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
-"POT-Creation-Date: 2023-01-13 16:43+0100\n"
+"POT-Creation-Date: 2023-02-16 16:59+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -340,6 +340,12 @@ msgid "Comments in output"
 msgstr ""
 
 msgid "add comments to output"
+msgstr ""
+
+msgid "line numbers"
+msgstr ""
+
+msgid "adding line numbers"
 msgstr ""
 
 msgid "Post-Command"

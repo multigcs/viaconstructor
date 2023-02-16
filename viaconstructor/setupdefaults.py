@@ -515,6 +515,12 @@ def setup_defaults(_) -> dict:
                 "title": _("Comments in output"),
                 "tooltip": _("add comments to output"),
             },
+            "numbers": {
+                "default": False,
+                "type": "bool",
+                "title": _("line numbers"),
+                "tooltip": _("adding line numbers"),
+            },
             "postcommand": {
                 "default": "",
                 "type": "str",
