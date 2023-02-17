@@ -663,7 +663,13 @@ def draw_machinecode_path(project: dict) -> bool:
     GL.glLineWidth(2)
     try:
         if project["suffix"] in {"ngc", "gcode"}:
-            GcodeParser(project["machine_cmd"]).draw(draw_line, (project,))
+            parser = GcodeParser(project["machine_cmd"])
+            parser.draw(draw_line, (project,))
+            """
+            scad_data = parser.openscad(project["setup"]["tool"]["diameter"])
+            print(scad_data)
+            open("/tmp/scad_data.scad", "w").write(scad_data)
+            """
         elif project["suffix"] in {"hpgl", "hpg"}:
             project["setup"]["machine"]["g54"] = False
             project["setup"]["workpiece"]["offset_z"] = 0.0

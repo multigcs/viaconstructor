@@ -145,6 +145,34 @@ class GcodeParser:
         for line in self.path:
             draw_function(line[0], line[1], line[2], *user_data)
 
+    def openscad(self, tool_diameter: float) -> str:
+        # code from https://github.com/pvdbrand/cnc-3d-gcode-viewer
+        movements = []
+        for line in self.path:
+            movements.append((line[0]["X"], line[0]["Y"], line[0]["Z"]))
+        minmax = self.get_minmax()
+        size = self.get_size()
+        stock_x = size[0] + tool_diameter * 4
+        stock_y = size[1] + tool_diameter * 4
+        stock_z = size[2]
+        tool_length = stock_z + 10
+        scad_data = [
+            f"module tool() {{cylinder(h={tool_length},r1={tool_diameter / 2.0},r2={tool_diameter / 2.0},center=false,$fn={8});}}"
+        ]
+        scad_data.append(
+            f"module stock() {{translate(v=[{minmax[0] - tool_diameter * 2},{minmax[1] - tool_diameter * 2},{-stock_z}]) cube(size=[{stock_x},{stock_y},{stock_z}],center=false);}}"
+        )
+        scad_data.append("difference() {")
+        scad_data.append("  stock();")
+        scad_data.append("  union() {")
+        for (s_x, s_y, s_z), (e_x, e_y, e_z) in zip(movements, movements[1:]):
+            scad_data.append(
+                f"    hull() {{translate(v=[{s_x},{s_y},{s_z}]) tool(); translate(v=[{e_x},{e_y},{e_z}]) tool();}}"
+            )
+        scad_data.append("  }")
+        scad_data.append("}")
+        return "\n".join(scad_data)
+
     def linear_move(
         self, cords: dict, fast: bool = False  # pylint: disable=W0613
     ) -> None:
