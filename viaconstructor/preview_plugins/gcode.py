@@ -154,7 +154,7 @@ class GcodeParser:
         size = self.get_size()
         stock_x = size[0] + tool_diameter * 4
         stock_y = size[1] + tool_diameter * 4
-        stock_z = size[2] - minmax[2]
+        stock_z = size[2] - minmax[5]
         tool_length = stock_z + 10
         scad_data = [
             f"module tool() {{cylinder(h={tool_length},r1={tool_diameter / 2.0},r2={tool_diameter / 2.0},center=false,$fn={8});}}"
