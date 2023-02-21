@@ -1,0 +1,10 @@
+
+line-length = 190
+
+select = ["E", "F", "B", "I001", "Q", "PIE", "PT"]
+ignore = ["B905"]
+
+
+[pydocstyle]
+convention = "google"
+
