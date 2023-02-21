@@ -10,6 +10,67 @@ from ..ext.meshcut import meshcut
 from ..input_plugins_base import DrawReaderBase
 
 
+def load_ply(fileobj):
+    """Same as load_ply, but takes a file-like object"""
+
+    def nextline():
+        """Read next line, skip comments"""
+        while True:
+            line = fileobj.readline()
+            assert line != ""  # eof
+            if not line.startswith("comment"):
+                return line.strip()
+
+    assert nextline() == "ply"
+    assert nextline() == "format ascii 1.0"
+    line = nextline()
+    assert line.startswith("element vertex")
+    nverts = int(line.split()[2])
+    # print "nverts : ", nverts
+    assert nextline() == "property float x"
+    assert nextline() == "property float y"
+    assert nextline() == "property float z"
+    line = nextline()
+
+    assert line.startswith("element face")
+    nfaces = int(line.split()[2])
+    # print "nfaces : ", nfaces
+    assert nextline() == "property list uchar int vertex_indices"
+    line = nextline()
+    has_texcoords = line == "property list uchar float texcoord"
+    if has_texcoords:
+        assert nextline() == "end_header"
+    else:
+        assert line == "end_header"
+
+    # Verts
+    verts = np.zeros((nverts, 3))
+    for i in range(nverts):
+        vals = nextline().split()
+        verts[i, :] = [float(v) for v in vals[:3]]
+    # Faces
+    faces = []
+    faces_uv = []
+    for _i in range(nfaces):
+        vals = nextline().split()
+        assert int(vals[0]) == 3
+        faces.append([int(v) for v in vals[1:4]])
+        if has_texcoords:
+            assert len(vals) == 11
+            assert int(vals[4]) == 6
+            faces_uv.append(
+                [
+                    (float(vals[5]), float(vals[6])),
+                    (float(vals[7]), float(vals[8])),
+                    (float(vals[9]), float(vals[10])),
+                ]
+            )
+            # faces_uv.append([float(v) for v in vals[5:]])
+        else:
+            assert len(vals) == 4
+    return verts, faces, faces_uv
+
+
 class DrawReader(DrawReaderBase):
     @staticmethod
     def arg_parser(parser) -> None:
@@ -24,17 +85,29 @@ class DrawReader(DrawReaderBase):
         """slicing and converting stl into single segments."""
         self.filename = filename
         self.segments: list[dict] = []
+        if self.filename.lower().endswith(".stl"):
+            meshdata = stl.mesh.Mesh.from_file(self.filename)
+            self.verts_3d = meshdata.vectors.reshape(-1, 3)
+            min_z = self.verts_3d[0][2]
+            max_z = min_z
+            for vert in self.verts_3d:
+                value_z = vert[2]
+                min_z = min(min_z, value_z)
+                max_z = max(max_z, value_z)
+            self.faces_3d = np.arange(len(self.verts_3d)).reshape(-1, 3)
+            verts, faces = meshcut.merge_close_vertices(self.verts_3d, self.faces_3d)
+        elif self.filename.lower().endswith(".ply"):
+            with open(self.filename) as file_d:
+                verts, faces, _ = load_ply(file_d)
+                self.faces_3d = faces
+                self.verts_3d = verts
+                min_z = self.verts_3d[0][2]
+                max_z = min_z
+                for vert in self.verts_3d:
+                    value_z = vert[2]
+                    min_z = min(min_z, value_z)
+                    max_z = max(max_z, value_z)
 
-        meshdata = stl.mesh.Mesh.from_file(self.filename)
-        self.verts_3d = meshdata.vectors.reshape(-1, 3)
-        min_z = self.verts_3d[0][2]
-        max_z = min_z
-        for vert in self.verts_3d:
-            value_z = vert[2]
-            min_z = min(min_z, value_z)
-            max_z = max(max_z, value_z)
-        self.faces_3d = np.arange(len(self.verts_3d)).reshape(-1, 3)
-        verts, faces = meshcut.merge_close_vertices(self.verts_3d, self.faces_3d)
         mesh = meshcut.TriangleMesh(verts, faces)
         self.diff_z = max_z - min_z
 
@@ -103,4 +176,4 @@ class DrawReader(DrawReaderBase):
 
     @staticmethod
     def suffix(args: argparse.Namespace = None) -> list[str]:  # pylint: disable=W0613
-        return ["stl"]
+        return ["stl", "ply"]
