@@ -515,7 +515,7 @@ class DrawReader(DrawReaderBase):
 
         if not self.backup_ok:
             try:
-                shutil.copy2(self.filename, f"/{self.filename}.{int(time.time())}")
+                shutil.copy2(self.filename, f"{self.filename}.{int(time.time())}")
                 self.backup_ok = True
             except Exception as error:  # pylint: disable=W0703,W0621
                 print(f"ERROR: can not make backup of file: {self.filename}: {error}")
