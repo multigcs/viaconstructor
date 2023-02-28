@@ -9,6 +9,7 @@ import os
 import platform
 import re
 import sys
+import threading
 import time
 from copy import deepcopy
 from functools import partial
@@ -23,6 +24,9 @@ import setproctitle
 from PyQt5.QtGui import (  # pylint: disable=E0611
     QFont,
     QIcon,
+    QImage,
+    QPalette,
+    QPixmap,
     QStandardItem,
     QStandardItemModel,
 )
@@ -45,6 +49,7 @@ from PyQt5.QtWidgets import (  # pylint: disable=E0611
     QMessageBox,
     QPlainTextEdit,
     QPushButton,
+    QSizePolicy,
     QSpinBox,
     QStatusBar,
     QTableWidget,
@@ -88,6 +93,7 @@ from .input_plugins_base import DrawReaderBase
 from .machine_cmd import polylines2machine_cmd
 from .output_plugins.gcode_linuxcnc import PostProcessorGcodeLinuxCNC
 from .output_plugins.hpgl import PostProcessorHpgl
+from .preview_plugins.gcode import GcodeParser
 from .setupdefaults import setup_defaults
 from .vc_types import VcSegment
 
@@ -835,6 +841,8 @@ class ViaConstructor:
         "minMax": [],
         "table": [],
         "glwidget": None,
+        "imgwidget": None,
+        "imgwidget_btn": None,
         "status": "INIT",
         "tabs": {
             "data": [],
@@ -2579,6 +2587,27 @@ class ViaConstructor:
         debug("load_drawing: error")
         return False
 
+    def generate_preview(self):
+        if self.project["suffix"] in {"ngc", "gcode"}:
+            parser = GcodeParser(self.project["machine_cmd"])
+            scad_data = parser.openscad(self.project["setup"]["tool"]["diameter"])
+            open("/tmp/viaconstructor-preview.scad", "w").write(scad_data)
+
+            def openscad():
+                os.system(
+                    "/usr/bin/openscad -o /tmp/viaconstructor-preview.png /tmp/viaconstructor-preview.scad"
+                )
+                image = QImage("/tmp/viaconstructor-preview.png")
+                self.project["imgwidget"].setPixmap(QPixmap.fromImage(image))
+                self.project["imgwidget_btn"].setEnabled(True)
+                self.project["imgwidget_btn"].setText(_("generate Preview"))
+
+            self.project["imgwidget_btn"].setEnabled(False)
+            self.project["imgwidget_btn"].setText(
+                _("generating preview image with openscad.... please wait")
+            )
+            threading.Thread(target=openscad).start()
+
     def __init__(self) -> None:
         """viaconstructor main init."""
         debug("main: startup")
@@ -2671,6 +2700,12 @@ class ViaConstructor:
             sys.exit(0)
 
         self.project["glwidget"] = GLWidget(self.project, self.update_drawing)
+        self.project["imgwidget"] = QLabel()
+        self.project["imgwidget"].setBackgroundRole(QPalette.Base)  # type: ignore
+        self.project["imgwidget"].setSizePolicy(
+            QSizePolicy.Ignored, QSizePolicy.Ignored  # type: ignore
+        )
+        self.project["imgwidget"].setScaledContents(True)
 
         self.main = QMainWindow()
         self.main.setWindowTitle("viaConstructor")
@@ -2706,6 +2741,18 @@ class ViaConstructor:
         tabwidget = QTabWidget()
         tabwidget.addTab(self.project["glwidget"], _("3D-View"))
         tabwidget.addTab(self.project["textwidget"], _("Machine-Output"))
+
+        if os.path.isfile("/usr/bin/openscad"):
+            preview = QWidget()
+            preview.setContentsMargins(0, 0, 0, 0)
+            preview_vbox = QVBoxLayout(preview)
+            preview_vbox.setContentsMargins(0, 0, 0, 0)
+            self.project["imgwidget_btn"] = QPushButton(_("generate Preview"))
+            self.project["imgwidget_btn"].setToolTip(_("this may take some time"))
+            self.project["imgwidget_btn"].pressed.connect(self.generate_preview)
+            preview_vbox.addWidget(self.project["imgwidget_btn"])
+            preview_vbox.addWidget(self.project["imgwidget"])
+            tabwidget.addTab(preview, _("Preview"))
 
         right_gridlayout = QGridLayout()
         right_gridlayout.addWidget(tabwidget)

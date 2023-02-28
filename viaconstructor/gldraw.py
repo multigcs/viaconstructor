@@ -665,13 +665,6 @@ def draw_machinecode_path(project: dict) -> bool:
         if project["suffix"] in {"ngc", "gcode"}:
             parser = GcodeParser(project["machine_cmd"])
             parser.draw(draw_line, (project,))
-            """
-            scad_data = parser.openscad(project["setup"]["tool"]["diameter"])
-            open("/tmp/scad_data.scad", "w").write(scad_data)
-            print("# openscad -o /tmp/scad_data.png /tmp/scad_data.scad && display /tmp/scad_data.png")
-            # import os
-            # os.system("(openscad -o /tmp/scad_data.png /tmp/scad_data.scad && display /tmp/scad_data.png) &")
-            """
         elif project["suffix"] in {"hpgl", "hpg"}:
             project["setup"]["machine"]["g54"] = False
             project["setup"]["workpiece"]["offset_z"] = 0.0
