@@ -842,7 +842,8 @@ class ViaConstructor:
         "table": [],
         "glwidget": None,
         "imgwidget": None,
-        "imgwidget_btn": None,
+        "preview_generate": None,
+        "preview_open": None,
         "status": "INIT",
         "tabs": {
             "data": [],
@@ -2587,26 +2588,41 @@ class ViaConstructor:
         debug("load_drawing: error")
         return False
 
+    def open_preview_in_openscad(self):
+        if self.project["suffix"] in {"ngc", "gcode"}:
+            parser = GcodeParser(self.project["machine_cmd"])
+            scad_data = parser.openscad(self.project["setup"]["tool"]["diameter"])
+            open("/tmp/viaconstructor-preview.scad", "w").write(scad_data)
+
+            def openscad_show():
+                os.system("/usr/bin/openscad /tmp/viaconstructor-preview.scad")
+                image = QImage("/tmp/viaconstructor-preview.png")
+                self.project["imgwidget"].setPixmap(QPixmap.fromImage(image))
+                self.project["preview_open"].setEnabled(True)
+
+            self.project["preview_open"].setEnabled(False)
+            threading.Thread(target=openscad_show).start()
+
     def generate_preview(self):
         if self.project["suffix"] in {"ngc", "gcode"}:
             parser = GcodeParser(self.project["machine_cmd"])
             scad_data = parser.openscad(self.project["setup"]["tool"]["diameter"])
             open("/tmp/viaconstructor-preview.scad", "w").write(scad_data)
 
-            def openscad():
+            def openscad_convert():
                 os.system(
                     "/usr/bin/openscad -o /tmp/viaconstructor-preview.png /tmp/viaconstructor-preview.scad"
                 )
                 image = QImage("/tmp/viaconstructor-preview.png")
                 self.project["imgwidget"].setPixmap(QPixmap.fromImage(image))
-                self.project["imgwidget_btn"].setEnabled(True)
-                self.project["imgwidget_btn"].setText(_("generate Preview"))
+                self.project["preview_generate"].setEnabled(True)
+                self.project["preview_generate"].setText(_("generate Preview"))
 
-            self.project["imgwidget_btn"].setEnabled(False)
-            self.project["imgwidget_btn"].setText(
+            self.project["preview_generate"].setEnabled(False)
+            self.project["preview_generate"].setText(
                 _("generating preview image with openscad.... please wait")
             )
-            threading.Thread(target=openscad).start()
+            threading.Thread(target=openscad_convert).start()
 
     def __init__(self) -> None:
         """viaconstructor main init."""
@@ -2747,10 +2763,14 @@ class ViaConstructor:
             preview.setContentsMargins(0, 0, 0, 0)
             preview_vbox = QVBoxLayout(preview)
             preview_vbox.setContentsMargins(0, 0, 0, 0)
-            self.project["imgwidget_btn"] = QPushButton(_("generate Preview"))
-            self.project["imgwidget_btn"].setToolTip(_("this may take some time"))
-            self.project["imgwidget_btn"].pressed.connect(self.generate_preview)
-            preview_vbox.addWidget(self.project["imgwidget_btn"])
+            self.project["preview_generate"] = QPushButton(_("generate Preview"))
+            self.project["preview_generate"].setToolTip(_("this may take some time"))
+            self.project["preview_generate"].pressed.connect(self.generate_preview)
+            preview_vbox.addWidget(self.project["preview_generate"])
+            self.project["preview_open"] = QPushButton(_("view in openscad"))
+            self.project["preview_open"].setToolTip(_("open's preview in openscad"))
+            self.project["preview_open"].pressed.connect(self.open_preview_in_openscad)
+            preview_vbox.addWidget(self.project["preview_open"])
             preview_vbox.addWidget(self.project["imgwidget"])
             tabwidget.addTab(preview, _("Preview"))
 
