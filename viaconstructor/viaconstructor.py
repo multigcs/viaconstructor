@@ -1295,6 +1295,7 @@ class ViaConstructor:
                 self.update_global_setup()
                 self.update_table()
                 self.global_changed(0)
+                self.prepare_segments()
                 self.update_drawing()
                 self.project["status"] = "READY"
                 self.status_bar_message(f"{self.info} - load setup from drawing..done")
