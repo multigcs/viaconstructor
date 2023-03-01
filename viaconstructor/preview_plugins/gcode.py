@@ -157,7 +157,7 @@ class GcodeParser:
         stock_z = size[2] - minmax[5]
         tool_length = stock_z + 10
         scad_data = [
-            f"module tool() {{cylinder(h={tool_length},r1={tool_diameter / 2.0},r2={tool_diameter / 2.0},center=false,$fn={8});}}"
+            f"module tool() {{cylinder(h={tool_length},d={tool_diameter},center=false,$fn={8});}}"
         ]
         scad_data.append(
             f"module stock() {{translate(v=[{minmax[0] - tool_diameter * 2},{minmax[1] - tool_diameter * 2},{-stock_z}]) cube(size=[{stock_x},{stock_y},{stock_z}],center=false);}}"
@@ -167,7 +167,7 @@ class GcodeParser:
         scad_data.append("  union() {")
         for (s_x, s_y, s_z), (e_x, e_y, e_z) in zip(movements, movements[1:]):
             scad_data.append(
-                f"    hull() {{translate(v=[{s_x},{s_y},{s_z}]) tool(); translate(v=[{e_x},{e_y},{e_z}]) tool();}}"
+                f"    hull() {{translate(v=[{s_x},{s_y},{s_z}]) tool(); translate(v=[{e_x},{e_y},{e_z-0.01}]) tool();}}"
             )
         scad_data.append("  }")
         scad_data.append("}")

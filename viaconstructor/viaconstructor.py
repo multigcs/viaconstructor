@@ -2597,8 +2597,6 @@ class ViaConstructor:
 
             def openscad_show():
                 os.system("/usr/bin/openscad /tmp/viaconstructor-preview.scad")
-                image = QImage("/tmp/viaconstructor-preview.png")
-                self.project["imgwidget"].setPixmap(QPixmap.fromImage(image))
                 self.project["preview_open"].setEnabled(True)
 
             self.project["preview_open"].setEnabled(False)
