@@ -106,9 +106,44 @@ def fuzy_match(p_1, p_2):
     return math.hypot(p_1[0] - p_2[0], p_1[1] - p_2[1]) < 0.01
 
 
+def get_nearest_line(check, lines):
+    """gets the lowest distance between a point and a list of lines in 2D."""
+    nearest = None
+    for line in lines:
+        dist = calc_distance_to_line(check, line)
+        if not nearest or nearest > dist:
+            nearest = dist
+    return nearest
+
+
+def calc_distance_to_line(check, line):
+    """gets the lowest distance between a point and a line in 2D."""
+    x_1 = line[0][0]
+    y_1 = line[0][1]
+    x_2 = line[1][0]
+    y_2 = line[1][1]
+    x_3 = check[0]
+    y_3 = check[1]
+    p_x = x_2 - x_1
+    p_y = y_2 - y_1
+    norm = p_x * p_x + p_y * p_y
+    u_t = ((x_3 - x_1) * p_x + (y_3 - y_1) * p_y) / float(norm)
+    if u_t > 1:
+        u_t = 1
+    elif u_t < 0:
+        u_t = 0
+    x_p = x_1 + u_t * p_x
+    y_p = y_1 + u_t * p_y
+    d_x = x_p - x_3
+    d_y = y_p - y_3
+    dist = (d_x * d_x + d_y * d_y) ** 0.5
+    return dist
+
+
 def calc_distance(p_1, p_2):
     """gets the distance between two points in 2D."""
-    return math.hypot(p_1[0] - p_2[0], p_1[1] - p_2[1])
+    # return math.hypot(p_1[0] - p_2[0], p_1[1] - p_2[1])
+    return math.dist(p_1[0:2], p_2[0:2])
 
 
 def calc_distance3d(p_1, p_2):
@@ -493,6 +528,16 @@ def object2vertex(obj):
         ydata.append(segment.end[1])
         bdata.append(0)
     return (xdata, ydata, bdata)
+
+
+def object2points(obj):
+    """converts an object to list of points"""
+    points = []
+    for segment in obj.segments:
+        points.append(segment.start)
+    if obj.closed:
+        points.append(obj.segments[0].start)
+    return points
 
 
 # ########## Polyline Functions ###########
