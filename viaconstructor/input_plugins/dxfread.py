@@ -75,6 +75,7 @@ class DrawReader(DrawReaderBase):
             parser.add_argument(
                 "--dxfread-no-svg",
                 help="dxfread: disable svg support (inkscape converter)",
+                type=bool,
                 default=False,
                 action="store_true",
             )
@@ -82,6 +83,7 @@ class DrawReader(DrawReaderBase):
             parser.add_argument(
                 "--dxfread-no-bmp",
                 help="dxfread: disable bmp support (potrace converter)",
+                type=bool,
                 default=False,
                 action="store_true",
             )
