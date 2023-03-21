@@ -75,12 +75,14 @@ class DrawReader(DrawReaderBase):
             parser.add_argument(
                 "--dxfread-no-svg",
                 help="dxfread: disable svg support (inkscape converter)",
+                default=False,
                 action="store_true",
             )
         if os.path.isfile("/usr/bin/potrace"):
             parser.add_argument(
                 "--dxfread-no-bmp",
                 help="dxfread: disable bmp support (potrace converter)",
+                default=False,
                 action="store_true",
             )
 
