@@ -6,6 +6,7 @@ import importlib
 import json
 import math
 import os
+import platform
 import re
 import sys
 import threading
@@ -99,7 +100,6 @@ for reader in ("dxfread", "hpglread", "stlread", "svgread", "ttfread", "imgread"
         sys.stderr.write(f"ERRO while loading input plugin {reader}: {reader_error}\n")
 
 
-DRAW_2D = True
 DEBUG = False
 TIMESTAMP = 0
 
@@ -147,6 +147,7 @@ class ViaConstructor:
     )
 
     project: dict = {
+        "engine": "3D",
         "setup_defaults": setup_defaults(_),
         "filename_draw": "",
         "filename_machine_cmd": "",
@@ -666,7 +667,7 @@ class ViaConstructor:
             self.run_calculation()
             debug("update_drawing: run_calculation done")
 
-        if DRAW_2D:
+        if self.project["engine"] == "2D":
             draw_all_2d(self.project)
         else:
             draw_all_gl(self.project)
@@ -1924,6 +1925,12 @@ class ViaConstructor:
             "filename", help="input file", type=str, nargs="?", default=None
         )
         parser.add_argument(
+            "--engine",
+            help="display engine",
+            type=str,
+            default="3D",
+        )
+        parser.add_argument(
             "-s",
             "--setup",
             help="setup file",
@@ -1956,6 +1963,11 @@ class ViaConstructor:
             reader_plugin.arg_parser(parser)
 
         self.args = parser.parse_args()
+
+        if platform.system().lower() == "windows":
+            self.project["engine"] = "2D"
+        else:
+            self.project["engine"] = self.args.engine
 
         # load setup
         debug("main: load setup")
@@ -1993,7 +2005,7 @@ class ViaConstructor:
         self.project["window"] = QWidget()
         self.project["app"] = self
 
-        if DRAW_2D:
+        if self.project["engine"] == "2D":
             self.project["glwidget"] = CanvasWidget(self.project, self.update_drawing)
         else:
             self.project["glwidget"] = GLWidget(self.project, self.update_drawing)
@@ -2086,7 +2098,7 @@ class ViaConstructor:
         self.main.show()
         debug("main: gui ready")
 
-        if DRAW_2D:
+        if self.project["engine"] == "2D":
             if self.project["status"] == "INIT":
                 self.project["status"] = "READY"
             self.update_drawing()
