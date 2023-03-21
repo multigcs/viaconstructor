@@ -1,6 +1,9 @@
 """OpenGL drawing functions"""
 
 import math
+import platform
+import sys
+from subprocess import call
 from typing import Sequence
 
 import ezdxf
@@ -22,16 +25,700 @@ from OpenGL.GLU import (
     gluTessProperty,
     gluTessVertex,
 )
+from PyQt5.QtOpenGL import QGLFormat, QGLWidget  # pylint: disable=E0611
+from PyQt5.QtWidgets import QMessageBox  # pylint: disable=E0611
 
-from .calc import angle_of_line, calc_distance, line_center_3d
+from .calc import (
+    angle_of_line,
+    calc_distance,
+    calc_distance3d,
+    found_next_open_segment_point,
+    found_next_point_on_segment,
+    found_next_segment_point,
+    found_next_tab_point,
+    line_center_2d,
+    line_center_3d,
+    point_of_line3d,
+)
 from .dxfcolors import dxfcolors
 from .ext.HersheyFonts.HersheyFonts import HersheyFonts
 from .preview_plugins.gcode import GcodeParser
 from .preview_plugins.hpgl import HpglParser
+from .vc_types import VcSegment
 
 font = HersheyFonts()
 font.load_default_font()
 font.normalize_rendering(6)
+
+
+class GLWidget(QGLWidget):
+    """customized GLWidget."""
+
+    GL_MULTISAMPLE = 0x809D
+    screen_w = 100
+    screen_h = 100
+    aspect = 1.0
+    rot_x = -20.0
+    rot_y = -30.0
+    rot_z = 0.0
+    rot_x_last = rot_x
+    rot_y_last = rot_y
+    rot_z_last = rot_z
+    trans_x = 0.0
+    trans_y = 0.0
+    trans_z = 0.0
+    trans_x_last = trans_x
+    trans_y_last = trans_y
+    trans_z_last = trans_z
+    scale_xyz = 1.0
+    scale = 1.0
+    scale_last = scale
+    ortho = False
+    mbutton = None
+    mpos = None
+    mouse_pos_x = 0
+    mouse_pos_y = 0
+    selector_mode = ""
+    selection = ()
+    selection_set = ()
+    size_x = 0
+    size_y = 0
+    retina = False
+    wheel_scale = 0.1
+
+    def __init__(self, project: dict, update_drawing):
+        """init function."""
+        self.project: dict = project
+        self.project["gllist"] = []
+
+        my_format = QGLFormat.defaultFormat()
+        my_format.setSampleBuffers(True)
+        QGLFormat.setDefaultFormat(my_format)
+        if not QGLFormat.hasOpenGL():
+            QMessageBox.information(
+                self.project["window"],
+                "OpenGL using samplebuffers",
+                "This system does not support OpenGL.",
+            )
+            sys.exit(0)
+
+        super(GLWidget, self).__init__()
+        self.startTimer(40)
+        self.update_drawing = update_drawing
+        self.setMouseTracking(True)
+        if platform.system().lower() == "darwin":
+            self.retina = not call(
+                "system_profiler SPDisplaysDataType 2>/dev/null | grep -i 'retina' >/dev/null",
+                shell=True,
+            )
+        self.wheel_scale = 0.005 if self.retina else 0.1
+
+    def initializeGL(self) -> None:  # pylint: disable=C0103
+        """glinit function."""
+        GL.glMatrixMode(GL.GL_PROJECTION)
+        GL.glLoadIdentity()
+
+        if self.frameGeometry().width() == 0:
+            self.aspect = 1.0
+        else:
+            self.aspect = self.frameGeometry().height() / self.frameGeometry().width()
+
+        hight = 0.2
+        width = hight * self.aspect
+
+        if self.ortho:
+            GL.glOrtho(
+                -hight * 2.5, hight * 2.5, -width * 2.5, width * 2.5, -1000, 1000
+            )
+        else:
+            GL.glFrustum(-hight, hight, -width, width, 0.5, 100.0)
+
+        GL.glMatrixMode(GL.GL_MODELVIEW)
+        GL.glLoadIdentity()
+        GL.glClearColor(0.0, 0.0, 0.0, 1.0)
+        GL.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT)
+        GL.glClearDepth(1.0)
+        GL.glEnable(GL.GL_DEPTH_TEST)
+        GL.glDisable(GL.GL_CULL_FACE)
+        GL.glEnable(GL.GL_RESCALE_NORMAL)
+        GL.glDepthFunc(GL.GL_LEQUAL)
+        GL.glDepthMask(GL.GL_TRUE)
+        GL.glEnable(GL.GL_BLEND)
+        GL.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA)
+        GL.glEnable(GL.GL_COLOR_MATERIAL)
+        GL.glColorMaterial(GL.GL_FRONT_AND_BACK, GL.GL_AMBIENT_AND_DIFFUSE)
+        GL.glEnable(GLWidget.GL_MULTISAMPLE)
+        GL.glLight(GL.GL_LIGHT0, GL.GL_POSITION, (0, 0, 0, 1))
+        GL.glLightfv(GL.GL_LIGHT0, GL.GL_AMBIENT, (0.1, 0.1, 0.1, 1))
+        GL.glLightfv(GL.GL_LIGHT0, GL.GL_DIFFUSE, (1, 1, 1, 1))
+        GL.glEnable(GL.GL_LIGHTING)
+        GL.glEnable(GL.GL_LIGHT0)
+
+    def resizeGL(self, width, hight) -> None:  # pylint: disable=C0103
+        """glresize function."""
+        if self.retina:
+            self.screen_w = width / 2
+            self.screen_h = hight / 2
+        else:
+            self.screen_w = width
+            self.screen_h = hight
+        GL.glViewport(0, 0, width, hight)
+        self.initializeGL()
+
+    def draw_tool(self, tool_pos, spindle) -> None:  # pylint: disable=C0103
+        blades = self.project["setup"]["tool"]["blades"]
+        radius = self.project["setup"]["tool"]["diameter"] / 2.0
+        height = max(
+            -self.project["setup"]["mill"]["depth"] + 5,
+            self.project["setup"]["tool"]["diameter"] * 3,
+        )
+        shaft_height = height * 2
+        angle = -self.project["simulation_cnt"]
+        self.project["simulation_cnt"] += 15
+
+        GL.glPushMatrix()
+        GL.glTranslatef(tool_pos[0], tool_pos[1], tool_pos[2])
+        if spindle != "OFF" and self.project["setup"]["machine"]["mode"] == "mill":
+            GL.glRotatef(angle, 0.0, 0.0, 1.0)
+
+        if self.project["setup"]["machine"]["mode"] == "mill":
+            climp = 0.4 * radius
+            blade_h = 1.0 * radius
+            asteps = 10
+            rots = (height + climp) / climp / asteps
+
+            # shaft
+            GL.glColor4f(0.5, 0.5, 0.5, 1.0)
+            GL.glBegin(GL.GL_TRIANGLE_STRIP)
+            z_pos = 0.0
+            angle = 0.0
+            while angle < math.pi * 2:
+                x_pos = radius * math.cos(angle)
+                y_pos = radius * math.sin(angle)
+                GL.glNormal3f(x_pos / radius, y_pos / radius, 0)
+                GL.glVertex3f(x_pos, y_pos, height)
+                GL.glVertex3f(x_pos, y_pos, height + shaft_height)
+                angle += math.pi / 10
+            x_pos = radius * math.cos(angle)
+            y_pos = radius * math.sin(angle)
+            GL.glNormal3f(x_pos / radius, y_pos / radius, 0)
+            GL.glVertex3f(x_pos, y_pos, height)
+            GL.glVertex3f(x_pos, y_pos, height + shaft_height)
+            GL.glEnd()
+
+            GL.glBegin(GL.GL_TRIANGLE_STRIP)
+            z_pos = 0.0
+            angle = 0.0
+            while angle < math.pi * 2:
+                x_pos = radius / 3 * math.cos(angle)
+                y_pos = radius / 3 * math.sin(angle)
+                GL.glNormal3f(x_pos / radius / 2, y_pos / radius / 2, 0)
+                GL.glVertex3f(x_pos, y_pos, 1.0)
+                GL.glVertex3f(x_pos, y_pos, height)
+                angle += math.pi / 10
+            x_pos = radius / 3 * math.cos(angle)
+            y_pos = radius / 3 * math.sin(angle)
+            GL.glNormal3f(x_pos / radius / 2, y_pos / radius / 2, 0)
+            GL.glVertex3f(x_pos, y_pos, 1.0)
+            GL.glVertex3f(x_pos, y_pos, height)
+            GL.glEnd()
+
+            # blades
+            start_angle = 0.0
+            while start_angle < math.pi * 2:
+                GL.glNormal3f(0, 0, -1)
+                GL.glBegin(GL.GL_TRIANGLE_STRIP)
+                z_pos = 0.0
+                angle = start_angle
+                while angle < math.pi * rots + start_angle:
+                    x_pos = radius * math.cos(angle)
+                    y_pos = radius * math.sin(angle)
+                    GL.glNormal3f(x_pos / radius, y_pos / radius, -0.5)
+                    GL.glVertex3f(0, 0, z_pos)
+                    GL.glVertex3f(x_pos, y_pos, z_pos)
+                    z_pos = z_pos + climp
+                    angle += math.pi / asteps
+                GL.glEnd()
+
+                GL.glNormal3f(0, 0, 1)
+                GL.glBegin(GL.GL_TRIANGLE_STRIP)
+                z_pos = blade_h
+                angle = start_angle
+                while angle < math.pi * rots + start_angle:
+                    x_pos = radius * math.cos(angle)
+                    y_pos = radius * math.sin(angle)
+                    GL.glNormal3f(x_pos / radius, y_pos / radius, 0.5)
+                    GL.glVertex3f(0, 0, z_pos)
+                    GL.glVertex3f(x_pos, y_pos, z_pos)
+                    z_pos = z_pos + climp
+                    angle += math.pi / asteps
+                GL.glEnd()
+
+                GL.glNormal3f(0, 0, 1)
+                GL.glBegin(GL.GL_TRIANGLE_STRIP)
+                z_pos = 0.0
+                angle = start_angle
+                while angle < math.pi * rots + start_angle:
+                    x_pos = radius * math.cos(angle)
+                    y_pos = radius * math.sin(angle)
+                    GL.glNormal3f(x_pos / radius, y_pos / radius, 0)
+                    GL.glVertex3f(x_pos, y_pos, z_pos + blade_h)
+                    GL.glVertex3f(x_pos, y_pos, z_pos)
+                    z_pos = z_pos + climp
+                    angle += math.pi / asteps
+                GL.glEnd()
+
+                start_angle += math.pi * 2 / blades
+        else:
+            # shaft
+            GL.glColor4f(0.5, 0.5, 0.5, 1.0)
+            GL.glBegin(GL.GL_TRIANGLE_STRIP)
+            z_pos = 0.0
+            angle = 0.0
+            while angle < math.pi * 2:
+                x_pos = (radius + 2) * math.cos(angle)
+                y_pos = (radius + 2) * math.sin(angle)
+                GL.glNormal3f(x_pos / (radius + 2), y_pos / (radius + 2), 0)
+                GL.glVertex3f(x_pos, y_pos, height)
+                GL.glVertex3f(x_pos, y_pos, height + shaft_height)
+                angle += math.pi / 10
+            x_pos = (radius + 2) * math.cos(angle)
+            y_pos = (radius + 2) * math.sin(angle)
+            GL.glNormal3f(x_pos / (radius + 2), y_pos / (radius + 2), 0)
+            GL.glVertex3f(x_pos, y_pos, height)
+            GL.glVertex3f(x_pos, y_pos, height + shaft_height)
+            GL.glEnd()
+
+            # laser
+            if spindle != "OFF":
+                GL.glColor4f(1.0, 0.0, 0.0, 0.5)
+            else:
+                GL.glColor4f(1.0, 1.0, 1.0, 0.2)
+            GL.glBegin(GL.GL_TRIANGLE_STRIP)
+            z_pos = 0.0
+            angle = 0.0
+            while angle < math.pi * 2:
+                x_pos = radius * math.cos(angle)
+                y_pos = radius * math.sin(angle)
+                GL.glNormal3f(x_pos / radius, y_pos / radius, 0)
+                GL.glVertex3f(x_pos, y_pos, 0)
+                GL.glVertex3f(x_pos, y_pos, height)
+                angle += math.pi / 10
+            x_pos = radius * math.cos(angle)
+            y_pos = radius * math.sin(angle)
+            GL.glNormal3f(x_pos / radius, y_pos / radius, 0)
+            GL.glVertex3f(x_pos, y_pos, 0)
+            GL.glVertex3f(x_pos, y_pos, height)
+            GL.glEnd()
+
+        GL.glPopMatrix()
+
+    def paintGL(self) -> None:  # pylint: disable=C0103
+        """glpaint function."""
+        min_max = self.project["minMax"]
+        if not min_max:
+            return
+
+        GL.glNormal3f(0, 0, 1)
+
+        self.size_x = max(min_max[2] - min_max[0], 0.1)
+        self.size_y = max(min_max[3] - min_max[1], 0.1)
+        self.scale = min(1.0 / self.size_x, 1.0 / self.size_y) / 1.4
+
+        GL.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT)
+        GL.glMatrixMode(GL.GL_MODELVIEW)
+
+        GL.glPushMatrix()
+        GL.glTranslatef(-self.trans_x, -self.trans_y, self.trans_z - 1.2)
+        GL.glScalef(self.scale_xyz, self.scale_xyz, self.scale_xyz)
+        GL.glRotatef(self.rot_x, 0.0, 1.0, 0.0)
+        GL.glRotatef(self.rot_y, 1.0, 0.0, 0.0)
+        GL.glRotatef(self.rot_z, 0.0, 0.0, 1.0)
+        GL.glTranslatef(
+            (-self.size_x / 2.0 - min_max[0]) * self.scale,
+            (-self.size_y / 2.0 - min_max[1]) * self.scale,
+            0.0,
+        )
+        GL.glScalef(self.scale, self.scale, self.scale)
+
+        GL.glCallList(self.project["gllist"])
+
+        GL.glNormal3f(0, 0, 1)
+        if self.selection:
+            if self.selector_mode == "start":
+                # depth = self.project["setup"]["mill"]["depth"] - 0.1
+                depth = 0.1
+                GL.glLineWidth(5)
+                GL.glColor4f(0.0, 1.0, 1.0, 1.0)
+                GL.glBegin(GL.GL_LINES)
+                GL.glVertex3f(self.selection[2][0] - 1, self.selection[2][1] - 1, depth)
+                GL.glVertex3f(self.selection[2][0] + 1, self.selection[2][1] + 1, depth)
+                GL.glVertex3f(self.selection[2][0] - 1, self.selection[2][1] + 1, depth)
+                GL.glVertex3f(self.selection[2][0] + 1, self.selection[2][1] - 1, depth)
+                GL.glEnd()
+            elif self.selector_mode == "repair":
+                if len(self.selection) > 4:
+                    depth = 0.1
+                    GL.glLineWidth(15)
+                    GL.glColor4f(1.0, 0.0, 0.0, 1.0)
+                    GL.glBegin(GL.GL_LINES)
+                    GL.glVertex3f(self.selection[0], self.selection[1], depth)
+                    GL.glVertex3f(self.selection[4], self.selection[5], depth)
+                    GL.glEnd()
+            elif self.selector_mode == "delete":
+                depth = 0.1
+                GL.glLineWidth(5)
+                GL.glColor4f(1.0, 0.0, 0.0, 1.0)
+                GL.glBegin(GL.GL_LINES)
+                GL.glVertex3f(self.selection[0] - 1, self.selection[1] - 1, depth)
+                GL.glVertex3f(self.selection[0] + 1, self.selection[1] + 1, depth)
+                GL.glVertex3f(self.selection[0] - 1, self.selection[1] + 1, depth)
+                GL.glVertex3f(self.selection[0] + 1, self.selection[1] - 1, depth)
+                GL.glEnd()
+            elif self.selector_mode == "oselect":
+                depth = 0.1
+                GL.glLineWidth(5)
+                GL.glColor4f(0.0, 1.0, 0.0, 1.0)
+                GL.glBegin(GL.GL_LINES)
+                GL.glVertex3f(self.selection[0] - 1, self.selection[1] - 1, depth)
+                GL.glVertex3f(self.selection[0] + 1, self.selection[1] + 1, depth)
+                GL.glVertex3f(self.selection[0] - 1, self.selection[1] + 1, depth)
+                GL.glVertex3f(self.selection[0] + 1, self.selection[1] - 1, depth)
+                GL.glEnd()
+            else:
+                depth = self.project["setup"]["mill"]["depth"] - 0.1
+                GL.glLineWidth(5)
+                GL.glColor4f(0.0, 1.0, 1.0, 1.0)
+                GL.glBegin(GL.GL_LINES)
+                GL.glVertex3f(self.selection[0][0], self.selection[0][1], depth)
+                GL.glVertex3f(self.selection[1][0], self.selection[1][1], depth)
+                GL.glEnd()
+
+        if self.project["simulation"] or self.project["simulation_pos"] != 0:
+            last_pos = self.project["simulation_last"]
+            sim_step = self.project["simulation_pos"]
+            if sim_step < len(self.project["simulation_data"]):
+                next_pos = self.project["simulation_data"][sim_step][1]
+                spindle = self.project["simulation_data"][sim_step][4]
+
+                if self.project["simulation"]:
+                    dist = calc_distance3d(last_pos, next_pos)
+                    if dist >= 1.0:
+                        pdist = 1.0 / dist
+                        next_pos = point_of_line3d(last_pos, next_pos, pdist)
+                    else:
+                        pdist = 1.0
+                    self.project["simulation_last"] = next_pos
+                    if pdist >= 1.0:
+                        if (
+                            self.project["simulation_pos"]
+                            < len(self.project["simulation_data"]) - 1
+                        ):
+                            self.project["simulation_pos"] += 1
+                        else:
+                            self.project["simulation_pos"] = 0
+                            self.project["simulation"] = False
+
+                self.draw_tool(self.project["simulation_last"], spindle)
+
+        GL.glPopMatrix()
+
+    def toggle_tab_selector(self) -> bool:
+        self.selection = ()
+        self.selection_set = ()
+        if self.selector_mode == "":
+            self.selector_mode = "tab"
+            self.view_2d()
+            return True
+        if self.selector_mode == "tab":
+            self.selector_mode = ""
+            self.view_reset()
+        return False
+
+    def toggle_start_selector(self) -> bool:
+        self.selection = ()
+        self.selection_set = ()
+        if self.selector_mode == "":
+            self.selector_mode = "start"
+            self.view_2d()
+            return True
+        if self.selector_mode == "start":
+            self.selector_mode = ""
+            self.view_reset()
+        return False
+
+    def toggle_repair_selector(self) -> bool:
+        self.selection = ()
+        self.selection_set = ()
+        if self.selector_mode == "":
+            self.selector_mode = "repair"
+            self.view_2d()
+            return True
+        if self.selector_mode == "repair":
+            self.selector_mode = ""
+            self.view_reset()
+        return False
+
+    def toggle_delete_selector(self) -> bool:
+        self.selection = ()
+        self.selection_set = ()
+        if self.selector_mode == "":
+            self.selector_mode = "delete"
+            self.view_2d()
+            return True
+        if self.selector_mode == "delete":
+            self.selector_mode = ""
+            self.view_reset()
+        return False
+
+    def toggle_object_selector(self) -> bool:
+        self.selection = ()
+        self.selection_set = ()
+        if self.selector_mode == "":
+            self.selector_mode = "oselect"
+            self.view_2d()
+            return True
+        if self.selector_mode == "oselect":
+            self.selector_mode = ""
+            self.view_reset()
+        return False
+
+    def view_2d(self) -> None:
+        """toggle view function."""
+        self.ortho = True
+        self.rot_x = 0.0
+        self.rot_y = 0.0
+        self.rot_z = 0.0
+        self.initializeGL()
+
+    def view_reset(self) -> None:
+        """toggle view function."""
+        if self.selector_mode != "":
+            return
+        self.ortho = False
+        self.rot_x = -20.0
+        self.rot_y = -30.0
+        self.rot_z = 0.0
+        self.trans_x = 0.0
+        self.trans_y = 0.0
+        self.trans_z = 0.0
+        self.scale_xyz = 1.0
+        self.initializeGL()
+
+    def timerEvent(self, event) -> None:  # pylint: disable=C0103,W0613
+        """gltimer function."""
+        if self.project["status"] == "INIT":
+            self.project["status"] = "READY"
+            self.update_drawing()
+        self.update()
+
+    def mousePressEvent(self, event) -> None:  # pylint: disable=C0103
+        """mouse button pressed."""
+        self.mbutton = event.button()
+        self.mpos = event.pos()
+        self.rot_x_last = self.rot_x
+        self.rot_y_last = self.rot_y
+        self.rot_z_last = self.rot_z
+        self.trans_x_last = self.trans_x
+        self.trans_y_last = self.trans_y
+        self.trans_z_last = self.trans_z
+        if self.selector_mode != "" and self.selection:
+            if self.mbutton == 1:
+                if self.selection:
+                    if self.selector_mode == "tab":
+                        self.project["tabs"]["data"].append(self.selection)
+                        self.project["app"].update_tabs()
+                        self.selection = ()
+                    elif self.selector_mode == "start":
+                        obj_idx = self.selection[0]
+                        segment_idx = self.selection[1]
+                        new_point = self.selection[2]
+                        obj = self.project["objects"][obj_idx]
+                        segment = obj.segments[segment_idx]
+                        if new_point not in (segment.start, segment.end):
+                            new_segment = VcSegment(
+                                {
+                                    "type": "LINE",
+                                    "object": segment.object,
+                                    "layer": segment.layer,
+                                    "color": segment.color,
+                                    "start": new_point,
+                                    "end": segment.end,
+                                    "bulge": segment.bulge / 2,
+                                }
+                            )
+                            segment.end = new_point
+                            segment.bulge = segment.bulge / 2
+                            obj.segments.insert(segment_idx + 1, new_segment)
+                        self.project["objects"][obj_idx]["start"] = new_point
+                        self.project["app"].update_starts()
+                        self.selection = ()
+                    elif self.selector_mode == "delete":
+                        self.selection_set = self.selection
+                        self.project["app"].update_table()
+                    elif self.selector_mode == "oselect":
+                        self.selection_set = self.selection
+                        self.project["app"].update_table()
+                    elif self.selector_mode == "repair":
+                        obj_idx = self.selection[2]
+                        self.project["segments_org"].append(
+                            VcSegment(
+                                {
+                                    "type": "LINE",
+                                    "object": None,
+                                    "layer": self.project["objects"][obj_idx]["layer"],
+                                    "color": self.project["objects"][obj_idx]["color"],
+                                    "start": (self.selection[0], self.selection[1]),
+                                    "end": (self.selection[4], self.selection[5]),
+                                    "bulge": 0.0,
+                                }
+                            )
+                        )
+                        self.selection = ()
+                        self.project["app"].prepare_segments()
+
+                self.update_drawing()
+                self.update()
+            elif self.mbutton == 2:
+                if self.selector_mode == "tab":
+                    sel_idx = -1
+                    sel_dist = -1
+                    for tab_idx, tab in enumerate(self.project["tabs"]["data"]):
+                        tab_pos = line_center_2d(tab[0], tab[1])
+                        dist = calc_distance(
+                            (self.mouse_pos_x, self.mouse_pos_y), tab_pos
+                        )
+                        if sel_dist < 0 or dist < sel_dist:
+                            sel_dist = dist
+                            sel_idx = tab_idx
+
+                    if 0.0 < sel_dist < 10.0:
+                        del self.project["tabs"]["data"][sel_idx]
+                        self.update_drawing()
+                        self.update()
+                        self.project["app"].update_tabs()
+                    self.selection = ()
+                elif self.selector_mode == "delete":
+                    obj_idx = self.selection[2]
+                    del self.project["objects"][obj_idx]
+                    self.project["app"].update_table()
+                    self.update_drawing()
+                    self.update()
+                    self.selection = ()
+                elif self.selector_mode == "oselect":
+                    pass
+                elif self.selector_mode == "start":
+                    obj_idx = self.selection[0]
+                    self.project["objects"][obj_idx]["start"] = ()
+                    self.update_drawing()
+                    self.update()
+                    self.project["app"].update_starts()
+                    self.selection = ()
+
+    def mouseReleaseEvent(self, event) -> None:  # pylint: disable=C0103,W0613
+        """mouse button released."""
+        self.mbutton = None
+        self.mpos = None
+
+    def mouse_pos_to_real_pos(self, mouse_pos) -> tuple:
+        min_max = self.project["minMax"]
+        mouse_pos_x = mouse_pos.x()
+        mouse_pos_y = self.screen_h - mouse_pos.y()
+        real_pos_x = (
+            (
+                (mouse_pos_x / self.screen_w - 0.5 + self.trans_x)
+                / self.scale
+                / self.scale_xyz
+            )
+            + (self.size_x / 2)
+            + min_max[0]
+        )
+        real_pos_y = (
+            (
+                (mouse_pos_y / self.screen_h - 0.5 + self.trans_y)
+                / self.scale
+                / self.scale_xyz
+                * self.aspect
+            )
+            + (self.size_y / 2)
+            + min_max[1]
+        )
+        return (real_pos_x, real_pos_y)
+
+    def mouseMoveEvent(self, event) -> None:  # pylint: disable=C0103
+        """mouse moved."""
+        if self.mbutton == 1:
+            moffset = self.mpos - event.pos()
+            self.trans_x = self.trans_x_last + moffset.x() / self.screen_w
+            self.trans_y = self.trans_y_last - moffset.y() / self.screen_h * self.aspect
+        elif self.selector_mode == "tab":
+            (self.mouse_pos_x, self.mouse_pos_y) = self.mouse_pos_to_real_pos(
+                event.pos()
+            )
+            self.selection = found_next_tab_point(
+                (self.mouse_pos_x, self.mouse_pos_y), self.project["offsets"]
+            )
+        elif self.selector_mode == "start":
+            (self.mouse_pos_x, self.mouse_pos_y) = self.mouse_pos_to_real_pos(
+                event.pos()
+            )
+            self.selection = found_next_point_on_segment(
+                (self.mouse_pos_x, self.mouse_pos_y), self.project["objects"]
+            )
+        elif self.selector_mode == "delete":
+            (self.mouse_pos_x, self.mouse_pos_y) = self.mouse_pos_to_real_pos(
+                event.pos()
+            )
+            self.selection = found_next_segment_point(
+                (self.mouse_pos_x, self.mouse_pos_y), self.project["objects"]
+            )
+        elif self.selector_mode == "oselect":
+            (self.mouse_pos_x, self.mouse_pos_y) = self.mouse_pos_to_real_pos(
+                event.pos()
+            )
+            self.selection = found_next_segment_point(
+                (self.mouse_pos_x, self.mouse_pos_y), self.project["objects"]
+            )
+        elif self.selector_mode == "repair":
+            (self.mouse_pos_x, self.mouse_pos_y) = self.mouse_pos_to_real_pos(
+                event.pos()
+            )
+            self.selection = found_next_open_segment_point(
+                (self.mouse_pos_x, self.mouse_pos_y), self.project["objects"]
+            )
+            if self.selection:
+                selection_end = found_next_open_segment_point(
+                    (self.mouse_pos_x, self.mouse_pos_y),
+                    self.project["objects"],
+                    max_dist=10.0,
+                    exclude=(self.selection[2], self.selection[3]),
+                )
+                if selection_end:
+                    self.selection += selection_end
+                else:
+                    self.selection = ()
+
+        elif self.mbutton == 2:
+            moffset = self.mpos - event.pos()
+            self.rot_z = self.rot_z_last - moffset.x() / 4
+            self.trans_z = self.trans_z_last + moffset.y() / 500
+            if self.ortho:
+                self.ortho = False
+                self.initializeGL()
+        elif self.mbutton == 4:
+            moffset = self.mpos - event.pos()
+            self.rot_x = self.rot_x_last + -moffset.x() / 4
+            self.rot_y = self.rot_y_last - moffset.y() / 4
+            if self.ortho:
+                self.ortho = False
+                self.initializeGL()
+
+    def wheelEvent(self, event) -> None:  # pylint: disable=C0103,W0613
+        """mouse wheel moved."""
+        if event.angleDelta().y() > 0:
+            self.scale_xyz += self.wheel_scale
+        else:
+            self.scale_xyz -= self.wheel_scale
 
 
 def draw_circle(center: Sequence[float], radius: float) -> None:
@@ -673,3 +1360,34 @@ def draw_machinecode_path(project: dict) -> bool:
         print(f"ERROR: parsing machine_cmd: {error_string}")
         return False
     return True
+
+
+def draw_all(project: dict) -> None:
+    project["gllist"] = GL.glGenLists(1)
+    GL.glNewList(project["gllist"], GL.GL_COMPILE)
+    draw_grid(project)
+
+    if project["setup"]["view"]["3d_show"]:
+        if hasattr(project["draw_reader"], "draw_3d"):
+            project["draw_reader"].draw_3d()
+
+    if project["glwidget"] and project["glwidget"].selector_mode != "repair":
+        if not draw_machinecode_path(project):
+            print("error while drawing machine commands")
+
+    if project["setup"]["view"]["object_ids"]:
+        draw_object_ids(project)
+
+    selected = -1
+    if (
+        project["glwidget"]
+        and project["glwidget"].selection_set
+        and project["glwidget"].selector_mode in {"delete", "oselect"}
+    ):
+        selected = project["glwidget"].selection_set[2]
+
+    draw_object_edges(project, selected=selected)
+    if project["setup"]["view"]["polygon_show"]:
+        draw_object_faces(project)
+
+    GL.glEndList()
