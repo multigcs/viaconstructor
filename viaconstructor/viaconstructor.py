@@ -85,6 +85,8 @@ try:
     HAVE_NEST = True
 except ImportError:
     HAVE_NEST = False
+except Exception:
+    HAVE_NEST = False
 
 reader_plugins: dict = {}
 for reader in ("dxfread", "hpglread", "stlread", "svgread", "ttfread", "imgread"):

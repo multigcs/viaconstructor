@@ -15,7 +15,7 @@ parser.add_argument(
     "--url",
     help="cncjs url (http://IP:PORT)",
     type=str,
-    default="http://192.168.10.183:8000",
+    default="http://192.168.10.50:8000",
 )
 parser.add_argument(
     "-U", "--username", help="cncjs api username", type=str, default="viaconstructor"
