@@ -81,8 +81,8 @@ def draw_line_2d(p_from: Sequence[float], p_to: Sequence[float]) -> None:
 def draw_circle_2d(p_center: Sequence[float], p_size: float) -> None:
     painter["ctx"].drawEllipse(
         QtCore.QPointF(  # type: ignore
-            (painter["offset_x"] + p_center[0] - p_size / 2.0) * painter["scale"],  # type: ignore
-            (painter["offset_y"] + p_center[1] - p_size / 2.0) * -painter["scale"],  # type: ignore
+            (painter["offset_x"] + p_center[0]) * painter["scale"],  # type: ignore
+            (painter["offset_y"] + p_center[1]) * -painter["scale"],  # type: ignore
         ),
         p_size * painter["scale"],  # type: ignore
         p_size * -painter["scale"],  # type: ignore
