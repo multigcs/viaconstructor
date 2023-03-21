@@ -66,9 +66,14 @@ class CanvasWidget(QLabel):  # pylint: disable=R0903
         self.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Ignored)  # type: ignore
         self.setScaledContents(True)
 
-        canvas = QPixmap(1200, 1200)
-        canvas.fill(QtCore.Qt.white)  # type: ignore  # pylint: disable=I1101
-        self.setPixmap(canvas)
+
+def draw_line_2d(p_from: Sequence[float], p_to: Sequence[float]) -> None:
+    painter["ctx"].drawLine(  # type: ignore
+        (painter["offset_x"] + p_from[0]) * painter["scale"],  # type: ignore
+        (painter["offset_y"] + p_from[1]) * -painter["scale"],  # type: ignore
+        (painter["offset_x"] + p_to[0]) * painter["scale"],  # type: ignore
+        (painter["offset_y"] + p_to[1]) * -painter["scale"],  # type: ignore
+    )
 
 
 def draw_mill_line(
@@ -80,13 +85,7 @@ def draw_mill_line(
     project: dict,  # pylint: disable=W0613
 ) -> None:
     """draws an milling line including direction and width"""
-
-    painter["ctx"].drawLine(  # type: ignore
-        painter["offset_x"] + p_from[0] * painter["scale"],  # type: ignore
-        painter["offset_y"] - p_from[1] * painter["scale"],  # type: ignore
-        painter["offset_x"] + p_to[0] * painter["scale"],  # type: ignore
-        painter["offset_y"] - p_to[1] * painter["scale"],  # type: ignore
-    )
+    draw_line_2d(p_from, p_to)
 
 
 def draw_object_edges(
@@ -113,7 +112,6 @@ def draw_object_edges(
             depths.append(odepth)
     depths.sort()
 
-    painter["ctx"] = QPainter(project["glwidget"].pixmap())
     painter["ctx"].setPen(QPen(QtCore.Qt.red, 1, QtCore.Qt.SolidLine))  # type: ignore  # pylint: disable=I1101
     for _obj_idx, obj in project["objects"].items():
         if obj.get("layer", "").startswith("BREAKS:") or obj.get(
@@ -122,14 +120,7 @@ def draw_object_edges(
             continue
 
         for segment in obj.segments:
-            painter["ctx"].drawLine(  # type: ignore
-                painter["offset_x"] + segment.start[0] * painter["scale"],
-                painter["offset_y"] - segment.start[1] * painter["scale"],
-                painter["offset_x"] + segment.end[0] * painter["scale"],
-                painter["offset_y"] - segment.end[1] * painter["scale"],
-            )
-
-    painter["ctx"].end()  # type: ignore
+            draw_line_2d(segment.start, segment.end)
 
 
 def draw_line(p_1: dict, p_2: dict, options: str, project: dict) -> None:
@@ -164,9 +155,6 @@ def draw_machinecode_path(project: dict) -> bool:
     """draws the machinecode path"""
     project["simulation_data"] = []
 
-    painter["ctx"]: QPainter = QPainter(project["glwidget"].pixmap())  # type: ignore
-    painter["ctx"].setPen(QPen(QtCore.Qt.green, 1, QtCore.Qt.SolidLine))  # type: ignore  # pylint: disable=I1101
-
     try:
         if project["suffix"] in {"ngc", "gcode"}:
             parser = GcodeParser(project["machine_cmd"])
@@ -179,12 +167,28 @@ def draw_machinecode_path(project: dict) -> bool:
         print(f"ERROR: parsing machine_cmd: {error_string}")
         return False
 
-    painter["ctx"].end()  # type: ignore
-
     return True
 
 
 def draw_all(project: dict) -> None:
+
+    min_max = project["minMax"]
+    if not min_max:
+        return
+
+    size_x = max(min_max[2] - min_max[0], 0.1)
+    size_y = max(min_max[3] - min_max[1], 0.1)
+    painter["scale"] = min(1200.0 / size_x, 1200.0 / size_y) / 1.4
+    painter["offset_x"] = -min_max[0] - size_x / 2 + (600 / painter["scale"])  # type: ignore
+    painter["offset_y"] = -size_y / 2 - min_max[1] - (600 / painter["scale"])  # type: ignore
+
+    canvas = QPixmap(1200, 1200)
+    project["glwidget"].setPixmap(canvas)
+    project["glwidget"].adjustSize()
+    project["glwidget"].pixmap().fill(QtCore.Qt.black)  # type: ignore  # pylint: disable=I1101
+    painter["ctx"]: QPainter = QPainter(project["glwidget"].pixmap())  # type: ignore
+    painter["ctx"].setPen(QPen(QtCore.Qt.green, 1, QtCore.Qt.SolidLine))  # type: ignore  # pylint: disable=I1101
+
     if project["glwidget"]:
         if not draw_machinecode_path(project):
             print("error while drawing machine commands")
@@ -198,3 +202,4 @@ def draw_all(project: dict) -> None:
         selected = project["glwidget"].selection_set[2]
 
     draw_object_edges(project, selected=selected)
+    painter["ctx"].end()  # type: ignore

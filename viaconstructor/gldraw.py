@@ -123,15 +123,15 @@ class GLWidget(QGLWidget):
         else:
             self.aspect = self.frameGeometry().height() / self.frameGeometry().width()
 
-        hight = 0.2
-        width = hight * self.aspect
+        height = 0.2
+        width = height * self.aspect
 
         if self.ortho:
             GL.glOrtho(
-                -hight * 2.5, hight * 2.5, -width * 2.5, width * 2.5, -1000, 1000
+                -height * 2.5, height * 2.5, -width * 2.5, width * 2.5, -1000, 1000
             )
         else:
-            GL.glFrustum(-hight, hight, -width, width, 0.5, 100.0)
+            GL.glFrustum(-height, height, -width, width, 0.5, 100.0)
 
         GL.glMatrixMode(GL.GL_MODELVIEW)
         GL.glLoadIdentity()
@@ -154,15 +154,15 @@ class GLWidget(QGLWidget):
         GL.glEnable(GL.GL_LIGHTING)
         GL.glEnable(GL.GL_LIGHT0)
 
-    def resizeGL(self, width, hight) -> None:  # pylint: disable=C0103
+    def resizeGL(self, width, height) -> None:  # pylint: disable=C0103
         """glresize function."""
         if self.retina:
             self.screen_w = width / 2
-            self.screen_h = hight / 2
+            self.screen_h = height / 2
         else:
             self.screen_w = width
-            self.screen_h = hight
-        GL.glViewport(0, 0, width, hight)
+            self.screen_h = height
+        GL.glViewport(0, 0, width, height)
         self.initializeGL()
 
     def draw_tool(self, tool_pos, spindle) -> None:  # pylint: disable=C0103

@@ -97,7 +97,7 @@ for reader in ("dxfread", "hpglread", "stlread", "svgread", "ttfread", "imgread"
         sys.stderr.write(f"ERRO while loading input plugin {reader}: {reader_error}\n")
 
 
-DRAW_2D = False
+DRAW_2D = True
 DEBUG = False
 TIMESTAMP = 0
 
