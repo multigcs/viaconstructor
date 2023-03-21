@@ -75,16 +75,12 @@ class DrawReader(DrawReaderBase):
             parser.add_argument(
                 "--dxfread-no-svg",
                 help="dxfread: disable svg support (inkscape converter)",
-                type=bool,
-                default=False,
                 action="store_true",
             )
         if os.path.isfile("/usr/bin/potrace"):
             parser.add_argument(
                 "--dxfread-no-bmp",
                 help="dxfread: disable bmp support (potrace converter)",
-                type=bool,
-                default=False,
                 action="store_true",
             )
 
@@ -578,11 +574,11 @@ class DrawReader(DrawReaderBase):
     @staticmethod
     def suffix(args: argparse.Namespace = None) -> list[str]:
         suffixes = ["dxf"]
-        if not args.dxfread_no_svg and os.path.isfile(
+        if not hasattr(args, "dxfread_no_bmp") or (not args.dxfread_no_svg and os.path.isfile(
             "/usr/share/inkscape/extensions/dxf_outlines.py"
-        ):
+        )):
             suffixes.append("svg")
-        if not args.dxfread_no_bmp and os.path.isfile("/usr/bin/potrace"):
+        if not hasattr(args, "dxfread_no_bmp") or (not args.dxfread_no_bmp and os.path.isfile("/usr/bin/potrace")):
             if os.path.isfile("/usr/bin/convert"):
                 suffixes += BITMAP_FORMATS
             else:
