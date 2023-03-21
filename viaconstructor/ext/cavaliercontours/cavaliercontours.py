@@ -3,12 +3,11 @@ import numpy as np
 import platform
 
 module_root = pathlib.Path(__file__).resolve().parent
-try:
-    libname = module_root / "lib/libCavalierContours.so"
-    c_lib = ctypes.CDLL(libname)
-except Exception:
-    libname = module_root / f"lib/libCavalierContours.x86_64-{platform.system().lower()}-gnu.so"
-    c_lib = ctypes.CDLL(libname)
+if platform.system().lower() == "windows":
+    libname = f"{module_root}/lib/libCavalierContours.x86_64-{platform.system().lower()}.dll"
+else:
+    libname = f"{module_root}/lib/libCavalierContours.x86_64-{platform.system().lower()}.so"
+c_lib = ctypes.CDLL(libname)
 
 class _PointStruct(ctypes.Structure):
     _fields_ = [('x', ctypes.c_double),
