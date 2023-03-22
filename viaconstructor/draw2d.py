@@ -68,8 +68,8 @@ class CanvasWidget(QLabel):  # pylint: disable=R0903
 
 
 def draw_line_2d(p_from: Sequence[float], p_to: Sequence[float]) -> None:
-    painter["ctx"].drawLine(
-        QtCore.QLineF(  # type: ignore
+    painter["ctx"].drawLine(  # type: ignore
+        QtCore.QLineF(  # pylint: disable=I1101
             (painter["offset_x"] + p_from[0]) * painter["scale"],  # type: ignore
             (painter["offset_y"] + p_from[1]) * -painter["scale"],  # type: ignore
             (painter["offset_x"] + p_to[0]) * painter["scale"],  # type: ignore
@@ -79,8 +79,8 @@ def draw_line_2d(p_from: Sequence[float], p_to: Sequence[float]) -> None:
 
 
 def draw_circle_2d(p_center: Sequence[float], p_size: float) -> None:
-    painter["ctx"].drawEllipse(
-        QtCore.QPointF(  # type: ignore
+    painter["ctx"].drawEllipse(  # type: ignore
+        QtCore.QPointF(  # pylint: disable=I1101
             (painter["offset_x"] + p_center[0]) * painter["scale"],  # type: ignore
             (painter["offset_y"] + p_center[1]) * -painter["scale"],  # type: ignore
         ),

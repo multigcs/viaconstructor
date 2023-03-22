@@ -81,12 +81,16 @@ from .preview_plugins.gcode import GcodeParser
 from .setupdefaults import setup_defaults
 
 try:
-    from .ext.nest2D.nest2D import Box, Item, Point, SVGWriter, nest
+    from .ext.nest2D.nest2D import (  # pylint: disable=E0611
+        Box,
+        Item,
+        Point,
+        SVGWriter,
+        nest,
+    )
 
     HAVE_NEST = True
-except ImportError:
-    HAVE_NEST = False
-except Exception:
+except Exception:  # pylint: disable=W0703
     HAVE_NEST = False
 
 reader_plugins: dict = {}
