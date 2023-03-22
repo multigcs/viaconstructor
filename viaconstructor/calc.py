@@ -109,13 +109,15 @@ def fuzy_match(p_1, p_2):
 def get_nearest_line(check, lines):
     """gets the lowest distance between a point and a list of lines in 2D."""
     nearest = None
+    nline = None
     for line in lines:
         dist = calc_distance_to_line(check, line)
         if nearest is None or nearest > dist:
             nearest = dist
+            nline = line
             if nearest == 0.0:
                 break
-    return nearest
+    return (nearest, nline)
 
 
 def calc_distance_to_line(check, line):
