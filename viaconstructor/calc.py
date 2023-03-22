@@ -111,8 +111,10 @@ def get_nearest_line(check, lines):
     nearest = None
     for line in lines:
         dist = calc_distance_to_line(check, line)
-        if not nearest or nearest > dist:
+        if nearest is None or nearest > dist:
             nearest = dist
+            if nearest == 0.0:
+                break
     return nearest
 
 
@@ -313,6 +315,9 @@ def find_tool_offsets(objects):
     part_l = len(objects)
     part_n = 0
     max_outer = 0
+    for obj_idx, obj in objects.items():
+        obj["inner_objects"] = []
+
     for obj_idx, obj in objects.items():
         print(f"set offsets: {round((part_n + 1) * 100 / part_l, 1)}%", end="\r")
         part_n += 1
