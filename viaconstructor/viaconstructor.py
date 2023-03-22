@@ -2087,12 +2087,12 @@ class ViaConstructor:
 
         self.tabwidget = QTabWidget()
         self.create_global_setup(self.tabwidget)
-        vbox.addWidget(self.tabwidget)
+        vbox.addWidget(self.tabwidget, stretch=1)
 
         bottom_container = QWidget()
         bottom_container.setContentsMargins(0, 0, 0, 0)
         bottom_container.setLayout(left_gridlayout)
-        vbox.addWidget(bottom_container, stretch=1)
+        vbox.addWidget(bottom_container, stretch=0)
 
         right_widget = QWidget()
         right_widget.setLayout(right_gridlayout)
