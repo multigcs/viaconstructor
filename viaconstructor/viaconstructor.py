@@ -620,7 +620,6 @@ class ViaConstructor:
                 self.update_global_setup()
                 self.update_table()
                 self.global_changed(0)
-                self.prepare_segments()
                 self.update_drawing()
                 self.project["status"] = "READY"
                 self.status_bar_message(f"{self.info} - load setup from drawing..done")
@@ -667,6 +666,8 @@ class ViaConstructor:
         debug("update_drawing: start")
         self.status_bar_message(f"{self.info} - calculate..")
         if not draw_only:
+            debug("update_drawing: prepare_segments")
+            self.prepare_segments()
             debug("update_drawing: run_calculation")
             self.run_calculation()
             debug("update_drawing: run_calculation done")
@@ -1869,8 +1870,6 @@ class ViaConstructor:
             self.project[
                 "filename_machine_cmd"
             ] = f"{'.'.join(self.project['filename_draw'].split('.')[:-1])}.{self.project['suffix']}"
-            debug("load_drawing: prepare_segments")
-            self.prepare_segments()
             debug("load_drawing: done")
 
             # disable some options on big drawings for a better view
