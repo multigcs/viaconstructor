@@ -194,48 +194,78 @@ def segment2machine_cmd(
             end_angle,  # pylint: disable=W0612
             radius,  # pylint: disable=W0612
         ) = ezdxf.math.bulge_to_arc(last, point, bulge)
-        circumference = 2 * radius * math.pi
-        arc_lenght = (end_angle - start_angle) * circumference / (math.pi * 2)
-        tab_width = min(tab_width, arc_lenght)
-        tab_angle = (math.pi * 2) / (circumference / tab_width)
+        if tabs.get("data"):
+            circumference = 2 * radius * math.pi
+            arc_lenght = (end_angle - start_angle) * circumference / (math.pi * 2)
+            tab_width = min(tab_width, arc_lenght)
+            if tab_width > 0.0 and circumference > 0.0:
+                tab_angle = (math.pi * 2) / (circumference / tab_width)
+            else:
+                tab_angle = 0.1
 
-        for tab in tabs.get("data", ()):
-            inters = lines_intersect(
-                (last[0], last[1]), (point[0], point[1]), tab[0], tab[1]
-            )
-            if inters:
-                half_angle = (
-                    start_angle + (end_angle - start_angle) / 2 - (tab_angle / 2)
+            for tab in tabs.get("data", ()):
+                inters = lines_intersect(
+                    (last[0], last[1]), (point[0], point[1]), tab[0], tab[1]
                 )
-                (start, end, bulge) = ezdxf.math.arc_to_bulge(  # pylint: disable=W0612
-                    center,
-                    start_angle,
-                    half_angle,
-                    radius,
-                )
-                post.arc_ccw(
-                    x_pos=end[0],
-                    y_pos=end[1],
-                    z_pos=set_depth,
-                    i_pos=(center[0] - last[0]),
-                    j_pos=(center[1] - last[1]),
-                )
-                last = end
-
-                if (
-                    project["setup"]["machine"]["mode"] != "mill"
-                    or "Z" not in project["axis"]
-                ):
-                    post.spindle_off()
-
-                if tabs_type == "rectangle":
-                    post.linear(
+                if inters:
+                    half_angle = (
+                        start_angle + (end_angle - start_angle) / 2 - (tab_angle / 2)
+                    )
+                    (
+                        start,  # pylint: disable=W0612
+                        end,
+                        bulge,
+                    ) = ezdxf.math.arc_to_bulge(
+                        center,
+                        start_angle,
+                        half_angle,
+                        radius,
+                    )
+                    post.arc_ccw(
                         x_pos=end[0],
                         y_pos=end[1],
-                        z_pos=tabs_depth,
+                        z_pos=set_depth,
+                        i_pos=(center[0] - last[0]),
+                        j_pos=(center[1] - last[1]),
                     )
-                else:
-                    half_angle = start_angle + (end_angle - start_angle) / 2
+                    last = end
+
+                    if (
+                        project["setup"]["machine"]["mode"] != "mill"
+                        or "Z" not in project["axis"]
+                    ):
+                        post.spindle_off()
+
+                    if tabs_type == "rectangle":
+                        post.linear(
+                            x_pos=end[0],
+                            y_pos=end[1],
+                            z_pos=tabs_depth,
+                        )
+                    else:
+                        half_angle = start_angle + (end_angle - start_angle) / 2
+                        (
+                            start,
+                            end,
+                            bulge,
+                        ) = ezdxf.math.arc_to_bulge(  # pylint: disable=W0612
+                            center,
+                            start_angle,
+                            half_angle,
+                            radius,
+                        )
+                        post.arc_ccw(
+                            x_pos=end[0],
+                            y_pos=end[1],
+                            z_pos=tabs_depth,
+                            i_pos=(center[0] - last[0]),
+                            j_pos=(center[1] - last[1]),
+                        )
+                        last = end
+
+                    half_angle = (
+                        start_angle + (end_angle - start_angle) / 2 + (tab_angle / 2)
+                    )
                     (
                         start,
                         end,
@@ -246,55 +276,37 @@ def segment2machine_cmd(
                         half_angle,
                         radius,
                     )
-                    post.arc_ccw(
-                        x_pos=end[0],
-                        y_pos=end[1],
-                        z_pos=tabs_depth,
-                        i_pos=(center[0] - last[0]),
-                        j_pos=(center[1] - last[1]),
-                    )
+                    if tabs_type == "rectangle":
+                        post.arc_ccw(
+                            x_pos=end[0],
+                            y_pos=end[1],
+                            z_pos=tabs_depth,
+                            i_pos=(center[0] - last[0]),
+                            j_pos=(center[1] - last[1]),
+                        )
+                        post.linear(
+                            x_pos=end[0],
+                            y_pos=end[1],
+                            z_pos=set_depth,
+                        )
+                    else:
+                        post.arc_ccw(
+                            x_pos=end[0],
+                            y_pos=end[1],
+                            z_pos=set_depth,
+                            i_pos=(center[0] - last[0]),
+                            j_pos=(center[1] - last[1]),
+                        )
                     last = end
-
-                half_angle = (
-                    start_angle + (end_angle - start_angle) / 2 + (tab_angle / 2)
-                )
-                (start, end, bulge) = ezdxf.math.arc_to_bulge(  # pylint: disable=W0612
-                    center,
-                    start_angle,
-                    half_angle,
-                    radius,
-                )
-                if tabs_type == "rectangle":
-                    post.arc_ccw(
-                        x_pos=end[0],
-                        y_pos=end[1],
-                        z_pos=tabs_depth,
-                        i_pos=(center[0] - last[0]),
-                        j_pos=(center[1] - last[1]),
-                    )
-                    post.linear(
-                        x_pos=end[0],
-                        y_pos=end[1],
-                        z_pos=set_depth,
-                    )
-                else:
-                    post.arc_ccw(
-                        x_pos=end[0],
-                        y_pos=end[1],
-                        z_pos=set_depth,
-                        i_pos=(center[0] - last[0]),
-                        j_pos=(center[1] - last[1]),
-                    )
-                last = end
-                if (
-                    project["setup"]["machine"]["mode"] != "mill"
-                    or "Z" not in project["axis"]
-                ):
-                    post.spindle_cw(
-                        project["setup"]["tool"]["speed"],
-                        project["setup"]["tool"]["pause"],
-                    )
-                break
+                    if (
+                        project["setup"]["machine"]["mode"] != "mill"
+                        or "Z" not in project["axis"]
+                    ):
+                        post.spindle_cw(
+                            project["setup"]["tool"]["speed"],
+                            project["setup"]["tool"]["pause"],
+                        )
+                    break
 
         post.arc_ccw(
             x_pos=point[0],
@@ -311,48 +323,23 @@ def segment2machine_cmd(
             end_angle,
             radius,
         ) = ezdxf.math.bulge_to_arc(last, point, bulge)
-        circumference = 2 * radius * math.pi
-        arc_lenght = (end_angle - start_angle) * circumference / (math.pi * 2)
-        tab_width = min(tab_width, arc_lenght)
-        tab_angle = (math.pi * 2) / (circumference / tab_width)
+        if tabs.get("data"):
+            circumference = 2 * radius * math.pi
+            arc_lenght = (end_angle - start_angle) * circumference / (math.pi * 2)
+            tab_width = min(tab_width, arc_lenght)
+            if tab_width > 0.0 and circumference > 0.0:
+                tab_angle = (math.pi * 2) / (circumference / tab_width)
+            else:
+                tab_angle = 0.1
 
-        for tab in tabs.get("data", ()):
-            inters = lines_intersect(
-                (last[0], last[1]), (point[0], point[1]), tab[0], tab[1]
-            )
-            if inters:
-                half_angle = (
-                    start_angle + (end_angle - start_angle) / 2 + (tab_angle / 2)
+            for tab in tabs.get("data", ()):
+                inters = lines_intersect(
+                    (last[0], last[1]), (point[0], point[1]), tab[0], tab[1]
                 )
-                (start, end, bulge) = ezdxf.math.arc_to_bulge(  # pylint: disable=W0612
-                    center,
-                    start_angle,
-                    half_angle,
-                    radius,
-                )
-                post.arc_cw(
-                    x_pos=end[0],
-                    y_pos=end[1],
-                    z_pos=set_depth,
-                    i_pos=(center[0] - last[0]),
-                    j_pos=(center[1] - last[1]),
-                )
-                last = end
-
-                if (
-                    project["setup"]["machine"]["mode"] != "mill"
-                    or "Z" not in project["axis"]
-                ):
-                    post.spindle_off()
-
-                if tabs_type == "rectangle":
-                    post.linear(
-                        x_pos=end[0],
-                        y_pos=end[1],
-                        z_pos=tabs_depth,
+                if inters:
+                    half_angle = (
+                        start_angle + (end_angle - start_angle) / 2 + (tab_angle / 2)
                     )
-                else:
-                    half_angle = start_angle + (end_angle - start_angle) / 2
                     (
                         start,
                         end,
@@ -366,53 +353,90 @@ def segment2machine_cmd(
                     post.arc_cw(
                         x_pos=end[0],
                         y_pos=end[1],
-                        z_pos=tabs_depth,
+                        z_pos=set_depth,
                         i_pos=(center[0] - last[0]),
                         j_pos=(center[1] - last[1]),
                     )
                     last = end
 
-                half_angle = (
-                    start_angle + (end_angle - start_angle) / 2 - (tab_angle / 2)
-                )
-                (start, end, bulge) = ezdxf.math.arc_to_bulge(  # pylint: disable=W0612
-                    center,
-                    start_angle,
-                    half_angle,
-                    radius,
-                )
-                if tabs_type == "rectangle":
-                    post.arc_cw(
-                        x_pos=end[0],
-                        y_pos=end[1],
-                        z_pos=tabs_depth,
-                        i_pos=(center[0] - last[0]),
-                        j_pos=(center[1] - last[1]),
-                    )
-                    post.linear(
-                        x_pos=end[0],
-                        y_pos=end[1],
-                        z_pos=set_depth,
-                    )
-                else:
-                    post.arc_cw(
-                        x_pos=end[0],
-                        y_pos=end[1],
-                        z_pos=set_depth,
-                        i_pos=(center[0] - last[0]),
-                        j_pos=(center[1] - last[1]),
-                    )
+                    if (
+                        project["setup"]["machine"]["mode"] != "mill"
+                        or "Z" not in project["axis"]
+                    ):
+                        post.spindle_off()
 
-                last = end
-                if (
-                    project["setup"]["machine"]["mode"] != "mill"
-                    or "Z" not in project["axis"]
-                ):
-                    post.spindle_cw(
-                        project["setup"]["tool"]["speed"],
-                        project["setup"]["tool"]["pause"],
+                    if tabs_type == "rectangle":
+                        post.linear(
+                            x_pos=end[0],
+                            y_pos=end[1],
+                            z_pos=tabs_depth,
+                        )
+                    else:
+                        half_angle = start_angle + (end_angle - start_angle) / 2
+                        (
+                            start,
+                            end,
+                            bulge,
+                        ) = ezdxf.math.arc_to_bulge(  # pylint: disable=W0612
+                            center,
+                            start_angle,
+                            half_angle,
+                            radius,
+                        )
+                        post.arc_cw(
+                            x_pos=end[0],
+                            y_pos=end[1],
+                            z_pos=tabs_depth,
+                            i_pos=(center[0] - last[0]),
+                            j_pos=(center[1] - last[1]),
+                        )
+                        last = end
+
+                    half_angle = (
+                        start_angle + (end_angle - start_angle) / 2 - (tab_angle / 2)
                     )
-                break
+                    (
+                        start,
+                        end,
+                        bulge,
+                    ) = ezdxf.math.arc_to_bulge(  # pylint: disable=W0612
+                        center,
+                        start_angle,
+                        half_angle,
+                        radius,
+                    )
+                    if tabs_type == "rectangle":
+                        post.arc_cw(
+                            x_pos=end[0],
+                            y_pos=end[1],
+                            z_pos=tabs_depth,
+                            i_pos=(center[0] - last[0]),
+                            j_pos=(center[1] - last[1]),
+                        )
+                        post.linear(
+                            x_pos=end[0],
+                            y_pos=end[1],
+                            z_pos=set_depth,
+                        )
+                    else:
+                        post.arc_cw(
+                            x_pos=end[0],
+                            y_pos=end[1],
+                            z_pos=set_depth,
+                            i_pos=(center[0] - last[0]),
+                            j_pos=(center[1] - last[1]),
+                        )
+
+                    last = end
+                    if (
+                        project["setup"]["machine"]["mode"] != "mill"
+                        or "Z" not in project["axis"]
+                    ):
+                        post.spindle_cw(
+                            project["setup"]["tool"]["speed"],
+                            project["setup"]["tool"]["pause"],
+                        )
+                    break
 
         post.arc_cw(
             x_pos=point[0],
@@ -422,7 +446,6 @@ def segment2machine_cmd(
             j_pos=(center[1] - last[1]),
         )
     else:
-
         tab_list = {}
         for tab in tabs.get("data", ()):
             inters = lines_intersect(
