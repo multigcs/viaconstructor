@@ -18,6 +18,7 @@ from typing import Optional, Union
 
 import ezdxf
 import setproctitle
+from PyQt5.QtCore import Qt  # pylint: disable=E0611
 from PyQt5.QtGui import (  # pylint: disable=E0611
     QFont,
     QIcon,
@@ -2005,6 +2006,8 @@ class ViaConstructor:
 
         # gui #
         debug("main: load gui")
+        # QApplication.setAttribute(Qt.AA_UseSoftwareOpenGL)  # needed for windows ?
+        QApplication.setAttribute(Qt.AA_UseDesktopOpenGL)  # type: ignore
         qapp = QApplication(sys.argv)
         self.project["window"] = QWidget()
         self.project["app"] = self
