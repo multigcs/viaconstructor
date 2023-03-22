@@ -315,7 +315,7 @@ def find_tool_offsets(objects):
     part_l = len(objects)
     part_n = 0
     max_outer = 0
-    for obj_idx, obj in objects.items():
+    for obj in objects.values():
         obj["inner_objects"] = []
 
     for obj_idx, obj in objects.items():
