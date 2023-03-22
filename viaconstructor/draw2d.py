@@ -6,13 +6,25 @@ from PyQt5 import QtCore
 from PyQt5.QtGui import QPainter, QPalette, QPen, QPixmap  # pylint: disable=E0611
 from PyQt5.QtWidgets import QLabel, QSizePolicy  # pylint: disable=E0611
 
+from .calc import (
+    calc_distance,
+    found_next_open_segment_point,
+    found_next_point_on_segment,
+    found_next_segment_point,
+    found_next_tab_point,
+    line_center_2d,
+)
 from .preview_plugins.gcode import GcodeParser
 from .preview_plugins.hpgl import HpglParser
+from .vc_types import VcSegment
 
 painter = {
     "offset_x": 300.0,
     "offset_y": 600.0,
     "scale": 5.0,
+    "scale_xyz": 1.0,
+    "move_x": 0.0,
+    "move_y": 0.0,
     "ctx": QPainter(),
 }
 
@@ -36,7 +48,6 @@ class CanvasWidget(QLabel):  # pylint: disable=R0903
     trans_x_last = trans_x
     trans_y_last = trans_y
     trans_z_last = trans_z
-    scale_xyz = 1.0
     scale = 1.0
     scale_last = scale
     ortho = False
@@ -65,6 +76,299 @@ class CanvasWidget(QLabel):  # pylint: disable=R0903
         self.setBackgroundRole(QPalette.Base)  # type: ignore
         self.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Ignored)  # type: ignore
         self.setScaledContents(True)
+
+    def mousePressEvent(self, event) -> None:  # pylint: disable=C0103
+        """mouse button pressed."""
+        self.mbutton = event.button()
+        self.mpos = event.pos()
+        self.rot_x_last = self.rot_x
+        self.rot_y_last = self.rot_y
+        self.rot_z_last = self.rot_z
+        self.trans_x_last = self.trans_x
+        self.trans_y_last = self.trans_y
+        self.trans_z_last = self.trans_z
+        if self.selector_mode != "" and self.selection:
+            if self.mbutton == 1:
+                if self.selection:
+                    if self.selector_mode == "tab":
+                        self.project["tabs"]["data"].append(self.selection)
+                        self.project["app"].update_tabs()
+                        self.selection = ()
+                    elif self.selector_mode == "start":
+                        obj_idx = self.selection[0]
+                        segment_idx = self.selection[1]
+                        new_point = self.selection[2]
+                        obj = self.project["objects"][obj_idx]
+                        segment = obj.segments[segment_idx]
+                        if new_point not in (segment.start, segment.end):
+                            new_segment = VcSegment(
+                                {
+                                    "type": "LINE",
+                                    "object": segment.object,
+                                    "layer": segment.layer,
+                                    "color": segment.color,
+                                    "start": new_point,
+                                    "end": segment.end,
+                                    "bulge": segment.bulge / 2,
+                                }
+                            )
+                            segment.end = new_point
+                            segment.bulge = segment.bulge / 2
+                            obj.segments.insert(segment_idx + 1, new_segment)
+                        self.project["objects"][obj_idx]["start"] = new_point
+                        self.project["app"].update_starts()
+                        self.selection = ()
+                    elif self.selector_mode == "delete":
+                        self.selection_set = self.selection
+                        self.project["app"].update_table()
+                    elif self.selector_mode == "oselect":
+                        self.selection_set = self.selection
+                        self.project["app"].update_table()
+                    elif self.selector_mode == "repair":
+                        obj_idx = self.selection[2]
+                        self.project["segments_org"].append(
+                            VcSegment(
+                                {
+                                    "type": "LINE",
+                                    "object": None,
+                                    "layer": self.project["objects"][obj_idx]["layer"],
+                                    "color": self.project["objects"][obj_idx]["color"],
+                                    "start": (self.selection[0], self.selection[1]),
+                                    "end": (self.selection[4], self.selection[5]),
+                                    "bulge": 0.0,
+                                }
+                            )
+                        )
+                        self.selection = ()
+                        self.project["app"].prepare_segments()
+
+                self.update_drawing()
+                self.update()
+            elif self.mbutton == 2:
+                if self.selector_mode == "tab":
+                    sel_idx = -1
+                    sel_dist = -1
+                    for tab_idx, tab in enumerate(self.project["tabs"]["data"]):
+                        tab_pos = line_center_2d(tab[0], tab[1])
+                        dist = calc_distance(
+                            (self.mouse_pos_x, self.mouse_pos_y), tab_pos
+                        )
+                        if sel_dist < 0 or dist < sel_dist:
+                            sel_dist = dist
+                            sel_idx = tab_idx
+
+                    if 0.0 < sel_dist < 10.0:
+                        del self.project["tabs"]["data"][sel_idx]
+                        self.update_drawing()
+                        self.update()
+                        self.project["app"].update_tabs()
+                    self.selection = ()
+                elif self.selector_mode == "delete":
+                    obj_idx = self.selection[2]
+                    del self.project["objects"][obj_idx]
+                    self.project["app"].update_table()
+                    self.update_drawing()
+                    self.update()
+                    self.selection = ()
+                elif self.selector_mode == "oselect":
+                    pass
+                elif self.selector_mode == "start":
+                    obj_idx = self.selection[0]
+                    self.project["objects"][obj_idx]["start"] = ()
+                    self.update_drawing()
+                    self.update()
+                    self.project["app"].update_starts()
+                    self.selection = ()
+        draw_all(self.project)
+
+    def mouseReleaseEvent(self, event) -> None:  # pylint: disable=C0103,W0613
+        """mouse button released."""
+        self.mbutton = None
+        self.mpos = None
+        draw_all(self.project)
+
+    def mouse_pos_to_real_pos(self, mouse_pos) -> tuple:
+        min_max = self.project["minMax"]
+        mouse_pos_x = mouse_pos.x()
+        mouse_pos_y = self.screen_h - mouse_pos.y()
+        real_pos_x = (
+            (
+                (mouse_pos_x / self.screen_w - 0.5 + self.trans_x)
+                / painter["scale"]
+                / painter["scale_xyz"]
+            )
+            + (self.size_x / 2)
+            + min_max[0]
+        )
+        real_pos_y = (
+            (
+                (mouse_pos_y / self.screen_h - 0.5 + self.trans_y)
+                / painter["scale"]
+                / painter["scale_xyz"]
+                * self.aspect
+            )
+            + (self.size_y / 2)
+            + min_max[1]
+        )
+        return (real_pos_x, real_pos_y)
+
+    def mouseMoveEvent(self, event) -> None:  # pylint: disable=C0103
+        """mouse moved."""
+        if self.mbutton == 1:
+            moffset = self.mpos - event.pos()
+            self.trans_x = self.trans_x_last + moffset.x() / self.screen_w
+            self.trans_y = self.trans_y_last - moffset.y() / self.screen_h * self.aspect
+            draw_all(self.project)
+        elif self.selector_mode == "tab":
+            (self.mouse_pos_x, self.mouse_pos_y) = self.mouse_pos_to_real_pos(
+                event.pos()
+            )
+            self.selection = found_next_tab_point(
+                (self.mouse_pos_x, self.mouse_pos_y), self.project["offsets"]
+            )
+            draw_all(self.project)
+        elif self.selector_mode == "start":
+            (self.mouse_pos_x, self.mouse_pos_y) = self.mouse_pos_to_real_pos(
+                event.pos()
+            )
+            self.selection = found_next_point_on_segment(
+                (self.mouse_pos_x, self.mouse_pos_y), self.project["objects"]
+            )
+            draw_all(self.project)
+        elif self.selector_mode == "delete":
+            (self.mouse_pos_x, self.mouse_pos_y) = self.mouse_pos_to_real_pos(
+                event.pos()
+            )
+            self.selection = found_next_segment_point(
+                (self.mouse_pos_x, self.mouse_pos_y), self.project["objects"]
+            )
+            draw_all(self.project)
+        elif self.selector_mode == "oselect":
+            (self.mouse_pos_x, self.mouse_pos_y) = self.mouse_pos_to_real_pos(
+                event.pos()
+            )
+            self.selection = found_next_segment_point(
+                (self.mouse_pos_x, self.mouse_pos_y), self.project["objects"]
+            )
+            draw_all(self.project)
+        elif self.selector_mode == "repair":
+            (self.mouse_pos_x, self.mouse_pos_y) = self.mouse_pos_to_real_pos(
+                event.pos()
+            )
+            self.selection = found_next_open_segment_point(
+                (self.mouse_pos_x, self.mouse_pos_y), self.project["objects"]
+            )
+            if self.selection:
+                selection_end = found_next_open_segment_point(
+                    (self.mouse_pos_x, self.mouse_pos_y),
+                    self.project["objects"],
+                    max_dist=10.0,
+                    exclude=(self.selection[2], self.selection[3]),
+                )
+                if selection_end:
+                    self.selection += selection_end
+                else:
+                    self.selection = ()
+            draw_all(self.project)
+
+        elif self.mbutton == 2:
+            moffset = self.mpos - event.pos()
+            self.rot_z = self.rot_z_last - moffset.x() / 4
+            self.trans_z = self.trans_z_last + moffset.y() / 500
+            draw_all(self.project)
+        elif self.mbutton == 4:
+            moffset = self.mpos - event.pos()
+            self.rot_x = self.rot_x_last + -moffset.x() / 4
+            self.rot_y = self.rot_y_last - moffset.y() / 4
+            draw_all(self.project)
+
+    def wheelEvent(self, event) -> None:  # pylint: disable=C0103,W0613
+        """mouse wheel moved."""
+        if event.angleDelta().y() > 0:
+            painter["scale_xyz"] += self.wheel_scale  # type: ignore
+        else:
+            painter["scale_xyz"] -= self.wheel_scale  # type: ignore
+
+        draw_all(self.project)
+
+    def toggle_tab_selector(self) -> bool:
+        self.selection = ()
+        self.selection_set = ()
+        if self.selector_mode == "":
+            self.selector_mode = "tab"
+            self.view_2d()
+            return True
+        if self.selector_mode == "tab":
+            self.selector_mode = ""
+            self.view_reset()
+        return False
+
+    def toggle_start_selector(self) -> bool:
+        self.selection = ()
+        self.selection_set = ()
+        if self.selector_mode == "":
+            self.selector_mode = "start"
+            self.view_2d()
+            return True
+        if self.selector_mode == "start":
+            self.selector_mode = ""
+            self.view_reset()
+        return False
+
+    def toggle_repair_selector(self) -> bool:
+        self.selection = ()
+        self.selection_set = ()
+        if self.selector_mode == "":
+            self.selector_mode = "repair"
+            self.view_2d()
+            return True
+        if self.selector_mode == "repair":
+            self.selector_mode = ""
+            self.view_reset()
+        return False
+
+    def toggle_delete_selector(self) -> bool:
+        self.selection = ()
+        self.selection_set = ()
+        if self.selector_mode == "":
+            self.selector_mode = "delete"
+            self.view_2d()
+            return True
+        if self.selector_mode == "delete":
+            self.selector_mode = ""
+            self.view_reset()
+        return False
+
+    def toggle_object_selector(self) -> bool:
+        self.selection = ()
+        self.selection_set = ()
+        if self.selector_mode == "":
+            self.selector_mode = "oselect"
+            self.view_2d()
+            return True
+        if self.selector_mode == "oselect":
+            self.selector_mode = ""
+            self.view_reset()
+        return False
+
+    def view_2d(self) -> None:
+        """toggle view function."""
+        self.rot_x = 0.0
+        self.rot_y = 0.0
+        self.rot_z = 0.0
+
+    def view_reset(self) -> None:
+        """toggle view function."""
+        if self.selector_mode != "":
+            return
+        self.ortho = False
+        self.rot_x = -20.0
+        self.rot_y = -30.0
+        self.rot_z = 0.0
+        self.trans_x = 0.0
+        self.trans_y = 0.0
+        self.trans_z = 0.0
+        painter["scale_xyz"] = 1.0
 
 
 def draw_line_2d(p_from: Sequence[float], p_to: Sequence[float]) -> None:
@@ -140,6 +444,13 @@ def draw_object_edges(
 
         for segment in obj.segments:
             draw_line_2d(segment.start, segment.end)
+
+    # tabs
+    painter["ctx"].setPen(QPen(QtCore.Qt.blue, 4, QtCore.Qt.SolidLine))  # type: ignore  # pylint: disable=I1101
+    tabs = project.get("tabs", {}).get("data", ())
+    if tabs:
+        for tab in tabs:
+            draw_line_2d(tab[0], tab[1])
 
 
 def draw_line(p_1: dict, p_2: dict, options: str, project: dict) -> None:
@@ -232,7 +543,7 @@ def draw_all(project: dict) -> None:
 
     size_x = max(min_max[2] - min_max[0], 0.1)
     size_y = max(min_max[3] - min_max[1], 0.1)
-    painter["scale"] = min(s_w / size_x, s_h / size_y) / 1.4
+    painter["scale"] = min(s_w / size_x, s_h / size_y) / 1.4 * painter["scale_xyz"]
     painter["offset_x"] = -min_max[0] - size_x / 2 + (s_w / 2 / painter["scale"])  # type: ignore
     painter["offset_y"] = -size_y / 2 - min_max[1] - (s_h / 2 / painter["scale"])  # type: ignore
 
@@ -259,4 +570,93 @@ def draw_all(project: dict) -> None:
         selected = project["glwidget"].selection_set[2]
 
     draw_object_edges(project, selected=selected)
+
+    if project["glwidget"].selection:
+        if project["glwidget"].selector_mode == "start":
+            draw_line_2d(
+                (
+                    project["glwidget"].selection[2][0] - 1,
+                    project["glwidget"].selection[2][1] - 1,
+                ),
+                (
+                    project["glwidget"].selection[2][0] + 1,
+                    project["glwidget"].selection[2][1] + 1,
+                ),
+            )
+            draw_line_2d(
+                (
+                    project["glwidget"].selection[2][0] - 1,
+                    project["glwidget"].selection[2][1] + 1,
+                ),
+                (
+                    project["glwidget"].selection[2][0] + 1,
+                    project["glwidget"].selection[2][1] - 1,
+                ),
+            )
+        elif project["glwidget"].selector_mode == "repair":
+            if len(project["glwidget"].selection) > 4:
+                draw_line_2d(
+                    (
+                        project["glwidget"].selection[0],
+                        project["glwidget"].selection[1],
+                    ),
+                    (
+                        project["glwidget"].selection[4],
+                        project["glwidget"].selection[5],
+                    ),
+                )
+        elif project["glwidget"].selector_mode == "delete":
+            draw_line_2d(
+                (
+                    project["glwidget"].selection[0] - 1,
+                    project["glwidget"].selection[1] - 1,
+                ),
+                (
+                    project["glwidget"].selection[0] + 1,
+                    project["glwidget"].selection[1] + 1,
+                ),
+            )
+            draw_line_2d(
+                (
+                    project["glwidget"].selection[0] - 1,
+                    project["glwidget"].selection[1] + 1,
+                ),
+                (
+                    project["glwidget"].selection[0] + 1,
+                    project["glwidget"].selection[1] - 1,
+                ),
+            )
+        elif project["glwidget"].selector_mode == "oselect":
+            draw_line_2d(
+                (
+                    project["glwidget"].selection[0] - 1,
+                    project["glwidget"].selection[1] - 1,
+                ),
+                (
+                    project["glwidget"].selection[0] + 1,
+                    project["glwidget"].selection[1] + 1,
+                ),
+            )
+            draw_line_2d(
+                (
+                    project["glwidget"].selection[0] - 1,
+                    project["glwidget"].selection[1] + 1,
+                ),
+                (
+                    project["glwidget"].selection[0] + 1,
+                    project["glwidget"].selection[1] - 1,
+                ),
+            )
+        else:
+            draw_line_2d(
+                (
+                    project["glwidget"].selection[0][0],
+                    project["glwidget"].selection[0][1],
+                ),
+                (
+                    project["glwidget"].selection[1][0],
+                    project["glwidget"].selection[1][1],
+                ),
+            )
+
     painter["ctx"].end()  # type: ignore
