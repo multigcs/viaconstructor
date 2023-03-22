@@ -59,11 +59,15 @@ from PyQt5.QtWidgets import (  # pylint: disable=E0611
 )
 
 from .calc import (
+    angle_of_line,
     clean_segments,
     find_tool_offsets,
+    get_nearest_line,
+    lines_to_path,
     mirror_objects,
     move_object,
     move_objects,
+    object2points,
     objects2minmax,
     objects2polyline_offsets,
     rotate_object,
@@ -296,7 +300,159 @@ class ViaConstructor:
                 f"ERROR: Unknown machine output plugin: {self.project['setup']['machine']['plugin']}"
             )
             sys.exit(1)
-        self.project["machine_cmd"] = polylines2machine_cmd(self.project, output_plugin)
+
+        if self.args.vcarve:
+            from .ext.polyskel.polyskel import skeletonize
+
+            fast_move_z = self.project["setup"]["mill"]["fast_move_z"]
+            depth = self.project["setup"]["mill"]["depth"]
+
+            for _name, _object in self.project["objects"].items():
+                if _object.closed and not _object.outer_objects:
+                    pscale = 1000
+                    contours = []
+                    points = object2points(_object)
+                    points.reverse()
+
+                    poly = []
+                    for point in points:
+                        poly.append((int(point[0] * pscale), int(point[1] * pscale)))
+                    contours.append(poly)
+
+                    clines = []
+                    clines.append(
+                        [_object.segments[-1].start, _object.segments[-1].end]
+                    )
+                    for segment in _object.segments:
+                        clines.append([segment.start, segment.end])
+                    clines.append([_object.segments[0].start, _object.segments[0].end])
+
+                    for oid in _object.inner_objects:
+                        _inner_object = self.project["objects"][oid]
+                        if (
+                            _inner_object.closed
+                            and len(_inner_object.outer_objects) == 1
+                        ):
+                            clines.append(
+                                [
+                                    _inner_object.segments[-1].start,
+                                    _inner_object.segments[-1].end,
+                                ]
+                            )
+                            for segment in _inner_object.segments:
+                                clines.append([segment.start, segment.end])
+                            clines.append(
+                                [
+                                    _inner_object.segments[0].start,
+                                    _inner_object.segments[0].end,
+                                ]
+                            )
+                            points = object2points(_inner_object)
+                            poly = []
+                            for point in points:
+                                poly.append(
+                                    (int(point[0] * pscale), int(point[1] * pscale))
+                                )
+                            contours.append(poly)
+
+                    poly = contours[0]
+                    holes = contours[1:] if len(contours) > 0 else None
+                    skeleton = skeletonize(poly, holes)
+
+                    # centerline to list of lines
+                    lines = []
+                    for arc in skeleton:
+                        for sink in arc.sinks:
+                            nextp = get_nearest_line(
+                                (sink.x / pscale, sink.y / pscale), clines
+                            )
+                            if nextp[0] > 0.01:
+                                lines.append(
+                                    (
+                                        (arc.source.x / pscale, arc.source.y / pscale),
+                                        (sink.x / pscale, sink.y / pscale),
+                                    )
+                                )
+                            else:
+                                for cln, cline in enumerate(clines):
+                                    if nextp[1][1] == cline[0]:
+                                        angle1 = angle_of_line(
+                                            clines[cln][0], clines[cln][1]
+                                        )
+                                        angle2 = angle_of_line(
+                                            clines[cln - 1][0], clines[cln - 1][1]
+                                        )
+                                        adiff = abs(angle1 - angle2)
+                                        while adiff > math.pi:
+                                            adiff -= math.pi
+                                        if adiff > 1.0 and adiff < 2.5:
+                                            lines.append(
+                                                (
+                                                    (
+                                                        arc.source.x / pscale,
+                                                        arc.source.y / pscale,
+                                                    ),
+                                                    (sink.x / pscale, sink.y / pscale),
+                                                )
+                                            )
+                                    elif nextp[1][1] == cline[1]:
+                                        angle1 = angle_of_line(
+                                            clines[cln][0], clines[cln][1]
+                                        )
+                                        angle2 = angle_of_line(
+                                            clines[cln - 1][0], clines[cln - 1][1]
+                                        )
+                                        adiff = abs(angle1 - angle2)
+                                        while adiff > math.pi:
+                                            adiff -= math.pi
+                                        if adiff > 1.0 and adiff < 2.5:
+                                            lines.append(
+                                                (
+                                                    (
+                                                        arc.source.x / pscale,
+                                                        arc.source.y / pscale,
+                                                    ),
+                                                    (sink.x / pscale, sink.y / pscale),
+                                                )
+                                            )
+
+                    new_lines = lines_to_path(lines, 0.1, 0.1)
+                    last = None
+                    for line in new_lines:
+                        if last != line[0]:
+                            if last:
+                                nextp = get_nearest_line(last, clines)[0]
+                                nextp = max(-nextp, depth)
+                                output_plugin.linear(
+                                    x_pos=last[0], y_pos=last[1], z_pos=nextp
+                                )
+                            output_plugin.move(z_pos=fast_move_z)
+                            nextp = get_nearest_line(line[0], clines)[0]
+                            nextp = max(-nextp, depth)
+                            output_plugin.move(x_pos=line[0][0], y_pos=line[0][1])
+                            output_plugin.linear(z_pos=nextp)
+                        else:
+                            nextp = get_nearest_line(line[0], clines)[0]
+                            nextp = max(-nextp, depth)
+                            output_plugin.linear(
+                                x_pos=line[0][0], y_pos=line[0][1], z_pos=nextp
+                            )
+                        last = line[1]
+
+                    if last:
+                        nextp = get_nearest_line(last, clines)[0]
+                        nextp = max(-nextp, depth)
+                        output_plugin.linear(x_pos=last[0], y_pos=last[1], z_pos=nextp)
+
+                    self.project["machine_cmd"] = output_plugin.get(
+                        numbers=self.project["setup"]["machine"].get("numbers", False)
+                    )
+
+        else:
+            self.project["machine_cmd"] = polylines2machine_cmd(
+                self.project, output_plugin
+            )
+
         debug("run_calculation: update textwidget")
         if self.project["textwidget"]:
             self.project["textwidget"].clear()
@@ -1960,6 +2116,13 @@ class ViaConstructor:
             "-l",
             "--laser",
             help="laser mode / no offsets / no order",
+            type=str,
+            default=None,
+        )
+        parser.add_argument(
+            "-v",
+            "--vcarve",
+            help="vcarve mode",
             type=str,
             default=None,
         )
