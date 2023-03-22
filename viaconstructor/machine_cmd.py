@@ -704,6 +704,8 @@ def polylines2machine_cmd(project: dict, post: PostProcessor) -> str:
 
                     depth = step
                     depth = max(depth, max_depth)
+                    min_depth = polyline.setup["mill"]["start_depth"]
+                    depth = min(depth, min_depth)
 
                     if (
                         project["setup"]["machine"]["mode"] == "mill"

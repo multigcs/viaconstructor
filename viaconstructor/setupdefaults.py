@@ -28,6 +28,16 @@ def setup_defaults(_) -> dict:
                 "tooltip": _("the maximum depth in one move"),
                 "unit": "LINEARMEASURE",
             },
+            "start_depth": {
+                "default": 0.0,
+                "type": "float",
+                "min": -999.0,
+                "max": 0.0,
+                "per_object": True,
+                "title": _("Start-Depth"),
+                "tooltip": _("the start depth for milling"),
+                "unit": "LINEARMEASURE",
+            },
             "passes": {
                 "default": 1,
                 "type": "int",
