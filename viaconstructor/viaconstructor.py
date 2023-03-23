@@ -1645,11 +1645,12 @@ class ViaConstructor:
         for sname in self.project["setup_defaults"]:
             vcontainer = QWidget()
             vlayout = QVBoxLayout(vcontainer)
+            vlayout.setContentsMargins(0, 0, 0, 0)
             tabwidget.addTab(vcontainer, sname)
             for ename, entry in self.project["setup_defaults"][sname].items():
                 container = QWidget()
-
                 hlayout = QHBoxLayout(container)
+                hlayout.setContentsMargins(10, 0, 10, 0)
                 label = QLabel(entry.get("title", ename))
                 hlayout.addWidget(label)
                 vlayout.addWidget(container)
