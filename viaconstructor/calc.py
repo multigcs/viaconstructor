@@ -4,7 +4,13 @@ import math
 from copy import deepcopy
 
 import ezdxf
-import pyclipper
+
+try:
+    import pyclipper
+
+    HAVE_PYCLIPPER = True
+except Exception:  # pylint: disable=W0703
+    HAVE_PYCLIPPER = False
 
 from .ext.cavaliercontours import cavaliercontours as cavc
 from .vc_types import VcObject
@@ -792,7 +798,7 @@ def do_pockets(  # pylint: disable=R0913
                 is_closed=False,
                 is_pocket=2,
             )
-    elif obj.inner_objects and obj.setup["pockets"]["islands"]:
+    elif HAVE_PYCLIPPER and obj.inner_objects and obj.setup["pockets"]["islands"]:
         subjs = []
         vertex_data = vertex_data_cache(polyline)
         points = vertex2points(vertex_data, no_bulge=True, scale=100.0)

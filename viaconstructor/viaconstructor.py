@@ -6,7 +6,6 @@ import importlib
 import json
 import math
 import os
-import platform
 import re
 import sys
 import threading
