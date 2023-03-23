@@ -1968,11 +1968,7 @@ class ViaConstructor:
             reader_plugin.arg_parser(parser)
 
         self.args = parser.parse_args()
-
-        if platform.system().lower() == "windows":
-            self.project["engine"] = "2D"
-        else:
-            self.project["engine"] = self.args.engine
+        self.project["engine"] = self.args.engine
 
         # load setup
         debug("main: load setup")
