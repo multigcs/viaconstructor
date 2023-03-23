@@ -116,8 +116,8 @@ class GLWidget(QGLWidget):
     def initializeGL(self) -> None:  # pylint: disable=C0103
         """glinit function."""
 
-        version = GL.glGetString(GL.GL_VERSION)
-        print(f"OpenGL-Version: {version.decode()}")
+        version = GL.glGetString(GL.GL_VERSION).decode()
+        print(f"OpenGL-Version: {version}")
 
         GL.glMatrixMode(GL.GL_PROJECTION)
         GL.glLoadIdentity()
@@ -144,14 +144,15 @@ class GLWidget(QGLWidget):
         GL.glClearDepth(1.0)
         GL.glEnable(GL.GL_DEPTH_TEST)
         GL.glDisable(GL.GL_CULL_FACE)
-        GL.glEnable(GL.GL_RESCALE_NORMAL)
         GL.glDepthFunc(GL.GL_LEQUAL)
         GL.glDepthMask(GL.GL_TRUE)
         GL.glEnable(GL.GL_BLEND)
         GL.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA)
         GL.glEnable(GL.GL_COLOR_MATERIAL)
         GL.glColorMaterial(GL.GL_FRONT_AND_BACK, GL.GL_AMBIENT_AND_DIFFUSE)
-        GL.glEnable(GLWidget.GL_MULTISAMPLE)
+        if int(version.split(".")[0]) >= 2:
+            GL.glEnable(GL.GL_RESCALE_NORMAL)
+            GL.glEnable(GLWidget.GL_MULTISAMPLE)
         GL.glLight(GL.GL_LIGHT0, GL.GL_POSITION, (0, 0, 0, 1))
         GL.glLightfv(GL.GL_LIGHT0, GL.GL_AMBIENT, (0.1, 0.1, 0.1, 1))
         GL.glLightfv(GL.GL_LIGHT0, GL.GL_DIFFUSE, (1, 1, 1, 1))
