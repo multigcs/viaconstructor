@@ -69,6 +69,14 @@ brew install python@3.10
 ```
 
 ### running on Windows10
+you can simply extract this zip file to you disk and execute the start.bat:
+
+ https://www.multixmedia.org/viaconstructor.zip
+
+this zip-file includes python3.10.10 and all needed packages
+
+or 
+
 install python3.10.10 from: https://www.python.org/ftp/python/3.10.10/python-3.10.10-amd64.exe
 install git from: https://github.com/git-for-windows/git/releases/download/v2.40.0.windows.1/Git-2.40.0-64-bit.exe
 at the moment, you need also Visual Studio Community 2022 from: https://visualstudio.microsoft.com/vs/community/ (to install pyclipper / some dll's needed for CavalierContours)
