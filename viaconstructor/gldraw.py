@@ -115,6 +115,10 @@ class GLWidget(QGLWidget):
 
     def initializeGL(self) -> None:  # pylint: disable=C0103
         """glinit function."""
+
+        version = GL.glGetString(GL.GL_VERSION)
+        print(f"OpenGL-Version: {version.decode()}")
+
         GL.glMatrixMode(GL.GL_PROJECTION)
         GL.glLoadIdentity()
 
