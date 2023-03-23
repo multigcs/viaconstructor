@@ -5,7 +5,9 @@ OpenSource CAM-Tool to generate gCode from DXF,SVG and HPGL-Files
 ## Known Issues:
 * beta - version
 * &gt;= Python-3.9
-* running on Linux and OS-X (there are problems with cavaliercontours and pyqt5 on Win)
+* running on Linux, OS-X and Windows
+* may be unstable on Windows
+* problems with some OpenGL versions (black 3D-View)
 * slow on very big files
 
 ## Features:
@@ -66,6 +68,16 @@ brew install python@3.10
 /usr/local/bin/python3 -m viaconstructor tests/data/simple.dxf
 ```
 
+### running on Windows10
+install python3.10.10 from: https://www.python.org/ftp/python/3.10.10/python-3.10.10-amd64.exe
+install git from: https://github.com/git-for-windows/git/releases/download/v2.40.0.windows.1/Git-2.40.0-64-bit.exe
+at the moment, you need also Visual Studio Community 2022 from: https://visualstudio.microsoft.com/vs/community/ (to install pyclipper / some dll's needed for CavalierContours)
+```
+git clone https://github.com/multigcs/viaconstructor.git
+python3.exe -m pip install -r requirements-install.in
+python3.exe -m viaconstructor tests/data/simple.dxf
+```
+
 ## Screenshots
 
 ### Helix
@@ -85,4 +97,7 @@ brew install python@3.10
 
 ### OSX
 ![osx](https://raw.githubusercontent.com/multigcs/viaconstructor/main/docs/osx.png)
+
+### Windows
+![osx](https://raw.githubusercontent.com/multigcs/viaconstructor/main/docs/windows.png)
 
