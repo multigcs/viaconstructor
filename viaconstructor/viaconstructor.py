@@ -1238,7 +1238,7 @@ class ViaConstructor:
         self.toolbuttons = {
             _("Load drawing"): [
                 "open.png",
-                "",
+                "Ctrl+O",
                 _("Load drawing"),
                 self._toolbar_load_drawing,
                 not os.environ.get("LINUXCNCVERSION"),
@@ -1250,7 +1250,7 @@ class ViaConstructor:
             ],
             _("Save drawing as DXF"): [
                 "save.png",
-                "Ctrl+S",
+                "Ctrl+D",
                 _("Save drawing as DXF"),
                 self._toolbar_save_dxf,
                 not os.environ.get("LINUXCNCVERSION"),
@@ -1382,7 +1382,7 @@ class ViaConstructor:
             ],
             _("2D-View"): [
                 "view-2d.png",
-                "",
+                "Ctrl+2",
                 _("2D-View"),
                 self._toolbar_view_2d,
                 True,
@@ -1394,7 +1394,7 @@ class ViaConstructor:
             ],
             _("Flip-X"): [
                 "flip-x.png",
-                "",
+                "Ctrl+X",
                 _("Flip-X workpiece"),
                 self._toolbar_flipx,
                 True,
@@ -1406,7 +1406,7 @@ class ViaConstructor:
             ],
             _("Flip-Y"): [
                 "flip-y.png",
-                "",
+                "Ctrl+Y",
                 _("Flip-Y workpiece"),
                 self._toolbar_flipy,
                 True,
@@ -1418,7 +1418,7 @@ class ViaConstructor:
             ],
             _("Rotate"): [
                 "rotate.png",
-                "",
+                "Ctrl+R",
                 _("Rotate workpiece"),
                 self._toolbar_rotate,
                 True,
@@ -1442,7 +1442,7 @@ class ViaConstructor:
             ],
             _("Nesting"): [
                 "nesting.png",
-                "",
+                "Ctrl+N",
                 _("nesting workpiece"),
                 self._toolbar_nest,
                 HAVE_NEST,
@@ -1466,7 +1466,7 @@ class ViaConstructor:
             ],
             _("Tab-Selector"): [
                 "tab-selector.png",
-                "",
+                "Ctrl+T",
                 _("Tab-Selector"),
                 self._toolbar_toggle_tab_selector,
                 True,
@@ -1478,7 +1478,7 @@ class ViaConstructor:
             ],
             _("Start-Selector"): [
                 "start.png",
-                "",
+                "Ctrl+L",
                 _("Start-Selector"),
                 self._toolbar_toggle_start_selector,
                 True,
@@ -1490,7 +1490,7 @@ class ViaConstructor:
             ],
             _("Repair-Selector"): [
                 "repair.png",
-                "",
+                "Ctrl+F",
                 _("Repair-Selector"),
                 self._toolbar_toggle_repair_selector,
                 True,
@@ -1514,7 +1514,7 @@ class ViaConstructor:
             ],
             _("Start simulation"): [
                 "play.png",
-                "",
+                "Space",
                 _("start/pause simulation"),
                 self._toolbar_simulate_play,
                 True,
@@ -1562,8 +1562,6 @@ class ViaConstructor:
                 if toolbutton[6]:
                     action.setCheckable(True)
                 action.triggered.connect(toolbutton[3])  # type: ignore
-                if toolbutton[1]:
-                    action.setShortcut(toolbutton[1])
                 action.setStatusTip(toolbutton[2])
                 self.toolbar.addAction(action)
                 toolbutton[9] = action
