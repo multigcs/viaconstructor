@@ -8,6 +8,7 @@ OpenSource CAM-Tool to generate gCode from DXF,SVG and HPGL-Files
 * running on Linux, OS-X and Windows
 * may be unstable on Windows
 * problems with some OpenGL versions (black 3D-View)
+* tabs on circles sometimes broken
 * slow on very big files
 
 ## Features:
