@@ -5,7 +5,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
-"POT-Creation-Date: 2023-03-22 10:15+0100\n"
+"POT-Creation-Date: 2023-03-24 16:48+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -573,16 +573,16 @@ msgstr ""
 msgid "generating preview image with openscad.... please wait"
 msgstr ""
 
-msgid "Objects"
+msgid "&Objects"
 msgstr ""
 
-msgid "Layers"
+msgid "&Layers"
 msgstr ""
 
-msgid "3D-View"
+msgid "&3D-View"
 msgstr ""
 
-msgid "Machine-Output"
+msgid "&Machine-Output"
 msgstr ""
 
 msgid "this may take some time"
@@ -594,7 +594,7 @@ msgstr ""
 msgid "open's preview in openscad"
 msgstr ""
 
-msgid "Preview"
+msgid "&Preview"
 msgstr ""
 
 msgid "Global-Settings:"

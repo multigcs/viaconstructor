@@ -1,4 +1,4 @@
-"""dxf reading."""
+"""stl reading."""
 
 import argparse
 
@@ -80,6 +80,42 @@ class DrawReader(DrawReaderBase):
             type=str,
             default=None,
         )
+
+    @staticmethod
+    def preload_setup(filename: str, args: argparse.Namespace):  # pylint: disable=W0613
+        from PyQt5.QtWidgets import (  # pylint: disable=E0611,C0415
+            QDialog,
+            QDialogButtonBox,
+            QDoubleSpinBox,
+            QLabel,
+            QVBoxLayout,
+        )
+
+        dialog = QDialog()
+        dialog.setWindowTitle("STL-Reader")
+
+        dialog.buttonBox = QDialogButtonBox(QDialogButtonBox.Ok)
+        dialog.buttonBox.accepted.connect(dialog.accept)
+
+        dialog.layout = QVBoxLayout()
+        message = QLabel("Import-Options")
+        dialog.layout.addWidget(message)
+
+        label = QLabel("Height")
+        dialog.layout.addWidget(label)
+        stlread_zslice = QDoubleSpinBox()
+        stlread_zslice.setDecimals(4)
+        stlread_zslice.setSingleStep(0.1)
+        stlread_zslice.setMinimum(0.0)
+        stlread_zslice.setMaximum(1.0)
+        stlread_zslice.setValue(0.5)
+        dialog.layout.addWidget(stlread_zslice)
+
+        dialog.layout.addWidget(dialog.buttonBox)
+        dialog.setLayout(dialog.layout)
+
+        if dialog.exec():
+            args.stlread_zslice = str(stlread_zslice.value())
 
     def __init__(self, filename: str, args: argparse.Namespace = None):
         """slicing and converting stl into single segments."""

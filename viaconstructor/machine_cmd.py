@@ -762,6 +762,9 @@ def polylines2machine_cmd(project: dict, post: PostProcessor) -> str:
                         # only if a start point is set
                         lead_in_active = "off"
                         lead_out_active = "off"
+                    if max_depth < step:
+                        # lead-out only on single pathes
+                        lead_out_active = "off"
 
                     if lead_in_active != "off":
                         lead_in_lenght = polyline.setup["leads"]["in_lenght"]

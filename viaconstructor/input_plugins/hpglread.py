@@ -1,4 +1,4 @@
-"""dxf reading."""
+"""hpgl reading."""
 
 import argparse
 import math

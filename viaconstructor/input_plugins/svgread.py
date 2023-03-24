@@ -27,10 +27,40 @@ class DrawReader(DrawReaderBase):
     def arg_parser(parser) -> None:
         parser.add_argument(
             "--svgread-as-lines",
-            help="dxfread: using different colors as different layers",
+            help="svgread: load arcs as lines",
             type=bool,
             default=False,
         )
+
+    @staticmethod
+    def preload_setup(filename: str, args: argparse.Namespace):  # pylint: disable=W0613
+        from PyQt5.QtWidgets import (  # pylint: disable=E0611,C0415
+            QCheckBox,
+            QDialog,
+            QDialogButtonBox,
+            QLabel,
+            QVBoxLayout,
+        )
+
+        dialog = QDialog()
+        dialog.setWindowTitle("SVG-Reader")
+
+        dialog.buttonBox = QDialogButtonBox(QDialogButtonBox.Ok)
+        dialog.buttonBox.accepted.connect(dialog.accept)
+
+        dialog.layout = QVBoxLayout()
+        message = QLabel("Import-Options")
+        dialog.layout.addWidget(message)
+
+        svgread_as_lines = QCheckBox("arcs as lines ?")
+        svgread_as_lines.setChecked(args.svgread_as_lines)
+        dialog.layout.addWidget(svgread_as_lines)
+
+        dialog.layout.addWidget(dialog.buttonBox)
+        dialog.setLayout(dialog.layout)
+
+        if dialog.exec():
+            args.svgread_as_lines = svgread_as_lines.isChecked()
 
     def __init__(
         self, filename: str, args: argparse.Namespace = None

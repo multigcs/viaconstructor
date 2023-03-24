@@ -185,6 +185,8 @@ class ViaConstructor:
         "simulation_data": [],
         "simulation_cnt": 0,
         "draw_reader": None,
+        "origin": [0.0, 0.0],
+        "layers": {},
     }
     info = ""
     save_tabs = "no"
@@ -247,7 +249,18 @@ class ViaConstructor:
         psetup: dict = self.project["setup"]
         min_max = objects2minmax(self.project["objects"])
         self.project["minMax"] = min_max
-        if psetup["workpiece"]["zero"] == "bottomLeft":
+        if psetup["workpiece"]["zero"] == "original":
+            if (
+                min_max[0] != self.project["origin"][0]
+                or min_max[1] != self.project["origin"][1]
+            ):
+                move_objects(self.project["objects"], -min_max[0], -min_max[1])
+                move_objects(
+                    self.project["objects"],
+                    self.project["origin"][0],
+                    self.project["origin"][1],
+                )
+        elif psetup["workpiece"]["zero"] == "bottomLeft":
             move_objects(self.project["objects"], -min_max[0], -min_max[1])
         elif psetup["workpiece"]["zero"] == "bottomRight":
             move_objects(self.project["objects"], -min_max[2], -min_max[1])
@@ -463,19 +476,19 @@ class ViaConstructor:
     def _toolbar_flipx(self) -> None:
         mirror_objects(self.project["objects"], self.project["minMax"], vertical=True)
         self.project["minMax"] = objects2minmax(self.project["objects"])
-        self.udate_tabs_data()
+        self.update_tabs_data()
         self.update_drawing()
 
     def _toolbar_flipy(self) -> None:
         mirror_objects(self.project["objects"], self.project["minMax"], horizontal=True)
         self.project["minMax"] = objects2minmax(self.project["objects"])
-        self.udate_tabs_data()
+        self.update_tabs_data()
         self.update_drawing()
 
     def _toolbar_rotate(self) -> None:
         rotate_objects(self.project["objects"], self.project["minMax"])
         self.project["minMax"] = objects2minmax(self.project["objects"])
-        self.udate_tabs_data()
+        self.update_tabs_data()
         self.update_drawing()
 
     def _toolbar_nest(self) -> None:
@@ -542,7 +555,7 @@ class ViaConstructor:
                             )
 
         self.project["minMax"] = objects2minmax(self.project["objects"])
-        self.udate_tabs_data()
+        self.update_tabs_data()
         self.update_drawing()
 
     def _toolbar_scale(self) -> None:
@@ -556,7 +569,7 @@ class ViaConstructor:
         ):
             scale_objects(self.project["objects"], float(scale))
             self.project["minMax"] = objects2minmax(self.project["objects"])
-            self.udate_tabs_data()
+            self.update_tabs_data()
             self.update_drawing()
 
     def _toolbar_view_2d(self) -> None:
@@ -693,10 +706,19 @@ class ViaConstructor:
         """load drawing."""
         self.status_bar_message(f"{self.info} - load drawing..")
         file_dialog = QFileDialog(self.main)
-        file_dialog.setNameFilters(["drawing (*.dxf)"])
+
+        suffix_list = []
+        for reader_plugin in reader_plugins.values():
+            for suffix in reader_plugin.suffix(self.args):
+                suffix_list.append(f"*.{suffix}")
         name = file_dialog.getOpenFileName(
-            self.main, "Load Drawing", "", "drawing (*.dxf)"
+            self.main,
+            "Load Drawing",
+            "",
+            f"drawing ( {' '.join(suffix_list)} )" "Load Drawing",
+            "",
         )
+
         if name[0] and self.load_drawing(name[0]):
             self.update_table()
             self.global_changed(0)
@@ -1371,7 +1393,7 @@ class ViaConstructor:
         self.toolbuttons = {
             _("Load drawing"): [
                 "open.png",
-                "",
+                "Ctrl+O",
                 _("Load drawing"),
                 self._toolbar_load_drawing,
                 not os.environ.get("LINUXCNCVERSION"),
@@ -1383,7 +1405,7 @@ class ViaConstructor:
             ],
             _("Save drawing as DXF"): [
                 "save.png",
-                "Ctrl+S",
+                "Ctrl+D",
                 _("Save drawing as DXF"),
                 self._toolbar_save_dxf,
                 not os.environ.get("LINUXCNCVERSION"),
@@ -1503,7 +1525,7 @@ class ViaConstructor:
             ],
             _("View-Reset"): [
                 "view-reset.png",
-                "",
+                "Ctrl+3",
                 _("View-Reset"),
                 self._toolbar_view_reset,
                 True,
@@ -1515,7 +1537,7 @@ class ViaConstructor:
             ],
             _("2D-View"): [
                 "view-2d.png",
-                "",
+                "Ctrl+2",
                 _("2D-View"),
                 self._toolbar_view_2d,
                 True,
@@ -1527,7 +1549,7 @@ class ViaConstructor:
             ],
             _("Flip-X"): [
                 "flip-x.png",
-                "",
+                "Ctrl+X",
                 _("Flip-X workpiece"),
                 self._toolbar_flipx,
                 True,
@@ -1539,7 +1561,7 @@ class ViaConstructor:
             ],
             _("Flip-Y"): [
                 "flip-y.png",
-                "",
+                "Ctrl+Y",
                 _("Flip-Y workpiece"),
                 self._toolbar_flipy,
                 True,
@@ -1551,7 +1573,7 @@ class ViaConstructor:
             ],
             _("Rotate"): [
                 "rotate.png",
-                "",
+                "Ctrl+R",
                 _("Rotate workpiece"),
                 self._toolbar_rotate,
                 True,
@@ -1575,7 +1597,7 @@ class ViaConstructor:
             ],
             _("Nesting"): [
                 "nesting.png",
-                "",
+                "Ctrl+N",
                 _("nesting workpiece"),
                 self._toolbar_nest,
                 HAVE_NEST,
@@ -1599,7 +1621,7 @@ class ViaConstructor:
             ],
             _("Tab-Selector"): [
                 "tab-selector.png",
-                "",
+                "Ctrl+T",
                 _("Tab-Selector"),
                 self._toolbar_toggle_tab_selector,
                 True,
@@ -1611,7 +1633,7 @@ class ViaConstructor:
             ],
             _("Start-Selector"): [
                 "start.png",
-                "",
+                "Ctrl+L",
                 _("Start-Selector"),
                 self._toolbar_toggle_start_selector,
                 True,
@@ -1623,7 +1645,7 @@ class ViaConstructor:
             ],
             _("Repair-Selector"): [
                 "repair.png",
-                "",
+                "Ctrl+F",
                 _("Repair-Selector"),
                 self._toolbar_toggle_repair_selector,
                 True,
@@ -1647,7 +1669,7 @@ class ViaConstructor:
             ],
             _("Start simulation"): [
                 "play.png",
-                "",
+                "Space",
                 _("start/pause simulation"),
                 self._toolbar_simulate_play,
                 True,
@@ -1695,8 +1717,6 @@ class ViaConstructor:
                 if toolbutton[6]:
                     action.setCheckable(True)
                 action.triggered.connect(toolbutton[3])  # type: ignore
-                if toolbutton[1]:
-                    action.setShortcut(toolbutton[1])
                 action.setStatusTip(toolbutton[2])
                 self.toolbar.addAction(action)
                 toolbutton[9] = action
@@ -1802,7 +1822,18 @@ class ViaConstructor:
             vcontainer = QWidget()
             vlayout = QVBoxLayout(vcontainer)
             vlayout.setContentsMargins(0, 0, 0, 0)
-            tabwidget.addTab(vcontainer, sname)
+
+            titles = {
+                "mill": "M&ill",
+                "tool": "&Tool",
+                "workpiece": "&Workpiece",
+                "pockets": "P&ockets",
+                "tabs": "Ta&bs",
+                "leads": "Lea&ds",
+                "machine": "M&achine",
+                "view": "&View",
+            }
+            tabwidget.addTab(vcontainer, titles.get(sname, sname))
             for ename, entry in self.project["setup_defaults"][sname].items():
                 container = QWidget()
                 hlayout = QHBoxLayout(container)
@@ -1928,7 +1959,7 @@ class ViaConstructor:
                 ulabel.setFont(QFont("Arial", 9))
                 hlayout.addWidget(ulabel)
 
-    def udate_tabs_data(self) -> None:
+    def update_tabs_data(self) -> None:
         self.project["tabs"]["data"] = []
         for obj in self.project["objects"].values():
             layer = obj.get("layer")
@@ -1980,8 +2011,8 @@ class ViaConstructor:
                                 obj["setup"]["tool"]["rate_h"] = int(value)
                             elif cmd in ("FEEDZ", "FZ"):
                                 obj["setup"]["tool"]["rate_v"] = int(value)
-        debug("prepare_segments: udate_tabs_data")
-        self.udate_tabs_data()
+        debug("prepare_segments: update_tabs_data")
+        self.update_tabs_data()
         if not self.args.laser:
             debug("prepare_segments: find_tool_offsets")
             self.project["maxOuter"] = find_tool_offsets(self.project["objects"])
@@ -2014,6 +2045,8 @@ class ViaConstructor:
         suffix = filename.split(".")[-1].lower()
         for reader_plugin in reader_plugins.values():
             if suffix in reader_plugin.suffix(self.args):
+                if self.main is not None and hasattr(reader_plugin, "preload_setup"):
+                    reader_plugin.preload_setup(filename, self.args)
                 self.project["draw_reader"] = reader_plugin(filename, self.args)
                 if reader_plugin.can_save_tabs:
                     self.save_tabs = "ask"
@@ -2035,6 +2068,7 @@ class ViaConstructor:
                 self.project["setup"]["view"]["path"] = "minimal"
                 self.project["setup"]["view"]["object_ids"] = False
 
+            self.project["origin"] = objects2minmax(self.project["objects"])[0:2]
             return True
 
         eprint(f"ERROR: can not load file: {filename}")
@@ -2042,7 +2076,7 @@ class ViaConstructor:
         return False
 
     def open_preview_in_openscad(self):
-        if self.project["suffix"] in {"ngc", "gcode"}:
+        if self.project["suffix"] in {"ngc", "gcode"} and self.project["machine_cmd"]:
             parser = GcodeParser(self.project["machine_cmd"])
             scad_data = parser.openscad(self.project["setup"]["tool"]["diameter"])
             open("/tmp/viaconstructor-preview.scad", "w").write(scad_data)
@@ -2055,7 +2089,7 @@ class ViaConstructor:
             threading.Thread(target=openscad_show).start()
 
     def generate_preview(self):
-        if self.project["suffix"] in {"ngc", "gcode"}:
+        if self.project["suffix"] in {"ngc", "gcode"} and self.project["machine_cmd"]:
             parser = GcodeParser(self.project["machine_cmd"])
             scad_data = parser.openscad(self.project["setup"]["tool"]["diameter"])
             open("/tmp/viaconstructor-preview.scad", "w").write(scad_data)
@@ -2209,14 +2243,14 @@ class ViaConstructor:
         self.project["layerwidget"].setColumnCount(2)
 
         ltabwidget = QTabWidget()
-        ltabwidget.addTab(self.project["objwidget"], _("Objects"))
-        ltabwidget.addTab(self.project["layerwidget"], _("Layers"))
+        ltabwidget.addTab(self.project["objwidget"], _("&Objects"))
+        ltabwidget.addTab(self.project["layerwidget"], _("&Layers"))
 
         left_gridlayout.addWidget(ltabwidget)
 
         tabwidget = QTabWidget()
-        tabwidget.addTab(self.project["glwidget"], _("3D-View"))
-        tabwidget.addTab(self.project["textwidget"], _("Machine-Output"))
+        tabwidget.addTab(self.project["glwidget"], _("&3D-View"))
+        tabwidget.addTab(self.project["textwidget"], _("&Machine-Output"))
 
         if os.path.isfile("/usr/bin/openscad"):
             preview = QWidget()
@@ -2232,7 +2266,7 @@ class ViaConstructor:
             self.project["preview_open"].pressed.connect(self.open_preview_in_openscad)
             preview_vbox.addWidget(self.project["preview_open"])
             preview_vbox.addWidget(self.project["imgwidget"])
-            tabwidget.addTab(preview, _("Preview"))
+            tabwidget.addTab(preview, _("&Preview"))
 
         right_gridlayout = QGridLayout()
         right_gridlayout.addWidget(tabwidget)

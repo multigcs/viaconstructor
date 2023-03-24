@@ -1,0 +1,34 @@
+M48 Beginning of header.
+METRIC Unit is METRIC (mm).
+T01C0.6 Tool sizes in mm. Tool 1 is 0.6 mm, tool
+T02C0.7 2 is 0.7mm, etc.
+T03C0.8
+T04C1.0
+% End of header.
+G05 Set drill/rout mode to drill Drill mode
+T01 Select tool T01
+X9.01Y3.3375 A hole with T01 size at XY Create 2 holes
+X9.01Y4.3125 Another hole at another XY
+T02 Select tool T02
+X8.01Y4.8 Holes with T02 size at these coordinates.
+X8.01Y2.85
+X6.54Y2.85
+X6.45Y4.8
+T03 Set current tool to T03
+G00X8.01Y3.825 Set rout mode and move T03 to XY
+M15 Tool down
+G01X6.54Y3.825 Linear rout to the coordinate
+M16 Tool up
+T04 Select tool T04
+G00X5.0Y2.6 Set rout mode and move T03 to XY
+M15 Tool down
+G03X6.0Y1.6A1.0 Circular CCW rout with radius A.
+G01X11.0Y1.6 Linear rout
+G01X11.0Y5.0 Linear rout
+G03X10.0Y6.0A1.0 Circular CCW rout
+G01X5.0Y6.0 Linear rout
+G01X5.0Y2.6 Linear rout
+M16 Tool up
+G05 Set drill/rout mode to drill. Drill mode
+T03 Select tool T03
+M30
