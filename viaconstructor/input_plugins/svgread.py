@@ -33,7 +33,7 @@ class DrawReader(DrawReaderBase):
         )
 
     @staticmethod
-    def preload_setup(filename: str, args: argparse.Namespace):
+    def preload_setup(filename: str, args: argparse.Namespace):  # pylint: disable=W0613
         from PyQt5.QtWidgets import (  # pylint: disable=E0611,C0415
             QCheckBox,
             QDialog,
