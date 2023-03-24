@@ -10,6 +10,7 @@ import time
 import ezdxf
 
 from ..calc import calc_distance, point_of_line  # pylint: disable=E0402
+from ..dxfcolors import dxfcolors
 from ..input_plugins_base import DrawReaderBase
 from ..vc_types import VcSegment
 
@@ -204,7 +205,8 @@ class DrawReader(DrawReaderBase):
             color = self.layer_colors[layer]
 
         if self.color_layers:
-            layer = f"{layer}-c{color}"
+            colorname = dxfcolors[color][3] or color
+            layer = f"{layer}-c{colorname}"
 
         if self.select_layers and layer not in self.select_layers:
             if layer not in self.filtered_layers:
