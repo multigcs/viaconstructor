@@ -243,7 +243,18 @@ class ViaConstructor:
         psetup: dict = self.project["setup"]
         min_max = objects2minmax(self.project["objects"])
         self.project["minMax"] = min_max
-        if psetup["workpiece"]["zero"] == "bottomLeft":
+        if psetup["workpiece"]["zero"] == "original":
+            if (
+                min_max[0] != self.project["origin"][0]
+                or min_max[1] != self.project["origin"][1]
+            ):
+                move_objects(self.project["objects"], -min_max[0], -min_max[1])
+                move_objects(
+                    self.project["objects"],
+                    self.project["origin"][0],
+                    self.project["origin"][1],
+                )
+        elif psetup["workpiece"]["zero"] == "bottomLeft":
             move_objects(self.project["objects"], -min_max[0], -min_max[1])
         elif psetup["workpiece"]["zero"] == "bottomRight":
             move_objects(self.project["objects"], -min_max[2], -min_max[1])
@@ -1879,6 +1890,7 @@ class ViaConstructor:
                 self.project["setup"]["view"]["path"] = "minimal"
                 self.project["setup"]["view"]["object_ids"] = False
 
+            self.project["origin"] = objects2minmax(self.project["objects"])[0:2]
             return True
 
         eprint(f"ERROR: can not load file: {filename}")
