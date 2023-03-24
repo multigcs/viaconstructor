@@ -273,7 +273,6 @@ class ViaConstructor:
                 -min_max[1] - ydiff / 2.0,
             )
         self.project["minMax"] = objects2minmax(self.project["objects"])
-        self.update_tabs_data()
 
         debug("run_calculation: offsets")
 
@@ -560,7 +559,7 @@ class ViaConstructor:
             self.main,
             "Load Drawing",
             "",
-            f"drawing ({' '.join(suffix_list)})" "Load Drawing",
+            f"drawing ( {' '.join(suffix_list)} )" "Load Drawing",
             "",
         )
 
