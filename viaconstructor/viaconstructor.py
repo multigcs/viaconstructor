@@ -1369,7 +1369,7 @@ class ViaConstructor:
             ],
             _("View-Reset"): [
                 "view-reset.png",
-                "",
+                "Ctrl+3",
                 _("View-Reset"),
                 self._toolbar_view_reset,
                 True,
@@ -1666,7 +1666,18 @@ class ViaConstructor:
             vcontainer = QWidget()
             vlayout = QVBoxLayout(vcontainer)
             vlayout.setContentsMargins(0, 0, 0, 0)
-            tabwidget.addTab(vcontainer, sname)
+
+            titles = {
+                "mill": "M&ill",
+                "tool": "&Tool",
+                "workpiece": "&Workpiece",
+                "pockets": "P&ockets",
+                "tabs": "Ta&bs",
+                "leads": "Lea&ds",
+                "machine": "M&achine",
+                "view": "&View",
+            }
+            tabwidget.addTab(vcontainer, titles.get(sname, sname))
             for ename, entry in self.project["setup_defaults"][sname].items():
                 container = QWidget()
                 hlayout = QHBoxLayout(container)
@@ -1909,7 +1920,7 @@ class ViaConstructor:
         return False
 
     def open_preview_in_openscad(self):
-        if self.project["suffix"] in {"ngc", "gcode"}:
+        if self.project["suffix"] in {"ngc", "gcode"} and self.project["machine_cmd"]:
             parser = GcodeParser(self.project["machine_cmd"])
             scad_data = parser.openscad(self.project["setup"]["tool"]["diameter"])
             open("/tmp/viaconstructor-preview.scad", "w").write(scad_data)
@@ -1922,7 +1933,7 @@ class ViaConstructor:
             threading.Thread(target=openscad_show).start()
 
     def generate_preview(self):
-        if self.project["suffix"] in {"ngc", "gcode"}:
+        if self.project["suffix"] in {"ngc", "gcode"} and self.project["machine_cmd"]:
             parser = GcodeParser(self.project["machine_cmd"])
             scad_data = parser.openscad(self.project["setup"]["tool"]["diameter"])
             open("/tmp/viaconstructor-preview.scad", "w").write(scad_data)
@@ -2069,14 +2080,14 @@ class ViaConstructor:
         self.project["layerwidget"].setColumnCount(2)
 
         ltabwidget = QTabWidget()
-        ltabwidget.addTab(self.project["objwidget"], _("Objects"))
-        ltabwidget.addTab(self.project["layerwidget"], _("Layers"))
+        ltabwidget.addTab(self.project["objwidget"], _("&Objects"))
+        ltabwidget.addTab(self.project["layerwidget"], _("&Layers"))
 
         left_gridlayout.addWidget(ltabwidget)
 
         tabwidget = QTabWidget()
-        tabwidget.addTab(self.project["glwidget"], _("3D-View"))
-        tabwidget.addTab(self.project["textwidget"], _("Machine-Output"))
+        tabwidget.addTab(self.project["glwidget"], _("&3D-View"))
+        tabwidget.addTab(self.project["textwidget"], _("&Machine-Output"))
 
         if os.path.isfile("/usr/bin/openscad"):
             preview = QWidget()
@@ -2092,7 +2103,7 @@ class ViaConstructor:
             self.project["preview_open"].pressed.connect(self.open_preview_in_openscad)
             preview_vbox.addWidget(self.project["preview_open"])
             preview_vbox.addWidget(self.project["imgwidget"])
-            tabwidget.addTab(preview, _("Preview"))
+            tabwidget.addTab(preview, _("&Preview"))
 
         right_gridlayout = QGridLayout()
         right_gridlayout.addWidget(tabwidget)
