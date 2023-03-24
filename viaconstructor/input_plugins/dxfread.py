@@ -85,6 +85,62 @@ class DrawReader(DrawReaderBase):
                 action="store_true",
             )
 
+    @staticmethod
+    def preload_setup(filename: str, args: argparse.Namespace):
+        from PyQt5.QtWidgets import (  # pylint: disable=E0611,C0415
+            QCheckBox,
+            QDialog,
+            QDialogButtonBox,
+            QDoubleSpinBox,
+            QLabel,
+            QVBoxLayout,
+        )
+
+        dialog = QDialog()
+        dialog.setWindowTitle("DXF-Reader")
+
+        dialog.buttonBox = QDialogButtonBox(QDialogButtonBox.Ok)
+        dialog.buttonBox.accepted.connect(dialog.accept)
+
+        dialog.layout = QVBoxLayout()
+        message = QLabel("Import-Options")
+        dialog.layout.addWidget(message)
+
+        dxfread_color_layers = QCheckBox("split colors into Layers ?")
+        dxfread_color_layers.setChecked(args.dxfread_color_layers)
+        dialog.layout.addWidget(dxfread_color_layers)
+
+        label = QLabel("Scale")
+        dialog.layout.addWidget(label)
+        dxfread_scale = QDoubleSpinBox()
+        dxfread_scale.setDecimals(4)
+        dxfread_scale.setSingleStep(0.1)
+        dxfread_scale.setMinimum(0.0001)
+        dxfread_scale.setMaximum(100000)
+        dxfread_scale.setValue(1.0)
+        dialog.layout.addWidget(dxfread_scale)
+
+        doc = ezdxf.readfile(filename)
+        dxfread_select_layers = {}
+        for layer in doc.layers:
+            dxfread_select_layers[layer.dxf.name] = QCheckBox(
+                f"select layer: {layer.dxf.name}"
+            )
+            dxfread_select_layers[layer.dxf.name].setChecked(True)
+            dialog.layout.addWidget(dxfread_select_layers[layer.dxf.name])
+
+        dialog.layout.addWidget(dialog.buttonBox)
+        dialog.setLayout(dialog.layout)
+
+        if dialog.exec():
+            args.dxfread_color_layers = dxfread_color_layers.isChecked()
+            args.dxfread_scale = dxfread_scale.value()
+            selection = []
+            for layer, stat in dxfread_select_layers.items():
+                if stat.isChecked():
+                    selection.append(layer)
+            args.dxfread_select_layers = selection
+
     def __init__(
         self, filename: str, args: argparse.Namespace = None
     ):  # pylint: disable=W0613

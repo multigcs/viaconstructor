@@ -181,6 +181,8 @@ class ViaConstructor:
         "simulation_data": [],
         "simulation_cnt": 0,
         "draw_reader": None,
+        "origin": [0.0, 0.0],
+        "layers": {},
     }
     info = ""
     save_tabs = "no"
@@ -1870,6 +1872,8 @@ class ViaConstructor:
         suffix = filename.split(".")[-1].lower()
         for reader_plugin in reader_plugins.values():
             if suffix in reader_plugin.suffix(self.args):
+                if self.main is not None and hasattr(reader_plugin, "preload_setup"):
+                    reader_plugin.preload_setup(filename, self.args)
                 self.project["draw_reader"] = reader_plugin(filename, self.args)
                 if reader_plugin.can_save_tabs:
                     self.save_tabs = "ask"
