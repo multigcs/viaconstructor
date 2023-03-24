@@ -135,11 +135,12 @@ class DrawReader(DrawReaderBase):
         if dialog.exec():
             args.dxfread_color_layers = dxfread_color_layers.isChecked()
             args.dxfread_scale = dxfread_scale.value()
-            selection = []
-            for layer, stat in dxfread_select_layers.items():
-                if stat.isChecked():
-                    selection.append(layer)
-            args.dxfread_select_layers = selection
+            if not args.dxfread_color_layers:
+                selection = []
+                for layer, stat in dxfread_select_layers.items():
+                    if stat.isChecked():
+                        selection.append(layer)
+                args.dxfread_select_layers = selection
 
     def __init__(
         self, filename: str, args: argparse.Namespace = None
