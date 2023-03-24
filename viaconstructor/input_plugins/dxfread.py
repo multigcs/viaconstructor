@@ -120,14 +120,15 @@ class DrawReader(DrawReaderBase):
         dxfread_scale.setValue(1.0)
         dialog.layout.addWidget(dxfread_scale)
 
-        doc = ezdxf.readfile(filename)
         dxfread_select_layers = {}
-        for layer in doc.layers:
-            dxfread_select_layers[layer.dxf.name] = QCheckBox(
-                f"select layer: {layer.dxf.name}"
-            )
-            dxfread_select_layers[layer.dxf.name].setChecked(True)
-            dialog.layout.addWidget(dxfread_select_layers[layer.dxf.name])
+        if filename.lower().endswith(".dxf"):
+            doc = ezdxf.readfile(filename)
+            for layer in doc.layers:
+                dxfread_select_layers[layer.dxf.name] = QCheckBox(
+                    f"select layer: {layer.dxf.name}"
+                )
+                dxfread_select_layers[layer.dxf.name].setChecked(True)
+                dialog.layout.addWidget(dxfread_select_layers[layer.dxf.name])
 
         dialog.layout.addWidget(dialog.buttonBox)
         dialog.setLayout(dialog.layout)

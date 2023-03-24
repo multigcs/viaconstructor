@@ -551,10 +551,19 @@ class ViaConstructor:
         """load drawing."""
         self.status_bar_message(f"{self.info} - load drawing..")
         file_dialog = QFileDialog(self.main)
-        file_dialog.setNameFilters(["drawing (*.dxf)"])
+
+        suffix_list = []
+        for reader_plugin in reader_plugins.values():
+            for suffix in reader_plugin.suffix(self.args):
+                suffix_list.append(f"*.{suffix}")
         name = file_dialog.getOpenFileName(
-            self.main, "Load Drawing", "", "drawing (*.dxf)"
+            self.main,
+            "Load Drawing",
+            "",
+            f"drawing ({' '.join(suffix_list)})" "Load Drawing",
+            "",
         )
+
         if name[0] and self.load_drawing(name[0]):
             self.update_table()
             self.global_changed(0)

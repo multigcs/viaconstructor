@@ -24,6 +24,50 @@ class DrawReader(DrawReaderBase):
             default=100,
         )
 
+    @staticmethod
+    def preload_setup(filename: str, args: argparse.Namespace):
+        from PyQt5.QtWidgets import (  # pylint: disable=E0611,C0415
+            QDialog,
+            QDialogButtonBox,
+            QDoubleSpinBox,
+            QLabel,
+            QLineEdit,
+            QVBoxLayout,
+        )
+
+        dialog = QDialog()
+        dialog.setWindowTitle("SVG-Reader")
+
+        dialog.buttonBox = QDialogButtonBox(QDialogButtonBox.Ok)
+        dialog.buttonBox.accepted.connect(dialog.accept)
+
+        dialog.layout = QVBoxLayout()
+        message = QLabel("Import-Options")
+        dialog.layout.addWidget(message)
+
+        label = QLabel("Text")
+        dialog.layout.addWidget(label)
+        ttfread_text = QLineEdit()
+        ttfread_text.setText("Via")
+        dialog.layout.addWidget(ttfread_text)
+
+        label = QLabel("Height")
+        dialog.layout.addWidget(label)
+        ttfread_height = QDoubleSpinBox()
+        ttfread_height.setDecimals(4)
+        ttfread_height.setSingleStep(0.1)
+        ttfread_height.setMinimum(0.0001)
+        ttfread_height.setMaximum(100000)
+        ttfread_height.setValue(100.0)
+        dialog.layout.addWidget(ttfread_height)
+
+        dialog.layout.addWidget(dialog.buttonBox)
+        dialog.setLayout(dialog.layout)
+
+        if dialog.exec():
+            args.ttfread_text = ttfread_text.text()
+            args.ttfread_height = ttfread_height.value()
+
     def __init__(self, filename: str, args: argparse.Namespace = None):
         """slicing and converting stl into single segments."""
         self.filename = filename
