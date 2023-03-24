@@ -205,8 +205,8 @@ class DrawReader(DrawReaderBase):
             color = self.layer_colors[layer]
 
         if self.color_layers:
-            colorname = dxfcolors[color][3] or color
-            layer = f"{layer}-c{colorname}"
+            colorname = dxfcolors[color][3] or f"c{color}"
+            layer = f"{layer}-{colorname}"
 
         if self.select_layers and layer not in self.select_layers:
             if layer not in self.filtered_layers:
