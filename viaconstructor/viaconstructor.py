@@ -318,19 +318,19 @@ class ViaConstructor:
     def _toolbar_flipx(self) -> None:
         mirror_objects(self.project["objects"], self.project["minMax"], vertical=True)
         self.project["minMax"] = objects2minmax(self.project["objects"])
-        self.udate_tabs_data()
+        self.update_tabs_data()
         self.update_drawing()
 
     def _toolbar_flipy(self) -> None:
         mirror_objects(self.project["objects"], self.project["minMax"], horizontal=True)
         self.project["minMax"] = objects2minmax(self.project["objects"])
-        self.udate_tabs_data()
+        self.update_tabs_data()
         self.update_drawing()
 
     def _toolbar_rotate(self) -> None:
         rotate_objects(self.project["objects"], self.project["minMax"])
         self.project["minMax"] = objects2minmax(self.project["objects"])
-        self.udate_tabs_data()
+        self.update_tabs_data()
         self.update_drawing()
 
     def _toolbar_nest(self) -> None:
@@ -397,7 +397,7 @@ class ViaConstructor:
                             )
 
         self.project["minMax"] = objects2minmax(self.project["objects"])
-        self.udate_tabs_data()
+        self.update_tabs_data()
         self.update_drawing()
 
     def _toolbar_scale(self) -> None:
@@ -411,7 +411,7 @@ class ViaConstructor:
         ):
             scale_objects(self.project["objects"], float(scale))
             self.project["minMax"] = objects2minmax(self.project["objects"])
-            self.udate_tabs_data()
+            self.update_tabs_data()
             self.update_drawing()
 
     def _toolbar_view_2d(self) -> None:
@@ -1783,7 +1783,7 @@ class ViaConstructor:
                 ulabel.setFont(QFont("Arial", 9))
                 hlayout.addWidget(ulabel)
 
-    def udate_tabs_data(self) -> None:
+    def update_tabs_data(self) -> None:
         self.project["tabs"]["data"] = []
         for obj in self.project["objects"].values():
             layer = obj.get("layer")
@@ -1835,8 +1835,8 @@ class ViaConstructor:
                                 obj["setup"]["tool"]["rate_h"] = int(value)
                             elif cmd in ("FEEDZ", "FZ"):
                                 obj["setup"]["tool"]["rate_v"] = int(value)
-        debug("prepare_segments: udate_tabs_data")
-        self.udate_tabs_data()
+        debug("prepare_segments: update_tabs_data")
+        self.update_tabs_data()
         if not self.args.laser:
             debug("prepare_segments: find_tool_offsets")
             self.project["maxOuter"] = find_tool_offsets(self.project["objects"])
