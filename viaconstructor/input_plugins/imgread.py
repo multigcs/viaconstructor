@@ -1,4 +1,4 @@
-"""dxf reading."""
+"""img reading."""
 
 import argparse
 
