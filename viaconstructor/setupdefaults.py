@@ -539,6 +539,12 @@ def setup_defaults(_) -> dict:
             },
         },
         "view": {
+            "autocalc": {
+                "default": True,
+                "type": "bool",
+                "title": _("Auto-Recalculation"),
+                "tooltip": _("update drawing automatically"),
+            },
             "path": {
                 "default": "simple",
                 "type": "select",
