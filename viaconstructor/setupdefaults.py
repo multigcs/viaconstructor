@@ -107,6 +107,7 @@ def setup_defaults(_) -> dict:
                     ("inside", _("inside")),
                     ("outside", _("outside")),
                     ("none", _("none")),
+                    ("centerline", _("centerline")),
                 ),
                 "title": _("Offset"),
                 "tooltip": _("tool offset"),

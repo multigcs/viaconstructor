@@ -313,14 +313,15 @@ class ViaConstructor:
             )
             sys.exit(1)
 
-        if self.args.vcarve:
+
+        if self.args.vcarve or False:
             from .ext.polyskel.polyskel import skeletonize
 
             fast_move_z = self.project["setup"]["mill"]["fast_move_z"]
             depth = self.project["setup"]["mill"]["depth"]
 
             for _name, _object in self.project["objects"].items():
-                if _object.closed and not _object.outer_objects:
+                if _object.closed and len(_object.outer_objects) == 1 and _object.setup["mill"]["offset"] == "centerline":
                     pscale = 1000
                     contours = []
                     points = object2points(_object)
@@ -343,7 +344,7 @@ class ViaConstructor:
                         _inner_object = self.project["objects"][oid]
                         if (
                             _inner_object.closed
-                            and len(_inner_object.outer_objects) == 1
+                            and len(_inner_object.outer_objects) == 2
                         ):
                             clines.append(
                                 [

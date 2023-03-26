@@ -85,6 +85,8 @@ class DrawReader(DrawReaderBase):
             args.ttfread_height = ttfread_height.value()
             args.ttfread_border = ttfread_border.value()
 
+
+
     def __init__(self, filename: str, args: argparse.Namespace = None):
         """slicing and converting stl into single segments."""
         self.filename = filename
@@ -147,23 +149,13 @@ class DrawReader(DrawReaderBase):
                 self.min_max[2] = max(self.min_max[2], segment.end[0])
                 self.min_max[3] = max(self.min_max[3], segment.end[1])
 
+
         if border >= 0.0:
-            self._add_line(
-                (self.min_max[0] - border, self.min_max[1] - border),
-                (self.min_max[0] - border, self.min_max[3] + border),
-            )
-            self._add_line(
-                (self.min_max[0] - border, self.min_max[3] + border),
-                (self.min_max[2] + border, self.min_max[3] + border),
-            )
-            self._add_line(
-                (self.min_max[2] + border, self.min_max[3] + border),
-                (self.min_max[2] + border, self.min_max[1] - border),
-            )
-            self._add_line(
-                (self.min_max[2] + border, self.min_max[1] - border),
-                (self.min_max[0] - border, self.min_max[1] - border),
-            )
+            self._add_line((self.min_max[0]-border, self.min_max[1]-border), (self.min_max[0]-border, self.min_max[3]+border))
+            self._add_line((self.min_max[0]-border, self.min_max[3]+border), (self.min_max[2]+border, self.min_max[3]+border))
+            self._add_line((self.min_max[2]+border, self.min_max[3]+border), (self.min_max[2]+border, self.min_max[1]-border))
+            self._add_line((self.min_max[2]+border, self.min_max[1]-border), (self.min_max[0]-border, self.min_max[1]-border))
+
 
         self.size = []
         self.size.append(self.min_max[2] - self.min_max[0])

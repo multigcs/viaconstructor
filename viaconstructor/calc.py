@@ -329,12 +329,10 @@ def find_tool_offsets(objects):
     for obj_idx, obj in objects.items():
         print(f"set offsets: {round((part_n + 1) * 100 / part_l, 1)}%", end="\r")
         part_n += 1
-
         outer = find_outer_objects(objects, obj.segments[0].start, [obj_idx])
         obj.outer_objects = outer
         if obj.closed:
-
-            if obj.setup["mill"]["offset"] == "auto":
+            if obj.setup["mill"]["offset"] in {"auto", "centerline"}:
                 obj.tool_offset = "outside" if len(outer) % 2 == 0 else "inside"
             else:
                 obj.tool_offset = obj.setup["mill"]["offset"]
