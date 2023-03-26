@@ -1056,7 +1056,7 @@ def draw_object_edges(project: dict, selected: int = -1) -> None:
                 continue
 
             color = (1.0, 1.0, 1.0)
-            if obj.color in dxfcolors:
+            if project["setup"]["view"]["colors_show"] and obj.color in dxfcolors:
                 color = dxfcolors[obj.color][0:3]
 
             odepth = obj["setup"]["mill"]["depth"]
