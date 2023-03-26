@@ -23,6 +23,12 @@ class DrawReader(DrawReaderBase):
             type=float,
             default=100,
         )
+        parser.add_argument(
+            "--ttfread-border",
+            help="adding border to the text",
+            type=float,
+            default=-1.0,
+        )
 
     @staticmethod
     def preload_setup(filename: str, args: argparse.Namespace):  # pylint: disable=W0613
@@ -54,12 +60,22 @@ class DrawReader(DrawReaderBase):
         label = QLabel("Height")
         dialog.layout.addWidget(label)
         ttfread_height = QDoubleSpinBox()
-        ttfread_height.setDecimals(4)
+        ttfread_height.setDecimals(3)
         ttfread_height.setSingleStep(0.1)
         ttfread_height.setMinimum(0.0001)
         ttfread_height.setMaximum(100000)
-        ttfread_height.setValue(100.0)
+        ttfread_height.setValue(args.ttfread_height)
         dialog.layout.addWidget(ttfread_height)
+
+        label = QLabel("Border")
+        dialog.layout.addWidget(label)
+        ttfread_border = QDoubleSpinBox()
+        ttfread_border.setDecimals(3)
+        ttfread_border.setSingleStep(0.1)
+        ttfread_border.setMinimum(-1000)
+        ttfread_border.setMaximum(1000)
+        ttfread_border.setValue(args.ttfread_border)
+        dialog.layout.addWidget(ttfread_border)
 
         dialog.layout.addWidget(dialog.buttonBox)
         dialog.setLayout(dialog.layout)
@@ -67,6 +83,7 @@ class DrawReader(DrawReaderBase):
         if dialog.exec():
             args.ttfread_text = ttfread_text.text()
             args.ttfread_height = ttfread_height.value()
+            args.ttfread_border = ttfread_border.value()
 
     def __init__(self, filename: str, args: argparse.Namespace = None):
         """slicing and converting stl into single segments."""
@@ -77,6 +94,7 @@ class DrawReader(DrawReaderBase):
         face.set_char_size(18 * 64)
 
         scale = args.ttfread_height / 1000.0  # type: ignore
+        border = args.ttfread_border
 
         ctx = {
             "last": (),
@@ -128,6 +146,24 @@ class DrawReader(DrawReaderBase):
                 self.min_max[1] = min(self.min_max[1], segment.end[1])
                 self.min_max[2] = max(self.min_max[2], segment.end[0])
                 self.min_max[3] = max(self.min_max[3], segment.end[1])
+
+        if border >= 0.0:
+            self._add_line(
+                (self.min_max[0] - border, self.min_max[1] - border),
+                (self.min_max[0] - border, self.min_max[3] + border),
+            )
+            self._add_line(
+                (self.min_max[0] - border, self.min_max[3] + border),
+                (self.min_max[2] + border, self.min_max[3] + border),
+            )
+            self._add_line(
+                (self.min_max[2] + border, self.min_max[3] + border),
+                (self.min_max[2] + border, self.min_max[1] - border),
+            )
+            self._add_line(
+                (self.min_max[2] + border, self.min_max[1] - border),
+                (self.min_max[0] - border, self.min_max[1] - border),
+            )
 
         self.size = []
         self.size.append(self.min_max[2] - self.min_max[0])
