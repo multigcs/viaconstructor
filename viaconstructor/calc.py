@@ -1109,7 +1109,7 @@ def object2polyline_offsets(
 
 def objects2polyline_offsets(diameter, objects, max_outer, small_circles=False):
     """calculates the offset line(s) of all objects"""
-    polyline_offsets = {}
+    polyline_offsets_all = {}
 
     part_l = len(objects)
     part_n = 0
@@ -1138,12 +1138,14 @@ def objects2polyline_offsets(diameter, objects, max_outer, small_circles=False):
             if do_reverse:
                 reverse_object(obj_copy)
 
+            polyline_offsets = {}
             object2polyline_offsets(
                 diameter, obj_copy, obj_idx, max_outer, polyline_offsets, small_circles
             )
+            polyline_offsets_all.update(polyline_offsets)
 
     print("")
-    return polyline_offsets
+    return polyline_offsets_all
 
 
 # analyze size
