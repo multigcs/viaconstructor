@@ -685,6 +685,10 @@ def polylines2machine_cmd(project: dict, post: PostProcessor) -> str:
                     points = vertex2points(vertex_data)
 
                 helix_mode = polyline.setup["mill"]["helix_mode"]
+                if not is_closed:
+                    helix_mode = False
+                #if polyline.is_pocket > 0:
+                #    helix_mode = False
 
                 # get object distance
                 obj_distance = 0
