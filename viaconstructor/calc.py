@@ -734,8 +734,9 @@ def do_pockets(  # pylint: disable=R0913
         if obj.inner_objects and obj.setup["pockets"]["islands"]:
             for idx in obj.inner_objects:
                 polyline_offset = polyline_offsets.get(f"{idx}.0")
-                vertex_data = vertex_data_cache(polyline_offset)
-                points_check.append(vertex2points(vertex_data, no_bulge=True))
+                if polyline_offset is not None:
+                    vertex_data = vertex_data_cache(polyline_offset)
+                    points_check.append(vertex2points(vertex_data, no_bulge=True))
 
         # get bounding box
         y_pos = bounding[1] + abs_tool_radius
@@ -1108,7 +1109,7 @@ def object2polyline_offsets(
 
 def objects2polyline_offsets(diameter, objects, max_outer, small_circles=False):
     """calculates the offset line(s) of all objects"""
-    polyline_offsets_all = {}
+    polyline_offsets = {}
 
     part_l = len(objects)
     part_n = 0
@@ -1137,15 +1138,12 @@ def objects2polyline_offsets(diameter, objects, max_outer, small_circles=False):
             if do_reverse:
                 reverse_object(obj_copy)
 
-            polyline_offsets = {}
-
             object2polyline_offsets(
                 diameter, obj_copy, obj_idx, max_outer, polyline_offsets, small_circles
             )
-            polyline_offsets_all.update(polyline_offsets)
 
     print("")
-    return polyline_offsets_all
+    return polyline_offsets
 
 
 # analyze size
