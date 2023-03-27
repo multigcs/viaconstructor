@@ -925,10 +925,12 @@ def object2polyline_offsets(
 ):
     """calculates the offset line(s) of one object"""
 
+    new_polyline_offsets = {}
+
     def overcut() -> None:
         quarter_pi = math.pi / 4
         radius_3 = abs(tool_radius * 3)
-        for offset_idx, polyline in enumerate(list(polyline_offsets.values())):
+        for offset_idx, polyline in enumerate(list(new_polyline_offsets.values())):
             points = vertex2points(vertex_data_cache(polyline))
             xdata = []
             ydata = []
@@ -1019,7 +1021,7 @@ def object2polyline_offsets(
             over_polyline.is_pocket = 0
             over_polyline.fixed_direction = False
             over_polyline.tool_offset = tool_offset
-            polyline_offsets[f"{obj_idx}.{offset_idx}"] = over_polyline
+            new_polyline_offsets[f"{obj_idx}.{offset_idx}"] = over_polyline
 
     tool_offset = obj.tool_offset
     if obj.overwrite_offset is not None:
@@ -1054,7 +1056,7 @@ def object2polyline_offsets(
                 polyline_offset.is_pocket = 0
                 polyline_offset.fixed_direction = False
                 polyline_offset.is_circle = is_circle
-                polyline_offsets[f"{obj_idx}.{offset_idx}"] = polyline_offset
+                new_polyline_offsets[f"{obj_idx}.{offset_idx}"] = polyline_offset
                 offset_idx += 1
                 if tool_offset == "inside" and obj.setup["pockets"]["active"]:
                     if polyline_offset.is_closed():
@@ -1085,7 +1087,7 @@ def object2polyline_offsets(
             polyline_offset.is_pocket = 0
             polyline_offset.fixed_direction = False
             polyline_offset.is_circle = True
-            polyline_offsets[f"{obj_idx}.{offset_idx}.x"] = polyline_offset
+            new_polyline_offsets[f"{obj_idx}.{offset_idx}.x"] = polyline_offset
             offset_idx += 1
 
         if obj.setup["mill"]["overcut"]:
@@ -1101,15 +1103,17 @@ def object2polyline_offsets(
         polyline.is_pocket = 0
         polyline.fixed_direction = False
         polyline.is_circle = False
-        polyline_offsets[f"{obj_idx}.{offset_idx}"] = polyline
+        new_polyline_offsets[f"{obj_idx}.{offset_idx}"] = polyline
         offset_idx += 1
+
+    polyline_offsets.update(new_polyline_offsets)
 
     return polyline_offsets
 
 
 def objects2polyline_offsets(diameter, objects, max_outer, small_circles=False):
     """calculates the offset line(s) of all objects"""
-    polyline_offsets_all = {}
+    polyline_offsets = {}
 
     part_l = len(objects)
     part_n = 0
@@ -1138,14 +1142,12 @@ def objects2polyline_offsets(diameter, objects, max_outer, small_circles=False):
             if do_reverse:
                 reverse_object(obj_copy)
 
-            polyline_offsets = {}
             object2polyline_offsets(
                 diameter, obj_copy, obj_idx, max_outer, polyline_offsets, small_circles
             )
-            polyline_offsets_all.update(polyline_offsets)
 
     print("")
-    return polyline_offsets_all
+    return polyline_offsets
 
 
 # analyze size
