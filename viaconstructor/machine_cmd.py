@@ -531,15 +531,22 @@ def get_nearest_free_object(
             )
             or next_filter == offset_num
         ):
+
+            print("########offset_num##################", offset_num, next_filter)
+
             if offset.is_pocket == 1 and offset.setup["pockets"]["insideout"]:
                 pocket_filter = None
                 offset_num_pre = offset_num.split(".")[0]
                 for pocket_offset_num in polylines:
+
+                    print("####", pocket_offset_num, offset_num_pre)
+
                     if (
                         pocket_offset_num not in milling
                         and pocket_offset_num.startswith(f"{offset_num_pre}.")
                     ):
                         pocket_filter = pocket_offset_num
+                        print("##pocket_filter#", pocket_filter,pocket_offset_num)
                 if offset_num != pocket_filter:
                     continue
 
@@ -589,6 +596,8 @@ def get_nearest_free_object(
                             nearest_idx = offset_num
                             nearest_point = len(vertex_data[0]) - 1
                             found = True
+
+    print("######## next ##################", found, nearest_idx)
 
     return (found, nearest_idx, nearest_point, nearest_dist)
 
