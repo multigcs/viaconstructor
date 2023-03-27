@@ -5,7 +5,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
-"POT-Creation-Date: 2023-03-26 11:56+0200\n"
+"POT-Creation-Date: 2023-03-27 16:02+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -381,6 +381,12 @@ msgstr ""
 msgid "how to show the gcode path in the 3d-View"
 msgstr ""
 
+msgid "Colors-Show"
+msgstr ""
+
+msgid "showing colors in 3D preview"
+msgstr ""
+
 msgid "Ruler-Show"
 msgstr ""
 
@@ -574,6 +580,9 @@ msgid "redraw"
 msgstr ""
 
 msgid "update calculation and redraw"
+msgstr ""
+
+msgid "Calculation"
 msgstr ""
 
 msgid "select this row"
