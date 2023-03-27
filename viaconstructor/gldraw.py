@@ -55,6 +55,7 @@ class GLWidget(QGLWidget):
     """customized GLWidget."""
 
     GL_MULTISAMPLE = 0x809D
+    version_printed = False
     screen_w = 100
     screen_h = 100
     aspect = 1.0
@@ -117,7 +118,9 @@ class GLWidget(QGLWidget):
         """glinit function."""
 
         version = GL.glGetString(GL.GL_VERSION).decode()
-        print(f"OpenGL-Version: {version}")
+        if not self.version_printed:
+            print(f"OpenGL-Version: {version}")
+            self.version_printed = True
 
         GL.glMatrixMode(GL.GL_PROJECTION)
         GL.glLoadIdentity()
