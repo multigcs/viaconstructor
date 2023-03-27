@@ -462,7 +462,7 @@ def segments2objects(segments):
                 min_y = min(min_y, segment.start[1], segment.end[1])
                 max_x = max(max_x, segment.start[0], segment.end[0])
                 max_y = max(max_y, segment.start[1], segment.end[1])
-            uid = f"{obj_idx}:{min_x}_{min_y}_{max_x}_{max_y}"
+            uid = f"{int(obj_idx * 100)}:{int(min_x * 100)}_{int(min_y * 100)}_{int(max_x * 100)}_{int(max_y * 100)}"
 
             objects[uid] = obj
             obj_idx += 1
