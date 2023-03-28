@@ -1,5 +1,6 @@
 """viaconstructor calculation functions."""
 
+import hashlib
 import math
 from copy import deepcopy
 
@@ -462,9 +463,10 @@ def segments2objects(segments):
                 min_y = min(min_y, segment.start[1], segment.end[1])
                 max_x = max(max_x, segment.start[0], segment.end[0])
                 max_y = max(max_y, segment.start[1], segment.end[1])
-            uid = f"{int(obj_idx * 100)}:{int(min_x * 100)}_{int(min_y * 100)}_{int(max_x * 100)}_{int(max_y * 100)}"
+            uid = hashlib.md5(f"{int(min_x * 100)}_{int(min_y * 100)}_{int(max_x * 100)}_{int(max_y * 100)}".encode('utf-8')).hexdigest()
+            obj_uid = f"{obj_idx}:{uid}"
 
-            objects[uid] = obj
+            objects[obj_uid] = obj
             obj_idx += 1
             last = None
 
@@ -842,7 +844,6 @@ def do_pockets(  # pylint: disable=R0913
         output_lines = lines_to_path(
             lines, max_vdist=abs_tool_radius * 2, max_dist=abs_tool_radius * 2
         )
-        print("##output_lines", len(output_lines))
         if output_lines:
             last = output_lines[0]
             polyline = []
