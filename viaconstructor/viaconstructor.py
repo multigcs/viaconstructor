@@ -549,6 +549,50 @@ class ViaConstructor:
         else:
             self.status_bar_message(f"{self.info} - save dxf..cancel")
 
+    def _toolbar_save_project(self) -> None:
+        """save project."""
+        self.status_bar_message(f"{self.info} - save project..")
+        file_dialog = QFileDialog(self.main)
+        file_dialog.setNameFilters(["vcp (*.vcp)"])
+        filename_default = f"{self.project['filename_draw'].split('.')[0]}.vcp"
+        self.project[
+            "filename_machine_cmd"
+        ] = f"{'.'.join(self.project['filename_draw'].split('.')[:-1])}.vcp"
+        name = file_dialog.getSaveFileName(
+            self.main,
+            "Save File",
+            filename_default,
+            "vcp (*.vcp)",
+        )
+        if name[0]:
+            self.save_project(name[0])
+        self.status_bar_message(f"{self.info} - save vcp..done ({name[0]})")
+
+    def _toolbar_load_project(self) -> None:
+        """load project."""
+        self.status_bar_message(f"{self.info} - load project..")
+        file_dialog = QFileDialog(self.main)
+
+        suffix_list = ["*.vcp"]
+        name = file_dialog.getOpenFileName(
+            self.main,
+            "Load Project",
+            "",
+            f"project ( {' '.join(suffix_list)} )" "Load Project",
+            "",
+        )
+        if name[0] and self.load_project(name[0]):
+            self.update_table()
+            self.global_changed(0)
+            self.update_drawing()
+
+            self.create_menubar()
+            self.create_toolbar()
+
+            self.status_bar_message(f"{self.info} - load project..done ({name[0]})")
+        else:
+            self.status_bar_message(f"{self.info} - load project..cancel")
+
     def _toolbar_load_drawing(self) -> None:
         """load drawing."""
         self.status_bar_message(f"{self.info} - load drawing..")
@@ -723,6 +767,7 @@ class ViaConstructor:
                     object_diffs[uid][section] = section_diff
 
         project_data = {
+            "filename_draw": self.project["filename_draw"],
             "general": self.project["setup"],
             "objects": object_diffs,
         }
@@ -730,10 +775,14 @@ class ViaConstructor:
         open(filename, "w").write(project_json)
 
     def load_project(self, filename: str) -> None:
-        self.project["status"] = "CHANGE"
         project_json = open(filename, "r").read()
         project_data = json.loads(project_json)
         self.project["setup"] = project_data["general"]
+
+        filename = project_data.get("filename_draw", "")
+        if filename and self.project["filename_draw"] != filename:
+            self.load_drawing(filename)
+
         for idx, obj in self.project["objects"].items():
             uid = idx.split(":")[1]
             obj["setup"] = deepcopy(self.project["setup"])
@@ -742,6 +791,8 @@ class ViaConstructor:
                 for section, section_data in project_data["objects"][uid].items():
                     for key, value in section_data.items():
                         obj["setup"][section][key] = value
+
+        self.project["status"] = "CHANGE"
         self.update_global_setup()
         self.update_table()
         self.global_changed(0)
@@ -1315,6 +1366,30 @@ class ViaConstructor:
                 False,
                 _("File"),
                 "exit",
+                None,
+            ],
+            _("Load project"): [
+                "open.png",
+                "",
+                _("Load project"),
+                self._toolbar_load_project,
+                False,
+                True,
+                False,
+                _("Project"),
+                "",
+                None,
+            ],
+            _("Save project"): [
+                "save.png",
+                "",
+                _("Save project"),
+                self._toolbar_save_project,
+                False,
+                True,
+                False,
+                _("Project"),
+                "",
                 None,
             ],
             _("Save Machine-Commands"): [
