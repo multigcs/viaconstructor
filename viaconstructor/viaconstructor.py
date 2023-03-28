@@ -554,7 +554,7 @@ class ViaConstructor:
         self.status_bar_message(f"{self.info} - save project..")
         file_dialog = QFileDialog(self.main)
         file_dialog.setNameFilters(["vcp (*.vcp)"])
-        filename_default = f"{self.project['filename_draw'].split('.')[:-1]}.vcp"
+        filename_default = f"{'.'.join(self.project['filename_draw'].split('.')[:-1])}.vcp"
         self.project[
             "filename_machine_cmd"
         ] = f"{'.'.join(self.project['filename_draw'].split('.')[:-1])}.vcp"
@@ -754,8 +754,12 @@ class ViaConstructor:
 
     def save_project(self, filename: str) -> bool:
         object_diffs: dict = {}
+        obj_starts = {}
         for idx, obj in self.project["objects"].items():
             uid = idx.split(":")[1]
+            obj_start = obj.get("start")
+            if obj_start:
+                obj_starts[uid] = obj_start
             for section, section_data in obj.setup.items():
                 section_diff = {}
                 for key, value in section_data.items():
@@ -772,6 +776,8 @@ class ViaConstructor:
         project_data = {
             "filename_draw": filename_draw,
             "general": self.project["setup"],
+            "tabs": self.project["tabs"],
+            "starts": obj_starts,
             "objects": object_diffs,
         }
         project_json = json.dumps(project_data, indent=4, sort_keys=True)
@@ -786,6 +792,9 @@ class ViaConstructor:
         filename = project_data.get("filename_draw", "")
         if filename and self.project["filename_draw"] != filename:
             self.load_drawing(filename)
+
+        if "tabs" in project_data:
+            self.project["tabs"] = project_data["tabs"]
 
         for idx, obj in self.project["objects"].items():
             uid = idx.split(":")[1]
