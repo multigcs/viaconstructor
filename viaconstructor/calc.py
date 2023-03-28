@@ -831,7 +831,6 @@ def do_pockets(  # pylint: disable=R0913
         output_lines = lines_to_path(
             lines, max_vdist=abs_tool_radius * 2, max_dist=abs_tool_radius * 2
         )
-        print("##output_lines", len(output_lines))
         if output_lines:
             last = output_lines[0]
             polyline = []
