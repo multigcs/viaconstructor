@@ -1000,7 +1000,7 @@ def draw_object_ids(project: dict) -> None:
             continue
         p_x = obj["segments"][0]["start"][0]
         p_y = obj["segments"][0]["start"][1]
-        for (x_1, y_1), (x_2, y_2) in font.lines_for_text(f"#{obj_idx}"):
+        for (x_1, y_1), (x_2, y_2) in font.lines_for_text(f"#{obj_idx.split(':')[0]}"):
             GL.glVertex3f(p_x + x_1, p_y + y_1, 5.0)
             GL.glVertex3f(p_x + x_2, p_y + y_2, 5.0)
     GL.glEnd()

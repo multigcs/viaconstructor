@@ -1,5 +1,6 @@
 """viaconstructor calculation functions."""
 
+import hashlib
 import math
 from copy import deepcopy
 
@@ -453,7 +454,19 @@ def segments2objects(segments):
                 if inside:
                     reverse_object(obj)
 
-            objects[obj_idx] = obj
+            min_x = obj.segments[0].start[0]
+            min_y = obj.segments[0].start[1]
+            max_x = obj.segments[0].start[0]
+            max_y = obj.segments[0].start[1]
+            for segment in obj.segments:
+                min_x = min(min_x, segment.start[0], segment.end[0])
+                min_y = min(min_y, segment.start[1], segment.end[1])
+                max_x = max(max_x, segment.start[0], segment.end[0])
+                max_y = max(max_y, segment.start[1], segment.end[1])
+            uid = hashlib.md5(f"{int(min_x * 100)}_{int(min_y * 100)}_{int(max_x * 100)}_{int(max_y * 100)}".encode('utf-8')).hexdigest()
+            obj_uid = f"{obj_idx}:{uid}"
+
+            objects[obj_uid] = obj
             obj_idx += 1
             last = None
 
