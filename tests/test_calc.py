@@ -558,7 +558,7 @@ def test_find_tool_offsets(objects, expected):
                 ),
             ],
             {
-                0: VcObject(
+                "0:8e4bfaa42b72193ab62f81d19ce497b7": VcObject(
                     {
                         "segments": [
                             VcSegment(
@@ -600,7 +600,7 @@ def test_find_tool_offsets(objects, expected):
                         "layer": "0",
                     }
                 ),
-                1: VcObject(
+                "1:25e319fcf0222e867027739f33abcfe6": VcObject(
                     {
                         "segments": [
                             VcSegment(
