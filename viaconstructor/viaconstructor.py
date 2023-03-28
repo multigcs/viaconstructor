@@ -752,7 +752,7 @@ class ViaConstructor:
         self.update_layers()
         debug("update_drawing: done")
 
-    def save_project(self, filename: str) -> None:
+    def save_project(self, filename: str) -> bool:
         object_diffs: dict = {}
         for idx, obj in self.project["objects"].items():
             uid = idx.split(":")[1]
@@ -766,15 +766,19 @@ class ViaConstructor:
                         object_diffs[uid] = {}
                     object_diffs[uid][section] = section_diff
 
+        filename_draw = self.project["filename_draw"]
+        if filename_draw:
+            filename_draw = str(Path(filename_draw).resolve())
         project_data = {
-            "filename_draw": self.project["filename_draw"],
+            "filename_draw": filename_draw,
             "general": self.project["setup"],
             "objects": object_diffs,
         }
         project_json = json.dumps(project_data, indent=4, sort_keys=True)
         open(filename, "w").write(project_json)
+        return True
 
-    def load_project(self, filename: str) -> None:
+    def load_project(self, filename: str) -> bool:
         project_json = open(filename, "r").read()
         project_data = json.loads(project_json)
         self.project["setup"] = project_data["general"]
@@ -798,6 +802,7 @@ class ViaConstructor:
             self.global_changed(0)
             self.update_drawing()
             self.project["status"] = "READY"
+        return True
 
     def materials_select(self, material_idx) -> None:
         """calculates the milling feedrate and tool-speed for the selected material
@@ -2019,7 +2024,7 @@ class ViaConstructor:
 
         # find plugin
         debug("load_drawing: start")
-        suffix = filename.split(".")[-1].lower()
+        suffix = filename.rsplit(".", maxsplit=1)[-1].lower()
         for reader_plugin in reader_plugins.values():
             if suffix in reader_plugin.suffix(self.args):
                 if self.main is not None and hasattr(reader_plugin, "preload_setup"):
@@ -2158,6 +2163,17 @@ class ViaConstructor:
 
         if self.args.filename and self.args.filename.endswith(".vcp"):
             self.load_project(self.args.filename)
+            # save and exit
+            if self.args.dxf:
+                self.update_drawing()
+                eprint(f"saving dawing to file: {self.args.dxf}")
+                self.save_objects_as_dxf(self.args.dxf)
+                sys.exit(0)
+            if self.args.output:
+                self.update_drawing()
+                eprint(f"saving machine_cmd to file: {self.args.output}")
+                open(self.args.output, "w").write(self.project["machine_cmd"])
+                sys.exit(0)
         elif self.args.filename and self.load_drawing(self.args.filename):
             # save and exit
             if self.args.dxf:
