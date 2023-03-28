@@ -596,6 +596,9 @@ class ViaConstructor:
     def _toolbar_simulate_play(self) -> None:
         self.project["simulation"] = not self.project["simulation"]
 
+    def _toolbar_redraw(self) -> None:
+        self.update_drawing()
+
     def _toolbar_toggle_delete_selector(self) -> None:
         """delete selector."""
         title = _("Delete-Selector")
@@ -950,7 +953,6 @@ class ViaConstructor:
         """object changed."""
         if self.project["status"] == "CHANGE":
             return
-
         entry_type = self.project["setup_defaults"][sname][ename]["type"]
         if entry_type == "bool":
             value = bool(value == 2)
@@ -972,6 +974,9 @@ class ViaConstructor:
         self.project["objects"][obj_idx]["setup"][sname][ename] = value
         if not self.args.laser:
             self.project["maxOuter"] = find_tool_offsets(self.project["objects"])
+
+        if not self.project["setup"]["view"]["autocalc"]:
+            return
         self.update_drawing()
 
     def update_table(self) -> None:
@@ -1149,7 +1154,6 @@ class ViaConstructor:
         """global setup changed."""
         if self.project["status"] == "CHANGE":
             return
-
         old_setup = deepcopy(self.project["setup"])
         for sname in self.project["setup_defaults"]:
             for ename, entry in self.project["setup_defaults"][sname].items():
@@ -1216,8 +1220,10 @@ class ViaConstructor:
                         obj["setup"][sect][key] = self.project["setup"][sect][key]
 
         self.project["maxOuter"] = find_tool_offsets(self.project["objects"])
-
         self.update_table()
+
+        if not self.project["setup"]["view"]["autocalc"]:
+            return
         self.update_drawing()
 
     def _toolbar_load_machine_cmd_setup(self) -> None:
@@ -1692,6 +1698,18 @@ class ViaConstructor:
                 "",
                 None,
             ],
+            _("redraw"): [
+                "redraw.png",
+                "F5",
+                _("update calculation and redraw"),
+                self._toolbar_redraw,
+                True,
+                True,
+                False,
+                _("Calculation"),
+                "",
+                None,
+            ],
         }
 
     def create_toolbar(self) -> None:
@@ -2066,6 +2084,7 @@ class ViaConstructor:
 
             # disable some options on big drawings for a better view
             if len(self.project["objects"]) >= 50:
+                self.project["setup"]["view"]["autocalc"] = False
                 self.project["setup"]["view"]["path"] = "minimal"
                 self.project["setup"]["view"]["object_ids"] = False
 

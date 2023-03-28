@@ -540,6 +540,12 @@ def setup_defaults(_) -> dict:
             },
         },
         "view": {
+            "autocalc": {
+                "default": True,
+                "type": "bool",
+                "title": _("Auto-Recalculation"),
+                "tooltip": _("update drawing automatically"),
+            },
             "path": {
                 "default": "simple",
                 "type": "select",
@@ -550,6 +556,12 @@ def setup_defaults(_) -> dict:
                 ),
                 "title": _("Path"),
                 "tooltip": _("how to show the gcode path in the 3d-View"),
+            },
+            "colors_show": {
+                "default": True,
+                "type": "bool",
+                "title": _("Colors-Show"),
+                "tooltip": _("showing colors in 3D preview"),
             },
             "ruler_show": {
                 "default": True,

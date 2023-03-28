@@ -6,7 +6,6 @@ import sys
 from subprocess import call
 from typing import Sequence
 
-import ezdxf
 from OpenGL import GL
 from OpenGL.GLU import (
     GLU_TESS_BEGIN,
@@ -30,6 +29,7 @@ from PyQt5.QtWidgets import QMessageBox  # pylint: disable=E0611
 
 from .calc import (
     angle_of_line,
+    bulge_points,
     calc_distance,
     calc_distance3d,
     found_next_open_segment_point,
@@ -55,6 +55,7 @@ class GLWidget(QGLWidget):
     """customized GLWidget."""
 
     GL_MULTISAMPLE = 0x809D
+    version_printed = False
     screen_w = 100
     screen_h = 100
     aspect = 1.0
@@ -117,7 +118,9 @@ class GLWidget(QGLWidget):
         """glinit function."""
 
         version = GL.glGetString(GL.GL_VERSION).decode()
-        print(f"OpenGL-Version: {version}")
+        if not self.version_printed:
+            print(f"OpenGL-Version: {version}")
+            self.version_printed = True
 
         GL.glMatrixMode(GL.GL_PROJECTION)
         GL.glLoadIdentity()
@@ -1003,28 +1006,6 @@ def draw_object_ids(project: dict) -> None:
     GL.glEnd()
 
 
-def bulge_points(segment):
-    points = []
-    (
-        center,
-        start_angle,  # pylint: disable=W0612
-        end_angle,  # pylint: disable=W0612
-        radius,  # pylint: disable=W0612
-    ) = ezdxf.math.bulge_to_arc(segment.start, segment.end, segment.bulge)
-    while start_angle > end_angle:
-        start_angle -= math.pi
-    steps = abs(start_angle - end_angle) / 10
-    angle = start_angle + steps
-    if start_angle < end_angle:
-        while angle < end_angle:
-            ap_x = center[0] + radius * math.sin(angle + math.pi / 2)
-            ap_y = center[1] - radius * math.cos(angle + math.pi / 2)
-            points.append((ap_x, ap_y))
-            angle += steps
-
-    return points
-
-
 def draw_object_edges(project: dict, selected: int = -1) -> None:
     """draws the edges of an object"""
     unit = project["setup"]["machine"]["unit"]
@@ -1056,7 +1037,7 @@ def draw_object_edges(project: dict, selected: int = -1) -> None:
                 continue
 
             color = (1.0, 1.0, 1.0)
-            if obj.color in dxfcolors:
+            if project["setup"]["view"]["colors_show"] and obj.color in dxfcolors:
                 color = dxfcolors[obj.color][0:3]
 
             odepth = obj["setup"]["mill"]["depth"]
@@ -1086,7 +1067,9 @@ def draw_object_edges(project: dict, selected: int = -1) -> None:
                 if segment.bulge != 0.0 and interpolate:
                     last_x = segment.start[0]
                     last_y = segment.start[1]
-                    for point in bulge_points(segment):
+                    for point in bulge_points(
+                        segment.start, segment.end, segment.bulge
+                    ):
                         GL.glVertex3f(last_x, last_y, 0.0)
                         GL.glVertex3f(point[0], point[1], 0.0)
                         last_x = point[0]
@@ -1105,7 +1088,9 @@ def draw_object_edges(project: dict, selected: int = -1) -> None:
                     if segment.bulge != 0.0 and interpolate:
                         last_x = segment.start[0]
                         last_y = segment.start[1]
-                        for point in bulge_points(segment):
+                        for point in bulge_points(
+                            segment.start, segment.end, segment.bulge
+                        ):
                             GL.glVertex3f(last_x, last_y, depth)
                             GL.glVertex3f(point[0], point[1], depth)
                             last_x = point[0]
@@ -1216,7 +1201,9 @@ def draw_object_faces(project: dict) -> None:
                 last_x = segment.start[0]
                 last_y = segment.start[1]
                 if segment.bulge != 0.0 and interpolate:
-                    for point in bulge_points(segment):
+                    for point in bulge_points(
+                        segment.start, segment.end, segment.bulge
+                    ):
                         add_triangle(
                             (last_x, last_y, 0.0),
                             (last_x, last_y, depth),
@@ -1274,7 +1261,9 @@ def draw_object_faces(project: dict) -> None:
                     p_xy = (segment.start[0], segment.start[1], depth)
                     gluTessVertex(tess, p_xy, p_xy)
                     if segment.bulge != 0.0 and interpolate:
-                        for point in bulge_points(segment):
+                        for point in bulge_points(
+                            segment.start, segment.end, segment.bulge
+                        ):
                             p_xy = (point[0], point[1], depth)
                             gluTessVertex(tess, p_xy, p_xy)
                     p_xy = (segment.end[0], segment.end[1], depth)
@@ -1310,7 +1299,7 @@ def draw_object_faces(project: dict) -> None:
                     p_xy = (segment.start[0], segment.start[1], depth)
                     gluTessVertex(tess, p_xy, p_xy)
                     if segment.bulge != 0.0 and interpolate:
-                        for point in bulge_points(segment):
+                        for point in bulge_points(segment.start, segment.end, segment.bulge):
                             p_xy = (point[0], point[1], depth)
                             gluTessVertex(tess, p_xy, p_xy)
                     p_xy = (segment.end[0], segment.end[1], depth)
