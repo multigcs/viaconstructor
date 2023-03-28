@@ -501,15 +501,70 @@ def inside_vertex(vertex_data, point):
     return bool(abs(angle) >= math.pi)
 
 
-def vertex2points(vertex_data, no_bulge=False, scale=1.0):
+def bulge_points(start, end, bulge, parts=10):
+    points = []
+    (
+        center,
+        start_angle,  # pylint: disable=W0612
+        end_angle,  # pylint: disable=W0612
+        radius,  # pylint: disable=W0612
+    ) = ezdxf.math.bulge_to_arc(start, end, bulge)
+    while start_angle > end_angle:
+        start_angle -= math.pi
+    steps = abs(start_angle - end_angle) / parts
+    angle = start_angle + steps
+    if start_angle < end_angle:
+        while angle < end_angle:
+            ap_x = center[0] + radius * math.sin(angle + math.pi / 2)
+            ap_y = center[1] - radius * math.cos(angle + math.pi / 2)
+            points.append((ap_x, ap_y))
+            angle += steps
+    return points
+
+
+def vertex2points(vertex_data, no_bulge=False, scale=1.0, interpolate=0):
     """converts an vertex to a list of points"""
     points = []
+
     if no_bulge:
-        for pos_x, pos_y in zip(vertex_data[0], vertex_data[1]):
-            points.append((pos_x * scale, pos_y * scale))
+        if interpolate > 0:
+            last_x = vertex_data[0][-1]
+            last_y = vertex_data[1][-1]
+            last_b = vertex_data[2][-1]
+            for pos_x, pos_y, bulge in zip(
+                vertex_data[0], vertex_data[1], vertex_data[2]
+            ):
+                if last_b > 0.0:
+                    points += bulge_points(
+                        (last_x * scale, last_y * scale),
+                        (pos_x * scale, pos_y * scale),
+                        last_b,
+                        interpolate,
+                    )
+                    points.append((pos_x * scale, pos_y * scale))
+                elif last_b < 0.0:
+                    new_points = bulge_points(
+                        (last_x * scale, last_y * scale),
+                        (pos_x * scale, pos_y * scale),
+                        last_b,
+                        interpolate,
+                    )
+                    new_points.reverse()
+                    points += new_points
+                    points.append((pos_x * scale, pos_y * scale))
+                else:
+                    points.append((pos_x * scale, pos_y * scale))
+                last_x = pos_x
+                last_y = pos_y
+                last_b = bulge
+
+        else:
+            for pos_x, pos_y in zip(vertex_data[0], vertex_data[1]):
+                points.append((pos_x * scale, pos_y * scale))
     else:
         for pos_x, pos_y, bulge in zip(vertex_data[0], vertex_data[1], vertex_data[2]):
             points.append((pos_x * scale, pos_y * scale, bulge))
+
     return points
 
 
@@ -698,14 +753,15 @@ def found_next_tab_point(mpos, offsets):
 
 def points2offsets(
     obj,
-    obj_idx,
     points,
     polyline_offsets,
     offset_idx,
+    pocket_idx,
     tool_offset,
     scale=1.0,
     is_closed=True,
     is_pocket=0,
+    parent_id="0",
 ):
     vertex_data = points2vertex(points, scale=scale)
     polyline_offset = cavc.Polyline(vertex_data, is_closed=is_closed)
@@ -717,7 +773,7 @@ def points2offsets(
     polyline_offset.start = obj.start
     polyline_offset.is_pocket = is_pocket
     polyline_offset.fixed_direction = False
-    polyline_offsets[f"{obj_idx}.{offset_idx}"] = polyline_offset
+    polyline_offsets[f"{parent_id}.{offset_idx}.{pocket_idx}"] = polyline_offset
     offset_idx += 1
     return offset_idx
 
@@ -731,14 +787,15 @@ def do_pockets(  # pylint: disable=R0913
     polyline_offsets,
     offset_idx,
     vertex_data_org,  # pylint: disable=W0613
+    parent_id,
 ):
     """calculates multiple offset lines of an polyline"""
+    interpolate = 6
     abs_tool_radius = abs(tool_radius)
-
+    pocket_idx = 0
     if obj.setup["pockets"]["zigzag"]:
         vertex_data = vertex_data_cache(polyline)
-        points = vertex2points(vertex_data, no_bulge=True)
-        bounding = points_to_boundingbox(points)
+        points = vertex2points(vertex_data, no_bulge=True, interpolate=interpolate)
         lines = []
 
         points_check = [points]
@@ -747,10 +804,18 @@ def do_pockets(  # pylint: disable=R0913
                 polyline_offset = polyline_offsets.get(f"{idx}.0")
                 if polyline_offset is not None:
                     vertex_data = vertex_data_cache(polyline_offset)
-                    points_check.append(vertex2points(vertex_data, no_bulge=True))
+                    points_check.append(
+                        vertex2points(
+                            vertex_data, no_bulge=True, interpolate=interpolate
+                        )
+                    )
 
         # get bounding box
+        bounding = points_to_boundingbox(points)
         y_pos = bounding[1] + abs_tool_radius
+        bounding_ydiff = bounding[3] - bounding[1]
+        steps_y = int(bounding_ydiff / abs_tool_radius) - 1
+        abs_tool_radius = bounding_ydiff / steps_y
         while y_pos <= bounding[3] - abs_tool_radius:
             intersects = set()
             for points in points_check:
@@ -768,15 +833,16 @@ def do_pockets(  # pylint: disable=R0913
                 for point_x1, point_x2 in zip(point_inter, point_inter):
                     lines.append(
                         (
-                            (point_x1 + abs_tool_radius, y_pos),
-                            (point_x2 - abs_tool_radius, y_pos),
+                            (point_x1 + abs_tool_radius * 0.6, y_pos),
+                            (point_x2 - abs_tool_radius * 0.6, y_pos),
                         )
                     )
             y_pos += abs_tool_radius
 
         output_lines = lines_to_path(
-            lines, max_vdist=abs_tool_radius, max_dist=abs_tool_radius * 3
+            lines, max_vdist=abs_tool_radius * 2, max_dist=abs_tool_radius * 2
         )
+        print("##output_lines", len(output_lines))
         if output_lines:
             last = output_lines[0]
             polyline = []
@@ -786,14 +852,16 @@ def do_pockets(  # pylint: disable=R0913
                 if last[1] != line[0]:
                     offset_idx = points2offsets(
                         obj,
-                        obj_idx,
                         polyline,
                         polyline_offsets,
                         offset_idx,
+                        pocket_idx,
                         tool_offset,
                         is_closed=False,
                         is_pocket=1,
+                        parent_id=parent_id,
                     )
+                    pocket_idx += 1
                     polyline = []
                     polyline.append(line[0])
                     polyline.append(line[1])
@@ -802,18 +870,22 @@ def do_pockets(  # pylint: disable=R0913
                 last = line
             offset_idx = points2offsets(
                 obj,
-                obj_idx,
                 polyline,
                 polyline_offsets,
                 offset_idx,
+                pocket_idx,
                 tool_offset,
                 is_closed=False,
                 is_pocket=2,
+                parent_id=parent_id,
             )
+            pocket_idx += 1
     elif HAVE_PYCLIPPER and obj.inner_objects and obj.setup["pockets"]["islands"]:
         subjs = []
         vertex_data = vertex_data_cache(polyline)
-        points = vertex2points(vertex_data, no_bulge=True, scale=100.0)
+        points = vertex2points(
+            vertex_data, no_bulge=True, scale=1000.0, interpolate=interpolate
+        )
         pco = pyclipper.PyclipperOffset()  # pylint: disable=E1101
         pco.AddPath(
             points,
@@ -825,26 +897,30 @@ def do_pockets(  # pylint: disable=R0913
             polyline_offset = polyline_offsets.get(f"{idx}.0")
             if polyline_offset and polyline_offset.level == level + 1:
                 vertex_data = vertex_data_cache(polyline_offset)
-                points = vertex2points(vertex_data, no_bulge=True, scale=100.0)
+                points = vertex2points(
+                    vertex_data, no_bulge=True, scale=1000.0, interpolate=interpolate
+                )
                 pco.AddPath(
                     points,
                     pyclipper.JT_ROUND,  # pylint: disable=E1101
                     pyclipper.ET_CLOSEDPOLYGON,  # pylint: disable=E1101
                 )
-        subjs = pco.Execute(-abs_tool_radius * 100)
+        subjs = pco.Execute(-abs_tool_radius * 1000)
 
         for points in subjs:
             offset_idx = points2offsets(
                 obj,
-                obj_idx,
                 points,
                 polyline_offsets,
                 offset_idx,
+                pocket_idx,
                 tool_offset,
-                scale=0.01,
+                scale=0.001,
                 is_closed=obj.closed,
                 is_pocket=2,
+                parent_id=parent_id,
             )
+            pocket_idx += 1
 
         while True:
             pco = pyclipper.PyclipperOffset()  # pylint: disable=E1101
@@ -854,21 +930,23 @@ def do_pockets(  # pylint: disable=R0913
                     pyclipper.JT_ROUND,  # pylint: disable=E1101
                     pyclipper.ET_CLOSEDPOLYGON,  # pylint: disable=E1101
                 )
-            subjs = pco.Execute(-abs_tool_radius * 100)  # pylint: disable=E1101
+            subjs = pco.Execute(-abs_tool_radius * 1000)  # pylint: disable=E1101
             if not subjs:
                 break
             for points in subjs:
                 offset_idx = points2offsets(
                     obj,
-                    obj_idx,
                     points,
                     polyline_offsets,
                     offset_idx,
+                    pocket_idx,
                     tool_offset,
-                    scale=0.01,
+                    scale=0.001,
                     is_closed=obj.closed,
                     is_pocket=2,
+                    parent_id=parent_id,
                 )
+                pocket_idx += 1
 
     elif obj.segments[0]["type"] == "CIRCLE" and "center" in obj.segments[0]:
         start = obj.segments[0].start
@@ -915,7 +993,10 @@ def do_pockets(  # pylint: disable=R0913
                 polyline_offset.start = obj.start
                 polyline_offset.is_pocket = 1
                 polyline_offset.fixed_direction = False
-                polyline_offsets[f"{obj_idx}.{offset_idx}"] = polyline_offset
+
+                parent_id = f"{parent_id}.{pocket_idx}"
+                polyline_offsets[parent_id] = polyline_offset
+                pocket_idx += 1
                 offset_idx += 1
                 if polyline_offset.is_closed():
                     offset_idx = do_pockets(
@@ -927,6 +1008,7 @@ def do_pockets(  # pylint: disable=R0913
                         polyline_offsets,
                         offset_idx,
                         vertex_data_org,
+                        parent_id,
                     )
     return offset_idx
 
@@ -936,10 +1018,12 @@ def object2polyline_offsets(
 ):
     """calculates the offset line(s) of one object"""
 
+    new_polyline_offsets = {}
+
     def overcut() -> None:
         quarter_pi = math.pi / 4
         radius_3 = abs(tool_radius * 3)
-        for offset_idx, polyline in enumerate(list(polyline_offsets.values())):
+        for offset_idx, polyline in enumerate(list(new_polyline_offsets.values())):
             points = vertex2points(vertex_data_cache(polyline))
             xdata = []
             ydata = []
@@ -1030,7 +1114,7 @@ def object2polyline_offsets(
             over_polyline.is_pocket = 0
             over_polyline.fixed_direction = False
             over_polyline.tool_offset = tool_offset
-            polyline_offsets[f"{obj_idx}.{offset_idx}"] = over_polyline
+            new_polyline_offsets[f"{obj_idx}.{offset_idx}"] = over_polyline
 
     tool_offset = obj.tool_offset
     if obj.overwrite_offset is not None:
@@ -1065,7 +1149,8 @@ def object2polyline_offsets(
                 polyline_offset.is_pocket = 0
                 polyline_offset.fixed_direction = False
                 polyline_offset.is_circle = is_circle
-                polyline_offsets[f"{obj_idx}.{offset_idx}"] = polyline_offset
+                parent_id = f"{obj_idx}.{offset_idx}"
+                new_polyline_offsets[parent_id] = polyline_offset
                 offset_idx += 1
                 if tool_offset == "inside" and obj.setup["pockets"]["active"]:
                     if polyline_offset.is_closed():
@@ -1078,6 +1163,7 @@ def object2polyline_offsets(
                             polyline_offsets,
                             offset_idx,
                             vertex_data,
+                            parent_id,
                         )
 
         elif is_circle and small_circles:
@@ -1096,7 +1182,7 @@ def object2polyline_offsets(
             polyline_offset.is_pocket = 0
             polyline_offset.fixed_direction = False
             polyline_offset.is_circle = True
-            polyline_offsets[f"{obj_idx}.{offset_idx}.x"] = polyline_offset
+            new_polyline_offsets[f"{obj_idx}.{offset_idx}.x"] = polyline_offset
             offset_idx += 1
 
         if obj.setup["mill"]["overcut"]:
@@ -1112,8 +1198,10 @@ def object2polyline_offsets(
         polyline.is_pocket = 0
         polyline.fixed_direction = False
         polyline.is_circle = False
-        polyline_offsets[f"{obj_idx}.{offset_idx}"] = polyline
+        new_polyline_offsets[f"{obj_idx}.{offset_idx}"] = polyline
         offset_idx += 1
+
+    polyline_offsets.update(new_polyline_offsets)
 
     return polyline_offsets
 

@@ -12,6 +12,9 @@ class fakeOffset:
             "mill": mill,
             "tabs": {"active": False},
             "leads": {"in": False, "out": False},
+            "pockets": {
+                "insideout": False,
+            },
         }
         self.data = data
         self.tool_offset = tool_offset
