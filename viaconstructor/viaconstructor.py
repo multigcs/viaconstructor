@@ -554,7 +554,7 @@ class ViaConstructor:
         self.status_bar_message(f"{self.info} - save project..")
         file_dialog = QFileDialog(self.main)
         file_dialog.setNameFilters(["vcp (*.vcp)"])
-        filename_default = f"{self.project['filename_draw'].split('.')[0]}.vcp"
+        filename_default = f"{self.project['filename_draw'].split('.')[:-1]}.vcp"
         self.project[
             "filename_machine_cmd"
         ] = f"{'.'.join(self.project['filename_draw'].split('.')[:-1])}.vcp"
@@ -787,17 +787,17 @@ class ViaConstructor:
             uid = idx.split(":")[1]
             obj["setup"] = deepcopy(self.project["setup"])
             if uid in project_data["objects"]:
-                print(uid, project_data["objects"][uid])
                 for section, section_data in project_data["objects"][uid].items():
                     for key, value in section_data.items():
                         obj["setup"][section][key] = value
 
-        self.project["status"] = "CHANGE"
-        self.update_global_setup()
-        self.update_table()
-        self.global_changed(0)
-        self.update_drawing()
-        self.project["status"] = "READY"
+        if self.project["status"] != "INIT":
+            self.project["status"] = "CHANGE"
+            self.update_global_setup()
+            self.update_table()
+            self.global_changed(0)
+            self.update_drawing()
+            self.project["status"] = "READY"
 
     def materials_select(self, material_idx) -> None:
         """calculates the milling feedrate and tool-speed for the selected material
@@ -2155,7 +2155,10 @@ class ViaConstructor:
 
         # load drawing #
         debug("main: load drawing")
-        if self.args.filename and self.load_drawing(self.args.filename):
+
+        if self.args.filename and self.args.filename.endswith(".vcp"):
+            self.load_project(self.args.filename)
+        elif self.args.filename and self.load_drawing(self.args.filename):
             # save and exit
             if self.args.dxf:
                 self.update_drawing()
