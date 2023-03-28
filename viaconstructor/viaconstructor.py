@@ -708,6 +708,46 @@ class ViaConstructor:
         self.update_layers()
         debug("update_drawing: done")
 
+    def save_project(self, filename: str) -> None:
+        object_diffs: dict = {}
+        for idx, obj in self.project["objects"].items():
+            uid = idx.split(":")[1]
+            for section, section_data in obj.setup.items():
+                section_diff = {}
+                for key, value in section_data.items():
+                    if value != self.project["setup"][section][key]:
+                        section_diff[key] = value
+                if section_diff:
+                    if uid not in object_diffs:
+                        object_diffs[uid] = {}
+                    object_diffs[uid][section] = section_diff
+
+        project_data = {
+            "general": self.project["setup"],
+            "objects": object_diffs,
+        }
+        project_json = json.dumps(project_data, indent=4, sort_keys=True)
+        open(filename, "w").write(project_json)
+
+    def load_project(self, filename: str) -> None:
+        self.project["status"] = "CHANGE"
+        project_json = open(filename, "r").read()
+        project_data = json.loads(project_json)
+        self.project["setup"] = project_data["general"]
+        for idx, obj in self.project["objects"].items():
+            uid = idx.split(":")[1]
+            obj["setup"] = deepcopy(self.project["setup"])
+            if uid in project_data["objects"]:
+                print(uid, project_data["objects"][uid])
+                for section, section_data in project_data["objects"][uid].items():
+                    for key, value in section_data.items():
+                        obj["setup"][section][key] = value
+        self.update_global_setup()
+        self.update_table()
+        self.global_changed(0)
+        self.update_drawing()
+        self.project["status"] = "READY"
+
     def materials_select(self, material_idx) -> None:
         """calculates the milling feedrate and tool-speed for the selected material
         see: https://www.precifast.de/schnittgeschwindigkeit-beim-fraesen-berechnen/
