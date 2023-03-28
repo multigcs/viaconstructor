@@ -554,7 +554,9 @@ class ViaConstructor:
         self.status_bar_message(f"{self.info} - save project..")
         file_dialog = QFileDialog(self.main)
         file_dialog.setNameFilters(["vcp (*.vcp)"])
-        filename_default = f"{'.'.join(self.project['filename_draw'].split('.')[:-1])}.vcp"
+        filename_default = (
+            f"{'.'.join(self.project['filename_draw'].split('.')[:-1])}.vcp"
+        )
         self.project[
             "filename_machine_cmd"
         ] = f"{'.'.join(self.project['filename_draw'].split('.')[:-1])}.vcp"
@@ -803,6 +805,8 @@ class ViaConstructor:
                 for section, section_data in project_data["objects"][uid].items():
                     for key, value in section_data.items():
                         obj["setup"][section][key] = value
+            if "starts" in project_data and uid in project_data["starts"]:
+                obj["start"] = project_data["starts"][uid]
 
         if self.project["status"] != "INIT":
             self.project["status"] = "CHANGE"
