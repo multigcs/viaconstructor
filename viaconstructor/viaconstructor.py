@@ -277,12 +277,8 @@ class ViaConstructor:
         debug("run_calculation: offsets")
 
         # create toolpath from objects
-        unit = psetup["machine"]["unit"]
-        diameter = psetup["tool"]["diameter"]
-        if unit == "inch":
-            diameter *= 25.4
         self.project["offsets"] = objects2polyline_offsets(
-            diameter,
+            psetup["machine"]["unit"],
             self.project["objects"],
             self.project["maxOuter"],
             psetup["mill"]["small_circles"],

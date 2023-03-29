@@ -1211,7 +1211,7 @@ def object2polyline_offsets(
     return polyline_offsets
 
 
-def objects2polyline_offsets(diameter, objects, max_outer, small_circles=False):
+def objects2polyline_offsets(unit, objects, max_outer, small_circles=False):
     """calculates the offset line(s) of all objects"""
     polyline_offsets = {}
 
@@ -1224,12 +1224,15 @@ def objects2polyline_offsets(diameter, objects, max_outer, small_circles=False):
                 continue
             if len(obj.outer_objects) != level:
                 continue
-
             percent = round((part_n + 1) * 100 / part_l, 1)
             if int(percent) != int(last_percent):
                 print(f"calc offset path: {percent}%", end="\r")
             last_percent = int(percent)
             part_n += 1
+
+            diameter = obj.setup["tool"]["diameter"]
+            if unit == "inch":
+                diameter *= 25.4
 
             obj_copy = deepcopy(obj)
             do_reverse = 0
