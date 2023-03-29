@@ -131,6 +131,7 @@ def setup_defaults(_) -> dict:
                 "title": _("Feed-Rate(Horizontal)"),
                 "tooltip": _("the Horizotal Feetrate"),
                 "unit": "mm/min",
+                "per_object": True,
             },
             "rate_v": {
                 "default": 100,
@@ -140,6 +141,7 @@ def setup_defaults(_) -> dict:
                 "title": _("Feed-Rate(Vertical)"),
                 "tooltip": _("the Vertical Feetrate"),
                 "unit": "mm/min",
+                "per_object": True,
             },
             "number": {
                 "default": 1,
@@ -148,6 +150,7 @@ def setup_defaults(_) -> dict:
                 "max": 99,
                 "title": _("Number"),
                 "tooltip": _("setting the Tool-Number to load in gcode"),
+                "per_object": True,
             },
             "diameter": {
                 "default": 4.0,
@@ -158,6 +161,7 @@ def setup_defaults(_) -> dict:
                 "title": _("Diameter"),
                 "tooltip": _("setting the Tool-Diameter to calculate the Offsets"),
                 "unit": "LINEARMEASURE",
+                "per_object": True,
             },
             "blades": {
                 "default": 2,
@@ -166,6 +170,7 @@ def setup_defaults(_) -> dict:
                 "max": 100,
                 "title": _("Blades"),
                 "tooltip": _("number ob blades"),
+                "per_object": True,
             },
             "speed": {
                 "default": 10000,
@@ -175,6 +180,7 @@ def setup_defaults(_) -> dict:
                 "title": _("Speed"),
                 "tooltip": _("setting the Tool-Speed in RPM"),
                 "unit": "RPM",
+                "per_object": True,
             },
             "pause": {
                 "default": 1,
@@ -184,6 +190,7 @@ def setup_defaults(_) -> dict:
                 "title": _("Pause"),
                 "tooltip": _("tool spin up time (G04 Pn)"),
                 "unit": "s",
+                "per_object": True,
             },
             "tooltable": {
                 "type": "table",

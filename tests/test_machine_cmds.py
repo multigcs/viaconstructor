@@ -10,6 +10,13 @@ class fakeOffset:
         self.closed = closed
         self.setup = {
             "mill": mill,
+            "tool": {
+                "number": 1,
+                "speed": 10000,
+                "pause": 1,
+                "rate_h": 10000,
+                "rate_v": 1000,
+            },
             "tabs": {"active": False},
             "leads": {"in": False, "out": False},
             "pockets": {
@@ -171,9 +178,6 @@ G40 (No Offsets)
 G90 (Absolute-Mode)
 G64 P0.05
 M05 (Spindle off)
-M06 T1
-M03 S10000 (Spindle on / CW)
-G04 P1 (pause in sec)
 F1000
 G00 Z20.000000
 
@@ -189,6 +193,9 @@ G00 Z20.000000
 (Tool-Diameter: 4.0mm)
 (Tool-Offset: 2.0mm inside)
 (--------------------------------------------------)
+M06 T1
+M03 S10000 (Spindle on / CW)
+G04 P1 (pause in sec)
 G00 X22.000000 Y24.828427
 (- Depth: -4.0mm -)
 F1000

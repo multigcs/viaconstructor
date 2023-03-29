@@ -13,6 +13,8 @@ class PostProcessorGcodeLinuxCNC(PostProcessor):
         self.offsets: tuple[float, float, float] = (0.0, 0.0, 0.0)
         self.offsets_reset = False
         self.scale: float = 1.0
+        self.tool_active = -1
+        self.tool_running = 0
 
     def separation(self) -> None:
         if self.comments:
@@ -111,15 +113,22 @@ class PostProcessorGcodeLinuxCNC(PostProcessor):
             self.gcode.append("G00 " + " ".join(line))
 
     def tool(self, number="1") -> None:
-        self.gcode.append(f"M06 T{number}")
+        if self.tool_active != number:
+            if self.speed > 0:
+                self.spindle_off()
+            self.gcode.append(f"M06 T{number}")
+        self.tool_active = number
 
     def spindle_off(self) -> None:
         if self.comments:
             self.gcode.append("M05 (Spindle off)")
         else:
             self.gcode.append("M05")
+        self.tool_running = 0
 
     def spindle_cw(self, speed: int, pause: int = 1) -> None:
+        if self.tool_running != 0 and self.tool_running == speed:
+            return
         cmd = "M03"
         if self.speed != speed:
             self.speed = speed
@@ -133,6 +142,8 @@ class PostProcessorGcodeLinuxCNC(PostProcessor):
                 self.gcode.append(f"G04 P{pause} (pause in sec)")
             else:
                 self.gcode.append(f"G04 P{pause}")
+
+        self.tool_running = self.speed
 
     def spindle_ccw(self, speed: int, pause: int = 1) -> None:
         cmd = "M04"

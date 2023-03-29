@@ -9,9 +9,6 @@ G40 (No Offsets)
 G90 (Absolute-Mode)
 G64 P0.02
 M05 (Spindle off)
-M06 T1
-M03 S10000 (Spindle on / CW)
-G04 P1 (pause in sec)
 F100
 G00 Z5.000000
 
@@ -27,6 +24,9 @@ G00 Z5.000000
 (Tool-Diameter: 2.0mm)
 (Tool-Offset: 1.0mm inside)
 (--------------------------------------------------)
+M06 T1
+M03 S10000 (Spindle on / CW)
+G04 P1 (pause in sec)
 G00 X11.000000 Y11.000000
 (- Depth: -2.0mm -)
 F100

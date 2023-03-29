@@ -966,7 +966,7 @@ class ViaConstructor:
                 ]
             )
             obj_root = root.child(root.rowCount() - 1)
-            for sname in ("mill", "pockets", "tabs", "leads"):
+            for sname in ("mill", "tool", "pockets", "tabs", "leads"):
                 obj_root.appendRow(
                     [
                         QStandardItem(sname),
@@ -1162,7 +1162,7 @@ class ViaConstructor:
         self.project["segments"] = deepcopy(self.project["segments_org"])
         self.project["segments"] = clean_segments(self.project["segments"])
         for obj in self.project["objects"].values():
-            for sect in ("tool", "mill", "pockets", "tabs", "leads"):
+            for sect in ("mill", "tool", "pockets", "tabs", "leads"):
                 for key, global_value in self.project["setup"][sect].items():
                     # change object value only if the value changed and the value diffs again the last value in global
                     if (
@@ -1979,7 +1979,7 @@ class ViaConstructor:
         debug("prepare_segments: setup")
         for obj in self.project["objects"].values():
             obj["setup"] = {}
-            for sect in ("tool", "mill", "pockets", "tabs", "leads"):
+            for sect in ("mill", "tool", "pockets", "tabs", "leads"):
                 obj["setup"][sect] = deepcopy(self.project["setup"][sect])
             layer = obj.get("layer")
             if layer.startswith(("BREAKS:", "_TABS")):
