@@ -5,8 +5,10 @@ from ..machine_cmd import PostProcessor  # pylint: disable=E0402
 
 
 class PostProcessorHpgl(PostProcessor):
-    def __init__(self, comments=True):
-        self.comments = comments
+    def __init__(self, project):
+        self.project = project
+        self.comments = self.project["setup"]["machine"]["comments"]
+        self.project = project
         self.hpgl: list[str] = []
         self.last_x: int = 0
         self.last_y: int = 0

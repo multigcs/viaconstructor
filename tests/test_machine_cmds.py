@@ -162,6 +162,8 @@ class fakeOffset:
                         "unit": "mm",
                         "comments": True,
                         "g54": False,
+                        "toolchange_pre": "",
+                        "toolchange_post": "",
                     },
                 },
                 "tablewidget": "",
@@ -260,6 +262,8 @@ M02
     ],
 )
 def test_polylines2machine_cmd(project, expected):
-    result = machine_cmd.polylines2machine_cmd(project, PostProcessorGcodeLinuxCNC())
+    result = machine_cmd.polylines2machine_cmd(
+        project, PostProcessorGcodeLinuxCNC(project)
+    )
     print(result)
     assert result == expected

@@ -526,6 +526,18 @@ def setup_defaults(_) -> dict:
                 "title": _("machine supports g54"),
                 "tooltip": _("machine supports g54"),
             },
+            "toolchange_pre": {
+                "default": "",
+                "type": "str",
+                "title": _("toolchange pre cmd"),
+                "tooltip": _("add gcode before tool-change"),
+            },
+            "toolchange_post": {
+                "default": "",
+                "type": "str",
+                "title": _("toolchange post cmd"),
+                "tooltip": _("add gcode after tool-change"),
+            },
             "comments": {
                 "default": True,
                 "type": "bool",

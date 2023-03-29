@@ -293,13 +293,13 @@ class ViaConstructor:
         output_plugin: Union[PostProcessorHpgl, PostProcessorGcodeLinuxCNC]
         if self.project["setup"]["machine"]["plugin"] == "gcode_linuxcnc":
             output_plugin = PostProcessorGcodeLinuxCNC(
-                self.project["setup"]["machine"]["comments"]
+                self.project,
             )
             self.project["suffix"] = output_plugin.suffix()
             self.project["axis"] = output_plugin.axis()
         elif self.project["setup"]["machine"]["plugin"] == "hpgl":
             output_plugin = PostProcessorHpgl(
-                self.project["setup"]["machine"]["comments"]
+                self.project,
             )
             self.project["suffix"] = output_plugin.suffix()
             self.project["axis"] = output_plugin.axis()
@@ -789,7 +789,8 @@ class ViaConstructor:
     def load_project(self, filename: str) -> bool:
         project_json = open(filename, "r").read()
         project_data = json.loads(project_json)
-        self.project["setup"] = project_data["general"]
+        for sname in self.project["setup"]:
+            self.project["setup"][sname].update(project_data.get(sname, {}))
 
         filename = project_data.get("filename_draw", "")
         if filename and self.project["filename_draw"] != filename:

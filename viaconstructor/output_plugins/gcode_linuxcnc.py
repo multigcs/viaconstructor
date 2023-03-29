@@ -2,8 +2,9 @@ from ..machine_cmd import PostProcessor  # pylint: disable=E0402
 
 
 class PostProcessorGcodeLinuxCNC(PostProcessor):
-    def __init__(self, comments=True):
-        self.comments = comments
+    def __init__(self, project):
+        self.project = project
+        self.comments = self.project["setup"]["machine"]["comments"]
         self.gcode: list[str] = []
         self.x_pos: float = None
         self.y_pos: float = None
@@ -116,7 +117,11 @@ class PostProcessorGcodeLinuxCNC(PostProcessor):
         if self.tool_active != number:
             if self.speed > 0:
                 self.spindle_off()
+            if self.project["setup"]["machine"]["toolchange_pre"]:
+                self.gcode.append(self.project["setup"]["machine"]["toolchange_pre"])
             self.gcode.append(f"M06 T{number}")
+            if self.project["setup"]["machine"]["toolchange_post"]:
+                self.gcode.append(self.project["setup"]["machine"]["toolchange_post"])
         self.tool_active = number
 
     def spindle_off(self) -> None:
