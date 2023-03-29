@@ -118,10 +118,16 @@ class PostProcessorGcodeLinuxCNC(PostProcessor):
             if self.speed > 0:
                 self.spindle_off()
             if self.project["setup"]["machine"]["toolchange_pre"]:
-                self.gcode.append(self.project["setup"]["machine"]["toolchange_pre"])
+                for part in self.project["setup"]["machine"]["toolchange_pre"].split(
+                    ";"
+                ):
+                    self.gcode.append(part)
             self.gcode.append(f"M06 T{number}")
             if self.project["setup"]["machine"]["toolchange_post"]:
-                self.gcode.append(self.project["setup"]["machine"]["toolchange_post"])
+                for part in self.project["setup"]["machine"]["toolchange_post"].split(
+                    ";"
+                ):
+                    self.gcode.append(part)
         self.tool_active = number
 
     def spindle_off(self) -> None:

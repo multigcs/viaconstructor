@@ -10,7 +10,6 @@ from viaconstructor.preview_plugins import gcode as gcodeparser
         "expected_state",
         "expected_minmax",
         "expected_size",
-        "expected_len",
     ),
     [
         (
@@ -260,6 +259,12 @@ from viaconstructor.preview_plugins import gcode as gcodeparser
                 "",
             ],
             [
+                [
+                    {"X": 0.0, "Y": 0.0, "Z": 0.0},
+                    {"X": 0.0, "Y": 0.0, "Z": 0.0},
+                    "CCW",
+                    "TOOLCHANGE:1",
+                ],
                 [{"X": 0, "Y": 0, "Z": 0}, {"Z": 5.0, "X": 0, "Y": 0}, "CW"],
                 [{"Z": 5.0, "X": 0, "Y": 0}, {"X": 0.0, "Y": 0.0, "Z": 5.0}, "CW"],
                 [{"X": 0.0, "Y": 0.0, "Z": 5.0}, {"Z": 5.0, "X": 0.0, "Y": 0.0}, "CW"],
@@ -1772,25 +1777,17 @@ from viaconstructor.preview_plugins import gcode as gcodeparser
             },
             [-22.0, -22.0, -9.0, 92.0, 42.0, 5.0],
             [114.0, 64.0, 14.0],
-            302,
         ),
     ],
 )
 def test_GcodeParser_get_path(
-    gcode, expected, expected_state, expected_minmax, expected_size, expected_len
+    gcode, expected, expected_state, expected_minmax, expected_size
 ):
-    drawed_lines = []
-
-    def draw_line(p_1, p_2, options):
-        drawed_lines.append((p_1, p_2))
-
     parser = gcodeparser.GcodeParser(gcode)
     result = parser.get_path(rounding=True)
     state = parser.get_state()
-    parser.draw(draw_line)
     print(result)
     assert result == expected
     assert state == expected_state
     assert parser.get_minmax() == expected_minmax
     assert parser.get_size() == expected_size
-    assert len(drawed_lines) == expected_len

@@ -485,12 +485,20 @@ def draw_machinecode_path(project: dict) -> bool:
 
     try:
         if project["suffix"] in {"ngc", "gcode"}:
-            parser = GcodeParser(project["machine_cmd"])
-            parser.draw(draw_line, (project,))
+            gcode_parser = GcodeParser(project["machine_cmd"])
+            toolpath = gcode_parser.get_path()
+            for line in toolpath:
+                draw_line(line[0], line[1], line[2], project)
+
         elif project["suffix"] in {"hpgl", "hpg"}:
             project["setup"]["machine"]["g54"] = False
             project["setup"]["workpiece"]["offset_z"] = 0.0
-            HpglParser(project["machine_cmd"]).draw(draw_line, (project,))
+
+            hpgl_parser = HpglParser(project["machine_cmd"])
+            toolpath = hpgl_parser.get_path()
+            for line in toolpath:
+                draw_line(line[0], line[1], line[2], project)
+
     except Exception as error_string:  # pylint: disable=W0703:
         print(f"ERROR: parsing machine_cmd: {error_string}")
         return False

@@ -151,10 +151,6 @@ class HpglParser:
                     segment[1][axis] = round(segment[1][axis], 6)
         return self.path
 
-    def draw(self, draw_function, user_data=()) -> None:
-        for line in self.path:
-            draw_function(line[0], line[1], line[2], *user_data)
-
     def linear_move(
         self, cords: dict, fast: bool = False  # pylint: disable=W0613
     ) -> None:
