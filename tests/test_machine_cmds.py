@@ -11,6 +11,7 @@ class fakeOffset:
         self.setup = {
             "mill": mill,
             "tool": {
+                "diameter": 4.0,
                 "number": 1,
                 "speed": 10000,
                 "pause": 1,

@@ -913,6 +913,8 @@ class ViaConstructor:
             value = int(value)
         elif entry_type == "str":
             value = str(value)
+        elif entry_type == "mstr":
+            value = str(value)
         elif entry_type == "table":
             pass
         elif entry_type == "color":
@@ -1033,6 +1035,16 @@ class ViaConstructor:
                             self.project["objwidget"].setIndexWidget(
                                 value_cell.index(), lineedit
                             )
+                        elif entry["type"] == "mstr":
+                            mlineedit = QPlainTextEdit()
+                            mlineedit.setPlainText(value)
+                            mlineedit.setToolTip(
+                                entry.get("tooltip", f"{sname}/{ename}")
+                            )
+                            mlineedit.textChanged.connect(partial(self.object_changed, obj_idx, sname, ename))  # type: ignore
+                            self.project["objwidget"].setIndexWidget(
+                                value_cell.index(), mlineedit
+                            )
                         elif entry["type"] == "table":
                             pass
                         elif entry["type"] == "color":
@@ -1099,7 +1111,7 @@ class ViaConstructor:
         if self.save_tabs == "yes" and self.project["draw_reader"]:
             self.project["draw_reader"].save_tabs(self.project["tabs"]["data"])
 
-    def global_changed(self, value) -> None:  # pylint: disable=W0613
+    def global_changed(self, value=0) -> None:  # pylint: disable=W0613
         """global setup changed."""
         if self.project["status"] == "CHANGE":
             return
@@ -1116,6 +1128,8 @@ class ViaConstructor:
                     self.project["setup"][sname][ename] = entry["widget"].value()
                 elif entry["type"] == "str":
                     self.project["setup"][sname][ename] = entry["widget"].text()
+                elif entry["type"] == "mstr":
+                    self.project["setup"][sname][ename] = entry["widget"].toPlainText()
                 elif entry["type"] == "table":
                     for row_idx in range(entry["widget"].rowCount()):
                         col_idx = 0
@@ -1126,6 +1140,15 @@ class ViaConstructor:
                             if col_type["type"] == "str":
                                 value = (
                                     entry["widget"].item(row_idx, col_idx + 1).text()
+                                )
+                                self.project["setup"][sname][ename][row_idx][key] = str(
+                                    value
+                                )
+                            elif col_type["type"] == "mstr":
+                                value = (
+                                    entry["widget"]
+                                    .item(row_idx, col_idx + 1)
+                                    .toPlainText()
                                 )
                                 self.project["setup"][sname][ename][row_idx][key] = str(
                                     value
@@ -1756,6 +1779,8 @@ class ViaConstructor:
                     entry["widget"].setValue(self.project["setup"][sname][ename])
                 elif entry["type"] == "str":
                     entry["widget"].setText(self.project["setup"][sname][ename])
+                elif entry["type"] == "mstr":
+                    entry["widget"].setPlainText(self.project["setup"][sname][ename])
                 elif entry["type"] == "table":
                     # add empty row if not exist
                     first_element = list(entry["columns"].keys())[0]
@@ -1887,6 +1912,13 @@ class ViaConstructor:
                     lineedit.textChanged.connect(self.global_changed)  # type: ignore
                     hlayout.addWidget(lineedit)
                     entry["widget"] = lineedit
+                elif entry["type"] == "mstr":
+                    mlineedit = QPlainTextEdit()
+                    mlineedit.setPlainText(self.project["setup"][sname][ename])
+                    mlineedit.setToolTip(entry.get("tooltip", f"{sname}/{ename}"))
+                    mlineedit.textChanged.connect(self.global_changed)  # type: ignore
+                    hlayout.addWidget(mlineedit)
+                    entry["widget"] = mlineedit
                 elif entry["type"] == "table":
                     # add empty row if not exist
                     first_element = list(entry["columns"].keys())[0]

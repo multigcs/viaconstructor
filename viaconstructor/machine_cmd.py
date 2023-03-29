@@ -722,16 +722,17 @@ def polylines2machine_cmd(project: dict, post: PostProcessor) -> str:
                             f"Depth: {polyline.setup['mill']['depth']}{unit} / {polyline.setup['mill']['step']}{unit}"
                         )
                     post.comment(
-                        f"Tool-Diameter: {project['setup']['tool']['diameter']}{unit}"
+                        f"Tool-Diameter: {polyline.setup['tool']['diameter']}{unit}"
                     )
                     if polyline.tool_offset:
                         post.comment(
-                            f"Tool-Offset: {project['setup']['tool']['diameter'] / 2.0}{unit} {polyline.tool_offset}"
+                            f"Tool-Offset: {polyline.setup['tool']['diameter'] / 2.0}{unit} {polyline.tool_offset}"
                         )
                     post.comment("--------------------------------------------------")
 
                 # toolchange
                 if project["setup"]["machine"]["mode"] == "mill":
+                    post.move(z_pos=fast_move_z)
                     post.tool(polyline.setup["tool"]["number"])
                     post.spindle_cw(
                         polyline.setup["tool"]["speed"], polyline.setup["tool"]["pause"]

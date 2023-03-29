@@ -119,13 +119,13 @@ class PostProcessorGcodeLinuxCNC(PostProcessor):
                 self.spindle_off()
             if self.project["setup"]["machine"]["toolchange_pre"]:
                 for part in self.project["setup"]["machine"]["toolchange_pre"].split(
-                    ";"
+                    "\n"
                 ):
                     self.gcode.append(part)
             self.gcode.append(f"M06 T{number}")
             if self.project["setup"]["machine"]["toolchange_post"]:
                 for part in self.project["setup"]["machine"]["toolchange_post"].split(
-                    ";"
+                    "\n"
                 ):
                     self.gcode.append(part)
         self.tool_active = number

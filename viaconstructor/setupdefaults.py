@@ -528,13 +528,13 @@ def setup_defaults(_) -> dict:
             },
             "toolchange_pre": {
                 "default": "",
-                "type": "str",
+                "type": "mstr",
                 "title": _("toolchange pre cmd"),
                 "tooltip": _("add gcode before tool-change"),
             },
             "toolchange_post": {
                 "default": "",
-                "type": "str",
+                "type": "mstr",
                 "title": _("toolchange post cmd"),
                 "tooltip": _("add gcode after tool-change"),
             },
