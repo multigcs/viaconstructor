@@ -2146,35 +2146,35 @@ class ViaConstructor:
 
     def open_preview_in_camotics(self):
         if self.project["suffix"] in {"ngc", "gcode"} and self.project["machine_cmd"]:
-            step = self.project["setup"]["mill"]["step"]
-            diameter = self.project["setup"]["tool"]["diameter"]
-            tool_nr = self.project["setup"]["tool"]["number"]
             units = "metric"
             if self.project["setup"]["machine"]["unit"] == "inch":
                 units = "imperial"
-            camotics_data = f"""{{
-                  "units": "{units}",
-                  "resolution-mode": "high",
-                  "resolution": 0.294723,
-                  "tools": {{
-                    "{tool_nr}": {{
-                      "units": "{units}",
-                      "shape": "cylindrical",
-                      "length": {abs(step * 1.5)},
-                      "diameter": {diameter},
-                      "description": ""
-                    }}
-                  }},
-                  "files": [
-                    "{TEMP_PREFIX}viaconstructor-preview.ngc"
-                  ]
-                }}
-            """
+
+            tools = {}
+            for obj in self.project["objects"].values():
+                tools[obj.setup["tool"]["number"]] = {
+                    "units": units,
+                    "shape": "cylindrical",
+                    "length": abs(self.project["setup"]["mill"]["step"] * 1.5),
+                    "diameter": obj.setup["tool"]["diameter"],
+                    "description": "",
+                }
+
+            camotics_data = {
+                "units": units,
+                "resolution-mode": "high",
+                "resolution": 0.294723,
+                "tools": tools,
+                "files": [
+                    f"{TEMP_PREFIX}viaconstructor-preview.ngc",
+                ],
+            }
+
             open(f"{TEMP_PREFIX}viaconstructor-preview.ngc", "w").write(
                 self.project["machine_cmd"]
             )
             open(f"{TEMP_PREFIX}viaconstructor-preview.camotics", "w").write(
-                camotics_data
+                json.dumps(camotics_data, indent=4, sort_keys=True)
             )
 
             def camotics_show():

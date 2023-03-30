@@ -115,8 +115,15 @@ class PostProcessorGcodeLinuxCNC(PostProcessor):
 
     def tool(self, number="1") -> None:
         if self.tool_active != number:
+            fast_move_z = self.project["setup"]["mill"]["fast_move_z"]
+
+            # tool to safe z
+            self.gcode.append(f"G00 Z{fast_move_z}")
+
+            # tool off
             if self.speed > 0:
                 self.spindle_off()
+
             if self.project["setup"]["machine"]["toolchange_pre"]:
                 for part in self.project["setup"]["machine"]["toolchange_pre"].split(
                     "\n"
@@ -128,6 +135,18 @@ class PostProcessorGcodeLinuxCNC(PostProcessor):
                     "\n"
                 ):
                     self.gcode.append(part)
+
+            # tool to safe z
+            self.gcode.append(f"G00 Z{fast_move_z}")
+
+            # tool to last xy
+            if self.x_pos is not None and self.y_pos is not None:
+                self.gcode.append(f"G00 X{self.x_pos} Y{self.y_pos}")
+
+            # tool to last z
+            if self.z_pos is not None:
+                self.gcode.append(f"G00 Z{self.z_pos}")
+
         self.tool_active = number
 
     def spindle_off(self) -> None:
