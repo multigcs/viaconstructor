@@ -9,7 +9,11 @@ import time
 
 import ezdxf
 
-from ..calc import calc_distance, point_of_line  # pylint: disable=E0402
+from ..calc import (  # pylint: disable=E0402
+    calc_distance,
+    external_command,
+    point_of_line,
+)
 from ..dxfcolors import dxfcolors
 from ..input_plugins_base import DrawReaderBase
 from ..vc_types import VcSegment
@@ -32,6 +36,9 @@ except Exception as error:  # pylint: disable=W0703
     SUPPORT_TEXT = False
 
 BITMAP_FORMATS = ("bmp", "png", "gif", "jpg", "jpeg")
+
+convert = external_command("convert")
+potrace = external_command("potrace")
 
 
 class DrawReader(DrawReaderBase):
@@ -78,7 +85,7 @@ class DrawReader(DrawReaderBase):
                 help="dxfread: disable svg support (inkscape converter)",
                 action="store_true",
             )
-        if os.path.isfile("/usr/bin/potrace"):
+        if potrace:
             parser.add_argument(
                 "--dxfread-no-bmp",
                 help="dxfread: disable bmp support (potrace converter)",
@@ -159,9 +166,7 @@ class DrawReader(DrawReaderBase):
             )
             self.doc = ezdxf.readfile(tmp_path)
             os.remove(tmp_path)
-        elif self.filename.lower().endswith(BITMAP_FORMATS) and os.path.isfile(
-            "/usr/bin/potrace"
-        ):
+        elif self.filename.lower().endswith(BITMAP_FORMATS) and potrace:
             print("INFO: converting bitmap to dxf with potrace")
             print("    you can disable this with: --dxfread-no-bmp")
             _fd, tmp_path = tempfile.mkstemp()
@@ -169,13 +174,13 @@ class DrawReader(DrawReaderBase):
             if not self.filename.lower().endswith(".bmp"):
                 _fd2, tmp_path2 = tempfile.mkstemp()
                 os.system(
-                    f"convert '{os.path.realpath(self.filename)}' '{tmp_path2}.bmp'"
+                    f"{convert} '{os.path.realpath(self.filename)}' '{tmp_path2}.bmp'"
                 )
-                os.system(f"potrace -b dxf -o '{tmp_path}' '{tmp_path2}.bmp'")
+                os.system(f"{potrace} -b dxf -o '{tmp_path}' '{tmp_path2}.bmp'")
                 os.remove(f"{tmp_path2}.bmp")
             else:
                 os.system(
-                    f"potrace -b dxf -o '{tmp_path}' '{os.path.realpath(self.filename)}'"
+                    f"{potrace} -b dxf -o '{tmp_path}' '{os.path.realpath(self.filename)}'"
                 )
             self.doc = ezdxf.readfile(tmp_path)
             os.remove(tmp_path)
@@ -639,10 +644,8 @@ class DrawReader(DrawReaderBase):
             and os.path.isfile("/usr/share/inkscape/extensions/dxf_outlines.py")
         ):
             suffixes.append("svg")
-        if not hasattr(args, "dxfread_no_bmp") or (
-            not args.dxfread_no_bmp and os.path.isfile("/usr/bin/potrace")
-        ):
-            if os.path.isfile("/usr/bin/convert"):
+        if not hasattr(args, "dxfread_no_bmp") or (not args.dxfread_no_bmp and potrace):
+            if convert:
                 suffixes += BITMAP_FORMATS
             else:
                 suffixes.append("bmp")

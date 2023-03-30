@@ -59,6 +59,7 @@ from PyQt5.QtWidgets import (  # pylint: disable=E0611
 
 from .calc import (
     clean_segments,
+    external_command,
     find_tool_offsets,
     mirror_objects,
     move_object,
@@ -106,6 +107,9 @@ for reader in ("dxfread", "hpglread", "stlread", "svgread", "ttfread", "imgread"
 
 DEBUG = False
 TIMESTAMP = 0
+
+openscad = external_command("openscasds")
+camotics = external_command("camotics")
 
 
 def eprint(message, *args, **kwargs):  # pylint: disable=W0613
@@ -1584,7 +1588,7 @@ class ViaConstructor:
                 _("nesting workpiece"),
                 self._toolbar_nest,
                 HAVE_NEST,
-                True,
+                HAVE_NEST,
                 False,
                 _("Nesting"),
                 "",
@@ -1669,6 +1673,30 @@ class ViaConstructor:
                 self._toolbar_simulate_stop,
                 True,
                 True,
+                False,
+                _("Simulation"),
+                "",
+                None,
+            ],
+            _("openscad preview"): [
+                "openscad.png",
+                "F5",
+                _("view in openscad"),
+                self.open_preview_in_openscad,
+                openscad is not None,
+                openscad is not None,
+                False,
+                _("Simulation"),
+                "",
+                None,
+            ],
+            _("camotics preview"): [
+                "camotics.png",
+                "F5",
+                _("view in camotics"),
+                self.open_preview_in_camotics,
+                camotics is not None,
+                camotics is not None,
                 False,
                 _("Simulation"),
                 "",
@@ -2078,11 +2106,47 @@ class ViaConstructor:
             open("/tmp/viaconstructor-preview.scad", "w").write(scad_data)
 
             def openscad_show():
-                os.system("/usr/bin/openscad /tmp/viaconstructor-preview.scad")
+                os.system(f"{openscad} /tmp/viaconstructor-preview.scad")
                 self.project["preview_open"].setEnabled(True)
 
             self.project["preview_open"].setEnabled(False)
             threading.Thread(target=openscad_show).start()
+
+    def open_preview_in_camotics(self):
+        if self.project["suffix"] in {"ngc", "gcode"} and self.project["machine_cmd"]:
+            step = self.project["setup"]["mill"]["step"]
+            diameter = self.project["setup"]["tool"]["diameter"]
+            tool_nr = self.project["setup"]["tool"]["number"]
+            units = "metric"
+            if self.project["setup"]["machine"]["unit"] == "inch":
+                units = "imperial"
+            camotics_data = f"""{{
+                  "units": "{units}",
+                  "resolution-mode": "high",
+                  "resolution": 0.294723,
+                  "tools": {{
+                    "{tool_nr}": {{
+                      "units": "{units}",
+                      "shape": "cylindrical",
+                      "length": {abs(step * 1.5)},
+                      "diameter": {diameter},
+                      "description": ""
+                    }}
+                  }},
+                  "files": [
+                    "/tmp/viaconstructor-preview.ngc"
+                  ]
+                }}
+            """
+            open("/tmp/viaconstructor-preview.ngc", "w").write(
+                self.project["machine_cmd"]
+            )
+            open("/tmp/viaconstructor-preview.camotics", "w").write(camotics_data)
+
+            def camotics_show():
+                os.system(f"{camotics} /tmp/viaconstructor-preview.camotics")
+
+            threading.Thread(target=camotics_show).start()
 
     def generate_preview(self):
         if self.project["suffix"] in {"ngc", "gcode"} and self.project["machine_cmd"]:
@@ -2092,7 +2156,7 @@ class ViaConstructor:
 
             def openscad_convert():
                 os.system(
-                    "/usr/bin/openscad -o /tmp/viaconstructor-preview.png /tmp/viaconstructor-preview.scad"
+                    f"{openscad} -o /tmp/viaconstructor-preview.png /tmp/viaconstructor-preview.scad"
                 )
                 image = QImage("/tmp/viaconstructor-preview.png")
                 self.project["imgwidget"].setPixmap(QPixmap.fromImage(image))
@@ -2255,19 +2319,34 @@ class ViaConstructor:
         tabwidget.addTab(self.project["glwidget"], _("&3D-View"))
         tabwidget.addTab(self.project["textwidget"], _("&Machine-Output"))
 
-        if os.path.isfile("/usr/bin/openscad"):
+        if openscad or camotics:
             preview = QWidget()
             preview.setContentsMargins(0, 0, 0, 0)
             preview_vbox = QVBoxLayout(preview)
             preview_vbox.setContentsMargins(0, 0, 0, 0)
-            self.project["preview_generate"] = QPushButton(_("generate Preview"))
-            self.project["preview_generate"].setToolTip(_("this may take some time"))
-            self.project["preview_generate"].pressed.connect(self.generate_preview)
-            preview_vbox.addWidget(self.project["preview_generate"])
-            self.project["preview_open"] = QPushButton(_("view in openscad"))
-            self.project["preview_open"].setToolTip(_("open's preview in openscad"))
-            self.project["preview_open"].pressed.connect(self.open_preview_in_openscad)
-            preview_vbox.addWidget(self.project["preview_open"])
+            if openscad:
+                self.project["preview_generate"] = QPushButton(_("generate Preview"))
+                self.project["preview_generate"].setToolTip(
+                    _("this may take some time")
+                )
+                self.project["preview_generate"].pressed.connect(self.generate_preview)
+                preview_vbox.addWidget(self.project["preview_generate"])
+                self.project["preview_open"] = QPushButton(_("view in openscad"))
+                self.project["preview_open"].setToolTip(_("open's preview in openscad"))
+                self.project["preview_open"].pressed.connect(
+                    self.open_preview_in_openscad
+                )
+                preview_vbox.addWidget(self.project["preview_open"])
+            if camotics:
+                self.project["preview_open2"] = QPushButton(_("view in camotics"))
+                self.project["preview_open2"].setToolTip(
+                    _("open's preview in camotics")
+                )
+                self.project["preview_open2"].pressed.connect(
+                    self.open_preview_in_camotics
+                )
+                preview_vbox.addWidget(self.project["preview_open2"])
+
             preview_vbox.addWidget(self.project["imgwidget"])
             tabwidget.addTab(preview, _("&Preview"))
 

@@ -5,7 +5,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
-"POT-Creation-Date: 2023-03-28 17:06+0200\n"
+"POT-Creation-Date: 2023-03-30 11:09+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -585,6 +585,18 @@ msgstr ""
 msgid "stop/reset simulation"
 msgstr ""
 
+msgid "openscad preview"
+msgstr ""
+
+msgid "view in openscad"
+msgstr ""
+
+msgid "camotics preview"
+msgstr ""
+
+msgid "view in camotics"
+msgstr ""
+
 msgid "redraw"
 msgstr ""
 
@@ -618,10 +630,10 @@ msgstr ""
 msgid "this may take some time"
 msgstr ""
 
-msgid "view in openscad"
+msgid "open's preview in openscad"
 msgstr ""
 
-msgid "open's preview in openscad"
+msgid "open's preview in camotics"
 msgstr ""
 
 msgid "&Preview"

@@ -2,6 +2,8 @@
 
 import hashlib
 import math
+import platform
+import shutil
 from copy import deepcopy
 
 import ezdxf
@@ -17,6 +19,13 @@ from .ext.cavaliercontours import cavaliercontours as cavc
 from .vc_types import VcObject
 
 TWO_PI = math.pi * 2
+
+
+# ########## helper Functions ###########
+def external_command(cmd: str):
+    if platform.system().lower() == "windows":
+        cmd += f"{cmd}.exe"
+    return shutil.which(cmd)
 
 
 # ########## Misc Functions ###########
