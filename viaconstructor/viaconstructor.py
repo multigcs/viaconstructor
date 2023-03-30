@@ -61,6 +61,7 @@ from .calc import (
     clean_segments,
     external_command,
     find_tool_offsets,
+    get_tmp_prefix,
     mirror_objects,
     move_object,
     move_objects,
@@ -108,7 +109,8 @@ for reader in ("dxfread", "hpglread", "stlread", "svgread", "ttfread", "imgread"
 DEBUG = False
 TIMESTAMP = 0
 
-openscad = external_command("openscasds")
+TEMP_PREFIX = get_tmp_prefix()
+openscad = external_command("openscad")
 camotics = external_command("camotics")
 
 
@@ -2103,11 +2105,12 @@ class ViaConstructor:
         if self.project["suffix"] in {"ngc", "gcode"} and self.project["machine_cmd"]:
             parser = GcodeParser(self.project["machine_cmd"])
             scad_data = parser.openscad(self.project["setup"]["tool"]["diameter"])
-            open("/tmp/viaconstructor-preview.scad", "w").write(scad_data)
+            open(f"{TEMP_PREFIX}viaconstructor-preview.scad", "w").write(scad_data)
 
             def openscad_show():
-                os.system(f"{openscad} /tmp/viaconstructor-preview.scad")
+                os.system(f"{openscad} {TEMP_PREFIX}viaconstructor-preview.scad")
                 self.project["preview_open"].setEnabled(True)
+                os.remove(f"{TEMP_PREFIX}viaconstructor-preview.scad")
 
             self.project["preview_open"].setEnabled(False)
             threading.Thread(target=openscad_show).start()
@@ -2134,17 +2137,21 @@ class ViaConstructor:
                     }}
                   }},
                   "files": [
-                    "/tmp/viaconstructor-preview.ngc"
+                    "{TEMP_PREFIX}viaconstructor-preview.ngc"
                   ]
                 }}
             """
-            open("/tmp/viaconstructor-preview.ngc", "w").write(
+            open(f"{TEMP_PREFIX}viaconstructor-preview.ngc", "w").write(
                 self.project["machine_cmd"]
             )
-            open("/tmp/viaconstructor-preview.camotics", "w").write(camotics_data)
+            open(f"{TEMP_PREFIX}viaconstructor-preview.camotics", "w").write(
+                camotics_data
+            )
 
             def camotics_show():
-                os.system(f"{camotics} /tmp/viaconstructor-preview.camotics")
+                os.system(f"{camotics} {TEMP_PREFIX}viaconstructor-preview.camotics")
+                os.remove(f"{TEMP_PREFIX}viaconstructor-preview.camotics")
+                os.remove(f"{TEMP_PREFIX}viaconstructor-preview.ngc")
 
             threading.Thread(target=camotics_show).start()
 
@@ -2152,16 +2159,17 @@ class ViaConstructor:
         if self.project["suffix"] in {"ngc", "gcode"} and self.project["machine_cmd"]:
             parser = GcodeParser(self.project["machine_cmd"])
             scad_data = parser.openscad(self.project["setup"]["tool"]["diameter"])
-            open("/tmp/viaconstructor-preview.scad", "w").write(scad_data)
+            open(f"{TEMP_PREFIX}viaconstructor-preview.scad", "w").write(scad_data)
 
             def openscad_convert():
                 os.system(
-                    f"{openscad} -o /tmp/viaconstructor-preview.png /tmp/viaconstructor-preview.scad"
+                    f"{openscad} -o {TEMP_PREFIX}viaconstructor-preview.png {TEMP_PREFIX}viaconstructor-preview.scad"
                 )
-                image = QImage("/tmp/viaconstructor-preview.png")
+                image = QImage(f"{TEMP_PREFIX}viaconstructor-preview.png")
                 self.project["imgwidget"].setPixmap(QPixmap.fromImage(image))
                 self.project["preview_generate"].setEnabled(True)
                 self.project["preview_generate"].setText(_("generate Preview"))
+                os.remove(f"{TEMP_PREFIX}viaconstructor-preview.scad")
 
             self.project["preview_generate"].setEnabled(False)
             self.project["preview_generate"].setText(

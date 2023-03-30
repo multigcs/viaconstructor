@@ -28,6 +28,12 @@ def external_command(cmd: str):
     return shutil.which(cmd)
 
 
+def get_tmp_prefix() -> str:
+    if platform.system().lower() == "windows":
+        return "c:\\temp\\"
+    return "/tmp/"
+
+
 # ########## Misc Functions ###########
 def rotate_list(rlist, idx):
     """rotating a list of values."""
