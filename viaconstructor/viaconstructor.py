@@ -284,10 +284,9 @@ class ViaConstructor:
 
         # create toolpath from objects
         self.project["offsets"] = objects2polyline_offsets(
-            psetup["machine"]["unit"],
+            psetup,
             self.project["objects"],
             self.project["maxOuter"],
-            psetup["mill"]["small_circles"],
         )
 
         # create machine commands
@@ -339,7 +338,16 @@ class ViaConstructor:
 
     def _toolbar_nest(self) -> None:
         int_scale = 100000
-        obj_dist = max(self.project["setup"]["tool"]["diameter"] * 3, 1.0)
+
+        diameter = None
+        for entry in self.project["setup"]["tool"]["tooltable"]:
+            if self.project["setup"]["tool"]["number"] == entry["number"]:
+                diameter = entry["diameter"]
+        if diameter is None:
+            print("ERROR: nest: TOOL not found")
+            return
+
+        obj_dist = max(diameter * 3, 1.0)
         items = []
         mapping = {}
         for obj_idx, obj_data in self.project["objects"].items():
@@ -826,24 +834,33 @@ class ViaConstructor:
         """
         machine_feedrate = self.project["setup"]["machine"]["feedrate"]
         machine_toolspeed = self.project["setup"]["machine"]["tool_speed"]
-        tool_diameter = self.project["setup"]["tool"]["diameter"]
+
+        diameter = None
+        blades = 0
+        for entry in self.project["setup"]["tool"]["tooltable"]:
+            if self.project["setup"]["tool"]["number"] == entry["number"]:
+                diameter = entry["diameter"]
+                blades = entry["blades"]
+        if diameter is None:
+            print("ERROR: nest: TOOL not found")
+            return
+
         unit = self.project["setup"]["machine"]["unit"]
         if unit == "inch":
-            tool_diameter *= 25.4
+            diameter *= 25.4
         tool_vc = self.project["setup"]["tool"]["materialtable"][material_idx]["vc"]
-        tool_speed = tool_vc * 1000 / (tool_diameter * math.pi)
+        tool_speed = tool_vc * 1000 / (diameter * math.pi)
         tool_speed = int(min(tool_speed, machine_toolspeed))
-        tool_blades = self.project["setup"]["tool"]["blades"]
-        if tool_diameter <= 4.0:
+        if diameter <= 4.0:
             fz_key = "fz4"
-        elif tool_diameter <= 8.0:
+        elif diameter <= 8.0:
             fz_key = "fz8"
         else:
             fz_key = "fz12"
         material_fz = self.project["setup"]["tool"]["materialtable"][material_idx][
             fz_key
         ]
-        feedrate = tool_speed * tool_blades * material_fz
+        feedrate = tool_speed * blades * material_fz
         feedrate = int(min(feedrate, machine_feedrate))
 
         info_test = []
@@ -866,6 +883,11 @@ class ViaConstructor:
             return
 
         self.project["status"] = "CHANGE"
+        for obj in self.project["objects"].values():
+            if obj.setup["tool"]["rate_h"] == self.project["setup"]["tool"]["rate_h"]:
+                obj.setup["tool"]["rate_h"] = int(feedrate)
+            if obj.setup["tool"]["speed"] == self.project["setup"]["tool"]["speed"]:
+                obj.setup["tool"]["speed"] = int(tool_speed)
         self.project["setup"]["tool"]["rate_h"] = int(feedrate)
         self.project["setup"]["tool"]["speed"] = int(tool_speed)
         self.update_global_setup()
@@ -875,17 +897,17 @@ class ViaConstructor:
 
     def tools_select(self, tool_idx) -> None:
         self.project["status"] = "CHANGE"
-        self.project["setup"]["tool"]["diameter"] = float(
-            self.project["setup"]["tool"]["tooltable"][tool_idx]["diameter"]
-        )
-        self.project["setup"]["tool"]["number"] = int(
+        old_tool_number = self.project["setup"]["tool"]["number"]
+        new_tool_number = int(
             self.project["setup"]["tool"]["tooltable"][tool_idx]["number"]
         )
-        self.project["setup"]["tool"]["blades"] = int(
-            self.project["setup"]["tool"]["tooltable"][tool_idx]["blades"]
-        )
+        self.project["setup"]["tool"]["number"] = new_tool_number
+        for obj in self.project["objects"].values():
+            if obj.setup["tool"]["number"] == old_tool_number:
+                obj.setup["tool"]["number"] = new_tool_number
         self.update_global_setup()
         self.update_table()
+        self.global_changed(0)
         self.update_drawing()
         self.project["status"] = "READY"
 
@@ -2133,7 +2155,16 @@ class ViaConstructor:
     def open_preview_in_openscad(self):
         if self.project["suffix"] in {"ngc", "gcode"} and self.project["machine_cmd"]:
             parser = GcodeParser(self.project["machine_cmd"])
-            scad_data = parser.openscad(self.project["setup"]["tool"]["diameter"])
+
+            diameter = None
+            for entry in self.project["setup"]["tool"]["tooltable"]:
+                if self.project["setup"]["tool"]["number"] == entry["number"]:
+                    diameter = entry["diameter"]
+            if diameter is None:
+                print("ERROR: nest: TOOL not found")
+                return
+
+            scad_data = parser.openscad(diameter)
             open(f"{TEMP_PREFIX}viaconstructor-preview.scad", "w").write(scad_data)
 
             def openscad_show():
@@ -2152,11 +2183,20 @@ class ViaConstructor:
 
             tools = {}
             for obj in self.project["objects"].values():
+
+                diameter = None
+                for entry in self.project["setup"]["tool"]["tooltable"]:
+                    if obj.setup["tool"]["number"] == entry["number"]:
+                        diameter = entry["diameter"]
+                if diameter is None:
+                    print("ERROR: nest: TOOL not found")
+                    return
+
                 tools[obj.setup["tool"]["number"]] = {
                     "units": units,
                     "shape": "cylindrical",
                     "length": abs(self.project["setup"]["mill"]["step"] * 1.5),
-                    "diameter": obj.setup["tool"]["diameter"],
+                    "diameter": diameter,
                     "description": "",
                 }
 
@@ -2187,7 +2227,16 @@ class ViaConstructor:
     def generate_preview(self):
         if self.project["suffix"] in {"ngc", "gcode"} and self.project["machine_cmd"]:
             parser = GcodeParser(self.project["machine_cmd"])
-            scad_data = parser.openscad(self.project["setup"]["tool"]["diameter"])
+
+            diameter = None
+            for entry in self.project["setup"]["tool"]["tooltable"]:
+                if self.project["setup"]["tool"]["number"] == entry["number"]:
+                    diameter = entry["diameter"]
+            if diameter is None:
+                print("ERROR: nest: TOOL not found")
+                return
+
+            scad_data = parser.openscad(diameter)
             open(f"{TEMP_PREFIX}viaconstructor-preview.scad", "w").write(scad_data)
 
             def openscad_convert():

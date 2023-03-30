@@ -5,7 +5,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
-"POT-Creation-Date: 2023-03-30 11:09+0200\n"
+"POT-Creation-Date: 2023-03-31 01:43+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -127,18 +127,6 @@ msgid "Number"
 msgstr ""
 
 msgid "setting the Tool-Number to load in gcode"
-msgstr ""
-
-msgid "Diameter"
-msgstr ""
-
-msgid "setting the Tool-Diameter to calculate the Offsets"
-msgstr ""
-
-msgid "Blades"
-msgstr ""
-
-msgid "number ob blades"
 msgstr ""
 
 msgid "Speed"
@@ -340,6 +328,18 @@ msgid "Unit of the machine"
 msgstr ""
 
 msgid "machine supports g54"
+msgstr ""
+
+msgid "toolchange pre cmd"
+msgstr ""
+
+msgid "add gcode before tool-change"
+msgstr ""
+
+msgid "toolchange post cmd"
+msgstr ""
+
+msgid "add gcode after tool-change"
 msgstr ""
 
 msgid "Comments in output"

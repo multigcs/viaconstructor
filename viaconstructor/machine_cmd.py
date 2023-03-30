@@ -703,6 +703,14 @@ def polylines2machine_cmd(project: dict, post: PostProcessor) -> str:
                 if is_closed:
                     obj_distance += calc_distance(point, points[0])
 
+                diameter = None
+                for entry in project["setup"]["tool"]["tooltable"]:
+                    if polyline.setup["tool"]["number"] == entry["number"]:
+                        diameter = entry["diameter"]
+                if diameter is None:
+                    print("ERROR: TOOL not found")
+                    break
+
                 if project["setup"]["machine"]["comments"]:
                     post.separation()
                     post.comment("--------------------------------------------------")
@@ -721,12 +729,10 @@ def polylines2machine_cmd(project: dict, post: PostProcessor) -> str:
                         post.comment(
                             f"Depth: {polyline.setup['mill']['depth']}{unit} / {polyline.setup['mill']['step']}{unit}"
                         )
-                    post.comment(
-                        f"Tool-Diameter: {polyline.setup['tool']['diameter']}{unit}"
-                    )
+                    post.comment(f"Tool-Diameter: {diameter}{unit}")
                     if polyline.tool_offset:
                         post.comment(
-                            f"Tool-Offset: {polyline.setup['tool']['diameter'] / 2.0}{unit} {polyline.tool_offset}"
+                            f"Tool-Offset: {diameter / 2.0}{unit} {polyline.tool_offset}"
                         )
                     post.comment("--------------------------------------------------")
 
@@ -747,9 +753,7 @@ def polylines2machine_cmd(project: dict, post: PostProcessor) -> str:
                     project["setup"]["machine"]["mode"] == "mill"
                     and "Z" in project["axis"]
                 ):
-                    if not (
-                        was_pocket and nearest_dist < polyline.setup["tool"]["diameter"]
-                    ):
+                    if not (was_pocket and nearest_dist < diameter):
                         post.move(z_pos=fast_move_z)
                     elif helix_mode:
                         post.move(z_pos=0.0)

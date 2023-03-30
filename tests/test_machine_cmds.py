@@ -11,7 +11,6 @@ class fakeOffset:
         self.setup = {
             "mill": mill,
             "tool": {
-                "diameter": 4.0,
                 "number": 1,
                 "speed": 10000,
                 "pause": 1,
@@ -142,6 +141,15 @@ class fakeOffset:
                         "pause": 1,
                         "rate_h": 10000,
                         "rate_v": 1000,
+                        "tooltable": [
+                            {
+                                "blades": 3,
+                                "diameter": 4.0,
+                                "lenght": 10.0,
+                                "name": "Holz-Fr\u00e4ser (klein)",
+                                "number": 1,
+                            },
+                        ],
                     },
                     "mill": {
                         "G64": 0.05,
@@ -196,6 +204,7 @@ G00 Z20.000000
 (Tool-Diameter: 4.0mm)
 (Tool-Offset: 2.0mm inside)
 (--------------------------------------------------)
+G00 Z20.0
 M06 T1
 M03 S10000 (Spindle on / CW)
 G04 P1 (pause in sec)

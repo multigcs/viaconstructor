@@ -173,12 +173,12 @@ class GLWidget(QGLWidget):
         GL.glViewport(0, 0, width, height)
         self.initializeGL()
 
-    def draw_tool(self, tool_pos, spindle) -> None:  # pylint: disable=C0103
-        blades = self.project["setup"]["tool"]["blades"]
-        radius = self.project["setup"]["tool"]["diameter"] / 2.0
+    def draw_tool(self, tool_pos, spindle, diameter) -> None:  # pylint: disable=C0103
+        blades = 2
+        radius = diameter / 2.0
         height = max(
             -self.project["setup"]["mill"]["depth"] + 5,
-            self.project["setup"]["tool"]["diameter"] * 3,
+            diameter * 3,
         )
         shaft_height = height * 2
         angle = -self.project["simulation_cnt"]
@@ -408,6 +408,7 @@ class GLWidget(QGLWidget):
             if sim_step < len(self.project["simulation_data"]):
                 next_pos = self.project["simulation_data"][sim_step][1]
                 spindle = self.project["simulation_data"][sim_step][4]
+                diameter = self.project["simulation_data"][sim_step][2]
 
                 if self.project["simulation"]:
                     dist = calc_distance3d(last_pos, next_pos)
@@ -427,7 +428,7 @@ class GLWidget(QGLWidget):
                             self.project["simulation_pos"] = 0
                             self.project["simulation"] = False
 
-                self.draw_tool(self.project["simulation_last"], spindle)
+                self.draw_tool(self.project["simulation_last"], spindle, diameter)
 
         GL.glPopMatrix()
 
@@ -1310,7 +1311,9 @@ def draw_object_faces(project: dict) -> None:
         """
 
 
-def draw_line(p_1: dict, p_2: dict, options: str, project: dict) -> None:
+def draw_line(
+    p_1: dict, p_2: dict, options: str, project: dict, tool_number: int = 0
+) -> None:
     """callback function for Parser to draw the lines"""
     if project["setup"]["machine"]["g54"]:
         p_from = (p_1["X"], p_1["Y"], p_1["Z"])
@@ -1330,26 +1333,36 @@ def draw_line(p_1: dict, p_2: dict, options: str, project: dict) -> None:
             p_2["Y"] - project["setup"]["workpiece"]["offset_y"] * unitscale,
             p_2["Z"] - project["setup"]["workpiece"]["offset_z"] * unitscale,
         )
-    line_width = project["setup"]["tool"]["diameter"]
+
+    if tool_number != 0:
+        diameter = None
+        for entry in project["setup"]["tool"]["tooltable"]:
+            if tool_number == entry["number"]:
+                diameter = entry["diameter"]
+        if diameter is None:
+            print("ERROR: draw_line: TOOL not found")
+            return
+    else:
+        diameter = 1
+
     mode = project["setup"]["view"]["path"]
-
-    project["simulation_data"].append((p_from, p_to, line_width, mode, options))
-
-    draw_mill_line(p_from, p_to, line_width, mode, options)
+    project["simulation_data"].append((p_from, p_to, diameter, mode, options))
+    draw_mill_line(p_from, p_to, diameter, mode, options)
 
 
 def draw_machinecode_path(project: dict) -> bool:
     """draws the machinecode path"""
     project["simulation_data"] = []
     GL.glLineWidth(2)
+    tool_number = 0
     try:
         if project["suffix"] in {"ngc", "gcode"}:
             gcode_parser = GcodeParser(project["machine_cmd"])
             toolpath = gcode_parser.get_path()
             for line in toolpath:
-
                 if len(line) > 3 and line[3].startswith("TOOLCHANGE:"):
                     new_tool = line[3].split(":")[1]
+                    tool_number = int(new_tool)
                     GL.glBegin(GL.GL_LINES)
                     draw_text(
                         f"TC:{new_tool}",
@@ -1361,18 +1374,14 @@ def draw_machinecode_path(project: dict) -> bool:
                         True,
                     )
                     GL.glEnd()
-
-                draw_line(line[0], line[1], line[2], project)
-
+                draw_line(line[0], line[1], line[2], project, tool_number)
         elif project["suffix"] in {"hpgl", "hpg"}:
             project["setup"]["machine"]["g54"] = False
             project["setup"]["workpiece"]["offset_z"] = 0.0
-
             hpgl_parser = HpglParser(project["machine_cmd"])
             toolpath = hpgl_parser.get_path()
             for line in toolpath:
                 draw_line(line[0], line[1], line[2], project)
-
     except Exception as error_string:  # pylint: disable=W0703:
         print(f"ERROR: parsing machine_cmd: {error_string}")
         return False

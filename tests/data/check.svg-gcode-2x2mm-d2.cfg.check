@@ -24,6 +24,7 @@ G00 Z5.000000
 (Tool-Diameter: 2.0mm)
 (Tool-Offset: 1.0mm inside)
 (--------------------------------------------------)
+G00 Z5.0
 M06 T1
 M03 S10000 (Spindle on / CW)
 G04 P1 (pause in sec)

@@ -949,9 +949,21 @@ def test_objects2polyline_offsets(
     diameter, objects, max_outer, small_circles, expected
 ):
     result = []
-    for _idx, line in calc.objects2polyline_offsets(
-        diameter, objects, max_outer, small_circles
-    ).items():
+
+    setup = {
+        "tool": {
+            "tooltable": [
+                {
+                    "number": 1,
+                    "diameter": diameter,
+                }
+            ]
+        },
+        "machine": {"unit": "mm"},
+        "mill": {"small_circles": False},
+    }
+
+    for _idx, line in calc.objects2polyline_offsets(setup, objects, max_outer).items():
         for axis in line.vertex_data().tolist():
             for value in axis:
                 result.append(round(value, 6))

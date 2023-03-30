@@ -137,14 +137,15 @@ class PostProcessorGcodeLinuxCNC(PostProcessor):
                     self.gcode.append(part)
 
             # tool to safe z
-            self.gcode.append(f"G00 Z{fast_move_z}")
+            if self.z_pos != fast_move_z:
+                self.gcode.append(f"G00 Z{fast_move_z}")
 
             # tool to last xy
             if self.x_pos is not None and self.y_pos is not None:
                 self.gcode.append(f"G00 X{self.x_pos} Y{self.y_pos}")
 
             # tool to last z
-            if self.z_pos is not None:
+            if self.z_pos is not None and self.z_pos != fast_move_z:
                 self.gcode.append(f"G00 Z{self.z_pos}")
 
         self.tool_active = number

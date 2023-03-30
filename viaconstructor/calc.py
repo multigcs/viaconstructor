@@ -1226,9 +1226,12 @@ def object2polyline_offsets(
     return polyline_offsets
 
 
-def objects2polyline_offsets(unit, objects, max_outer, small_circles=False):
+def objects2polyline_offsets(setup, objects, max_outer):
     """calculates the offset line(s) of all objects"""
     polyline_offsets = {}
+
+    unit = setup["machine"]["unit"]
+    small_circles = setup["mill"]["small_circles"]
 
     part_l = len(objects)
     part_n = 0
@@ -1245,7 +1248,14 @@ def objects2polyline_offsets(unit, objects, max_outer, small_circles=False):
             last_percent = int(percent)
             part_n += 1
 
-            diameter = obj.setup["tool"]["diameter"]
+            diameter = None
+            for entry in setup["tool"]["tooltable"]:
+                if obj.setup["tool"]["number"] == entry["number"]:
+                    diameter = entry["diameter"]
+            if diameter is None:
+                print("ERROR: TOOL not found")
+                break
+
             if unit == "inch":
                 diameter *= 25.4
 
