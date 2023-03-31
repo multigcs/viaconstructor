@@ -18,15 +18,7 @@ from typing import Optional, Union
 import ezdxf
 import setproctitle
 from PyQt5.QtCore import Qt  # pylint: disable=E0611
-from PyQt5.QtGui import (  # pylint: disable=E0611
-    QFont,
-    QIcon,
-    QImage,
-    QPalette,
-    QPixmap,
-    QStandardItem,
-    QStandardItemModel,
-)
+from PyQt5.QtGui import QFont, QIcon, QImage, QPalette, QPixmap  # pylint: disable=E0611
 from PyQt5.QtWidgets import (  # pylint: disable=E0611
     QAction,
     QApplication,
@@ -52,7 +44,6 @@ from PyQt5.QtWidgets import (  # pylint: disable=E0611
     QTableWidgetItem,
     QTabWidget,
     QToolBar,
-    QTreeView,
     QVBoxLayout,
     QWidget,
 )
@@ -149,7 +140,7 @@ if lang:
         sys.stderr.write(f"WARNING: localedir not found {localedir}\n")
 
 
-class ViaConstructor:
+class ViaConstructor:  # pylint: disable=R0904
     """viaconstructor main class."""
 
     LAYER_REGEX = re.compile(
@@ -189,10 +180,12 @@ class ViaConstructor:
         "draw_reader": None,
         "origin": [0.0, 0.0],
         "layers": {},
+        "object_active": "",
     }
     info = ""
     save_tabs = "no"
     save_starts = "no"
+    combobjwidget = None
     status_bar: Optional[QStatusBar] = None
     main: Optional[QMainWindow] = None
     toolbar: Optional[QToolBar] = None
@@ -594,7 +587,7 @@ class ViaConstructor:
             "",
         )
         if name[0] and self.load_project(name[0]):
-            self.update_table()
+            self.update_object_setup()
             self.global_changed(0)
             self.update_drawing()
 
@@ -623,7 +616,7 @@ class ViaConstructor:
         )
 
         if name[0] and self.load_drawing(name[0]):
-            self.update_table()
+            self.update_object_setup()
             self.global_changed(0)
             self.update_drawing()
 
@@ -673,7 +666,7 @@ class ViaConstructor:
         if name[0] and self.setup_load(name[0]):
             self.project["status"] = "CHANGE"
             self.update_global_setup()
-            self.update_table()
+            self.update_object_setup()
             self.global_changed(0)
             self.update_drawing()
             self.project["status"] = "READY"
@@ -699,7 +692,7 @@ class ViaConstructor:
             if self.setup_load_string(self.project["draw_reader"].load_setup()):  # type: ignore
                 self.project["status"] = "CHANGE"
                 self.update_global_setup()
-                self.update_table()
+                self.update_object_setup()
                 self.global_changed(0)
                 self.prepare_segments()
                 self.update_drawing()
@@ -822,7 +815,7 @@ class ViaConstructor:
         if self.project["status"] != "INIT":
             self.project["status"] = "CHANGE"
             self.update_global_setup()
-            self.update_table()
+            self.update_object_setup()
             self.global_changed(0)
             self.update_drawing()
             self.project["status"] = "READY"
@@ -848,7 +841,9 @@ class ViaConstructor:
         unit = self.project["setup"]["machine"]["unit"]
         if unit == "inch":
             diameter *= 25.4
-        tool_vc = self.project["setup"]["workpiece"]["materialtable"][material_idx]["vc"]
+        tool_vc = self.project["setup"]["workpiece"]["materialtable"][material_idx][
+            "vc"
+        ]
         tool_speed = tool_vc * 1000 / (diameter * math.pi)
         tool_speed = int(min(tool_speed, machine_toolspeed))
         if diameter <= 4.0:
@@ -891,7 +886,7 @@ class ViaConstructor:
         self.project["setup"]["tool"]["rate_h"] = int(feedrate)
         self.project["setup"]["tool"]["speed"] = int(tool_speed)
         self.update_global_setup()
-        self.update_table()
+        self.update_object_setup()
         self.update_drawing()
         self.project["status"] = "READY"
 
@@ -906,7 +901,7 @@ class ViaConstructor:
             if obj.setup["tool"]["number"] == old_tool_number:
                 obj.setup["tool"]["number"] = new_tool_number
         self.update_global_setup()
-        self.update_table()
+        self.update_object_setup()
         self.global_changed(0)
         self.update_drawing()
         self.project["status"] = "READY"
@@ -925,169 +920,6 @@ class ViaConstructor:
         button.setStyleSheet(f"background-color:rgb({rgb})")
         button.setText(rgb)
         self.global_changed(0)
-
-    def object_changed(self, obj_idx, sname, ename, value) -> None:
-        """object changed."""
-        if self.project["status"] == "CHANGE":
-            return
-        entry_type = self.project["setup_defaults"][sname][ename]["type"]
-        if entry_type == "bool":
-            value = bool(value == 2)
-        elif entry_type == "select":
-            value = str(value)
-        elif entry_type == "float":
-            value = float(value)
-        elif entry_type == "int":
-            value = int(value)
-        elif entry_type == "str":
-            value = str(value)
-        elif entry_type == "mstr":
-            value = str(value)
-        elif entry_type == "table":
-            pass
-        elif entry_type == "color":
-            pass
-        else:
-            eprint(f"Unknown setup-type: {entry_type}")
-            value = None
-        self.project["objects"][obj_idx]["setup"][sname][ename] = value
-        if not self.args.laser:
-            self.project["maxOuter"] = find_tool_offsets(self.project["objects"])
-
-        if not self.project["setup"]["view"]["autocalc"]:
-            return
-        self.update_drawing()
-
-    def update_table(self) -> None:
-        """update objects table."""
-
-        selected = -1
-        if (
-            self.project["glwidget"]
-            and self.project["glwidget"].selection_set
-            and self.project["glwidget"].selector_mode in {"delete", "oselect"}
-        ):
-            selected = self.project["glwidget"].selection_set[2]
-
-        debug("update_table: clear")
-        self.project["objmodel"].clear()
-        self.project["objmodel"].setHorizontalHeaderLabels(["Object", "Value"])
-        # self.project["objwidget"].header().setDefaultSectionSize(180)
-        self.project["objwidget"].setModel(self.project["objmodel"])
-        root = self.project["objmodel"].invisibleRootItem()
-
-        if len(self.project["objects"]) >= 50:
-            debug(f"update_table: too many objects: {len(self.project['objects'])}")
-            return
-        debug("update_table: loading")
-        for obj_idx, obj in self.project["objects"].items():
-            if obj.get("layer", "").startswith("BREAKS:") or obj.get(
-                "layer", ""
-            ).startswith("_TABS"):
-                continue
-            root.appendRow(
-                [
-                    QStandardItem(
-                        f"#{obj_idx} {'closed' if obj['closed'] else 'open'}"
-                    ),
-                ]
-            )
-            obj_root = root.child(root.rowCount() - 1)
-            for sname in ("mill", "tool", "pockets", "tabs", "leads"):
-                obj_root.appendRow(
-                    [
-                        QStandardItem(sname),
-                    ]
-                )
-                section_root = obj_root.child(obj_root.rowCount() - 1)
-                for ename, entry in self.project["setup_defaults"][sname].items():
-                    value = obj["setup"][sname][ename]
-                    if entry.get("per_object"):
-                        title_cell = QStandardItem(ename)
-                        value_cell = QStandardItem("")
-                        section_root.appendRow([title_cell, value_cell])
-                        if entry["type"] == "bool":
-                            checkbox = QCheckBox(entry.get("title", ename))
-                            checkbox.setChecked(value)
-                            checkbox.setToolTip(
-                                entry.get("tooltip", f"{sname}/{ename}")
-                            )
-                            checkbox.stateChanged.connect(partial(self.object_changed, obj_idx, sname, ename))  # type: ignore
-                            self.project["objwidget"].setIndexWidget(
-                                value_cell.index(), checkbox
-                            )
-                        elif entry["type"] == "select":
-                            combobox = QComboBox()
-                            for option in entry["options"]:
-                                combobox.addItem(option[0])
-                            combobox.setCurrentText(value)
-                            combobox.setToolTip(
-                                entry.get("tooltip", f"{sname}/{ename}")
-                            )
-                            combobox.currentTextChanged.connect(partial(self.object_changed, obj_idx, sname, ename))  # type: ignore
-                            self.project["objwidget"].setIndexWidget(
-                                value_cell.index(), combobox
-                            )
-                        elif entry["type"] == "float":
-                            dspinbox = QDoubleSpinBox()
-                            dspinbox.setDecimals(entry.get("decimals", 4))
-                            dspinbox.setSingleStep(entry.get("step", 1.0))
-                            dspinbox.setMinimum(entry["min"])
-                            dspinbox.setMaximum(entry["max"])
-                            dspinbox.setValue(value)
-                            dspinbox.setToolTip(
-                                entry.get("tooltip", f"{sname}/{ename}")
-                            )
-                            dspinbox.valueChanged.connect(partial(self.object_changed, obj_idx, sname, ename))  # type: ignore
-                            self.project["objwidget"].setIndexWidget(
-                                value_cell.index(), dspinbox
-                            )
-                        elif entry["type"] == "int":
-                            spinbox = QSpinBox()
-                            spinbox.setSingleStep(entry.get("step", 1))
-                            spinbox.setMinimum(entry["min"])
-                            spinbox.setMaximum(entry["max"])
-                            spinbox.setValue(value)
-                            spinbox.setToolTip(entry.get("tooltip", f"{sname}/{ename}"))
-                            spinbox.valueChanged.connect(partial(self.object_changed, obj_idx, sname, ename))  # type: ignore
-                            self.project["objwidget"].setIndexWidget(
-                                value_cell.index(), spinbox
-                            )
-                        elif entry["type"] == "str":
-                            lineedit = QLineEdit()
-                            lineedit.setText(value)
-                            lineedit.setToolTip(
-                                entry.get("tooltip", f"{sname}/{ename}")
-                            )
-                            lineedit.textChanged.connect(partial(self.object_changed, obj_idx, sname, ename))  # type: ignore
-                            self.project["objwidget"].setIndexWidget(
-                                value_cell.index(), lineedit
-                            )
-                        elif entry["type"] == "mstr":
-                            mlineedit = QPlainTextEdit()
-                            mlineedit.setPlainText(value)
-                            mlineedit.setToolTip(
-                                entry.get("tooltip", f"{sname}/{ename}")
-                            )
-                            mlineedit.textChanged.connect(partial(self.object_changed, obj_idx, sname, ename))  # type: ignore
-                            self.project["objwidget"].setIndexWidget(
-                                value_cell.index(), mlineedit
-                            )
-                        elif entry["type"] == "table":
-                            pass
-                        elif entry["type"] == "color":
-                            pass
-                        else:
-                            eprint(f"Unknown setup-type: {entry['type']}")
-
-            index = self.project["objmodel"].indexFromItem(obj_root)
-            if obj_idx == selected:
-                self.project["objwidget"].expand(index)
-            else:
-                self.project["objwidget"].collapse(index)
-
-        # self.project["objwidget"].expandAll()
-        debug("update_table: done")
 
     def update_starts(self) -> None:
         """update starts."""
@@ -1138,6 +970,112 @@ class ViaConstructor:
                 self.save_tabs = "no"
         if self.save_tabs == "yes" and self.project["draw_reader"]:
             self.project["draw_reader"].save_tabs(self.project["tabs"]["data"])
+
+    def object_changed(self, value=0) -> None:  # pylint: disable=W0613
+        """object setup changed."""
+
+        titles = {
+            "mill": "Mill",
+            "tool": "Tool",
+            "pockets": "Pockets",
+            "tabs": "Tabs",
+            "leads": "Leads",
+        }
+
+        if self.project["status"] == "CHANGE":
+            return
+
+        object_active = self.project["object_active"]
+        setup_data = self.project["setup"]
+
+        for obj_idx, obj in self.project["objects"].items():
+            if obj_idx.startswith(f"{object_active}:"):
+                setup_data = obj["setup"]
+
+        tab_idx = 0
+        for sname in self.project["setup_defaults"]:
+            show_section = False
+            changed_section = False
+            for entry in self.project["setup_defaults"][sname].values():
+                if entry.get("per_object", False):
+                    show_section = True
+            if not show_section:
+                continue
+            for ename, entry in self.project["setup_defaults"][sname].items():
+                if not entry.get("per_object", False):
+                    continue
+                if entry["type"] == "bool":
+                    setup_data[sname][ename] = entry["widget_obj"].isChecked()
+                elif entry["type"] == "select":
+                    setup_data[sname][ename] = entry["widget_obj"].currentText()
+                elif entry["type"] == "float":
+                    setup_data[sname][ename] = entry["widget_obj"].value()
+                elif entry["type"] == "int":
+                    setup_data[sname][ename] = entry["widget_obj"].value()
+                elif entry["type"] == "str":
+                    setup_data[sname][ename] = entry["widget_obj"].text()
+                elif entry["type"] == "mstr":
+                    setup_data[sname][ename] = entry["widget_obj"].toPlainText()
+                elif entry["type"] == "table":
+                    for row_idx in range(entry["widget_obj"].rowCount()):
+                        col_idx = 0
+                        for key, col_type in entry["columns"].items():
+                            if entry["widget_obj"].item(row_idx, col_idx + 1) is None:
+                                print("TABLE_ERROR")
+                                continue
+                            if col_type["type"] == "str":
+                                value = (
+                                    entry["widget_obj"]
+                                    .item(row_idx, col_idx + 1)
+                                    .text()
+                                )
+                                setup_data[sname][ename][row_idx][key] = str(value)
+                            elif col_type["type"] == "mstr":
+                                value = (
+                                    entry["widget_obj"]
+                                    .item(row_idx, col_idx + 1)
+                                    .toPlainText()
+                                )
+                                setup_data[sname][ename][row_idx][key] = str(value)
+                            elif col_type["type"] == "int":
+                                value = (
+                                    entry["widget_obj"]
+                                    .item(row_idx, col_idx + 1)
+                                    .text()
+                                )
+                                setup_data[sname][ename][row_idx][key] = int(value)
+                            elif col_type["type"] == "float":
+                                value = (
+                                    entry["widget_obj"]
+                                    .item(row_idx, col_idx + 1)
+                                    .text()
+                                )
+                                setup_data[sname][ename][row_idx][key] = float(value)
+                            col_idx += 1
+                elif entry["type"] == "color":
+                    pass
+                else:
+                    eprint(f"Unknown setup-type: {entry['type']}")
+                if setup_data[sname][ename] != self.project["setup"][sname][ename]:
+                    entry["widget_obj_label"].setStyleSheet("color: black")
+                    changed_section = True
+                else:
+                    entry["widget_obj_label"].setStyleSheet("color: lightgray")
+            if changed_section:
+                self.tabobjwidget.setTabText(tab_idx, f">{titles.get(sname, sname)}<")
+            else:
+                self.tabobjwidget.setTabText(tab_idx, f"{titles.get(sname, sname)}")
+            tab_idx += 1
+
+        if setup_data["mill"]["step"] >= 0.0:
+            setup_data["mill"]["step"] = -0.05
+
+        if not self.project["draw_reader"]:
+            return
+
+        if not self.project["setup"]["view"]["autocalc"]:
+            return
+        self.update_drawing()
 
     def global_changed(self, value=0) -> None:  # pylint: disable=W0613
         """global setup changed."""
@@ -1220,7 +1158,7 @@ class ViaConstructor:
                         obj["setup"][sect][key] = self.project["setup"][sect][key]
 
         self.project["maxOuter"] = find_tool_offsets(self.project["objects"])
-        self.update_table()
+        self.update_object_setup()
 
         if not self.project["setup"]["view"]["autocalc"]:
             return
@@ -1319,7 +1257,7 @@ class ViaConstructor:
 
             self.project["status"] = "CHANGE"
             self.update_global_setup()
-            self.update_table()
+            self.update_object_setup()
             self.global_changed(0)
             self.update_drawing()
             self.project["status"] = "READY"
@@ -2035,6 +1973,258 @@ class ViaConstructor:
                 ulabel.setFont(QFont("Arial", 9))
                 hlayout.addWidget(ulabel)
 
+    def setup_select_object(self, value):
+        obj_idx = value.split(":")[0]
+        print("select object:", obj_idx)
+        self.project["object_active"] = obj_idx
+        self.update_object_setup()
+
+    def update_object_setup(self) -> None:
+
+        object_active = self.project["object_active"]
+        setup_data = self.project["setup"]
+
+        for obj_idx, obj in self.project["objects"].items():
+            if obj_idx.startswith(f"{object_active}:"):
+                setup_data = obj["setup"]
+
+        for sname in self.project["setup_defaults"]:
+            show_section = False
+            for entry in self.project["setup_defaults"][sname].values():
+                if entry.get("per_object", False):
+                    show_section = True
+            if not show_section:
+                continue
+            for ename, entry in self.project["setup_defaults"][sname].items():
+                if not entry.get("per_object", False):
+                    continue
+
+                if setup_data[sname][ename] != self.project["setup"][sname][ename]:
+                    entry["widget_obj_label"].setStyleSheet("color: black")
+                else:
+                    entry["widget_obj_label"].setStyleSheet("color: lightgray")
+
+                if entry["type"] == "bool":
+                    entry["widget_obj"].setChecked(setup_data[sname][ename])
+                elif entry["type"] == "select":
+                    entry["widget_obj"].setCurrentText(setup_data[sname][ename])
+                elif entry["type"] == "float":
+                    entry["widget_obj"].setValue(setup_data[sname][ename])
+                elif entry["type"] == "int":
+                    entry["widget_obj"].setValue(setup_data[sname][ename])
+                elif entry["type"] == "str":
+                    entry["widget_obj"].setText(setup_data[sname][ename])
+                elif entry["type"] == "mstr":
+                    entry["widget_obj"].setPlainText(setup_data[sname][ename])
+                elif entry["type"] == "table":
+                    # add empty row if not exist
+                    first_element = list(entry["columns"].keys())[0]
+
+                    if (
+                        entry.get("column_defaults") is not None
+                        and str(setup_data[sname][ename][-1][first_element]) != ""
+                    ):
+                        new_row = {}
+                        for key, default in entry["column_defaults"].items():
+                            new_row[key] = default
+                        setup_data[sname][ename].append(new_row)
+
+                    table = entry["widget_obj"]
+                    table.setRowCount(len(setup_data[sname][ename]))
+                    idxf_offset = 0
+                    table.setColumnCount(len(entry["columns"]))
+                    if entry["selectable"]:
+                        table.setColumnCount(len(entry["columns"]) + 1)
+                        table.setHorizontalHeaderItem(0, QTableWidgetItem("Select"))
+                        idxf_offset = 1
+                    for col_idx, title in enumerate(entry["columns"]):
+                        table.setHorizontalHeaderItem(
+                            col_idx + idxf_offset, QTableWidgetItem(title)
+                        )
+                    for row_idx, row in enumerate(setup_data[sname][ename]):
+                        if entry["selectable"]:
+                            button = QPushButton()
+                            button.setIcon(
+                                QIcon(
+                                    os.path.join(
+                                        self.module_root, "icons", "select.png"
+                                    )
+                                )
+                            )
+                            button.setToolTip(_("select this row"))
+                            button.clicked.connect(partial(self.table_select, sname, ename, row_idx))  # type: ignore
+                            table.setCellWidget(row_idx, 0, button)
+                            table.resizeColumnToContents(0)
+                        for col_idx, key in enumerate(entry["columns"]):
+                            table.setItem(
+                                row_idx,
+                                col_idx + idxf_offset,
+                                QTableWidgetItem(str(row[key])),
+                            )
+                            table.resizeColumnToContents(col_idx + idxf_offset)
+
+                elif entry["type"] == "color":
+                    pass
+                else:
+                    eprint(f"Unknown setup-type: {entry['type']}")
+
+    def create_object_setup(self, tabwidget) -> None:
+        for sname in self.project["setup_defaults"]:
+            show_section = False
+            for entry in self.project["setup_defaults"][sname].values():
+                if entry.get("per_object", False):
+                    show_section = True
+            if not show_section:
+                continue
+
+            vcontainer = QWidget()
+            vlayout = QVBoxLayout(vcontainer)
+            vlayout.setContentsMargins(0, 0, 0, 0)
+
+            titles = {
+                "mill": "Mill",
+                "tool": "Tool",
+                "pockets": "Pockets",
+                "tabs": "Tabs",
+                "leads": "Leads",
+            }
+            tabwidget.addTab(vcontainer, titles.get(sname, sname))
+
+            for ename, entry in self.project["setup_defaults"][sname].items():
+                if not entry.get("per_object", False):
+                    continue
+
+                container = QWidget()
+                hlayout = QHBoxLayout(container)
+                hlayout.setContentsMargins(10, 0, 10, 0)
+                entry["widget_obj_label"] = QLabel(entry.get("title", ename))
+                hlayout.addWidget(entry["widget_obj_label"])
+                vlayout.addWidget(container)
+                hlayout.addStretch(1)
+                if entry["type"] == "bool":
+                    checkbox = QCheckBox(entry.get("title", ename))
+                    checkbox.setChecked(self.project["setup"][sname][ename])
+                    checkbox.setToolTip(entry.get("tooltip", f"{sname}/{ename}"))
+                    checkbox.stateChanged.connect(self.object_changed)  # type: ignore
+                    hlayout.addWidget(checkbox)
+                    entry["widget_obj"] = checkbox
+                elif entry["type"] == "select":
+                    combobox = QComboBox()
+                    for option in entry["options"]:
+                        combobox.addItem(option[0])
+                    combobox.setCurrentText(self.project["setup"][sname][ename])
+                    combobox.setToolTip(entry.get("tooltip", f"{sname}/{ename}"))
+                    combobox.currentTextChanged.connect(self.object_changed)  # type: ignore
+                    hlayout.addWidget(combobox)
+                    entry["widget_obj"] = combobox
+                elif entry["type"] == "color":
+                    color = self.project["setup"][sname][ename]
+                    rgb = f"{color[0] * 255:1.0f},{color[1] * 255:1.0f},{color[2] * 255:1.0f}"
+                    button = QPushButton(rgb)
+                    button.setStyleSheet(f"background-color:rgb({rgb})")
+                    button.setToolTip(entry.get("tooltip", f"{sname}/{ename}"))
+                    button.clicked.connect(partial(self.color_select, sname, ename))  # type: ignore
+                    hlayout.addWidget(button)
+                    entry["widget_obj"] = button
+                elif entry["type"] == "float":
+                    dspinbox = QDoubleSpinBox()
+                    dspinbox.setDecimals(entry.get("decimals", 4))
+                    dspinbox.setSingleStep(entry.get("step", 1.0))
+                    dspinbox.setMinimum(entry["min"])
+                    dspinbox.setMaximum(entry["max"])
+                    dspinbox.setValue(self.project["setup"][sname][ename])
+                    dspinbox.setToolTip(entry.get("tooltip", f"{sname}/{ename}"))
+                    dspinbox.valueChanged.connect(self.object_changed)  # type: ignore
+                    hlayout.addWidget(dspinbox)
+                    entry["widget_obj"] = dspinbox
+                elif entry["type"] == "int":
+                    spinbox = QSpinBox()
+                    spinbox.setSingleStep(entry.get("step", 1))
+                    spinbox.setMinimum(entry["min"])
+                    spinbox.setMaximum(entry["max"])
+                    spinbox.setValue(self.project["setup"][sname][ename])
+                    spinbox.setToolTip(entry.get("tooltip", f"{sname}/{ename}"))
+                    spinbox.valueChanged.connect(self.object_changed)  # type: ignore
+                    hlayout.addWidget(spinbox)
+                    entry["widget_obj"] = spinbox
+                elif entry["type"] == "str":
+                    lineedit = QLineEdit()
+                    lineedit.setText(self.project["setup"][sname][ename])
+                    lineedit.setToolTip(entry.get("tooltip", f"{sname}/{ename}"))
+                    lineedit.textChanged.connect(self.object_changed)  # type: ignore
+                    hlayout.addWidget(lineedit)
+                    entry["widget_obj"] = lineedit
+                elif entry["type"] == "mstr":
+                    mlineedit = QPlainTextEdit()
+                    mlineedit.setPlainText(self.project["setup"][sname][ename])
+                    mlineedit.setToolTip(entry.get("tooltip", f"{sname}/{ename}"))
+                    mlineedit.textChanged.connect(self.object_changed)  # type: ignore
+                    hlayout.addWidget(mlineedit)
+                    entry["widget_obj"] = mlineedit
+                elif entry["type"] == "table":
+                    # add empty row if not exist
+                    first_element = list(entry["columns"].keys())[0]
+                    if (
+                        entry.get("column_defaults") is not None
+                        and str(self.project["setup"][sname][ename][-1][first_element])
+                        != ""
+                    ):
+                        new_row = {}
+                        for key, default in entry["column_defaults"].items():
+                            new_row[key] = default
+                        self.project["setup"][sname][ename].append(new_row)
+
+                    table = QTableWidget()
+                    table.setToolTip(entry.get("tooltip", f"{sname}/{ename}"))
+                    table.setRowCount(len(self.project["setup"][sname][ename]))
+                    idxf_offset = 0
+                    table.setColumnCount(len(entry["columns"]))
+                    if entry["selectable"]:
+                        table.setColumnCount(len(entry["columns"]) + 1)
+                        table.setHorizontalHeaderItem(0, QTableWidgetItem("Select"))
+                        idxf_offset = 1
+                    for col_idx, title in enumerate(entry["columns"]):
+                        table.setHorizontalHeaderItem(
+                            col_idx + idxf_offset, QTableWidgetItem(title)
+                        )
+                    for row_idx, row in enumerate(self.project["setup"][sname][ename]):
+                        if entry["selectable"]:
+                            button = QPushButton()
+                            button.setIcon(
+                                QIcon(
+                                    os.path.join(
+                                        self.module_root, "icons", "select.png"
+                                    )
+                                )
+                            )
+                            button.setToolTip(_("select this row"))
+                            button.clicked.connect(partial(self.table_select, sname, ename, row_idx))  # type: ignore
+                            table.setCellWidget(row_idx, 0, button)
+                            table.resizeColumnToContents(0)
+                        for col_idx, key in enumerate(entry["columns"]):
+                            item = QTableWidgetItem(str(row[key]))
+                            table.setItem(
+                                row_idx,
+                                col_idx + idxf_offset,
+                                item,
+                            )
+                            # if entry["columns"][key].get("ro", False):
+                            #    item.setFlags(QtCore.Qt.ItemIsEditable)
+                            table.resizeColumnToContents(col_idx + idxf_offset)
+                    table.itemChanged.connect(self.object_changed)  # type: ignore
+                    vlayout.addWidget(table)
+                    entry["widget_obj"] = table
+                else:
+                    eprint(f"Unknown setup-type: {entry['type']}")
+
+                unit = entry.get("unit", "")
+                if unit == "LINEARMEASURE":
+                    unit = self.project["setup"]["machine"]["unit"]
+
+                ulabel = QLabel(unit)
+                ulabel.setFont(QFont("Arial", 9))
+                hlayout.addWidget(ulabel)
+
     def update_tabs_data(self) -> None:
         self.project["tabs"]["data"] = []
         for obj in self.project["objects"].values():
@@ -2146,6 +2336,13 @@ class ViaConstructor:
                 self.project["setup"]["view"]["object_ids"] = False
 
             self.project["origin"] = objects2minmax(self.project["objects"])[0:2]
+
+            if self.combobjwidget:
+                self.combobjwidget.clear()
+                for idx in self.project["objects"]:
+                    self.combobjwidget.addItem(idx.split(":")[0])
+                self.combobjwidget.setCurrentText(self.project["object_active"])
+
             return True
 
         eprint(f"ERROR: can not load file: {filename}")
@@ -2384,22 +2581,12 @@ class ViaConstructor:
         self.status_bar_message(f"{self.info} - startup")
 
         self.project["textwidget"] = QPlainTextEdit()
-        self.project["objwidget"] = QTreeView()
-        self.project["objmodel"] = QStandardItemModel()
-        self.update_table()
         left_gridlayout = QGridLayout()
-        left_gridlayout.addWidget(QLabel("Objects-Settings:"))
 
         self.project["layerwidget"] = QTableWidget()
         self.project["layerwidget"].clicked.connect(self.toggle_layer)
         self.project["layerwidget"].setRowCount(0)
         self.project["layerwidget"].setColumnCount(2)
-
-        ltabwidget = QTabWidget()
-        ltabwidget.addTab(self.project["objwidget"], _("&Objects"))
-        ltabwidget.addTab(self.project["layerwidget"], _("&Layers"))
-
-        left_gridlayout.addWidget(ltabwidget)
 
         tabwidget = QTabWidget()
         tabwidget.addTab(self.project["glwidget"], _("&3D-View"))
@@ -2444,11 +2631,43 @@ class ViaConstructor:
 
         vbox = QVBoxLayout(left_widget)
         vbox.setContentsMargins(0, 0, 0, 0)
-        vbox.addWidget(QLabel(_("Global-Settings:")))
+        # vbox.addWidget(QLabel(_("Global-Settings:")))
 
         self.tabwidget = QTabWidget()
         self.create_global_setup(self.tabwidget)
-        vbox.addWidget(self.tabwidget, stretch=1)
+
+        self.tabobjwidget = QTabWidget()
+        self.create_object_setup(self.tabobjwidget)
+
+        self.objwidget = QWidget()
+        object_vbox = QVBoxLayout(self.objwidget)
+        object_vbox.setContentsMargins(0, 0, 0, 0)
+
+        self.combobjwidget = QComboBox()
+        self.combobjwidget.addItem("0")
+        self.combobjwidget.addItem("1")
+        self.combobjwidget.setCurrentText("0")
+        self.combobjwidget.setToolTip("Global/Object settings")
+        self.combobjwidget.currentTextChanged.connect(self.setup_select_object)  # type: ignore
+
+        object_vbox.addWidget(QLabel(_("Object:")))
+        object_vbox.addWidget(self.combobjwidget, stretch=0)
+        object_vbox.addWidget(self.tabobjwidget, stretch=1)
+
+        ltabwidget = QTabWidget()
+        ltabwidget.addTab(self.tabwidget, _("&Global"))
+        ltabwidget.addTab(self.objwidget, _("&Objects"))
+
+        ltabwidget.addTab(self.project["layerwidget"], _("&Layers"))
+        left_gridlayout.addWidget(ltabwidget)
+
+        if self.combobjwidget:
+            self.combobjwidget.clear()
+            for idx in self.project["objects"]:
+                self.combobjwidget.addItem(idx.split(":")[0])
+            self.combobjwidget.setCurrentText(self.project["object_active"])
+
+        self.update_object_setup()
 
         bottom_container = QWidget()
         bottom_container.setContentsMargins(0, 0, 0, 0)

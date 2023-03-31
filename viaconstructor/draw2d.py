@@ -120,10 +120,10 @@ class CanvasWidget(QLabel):  # pylint: disable=R0903
                         self.selection = ()
                     elif self.selector_mode == "delete":
                         self.selection_set = self.selection
-                        self.project["app"].update_table()
+                        self.project["app"].update_object_setup()
                     elif self.selector_mode == "oselect":
                         self.selection_set = self.selection
-                        self.project["app"].update_table()
+                        self.project["app"].update_object_setup()
                     elif self.selector_mode == "repair":
                         obj_idx = self.selection[2]
                         self.project["segments_org"].append(
@@ -166,7 +166,7 @@ class CanvasWidget(QLabel):  # pylint: disable=R0903
                 elif self.selector_mode == "delete":
                     obj_idx = self.selection[2]
                     del self.project["objects"][obj_idx]
-                    self.project["app"].update_table()
+                    self.project["app"].update_object_setup()
                     self.update_drawing()
                     self.update()
                     self.selection = ()

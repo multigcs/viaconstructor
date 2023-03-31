@@ -5,7 +5,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
-"POT-Creation-Date: 2023-03-31 01:43+0200\n"
+"POT-Creation-Date: 2023-03-31 16:53+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -147,12 +147,6 @@ msgstr ""
 msgid "tooltable"
 msgstr ""
 
-msgid "Materials"
-msgstr ""
-
-msgid "materialtable"
-msgstr ""
-
 msgid "original"
 msgstr ""
 
@@ -193,6 +187,12 @@ msgid "Offset Z"
 msgstr ""
 
 msgid "Offset Z (G54)"
+msgstr ""
+
+msgid "Materials"
+msgstr ""
+
+msgid "materialtable"
 msgstr ""
 
 msgid "Pocket"
@@ -615,12 +615,6 @@ msgstr ""
 msgid "generating preview image with openscad.... please wait"
 msgstr ""
 
-msgid "&Objects"
-msgstr ""
-
-msgid "&Layers"
-msgstr ""
-
 msgid "&3D-View"
 msgstr ""
 
@@ -639,5 +633,14 @@ msgstr ""
 msgid "&Preview"
 msgstr ""
 
-msgid "Global-Settings:"
+msgid "Object:"
+msgstr ""
+
+msgid "&Global"
+msgstr ""
+
+msgid "&Objects"
+msgstr ""
+
+msgid "&Layers"
 msgstr ""
