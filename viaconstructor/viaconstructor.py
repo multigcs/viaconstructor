@@ -848,7 +848,7 @@ class ViaConstructor:
         unit = self.project["setup"]["machine"]["unit"]
         if unit == "inch":
             diameter *= 25.4
-        tool_vc = self.project["setup"]["tool"]["materialtable"][material_idx]["vc"]
+        tool_vc = self.project["setup"]["workpiece"]["materialtable"][material_idx]["vc"]
         tool_speed = tool_vc * 1000 / (diameter * math.pi)
         tool_speed = int(min(tool_speed, machine_toolspeed))
         if diameter <= 4.0:
@@ -857,7 +857,7 @@ class ViaConstructor:
             fz_key = "fz8"
         else:
             fz_key = "fz12"
-        material_fz = self.project["setup"]["tool"]["materialtable"][material_idx][
+        material_fz = self.project["setup"]["workpiece"]["materialtable"][material_idx][
             fz_key
         ]
         feedrate = tool_speed * blades * material_fz
@@ -914,7 +914,7 @@ class ViaConstructor:
     def table_select(self, section, name, row_idx) -> None:
         if section == "tool" and name == "tooltable":
             self.tools_select(row_idx)
-        elif section == "tool" and name == "materialtable":
+        elif section == "workpiece" and name == "materialtable":
             self.materials_select(row_idx)
 
     def color_select(self, section, name) -> None:
