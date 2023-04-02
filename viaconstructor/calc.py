@@ -2,6 +2,7 @@
 
 import hashlib
 import math
+import os
 import platform
 import shutil
 from copy import deepcopy
@@ -28,12 +29,12 @@ def external_command(cmd: str):
         "openscad.exe": ["c:\\Program Files\\OpenSCAD\\openscad.exe", "c:\\Program Files (x86)\\OpenSCAD\\openscad.exe"],
     }
     if platform.system().lower() == "windows":
-        cmd += f"{cmd}.exe"
+        cmd = f"{cmd}.exe"
     path = shutil.which(cmd)
     if path is None:
         if cmd in known_paths:
             for known_path in known_paths[cmd]:
-                if not os.path.isfile(known_path):
+                if os.path.isfile(known_path):
                     path = known_path
                     break
     return path
