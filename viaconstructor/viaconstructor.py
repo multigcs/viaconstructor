@@ -77,6 +77,7 @@ from .draw2d import draw_all as draw_all_2d
 from .gldraw import GLWidget
 from .gldraw import draw_all as draw_all_gl
 from .machine_cmd import polylines2machine_cmd
+from .output_plugins.gcode_grbl import PostProcessorGcodeGrbl
 from .output_plugins.gcode_linuxcnc import PostProcessorGcodeLinuxCNC
 from .output_plugins.hpgl import PostProcessorHpgl
 from .preview_plugins.gcode import GcodeParser
@@ -296,10 +297,18 @@ class ViaConstructor:
 
         # create machine commands
         debug("run_calculation: machine_commands")
-        output_plugin: Union[PostProcessorHpgl, PostProcessorGcodeLinuxCNC]
+        output_plugin: Union[
+            PostProcessorHpgl, PostProcessorGcodeLinuxCNC, PostProcessorGcodeGrbl
+        ]
         if self.project["setup"]["machine"]["plugin"] == "gcode_linuxcnc":
             output_plugin = PostProcessorGcodeLinuxCNC(
                 self.project["setup"]["machine"]["comments"]
+            )
+            self.project["suffix"] = output_plugin.suffix()
+            self.project["axis"] = output_plugin.axis()
+        elif self.project["setup"]["machine"]["plugin"] == "gcode_grbl":
+            output_plugin = PostProcessorGcodeGrbl(
+                self.project,
             )
             self.project["suffix"] = output_plugin.suffix()
             self.project["axis"] = output_plugin.axis()
