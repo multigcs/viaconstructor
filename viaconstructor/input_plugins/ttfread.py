@@ -37,7 +37,7 @@ class DrawReader(DrawReaderBase):
             QDialogButtonBox,
             QDoubleSpinBox,
             QLabel,
-            QLineEdit,
+            QPlainTextEdit,
             QVBoxLayout,
         )
 
@@ -53,8 +53,9 @@ class DrawReader(DrawReaderBase):
 
         label = QLabel("Text")
         dialog.layout.addWidget(label)
-        ttfread_text = QLineEdit()
-        ttfread_text.setText("Via")
+
+        ttfread_text = QPlainTextEdit()
+        ttfread_text.setPlainText("Via")
         dialog.layout.addWidget(ttfread_text)
 
         label = QLabel("Height")
@@ -81,7 +82,7 @@ class DrawReader(DrawReaderBase):
         dialog.setLayout(dialog.layout)
 
         if dialog.exec():
-            args.ttfread_text = ttfread_text.text()
+            args.ttfread_text = ttfread_text.toPlainText()
             args.ttfread_height = ttfread_height.value()
             args.ttfread_border = ttfread_border.value()
 
