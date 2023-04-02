@@ -33,7 +33,7 @@ class DrawReader(DrawReaderBase):
             "--ttfread-border",
             help="adding border to the text",
             type=float,
-            default=-1.0,
+            default=10.0,
         )
 
     @staticmethod
@@ -48,7 +48,7 @@ class DrawReader(DrawReaderBase):
         )
 
         dialog = QDialog()
-        dialog.setWindowTitle("SVG-Reader")
+        dialog.setWindowTitle("TTF-Reader")
 
         dialog.buttonBox = QDialogButtonBox(QDialogButtonBox.Ok)
         dialog.buttonBox.accepted.connect(dialog.accept)
