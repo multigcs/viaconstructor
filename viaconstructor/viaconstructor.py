@@ -2347,7 +2347,7 @@ class ViaConstructor:  # pylint: disable=R0904
 
             self.project["origin"] = objects2minmax(self.project["objects"])[0:2]
 
-            if self.combobjwidget:
+            if self.combobjwidget is not None:
                 self.combobjwidget.clear()
                 for idx in self.project["objects"]:
                     self.combobjwidget.addItem(idx.split(":")[0])
@@ -2669,7 +2669,6 @@ class ViaConstructor:  # pylint: disable=R0904
 
         self.combobjwidget = QComboBox()
         self.combobjwidget.addItem("0")
-        self.combobjwidget.addItem("1")
         self.combobjwidget.setCurrentText("0")
         self.combobjwidget.setToolTip("Global/Object settings")
         self.combobjwidget.currentTextChanged.connect(self.setup_select_object)  # type: ignore
@@ -2685,7 +2684,7 @@ class ViaConstructor:  # pylint: disable=R0904
         ltabwidget.addTab(self.project["layerwidget"], _("&Layers"))
         left_gridlayout.addWidget(ltabwidget)
 
-        if self.combobjwidget:
+        if self.combobjwidget is not None:
             self.combobjwidget.clear()
             for idx in self.project["objects"]:
                 self.combobjwidget.addItem(idx.split(":")[0])
