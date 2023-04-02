@@ -165,7 +165,7 @@ class DrawReader(DrawReaderBase):
                 self.min_max[2] = max(self.min_max[2], segment.end[0])
                 self.min_max[3] = max(self.min_max[3], segment.end[1])
 
-        if border >= 0.0:
+        if border != 0.0:
             self._add_line(
                 (self.min_max[0] - border, self.min_max[1] - border),
                 (self.min_max[0] - border, self.min_max[3] + border),
