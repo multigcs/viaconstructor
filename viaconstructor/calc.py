@@ -26,8 +26,14 @@ TWO_PI = math.pi * 2
 # ########## helper Functions ###########
 def external_command(cmd: str):
     known_paths = {
-        "camotics.exe": ["c:\\Program Files\\CAMotics\\camotics.exe", "c:\\Program Files (x86)\\CAMotics\\camotics.exe"],
-        "openscad.exe": ["c:\\Program Files\\OpenSCAD\\openscad.exe", "c:\\Program Files (x86)\\OpenSCAD\\openscad.exe"],
+        "camotics.exe": [
+            "c:\\Program Files\\CAMotics\\camotics.exe",
+            "c:\\Program Files (x86)\\CAMotics\\camotics.exe",
+        ],
+        "openscad.exe": [
+            "c:\\Program Files\\OpenSCAD\\openscad.exe",
+            "c:\\Program Files (x86)\\OpenSCAD\\openscad.exe",
+        ],
     }
     if platform.system().lower() == "windows":
         cmd = f"{cmd}.exe"
