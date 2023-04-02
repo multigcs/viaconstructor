@@ -24,6 +24,12 @@ class DrawReader(DrawReaderBase):
             default=100,
         )
         parser.add_argument(
+            "--ttfread-space",
+            help="extra space between character",
+            type=float,
+            default=0,
+        )
+        parser.add_argument(
             "--ttfread-border",
             help="adding border to the text",
             type=float,
@@ -68,6 +74,16 @@ class DrawReader(DrawReaderBase):
         ttfread_height.setValue(args.ttfread_height)
         dialog.layout.addWidget(ttfread_height)
 
+        label = QLabel("Space")
+        dialog.layout.addWidget(label)
+        ttfread_space = QDoubleSpinBox()
+        ttfread_space.setDecimals(3)
+        ttfread_space.setSingleStep(0.1)
+        ttfread_space.setMinimum(-100000)
+        ttfread_space.setMaximum(100000)
+        ttfread_space.setValue(args.ttfread_space)
+        dialog.layout.addWidget(ttfread_space)
+
         label = QLabel("Border")
         dialog.layout.addWidget(label)
         ttfread_border = QDoubleSpinBox()
@@ -84,6 +100,7 @@ class DrawReader(DrawReaderBase):
         if dialog.exec():
             args.ttfread_text = ttfread_text.toPlainText()
             args.ttfread_height = ttfread_height.value()
+            args.ttfread_space = ttfread_space.value()
             args.ttfread_border = ttfread_border.value()
 
     def __init__(self, filename: str, args: argparse.Namespace = None):
@@ -92,7 +109,7 @@ class DrawReader(DrawReaderBase):
         self.segments: list[dict] = []
 
         face = freetype.Face(self.filename)
-        face.set_char_size(18 * 64)
+        face.set_char_size(1000)
 
         scale = args.ttfread_height / 1000.0  # type: ignore
         border = args.ttfread_border
@@ -108,7 +125,7 @@ class DrawReader(DrawReaderBase):
         for part_n, char in enumerate(args.ttfread_text):  # type: ignore
             print(f"loading file: {round((part_n + 1) * 100 / part_l, 1)}%", end="\r")
             if char == " ":
-                ctx["pos"][0] += 500 * scale  # type: ignore
+                ctx["pos"][0] += 800 * scale  # type: ignore
                 continue
             if char == "\n":
                 ctx["pos"][0] = 0  # type: ignore
@@ -126,7 +143,7 @@ class DrawReader(DrawReaderBase):
                 conic_to=self.conic_to,
                 cubic_to=self.cubic_to,
             )
-            ctx["pos"][0] = ctx["max"]  # type: ignore
+            ctx["pos"][0] = ctx["max"] + args.ttfread_space  # type: ignore
             ctx["max"] = 0
         print("")
 

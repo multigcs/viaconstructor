@@ -5,7 +5,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
-"POT-Creation-Date: 2023-03-31 16:53+0200\n"
+"POT-Creation-Date: 2023-04-02 23:18+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -111,18 +111,6 @@ msgstr ""
 msgid "how order the objects"
 msgstr ""
 
-msgid "Feed-Rate(Horizontal)"
-msgstr ""
-
-msgid "the Horizotal Feetrate"
-msgstr ""
-
-msgid "Feed-Rate(Vertical)"
-msgstr ""
-
-msgid "the Vertical Feetrate"
-msgstr ""
-
 msgid "Number"
 msgstr ""
 
@@ -133,6 +121,18 @@ msgid "Speed"
 msgstr ""
 
 msgid "setting the Tool-Speed in RPM"
+msgstr ""
+
+msgid "Feed-Rate(Horizontal)"
+msgstr ""
+
+msgid "the Horizotal Feetrate"
+msgstr ""
+
+msgid "Feed-Rate(Vertical)"
+msgstr ""
+
+msgid "the Vertical Feetrate"
 msgstr ""
 
 msgid "Pause"
@@ -292,6 +292,9 @@ msgid "maximum tool-speed"
 msgstr ""
 
 msgid "gcode_linuxcnc"
+msgstr ""
+
+msgid "gcode_grbl"
 msgstr ""
 
 msgid "hpgl"
