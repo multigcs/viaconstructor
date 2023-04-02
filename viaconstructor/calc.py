@@ -42,7 +42,7 @@ def external_command(cmd: str):
 
 def get_tmp_prefix() -> str:
     if platform.system().lower() == "windows":
-        return "c:\\temp\\"
+        return str(os.path.join(Path.home()) + "\\"
     return "/tmp/"
 
 
