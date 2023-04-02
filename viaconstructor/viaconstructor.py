@@ -1984,22 +1984,37 @@ class ViaConstructor:  # pylint: disable=R0904
                 hlayout.addWidget(ulabel)
 
     def setup_select_object(self, value):
+        if self.project["status"] != "READY":
+            return
+        self.project["status"] = "CHANGE"
         obj_idx = value.split(":")[0]
-        print("select object:", obj_idx)
         self.project["object_active"] = obj_idx
         self.update_object_setup()
+        self.project["status"] = "READY"
 
     def update_object_setup(self) -> None:
-
         object_active = self.project["object_active"]
         setup_data = self.project["setup"]
+
+        titles = {
+            "mill": "M&ill",
+            "tool": "&Tool",
+            "workpiece": "&Workpiece",
+            "pockets": "P&ockets",
+            "tabs": "Ta&bs",
+            "leads": "Lea&ds",
+            "machine": "M&achine",
+            "view": "&View",
+        }
 
         for obj_idx, obj in self.project["objects"].items():
             if obj_idx.startswith(f"{object_active}:"):
                 setup_data = obj["setup"]
 
+        tab_idx = 0
         for sname in self.project["setup_defaults"]:
             show_section = False
+            changed_section = False
             for entry in self.project["setup_defaults"][sname].values():
                 if entry.get("per_object", False):
                     show_section = True
@@ -2011,6 +2026,7 @@ class ViaConstructor:  # pylint: disable=R0904
 
                 if setup_data[sname][ename] != self.project["setup"][sname][ename]:
                     entry["widget_obj_label"].setStyleSheet("color: black")
+                    changed_section = True
                 else:
                     entry["widget_obj_label"].setStyleSheet("color: lightgray")
 
@@ -2072,11 +2088,16 @@ class ViaConstructor:  # pylint: disable=R0904
                                 QTableWidgetItem(str(row[key])),
                             )
                             table.resizeColumnToContents(col_idx + idxf_offset)
-
                 elif entry["type"] == "color":
                     pass
                 else:
                     eprint(f"Unknown setup-type: {entry['type']}")
+
+            if changed_section:
+                self.tabobjwidget.setTabText(tab_idx, f">{titles.get(sname, sname)}<")
+            else:
+                self.tabobjwidget.setTabText(tab_idx, f"{titles.get(sname, sname)}")
+            tab_idx += 1
 
     def create_object_setup(self, tabwidget) -> None:
         for sname in self.project["setup_defaults"]:

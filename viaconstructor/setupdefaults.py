@@ -405,6 +405,7 @@ def setup_defaults(_) -> dict:
                     ("triangle", _("triangle")),
                 ),
                 "title": _("Type"),
+                "per_object": True,
                 "tooltip": _("type of the tab"),
             },
         },
