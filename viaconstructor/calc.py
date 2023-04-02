@@ -2,9 +2,11 @@
 
 import hashlib
 import math
+import os
 import platform
 import shutil
 from copy import deepcopy
+from pathlib import Path
 
 import ezdxf
 
@@ -23,14 +25,31 @@ TWO_PI = math.pi * 2
 
 # ########## helper Functions ###########
 def external_command(cmd: str):
+    known_paths = {
+        "camotics.exe": [
+            "c:\\Program Files\\CAMotics\\camotics.exe",
+            "c:\\Program Files (x86)\\CAMotics\\camotics.exe",
+        ],
+        "openscad.exe": [
+            "c:\\Program Files\\OpenSCAD\\openscad.exe",
+            "c:\\Program Files (x86)\\OpenSCAD\\openscad.exe",
+        ],
+    }
     if platform.system().lower() == "windows":
-        cmd += f"{cmd}.exe"
-    return shutil.which(cmd)
+        cmd = f"{cmd}.exe"
+    path = shutil.which(cmd)
+    if path is None:
+        if cmd in known_paths:
+            for known_path in known_paths[cmd]:
+                if os.path.isfile(known_path):
+                    path = known_path
+                    break
+    return path
 
 
 def get_tmp_prefix() -> str:
     if platform.system().lower() == "windows":
-        return "c:\\temp\\"
+        return str(os.path.join(Path.home())) + "\\"
     return "/tmp/"
 
 

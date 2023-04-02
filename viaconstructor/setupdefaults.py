@@ -474,6 +474,7 @@ def setup_defaults(_) -> dict:
                 "type": "select",
                 "options": (
                     ("gcode_linuxcnc", _("gcode_linuxcnc")),
+                    ("gcode_grbl", _("gcode_grbl")),
                     ("hpgl", _("hpgl")),
                 ),
                 "title": _("Plugin"),

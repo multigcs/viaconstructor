@@ -7,6 +7,7 @@ import json
 import math
 import os
 import re
+import subprocess
 import sys
 import threading
 import time
@@ -68,6 +69,7 @@ from .draw2d import draw_all as draw_all_2d
 from .gldraw import GLWidget
 from .gldraw import draw_all as draw_all_gl
 from .machine_cmd import polylines2machine_cmd
+from .output_plugins.gcode_grbl import PostProcessorGcodeGrbl
 from .output_plugins.gcode_linuxcnc import PostProcessorGcodeLinuxCNC
 from .output_plugins.hpgl import PostProcessorHpgl
 from .preview_plugins.gcode import GcodeParser
@@ -284,9 +286,17 @@ class ViaConstructor:  # pylint: disable=R0904
 
         # create machine commands
         debug("run_calculation: machine_commands")
-        output_plugin: Union[PostProcessorHpgl, PostProcessorGcodeLinuxCNC]
+        output_plugin: Union[
+            PostProcessorHpgl, PostProcessorGcodeLinuxCNC, PostProcessorGcodeGrbl
+        ]
         if self.project["setup"]["machine"]["plugin"] == "gcode_linuxcnc":
             output_plugin = PostProcessorGcodeLinuxCNC(
+                self.project,
+            )
+            self.project["suffix"] = output_plugin.suffix()
+            self.project["axis"] = output_plugin.axis()
+        elif self.project["setup"]["machine"]["plugin"] == "gcode_grbl":
+            output_plugin = PostProcessorGcodeGrbl(
                 self.project,
             )
             self.project["suffix"] = output_plugin.suffix()
@@ -2365,7 +2375,12 @@ class ViaConstructor:  # pylint: disable=R0904
             open(f"{TEMP_PREFIX}viaconstructor-preview.scad", "w").write(scad_data)
 
             def openscad_show():
-                os.system(f"{openscad} {TEMP_PREFIX}viaconstructor-preview.scad")
+                process = subprocess.Popen([openscad, f"{TEMP_PREFIX}viaconstructor-preview.scad"])
+                while True:
+                    time.sleep(0.5)
+                    return_code = process.poll()
+                    if return_code is not None:
+                        break
                 self.project["preview_open"].setEnabled(True)
                 os.remove(f"{TEMP_PREFIX}viaconstructor-preview.scad")
 
@@ -2415,7 +2430,12 @@ class ViaConstructor:  # pylint: disable=R0904
             )
 
             def camotics_show():
-                os.system(f"{camotics} {TEMP_PREFIX}viaconstructor-preview.camotics")
+                process = subprocess.Popen([camotics, f"{TEMP_PREFIX}viaconstructor-preview.camotics"])
+                while True:
+                    time.sleep(0.5)
+                    return_code = process.poll()
+                    if return_code is not None:
+                        break
                 os.remove(f"{TEMP_PREFIX}viaconstructor-preview.camotics")
                 os.remove(f"{TEMP_PREFIX}viaconstructor-preview.ngc")
 
@@ -2695,3 +2715,4 @@ class ViaConstructor:  # pylint: disable=R0904
 
 if __name__ == "__main__":
     ViaConstructor()
+
