@@ -23,9 +23,20 @@ TWO_PI = math.pi * 2
 
 # ########## helper Functions ###########
 def external_command(cmd: str):
+    known_paths = {
+        "camotics.exe": ["c:\\Program Files\\CAMotics\\camotics.exe", "c:\\Program Files (x86)\\CAMotics\\camotics.exe"],
+        "openscad.exe": ["c:\\Program Files\\OpenSCAD\\openscad.exe", "c:\\Program Files (x86)\\OpenSCAD\\openscad.exe"],
+    }
     if platform.system().lower() == "windows":
         cmd += f"{cmd}.exe"
-    return shutil.which(cmd)
+    path = shutil.which(cmd)
+    if path is None:
+        if cmd in known_paths:
+            for known_path in known_paths[cmd]:
+                if not os.path.isfile(known_path):
+                    path = known_path
+                    break
+    return path
 
 
 def get_tmp_prefix() -> str:
