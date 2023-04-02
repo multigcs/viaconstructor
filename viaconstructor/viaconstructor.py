@@ -2375,7 +2375,9 @@ class ViaConstructor:  # pylint: disable=R0904
             open(f"{TEMP_PREFIX}viaconstructor-preview.scad", "w").write(scad_data)
 
             def openscad_show():
-                process = subprocess.Popen([openscad, f"{TEMP_PREFIX}viaconstructor-preview.scad"])
+                process = subprocess.Popen(
+                    [openscad, f"{TEMP_PREFIX}viaconstructor-preview.scad"]
+                )
                 while True:
                     time.sleep(0.5)
                     return_code = process.poll()
@@ -2430,7 +2432,9 @@ class ViaConstructor:  # pylint: disable=R0904
             )
 
             def camotics_show():
-                process = subprocess.Popen([camotics, f"{TEMP_PREFIX}viaconstructor-preview.camotics"])
+                process = subprocess.Popen(
+                    [camotics, f"{TEMP_PREFIX}viaconstructor-preview.camotics"]
+                )
                 while True:
                     time.sleep(0.5)
                     return_code = process.poll()
@@ -2715,4 +2719,3 @@ class ViaConstructor:  # pylint: disable=R0904
 
 if __name__ == "__main__":
     ViaConstructor()
-
