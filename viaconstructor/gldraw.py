@@ -564,7 +564,8 @@ class GLWidget(QGLWidget):
                         self.selection = ()
                     elif self.selector_mode == "delete":
                         self.selection_set = self.selection
-                        self.project["app"].update_object_setup()
+                        # self.project["app"].update_object_setup()
+                        self.project["app"].setup_select_object(self.selection_set[2])
                     elif self.selector_mode == "oselect":
                         self.selection_set = self.selection
                         # self.project["app"].update_object_setup()
@@ -1047,7 +1048,7 @@ def draw_object_edges(project: dict, selected: int = -1) -> None:
             if odepth > depth:
                 continue
 
-            if obj_idx == selected:
+            if obj_idx.split(":")[0] == selected:
                 GL.glLineWidth(5)
                 GL.glColor4f(1.0, 0.0, 0.0, 1.0)
             else:
@@ -1406,13 +1407,7 @@ def draw_all(project: dict) -> None:
     if project["setup"]["view"]["object_ids"]:
         draw_object_ids(project)
 
-    selected = -1
-    if (
-        project["glwidget"]
-        and project["glwidget"].selection_set
-        and project["glwidget"].selector_mode in {"delete", "oselect"}
-    ):
-        selected = project["glwidget"].selection_set[2]
+    selected = project["object_active"]
 
     draw_object_edges(project, selected=selected)
     if project["setup"]["view"]["polygon_show"]:

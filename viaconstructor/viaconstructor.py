@@ -470,6 +470,10 @@ class ViaConstructor:  # pylint: disable=R0904
             self.toolbuttons[title][9].setChecked(True)
         else:
             self.toolbuttons[title][9].setChecked(False)
+            self.project["maxOuter"] = find_tool_offsets(self.project["objects"])
+            self.combobjwidget.clear()  # type: ignore
+            for idx in self.project["objects"]:
+                self.combobjwidget.addItem(idx.split(":")[0])  # type: ignore
 
     def _toolbar_toggle_object_selector(self) -> None:
         """delete selector."""
@@ -1993,9 +1997,15 @@ class ViaConstructor:  # pylint: disable=R0904
             return
         self.project["status"] = "CHANGE"
         obj_idx = value.split(":")[0]
+        self.combobjwidget.setCurrentText(obj_idx)
         self.project["object_active"] = obj_idx
         self.update_object_setup()
         self.project["status"] = "READY"
+
+        if self.project["engine"] == "2D":
+            draw_all_2d(self.project)
+        else:
+            draw_all_gl(self.project)
 
     def update_object_setup(self) -> None:
         object_active = self.project["object_active"]
@@ -2449,6 +2459,68 @@ class ViaConstructor:  # pylint: disable=R0904
         button = QPushButton("Scale")
         button.setToolTip(_("scale"))
         button.clicked.connect(partial(object_scale, dspinbox, checkbox))  # type: ignore
+        glayout.addWidget(button, 0, 0)
+
+        def clone_object(obj_idx):
+            main_idx = obj_idx.split(":")[0]
+            main_uid = obj_idx.split(":")[1]
+            idx_list = [oid.split(":")[0] for oid in self.project["objects"]]
+            sub_idx = 1
+            while f"{main_idx},{sub_idx}" in idx_list:
+                sub_idx += 1
+            new_obj_idx = f"{main_idx},{sub_idx}:{main_uid}"
+            self.project["objects"][new_obj_idx] = deepcopy(
+                self.project["objects"][obj_idx]
+            )
+            move_object(
+                self.project["objects"][new_obj_idx],
+                (self.project["minMax"][2] - self.project["minMax"][0]) + 10,
+                0,
+            )
+            return new_obj_idx
+
+        def object_copy(checkbox_childs):
+            object_active = self.project["object_active"]
+            with_childs = checkbox_childs.isChecked()
+
+            object_active_obj = None
+            object_active_obj_idx = ""
+            for obj_idx, obj in self.project["objects"].items():
+                if obj_idx.startswith(f"{object_active}:"):
+                    object_active_obj = obj
+                    object_active_obj_idx = obj_idx
+
+            new_obj_idx = clone_object(object_active_obj_idx)
+            if with_childs:
+                for inner in object_active_obj["inner_objects"]:
+                    clone_object(inner)
+
+            self.combobjwidget.clear()
+            for idx in self.project["objects"]:
+                self.combobjwidget.addItem(idx.split(":")[0])
+
+            self.project["maxOuter"] = find_tool_offsets(self.project["objects"])
+
+            self.setup_select_object(new_obj_idx)
+
+            self.update_tabs_data()
+            self.update_drawing()
+
+        vlayout.addWidget(QLabel("Copy:"))
+
+        checkbox = QCheckBox("with childs")
+        checkbox.setChecked(True)
+        checkbox.setToolTip("move all childs")
+        vlayout.addWidget(checkbox)
+
+        gcontainer = QWidget()
+        glayout = QGridLayout()
+        gcontainer.setLayout(glayout)
+        vlayout.addWidget(gcontainer)
+
+        button = QPushButton("Clone")
+        button.setToolTip(_("clone object"))
+        button.clicked.connect(partial(object_copy, checkbox))  # type: ignore
         glayout.addWidget(button, 0, 0)
 
         vlayout.addStretch(1)
