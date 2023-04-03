@@ -26,6 +26,8 @@ from PyQt5.QtWidgets import (  # pylint: disable=E0611
     QCheckBox,
     QColorDialog,
     QComboBox,
+    QDialog,
+    QDialogButtonBox,
     QDoubleSpinBox,
     QFileDialog,
     QGridLayout,
@@ -2340,14 +2342,48 @@ class ViaConstructor:  # pylint: disable=R0904
         # find plugin
         debug("load_drawing: start")
         suffix = filename.rsplit(".", maxsplit=1)[-1].lower()
-        for reader_plugin in reader_plugins.values():
+
+        reader_plugin_list = []
+        for plugin_name, reader_plugin in reader_plugins.items():
             if suffix in reader_plugin.suffix(self.args):
-                if self.main is not None and hasattr(reader_plugin, "preload_setup"):
-                    reader_plugin.preload_setup(filename, self.args)
-                self.project["draw_reader"] = reader_plugin(filename, self.args)
-                if reader_plugin.can_save_tabs:
-                    self.save_tabs = "ask"
-                break
+                reader_plugin_list.append(plugin_name)
+
+        if not reader_plugin_list:
+            return False
+
+        if len(reader_plugin_list) == 1:
+            plugin_name = reader_plugin_list[0]
+        elif self.main is None:
+            plugin_name = reader_plugin_list[0]
+        else:
+            dialog = QDialog()
+            dialog.setWindowTitle(_("Reader-Selection"))
+
+            dialog.buttonBox = QDialogButtonBox(QDialogButtonBox.Ok)  # type: ignore
+            dialog.buttonBox.accepted.connect(dialog.accept)  # type: ignore
+
+            dialog.layout = QVBoxLayout()  # type: ignore
+            message = QLabel(_("Import-Options"))
+            dialog.layout.addWidget(message)  # type: ignore
+
+            combobox = QComboBox()
+            for plugin_name in reader_plugin_list:
+                combobox.addItem(plugin_name)  # type: ignore
+            dialog.layout.addWidget(combobox)  # type: ignore
+
+            dialog.layout.addWidget(dialog.buttonBox)  # type: ignore
+            dialog.setLayout(dialog.layout)  # type: ignore
+
+            if dialog.exec():
+                plugin_name = combobox.currentText()
+                reader_plugin = reader_plugins[plugin_name]
+
+        reader_plugin = reader_plugins[plugin_name]
+        if self.main is not None and hasattr(reader_plugin, "preload_setup"):
+            reader_plugin.preload_setup(filename, self.args)
+        self.project["draw_reader"] = reader_plugin(filename, self.args)
+        if reader_plugin.can_save_tabs:
+            self.save_tabs = "ask"
 
         if self.project["draw_reader"]:
             debug("load_drawing: get segments")
