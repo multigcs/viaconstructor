@@ -278,6 +278,13 @@ def points_to_boundingbox(points):
     return (min_x, min_y, max_x, max_y)
 
 
+def points_to_center(points):
+    bounding_box = points_to_boundingbox(points)
+    center_x = bounding_box[0] + (bounding_box[2] - bounding_box[0]) / 2.0
+    center_y = bounding_box[1] + (bounding_box[3] - bounding_box[1]) / 2.0
+    return (center_x, center_y)
+
+
 # ########## Object & Segments Functions ###########
 
 
@@ -1395,7 +1402,7 @@ def mirror_objects(
 
 
 def rotate_objects(objects: dict, min_max: list[float]) -> None:
-    """rotates an object"""
+    """rotates all object"""
     for obj in objects.values():
         for segment in obj.segments:
             for ptype in ("start", "end", "center"):
@@ -1407,8 +1414,19 @@ def rotate_objects(objects: dict, min_max: list[float]) -> None:
     mirror_objects(objects, min_max, horizontal=True)
 
 
+def scale_object(obj: VcObject, scale: float) -> None:
+    """scale an object"""
+    for segment in obj.segments:
+        for ptype in ("start", "end", "center"):
+            if ptype in segment:
+                segment[ptype] = (
+                    segment[ptype][0] * scale,
+                    segment[ptype][1] * scale,
+                )
+
+
 def scale_objects(objects: dict, scale: float) -> None:
-    """rotates an object"""
+    """scale all object"""
     for obj in objects.values():
         for segment in obj.segments:
             for ptype in ("start", "end", "center"):

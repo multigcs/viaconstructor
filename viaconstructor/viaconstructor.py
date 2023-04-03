@@ -59,10 +59,13 @@ from .calc import (
     mirror_objects,
     move_object,
     move_objects,
+    object2points,
     objects2minmax,
     objects2polyline_offsets,
+    points_to_center,
     rotate_object,
     rotate_objects,
+    scale_object,
     scale_objects,
     segments2objects,
 )
@@ -2110,10 +2113,6 @@ class ViaConstructor:  # pylint: disable=R0904
             if not show_section:
                 continue
 
-            vcontainer = QWidget()
-            vlayout = QVBoxLayout(vcontainer)
-            vlayout.setContentsMargins(0, 0, 0, 0)
-
             titles = {
                 "mill": "Mill",
                 "tool": "Tool",
@@ -2121,6 +2120,9 @@ class ViaConstructor:  # pylint: disable=R0904
                 "tabs": "Tabs",
                 "leads": "Leads",
             }
+            vcontainer = QWidget()
+            vlayout = QVBoxLayout(vcontainer)
+            vlayout.setContentsMargins(0, 0, 0, 0)
             tabwidget.addTab(vcontainer, titles.get(sname, sname))
 
             for ename, entry in self.project["setup_defaults"][sname].items():
@@ -2257,6 +2259,200 @@ class ViaConstructor:  # pylint: disable=R0904
                 ulabel = QLabel(unit)
                 ulabel.setFont(QFont("Arial", 9))
                 hlayout.addWidget(ulabel)
+
+        def object_move(spinbox_steps, checkbox_childs, direction):
+            object_active = self.project["object_active"]
+            with_childs = checkbox_childs.isChecked()
+            diff = spinbox_steps.value()
+            step_x = 0.0
+            step_y = 0.0
+            if direction == "left":
+                step_x = -diff
+            elif direction == "right":
+                step_x = diff
+            elif direction == "up":
+                step_y = diff
+            elif direction == "down":
+                step_y = -diff
+
+            object_active_obj = None
+            for obj_idx, obj in self.project["objects"].items():
+                if obj_idx.startswith(f"{object_active}:"):
+                    object_active_obj = obj
+
+            move_object(object_active_obj, step_x, step_y)
+            if with_childs:
+                for inner in object_active_obj["inner_objects"]:
+                    move_object(self.project["objects"][inner], step_x, step_y)
+
+            self.update_tabs_data()
+            self.update_drawing()
+
+        vcontainer = QWidget()
+        vlayout = QVBoxLayout(vcontainer)
+        vlayout.setContentsMargins(0, 0, 0, 0)
+
+        vlayout.addWidget(QLabel("Move:"))
+
+        vlayout.addWidget(QLabel("Steps"))
+
+        dspinbox = QDoubleSpinBox()
+        dspinbox.setDecimals(4)
+        dspinbox.setSingleStep(1.0)
+        dspinbox.setMinimum(0.0)
+        dspinbox.setMaximum(1000.0)
+        dspinbox.setValue(1.0)
+        dspinbox.setToolTip("")
+        vlayout.addWidget(dspinbox)
+
+        checkbox = QCheckBox("with childs")
+        checkbox.setChecked(True)
+        checkbox.setToolTip("move all childs")
+        vlayout.addWidget(checkbox)
+
+        gcontainer = QWidget()
+        glayout = QGridLayout()
+        gcontainer.setLayout(glayout)
+        vlayout.addWidget(gcontainer)
+
+        button = QPushButton("Left")
+        button.setToolTip(_("move left"))
+        button.clicked.connect(partial(object_move, dspinbox, checkbox, "left"))  # type: ignore
+        glayout.addWidget(button, 1, 0)
+
+        button = QPushButton("Right")
+        button.setToolTip(_("move right"))
+        button.clicked.connect(partial(object_move, dspinbox, checkbox, "right"))  # type: ignore
+        glayout.addWidget(button, 1, 2)
+
+        button = QPushButton("Up")
+        button.setToolTip(_("move up"))
+        button.clicked.connect(partial(object_move, dspinbox, checkbox, "up"))  # type: ignore
+        glayout.addWidget(button, 0, 1)
+
+        button = QPushButton("Down")
+        button.setToolTip(_("move down"))
+        button.clicked.connect(partial(object_move, dspinbox, checkbox, "down"))  # type: ignore
+        glayout.addWidget(button, 2, 1)
+
+        def object_rotate(spinbox_angle, checkbox_childs, direction):
+            object_active = self.project["object_active"]
+            with_childs = checkbox_childs.isChecked()
+            diff = spinbox_angle.value()
+            if direction == "left":
+                angle = diff
+            elif direction == "right":
+                angle = -diff
+
+            object_active_obj = None
+            for obj_idx, obj in self.project["objects"].items():
+                if obj_idx.startswith(f"{object_active}:"):
+                    object_active_obj = obj
+
+            center = points_to_center(object2points(object_active_obj))
+
+            rotate_object(
+                object_active_obj, center[0], center[1], angle * math.pi / 180.0
+            )
+            if with_childs:
+                for inner in object_active_obj["inner_objects"]:
+                    rotate_object(
+                        self.project["objects"][inner],
+                        center[0],
+                        center[1],
+                        angle * math.pi / 180.0,
+                    )
+
+            self.update_tabs_data()
+            self.update_drawing()
+
+        vlayout.addWidget(QLabel("Rotate:"))
+        vlayout.addWidget(QLabel("Angle"))
+
+        dspinbox = QDoubleSpinBox()
+        dspinbox.setDecimals(4)
+        dspinbox.setSingleStep(1.0)
+        dspinbox.setMinimum(0.0)
+        dspinbox.setMaximum(360.0)
+        dspinbox.setValue(45.0)
+        dspinbox.setToolTip("")
+        vlayout.addWidget(dspinbox)
+
+        checkbox = QCheckBox("with childs")
+        checkbox.setChecked(True)
+        checkbox.setToolTip("move all childs")
+        vlayout.addWidget(checkbox)
+
+        gcontainer = QWidget()
+        glayout = QGridLayout()
+        gcontainer.setLayout(glayout)
+        vlayout.addWidget(gcontainer)
+
+        button = QPushButton("Left")
+        button.setToolTip(_("rotate left"))
+        button.clicked.connect(partial(object_rotate, dspinbox, checkbox, "left"))  # type: ignore
+        glayout.addWidget(button, 0, 0)
+
+        button = QPushButton("Right")
+        button.setToolTip(_("rotate right"))
+        button.clicked.connect(partial(object_rotate, dspinbox, checkbox, "right"))  # type: ignore
+        glayout.addWidget(button, 0, 1)
+
+        def object_scale(spinbox_scale, checkbox_childs):
+            object_active = self.project["object_active"]
+            with_childs = checkbox_childs.isChecked()
+            scale = spinbox_scale.value()
+
+            object_active_obj = None
+            for obj_idx, obj in self.project["objects"].items():
+                if obj_idx.startswith(f"{object_active}:"):
+                    object_active_obj = obj
+
+            center = points_to_center(object2points(object_active_obj))
+            move_object(object_active_obj, -center[0], -center[1])
+            scale_object(object_active_obj, scale)
+            move_object(object_active_obj, center[0], center[1])
+            if with_childs:
+                for inner in object_active_obj["inner_objects"]:
+                    center = points_to_center(
+                        object2points(self.project["objects"][inner])
+                    )
+                    move_object(self.project["objects"][inner], -center[0], -center[1])
+                    scale_object(self.project["objects"][inner], scale)
+                    move_object(self.project["objects"][inner], center[0], center[1])
+
+            self.update_tabs_data()
+            self.update_drawing()
+
+        vlayout.addWidget(QLabel("Scale:"))
+        vlayout.addWidget(QLabel("Scale"))
+
+        dspinbox = QDoubleSpinBox()
+        dspinbox.setDecimals(4)
+        dspinbox.setSingleStep(1.0)
+        dspinbox.setMinimum(0.0)
+        dspinbox.setMaximum(1000.0)
+        dspinbox.setValue(1.1)
+        dspinbox.setToolTip("scale multiplier")
+        vlayout.addWidget(dspinbox)
+
+        checkbox = QCheckBox("with childs")
+        checkbox.setChecked(True)
+        checkbox.setToolTip("move all childs")
+        vlayout.addWidget(checkbox)
+
+        gcontainer = QWidget()
+        glayout = QGridLayout()
+        gcontainer.setLayout(glayout)
+        vlayout.addWidget(gcontainer)
+
+        button = QPushButton("Scale")
+        button.setToolTip(_("scale"))
+        button.clicked.connect(partial(object_scale, dspinbox, checkbox))  # type: ignore
+        glayout.addWidget(button, 0, 0)
+
+        vlayout.addStretch(1)
+        tabwidget.addTab(vcontainer, _("Manipulate"))
 
     def update_tabs_data(self) -> None:
         self.project["tabs"]["data"] = []
@@ -2746,6 +2942,7 @@ class ViaConstructor:  # pylint: disable=R0904
             self.combobjwidget.clear()
             for idx in self.project["objects"]:
                 self.combobjwidget.addItem(idx.split(":")[0])
+            self.project["object_active"] = "0"
             self.combobjwidget.setCurrentText(self.project["object_active"])
 
         self.update_object_setup()
