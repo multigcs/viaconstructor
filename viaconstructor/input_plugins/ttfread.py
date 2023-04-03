@@ -1,4 +1,4 @@
-"""ttf reading."""
+"""ttf and otf reading."""
 
 import argparse
 
@@ -104,7 +104,7 @@ class DrawReader(DrawReaderBase):
             args.ttfread_border = ttfread_border.value()
 
     def __init__(self, filename: str, args: argparse.Namespace = None):
-        """slicing and converting stl into single segments."""
+        """loading and drawing font"""
         self.filename = filename
         self.segments: list[dict] = []
 
