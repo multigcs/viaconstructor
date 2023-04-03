@@ -2401,6 +2401,7 @@ class ViaConstructor:  # pylint: disable=R0904
                 self.project["setup"]["view"]["autocalc"] = False
                 self.project["setup"]["view"]["path"] = "minimal"
                 self.project["setup"]["view"]["object_ids"] = False
+                self.project["setup"]["pockets"]["active"] = False
 
             self.project["origin"] = objects2minmax(self.project["objects"])[0:2]
 
