@@ -845,6 +845,8 @@ def draw_grid(project: dict) -> None:
     """draws the grid"""
     GL.glNormal3f(0, 0, 1)
     min_max = project["minMax"]
+    if not min_max:
+        return
     size = project["setup"]["view"]["grid_size"]
     start_x = int(min_max[0] / size) * size - size
     end_x = int(min_max[2] / size) * size + size
