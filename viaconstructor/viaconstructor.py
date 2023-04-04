@@ -62,6 +62,7 @@ from .calc import (
     object2points,
     objects2minmax,
     objects2polyline_offsets,
+    points_to_boundingbox,
     points_to_center,
     rotate_object,
     rotate_objects,
@@ -2349,9 +2350,9 @@ class ViaConstructor:  # pylint: disable=R0904
             object_active = self.project["object_active"]
             with_childs = checkbox_childs.isChecked()
             diff = spinbox_angle.value()
-            if direction == "left":
+            if direction == "ccw":
                 angle = diff
-            elif direction == "right":
+            elif direction == "cw":
                 angle = -diff
 
             object_active_obj = None
@@ -2398,14 +2399,14 @@ class ViaConstructor:  # pylint: disable=R0904
         gcontainer.setLayout(glayout)
         vlayout.addWidget(gcontainer)
 
-        button = QPushButton("Left")
-        button.setToolTip(_("rotate left"))
-        button.clicked.connect(partial(object_rotate, dspinbox, checkbox, "left"))  # type: ignore
+        button = QPushButton(_("CCW"))
+        button.setToolTip(_("rotate counter clockwise"))
+        button.clicked.connect(partial(object_rotate, dspinbox, checkbox, "ccw"))  # type: ignore
         glayout.addWidget(button, 0, 0)
 
-        button = QPushButton("Right")
-        button.setToolTip(_("rotate right"))
-        button.clicked.connect(partial(object_rotate, dspinbox, checkbox, "right"))  # type: ignore
+        button = QPushButton(_("CW"))
+        button.setToolTip(_("rotate clockwise"))
+        button.clicked.connect(partial(object_rotate, dspinbox, checkbox, "cw"))  # type: ignore
         glayout.addWidget(button, 0, 1)
 
         def object_scale(spinbox_scale, checkbox_childs):
@@ -2461,7 +2462,9 @@ class ViaConstructor:  # pylint: disable=R0904
         button.clicked.connect(partial(object_scale, dspinbox, checkbox))  # type: ignore
         glayout.addWidget(button, 0, 0)
 
-        def clone_object(obj_idx):
+        def clone_object(obj_idx, offset_x=0, offset_y=0):
+            if not obj_idx:
+                return
             main_idx = obj_idx.split(":")[0]
             main_uid = obj_idx.split(":")[1]
             idx_list = [oid.split(":")[0] for oid in self.project["objects"]]
@@ -2472,14 +2475,15 @@ class ViaConstructor:  # pylint: disable=R0904
             self.project["objects"][new_obj_idx] = deepcopy(
                 self.project["objects"][obj_idx]
             )
+
             move_object(
                 self.project["objects"][new_obj_idx],
-                (self.project["minMax"][2] - self.project["minMax"][0]) + 10,
-                0,
+                offset_x,
+                offset_y,
             )
             return new_obj_idx
 
-        def object_copy(checkbox_childs):
+        def object_copy(checkbox_childs, offset_direction):
             object_active = self.project["object_active"]
             with_childs = checkbox_childs.isChecked()
 
@@ -2490,10 +2494,36 @@ class ViaConstructor:  # pylint: disable=R0904
                     object_active_obj = obj
                     object_active_obj_idx = obj_idx
 
-            new_obj_idx = clone_object(object_active_obj_idx)
+            bounding_box = points_to_boundingbox(
+                object2points(self.project["objects"][object_active_obj_idx])
+            )
+            offset_x = 0
+            offset_y = 0
+            if offset_direction == "left":
+                offset_x = (
+                    0 - (bounding_box[2] - bounding_box[0]) - bounding_box[0] - 10
+                )
+            elif offset_direction == "right":
+                offset_x = (
+                    (self.project["minMax"][2] - self.project["minMax"][0])
+                    - bounding_box[0]
+                    + 10
+                )
+            elif offset_direction == "top":
+                offset_y = (
+                    (self.project["minMax"][3] - self.project["minMax"][1])
+                    - bounding_box[1]
+                    + 10
+                )
+            elif offset_direction == "bottom":
+                offset_y = (
+                    0 - (bounding_box[3] - bounding_box[1]) - bounding_box[1] - 10
+                )
+
+            new_obj_idx = clone_object(object_active_obj_idx, offset_x, offset_y)
             if with_childs:
                 for inner in object_active_obj["inner_objects"]:
-                    clone_object(inner)
+                    clone_object(inner, offset_x, offset_y)
 
             self.combobjwidget.clear()
             for idx in self.project["objects"]:
@@ -2518,10 +2548,25 @@ class ViaConstructor:  # pylint: disable=R0904
         gcontainer.setLayout(glayout)
         vlayout.addWidget(gcontainer)
 
-        button = QPushButton("Clone")
+        button = QPushButton("Clone Top")
         button.setToolTip(_("clone object"))
-        button.clicked.connect(partial(object_copy, checkbox))  # type: ignore
-        glayout.addWidget(button, 0, 0)
+        button.clicked.connect(partial(object_copy, checkbox, "top"))  # type: ignore
+        glayout.addWidget(button, 0, 1)
+
+        button = QPushButton("Clone Left")
+        button.setToolTip(_("clone object"))
+        button.clicked.connect(partial(object_copy, checkbox, "left"))  # type: ignore
+        glayout.addWidget(button, 1, 0)
+
+        button = QPushButton("Clone Right")
+        button.setToolTip(_("clone object"))
+        button.clicked.connect(partial(object_copy, checkbox, "right"))  # type: ignore
+        glayout.addWidget(button, 1, 2)
+
+        button = QPushButton("Clone Bottom")
+        button.setToolTip(_("clone object"))
+        button.clicked.connect(partial(object_copy, checkbox, "bottom"))  # type: ignore
+        glayout.addWidget(button, 2, 1)
 
         vlayout.addStretch(1)
         tabwidget.addTab(vcontainer, _("Manipulate"))
