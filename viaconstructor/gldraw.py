@@ -993,13 +993,20 @@ def draw_grid(project: dict) -> None:
         GL.glEnd()
 
 
-def draw_object_ids(project: dict) -> None:
+def draw_object_ids(project: dict, selected: int = -1) -> None:
     """draws the object id's as text"""
     GL.glNormal3f(0, 0, 1)
-    GL.glLineWidth(2)
-    GL.glColor3f(0.63, 0.36, 0.11)
-    GL.glBegin(GL.GL_LINES)
     for obj_idx, obj in project["objects"].items():
+
+        if obj_idx.split(":")[0] == selected:
+            GL.glLineWidth(2)
+            GL.glColor3f(1.0, 1.0, 1.01)
+        else:
+            GL.glLineWidth(2)
+            GL.glColor3f(0.63, 0.36, 0.11)
+
+        GL.glBegin(GL.GL_LINES)
+
         if obj.get("layer", "").startswith("BREAKS:") or obj.get(
             "layer", ""
         ).startswith("_TABS"):
@@ -1009,7 +1016,7 @@ def draw_object_ids(project: dict) -> None:
         for (x_1, y_1), (x_2, y_2) in font.lines_for_text(f"#{obj_idx.split(':')[0]}"):
             GL.glVertex3f(p_x + x_1, p_y + y_1, 5.0)
             GL.glVertex3f(p_x + x_2, p_y + y_2, 5.0)
-    GL.glEnd()
+        GL.glEnd()
 
 
 def draw_object_edges(project: dict, selected: int = -1) -> None:
@@ -1393,6 +1400,8 @@ def draw_machinecode_path(project: dict) -> bool:
 
 
 def draw_all(project: dict) -> None:
+    selected = project["object_active"]
+
     project["gllist"] = GL.glGenLists(1)
     GL.glNewList(project["gllist"], GL.GL_COMPILE)
     draw_grid(project)
@@ -1406,9 +1415,7 @@ def draw_all(project: dict) -> None:
             print("error while drawing machine commands")
 
     if project["setup"]["view"]["object_ids"]:
-        draw_object_ids(project)
-
-    selected = project["object_active"]
+        draw_object_ids(project, selected=selected)
 
     draw_object_edges(project, selected=selected)
     if project["setup"]["view"]["polygon_show"]:

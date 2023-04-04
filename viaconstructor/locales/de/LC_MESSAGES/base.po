@@ -5,7 +5,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
-"POT-Creation-Date: 2023-04-03 15:42+0200\n"
+"POT-Creation-Date: 2023-04-04 09:32+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -628,6 +628,12 @@ msgid "rotate left"
 msgstr ""
 
 msgid "rotate right"
+msgstr ""
+
+msgid "scale"
+msgstr ""
+
+msgid "clone object"
 msgstr ""
 
 msgid "Manipulate"
