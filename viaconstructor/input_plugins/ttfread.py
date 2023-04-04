@@ -61,7 +61,7 @@ class DrawReader(DrawReaderBase):
         dialog.layout.addWidget(label)
 
         ttfread_text = QPlainTextEdit()
-        ttfread_text.setPlainText("Via")
+        ttfread_text.setPlainText(args.ttfread_text)
         dialog.layout.addWidget(ttfread_text)
 
         label = QLabel("Height")

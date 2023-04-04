@@ -72,6 +72,7 @@ from .calc import (
 )
 from .draw2d import CanvasWidget
 from .draw2d import draw_all as draw_all_2d
+from .fonttool import FontTool
 from .gldraw import GLWidget
 from .gldraw import draw_all as draw_all_gl
 from .machine_cmd import polylines2machine_cmd
@@ -326,6 +327,9 @@ class ViaConstructor:  # pylint: disable=R0904
             self.project["textwidget"].verticalScrollBar().setValue(0)
 
         debug("run_calculation: done")
+
+    def _toolbar_fonttool(self) -> None:
+        self.font_tool.show()
 
     def _toolbar_flipx(self) -> None:
         mirror_objects(self.project["objects"], self.project["minMax"], vertical=True)
@@ -1634,7 +1638,7 @@ class ViaConstructor:  # pylint: disable=R0904
             ],
             _("Repair-Selector"): [
                 "repair.png",
-                "Ctrl+F",
+                "",
                 _("Repair-Selector"),
                 self._toolbar_toggle_repair_selector,
                 True,
@@ -1714,6 +1718,18 @@ class ViaConstructor:  # pylint: disable=R0904
                 False,
                 _("Calculation"),
                 "",
+                None,
+            ],
+            _("Font-Tool"): [
+                "fonts.png",
+                "Ctrl+F",
+                _("open fonttool"),
+                self._toolbar_fonttool,
+                False,
+                True,
+                False,
+                _("Tools"),
+                "exit",
                 None,
             ],
         }
@@ -1977,7 +1993,7 @@ class ViaConstructor:  # pylint: disable=R0904
                                 item,
                             )
                             # if entry["columns"][key].get("ro", False):
-                            #    item.setFlags(QtCore.Qt.ItemIsEditable)
+                            #    item.setFlags(Qt.ItemIsEditable)
                             table.resizeColumnToContents(col_idx + idxf_offset)
                     table.itemChanged.connect(self.global_changed)  # type: ignore
                     vlayout.addWidget(table)
@@ -2255,7 +2271,7 @@ class ViaConstructor:  # pylint: disable=R0904
                                 item,
                             )
                             # if entry["columns"][key].get("ro", False):
-                            #    item.setFlags(QtCore.Qt.ItemIsEditable)
+                            #    item.setFlags(Qt.ItemIsEditable)
                             table.resizeColumnToContents(col_idx + idxf_offset)
                     table.itemChanged.connect(self.object_changed)  # type: ignore
                     vlayout.addWidget(table)
@@ -2464,7 +2480,7 @@ class ViaConstructor:  # pylint: disable=R0904
 
         def clone_object(obj_idx, offset_x=0, offset_y=0):
             if not obj_idx:
-                return
+                return None
             main_idx = obj_idx.split(":")[0]
             main_uid = obj_idx.split(":")[1]
             idx_list = [oid.split(":")[0] for oid in self.project["objects"]]
@@ -2521,7 +2537,7 @@ class ViaConstructor:  # pylint: disable=R0904
                 )
 
             new_obj_idx = clone_object(object_active_obj_idx, offset_x, offset_y)
-            if with_childs:
+            if new_obj_idx is not None and with_childs:
                 for inner in object_active_obj["inner_objects"]:
                     clone_object(inner, offset_x, offset_y)
 
@@ -2630,7 +2646,7 @@ class ViaConstructor:  # pylint: disable=R0904
             self.project["maxOuter"] = find_tool_offsets(self.project["objects"])
         debug("prepare_segments: done")
 
-    def load_drawing(self, filename: str) -> bool:
+    def load_drawing(self, filename: str, no_setup: bool = False) -> bool:
         # clean project
         debug("load_drawing: cleanup")
         self.project["filename_draw"] = ""
@@ -2692,7 +2708,11 @@ class ViaConstructor:  # pylint: disable=R0904
                 reader_plugin = reader_plugins[plugin_name]
 
         reader_plugin = reader_plugins[plugin_name]
-        if self.main is not None and hasattr(reader_plugin, "preload_setup"):
+        if (
+            not no_setup
+            and self.main is not None
+            and hasattr(reader_plugin, "preload_setup")
+        ):
             reader_plugin.preload_setup(filename, self.args)
         self.project["draw_reader"] = reader_plugin(filename, self.args)
         if reader_plugin.can_save_tabs:
@@ -3075,6 +3095,9 @@ class ViaConstructor:  # pylint: disable=R0904
         hlay = QHBoxLayout(self.project["window"])
         hlay.addWidget(left_widget, stretch=1)
         hlay.addWidget(right_widget, stretch=3)
+
+        # Tools
+        self.font_tool = FontTool(self)
 
         self.main.resize(1600, 1200)
         self.main.show()

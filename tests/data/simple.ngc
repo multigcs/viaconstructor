@@ -1,11 +1,8 @@
 
-$X
-
 G21 (Metric/mm)
 G40 (No Offsets)
 G90 (Absolute-Mode)
 F100
-G64 P0.05
 M05 (Spindle off)
 
 M03 S10000 (Spindle on / CW)
