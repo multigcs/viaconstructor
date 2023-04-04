@@ -6,6 +6,7 @@ from PyQt5.QtCore import QLineF, QStandardPaths, Qt  # pylint: disable=E0611
 from PyQt5.QtGui import QPainter, QPen, QPixmap  # pylint: disable=E0611
 from PyQt5.QtWidgets import (  # pylint: disable=E0611
     QComboBox,
+    QCompleter,
     QDoubleSpinBox,
     QLabel,
     QPlainTextEdit,
@@ -22,13 +23,12 @@ class FontTool(QWidget):
 
     def __init__(self, app):
         super().__init__()
+        self.setWindowTitle("Font-Tool")
         self.app = app
         layout = QVBoxLayout()
-        self.label = QLabel("Another Window")
-        layout.addWidget(self.label)
         self.setLayout(layout)
 
-        message = QLabel("Import-Options")
+        message = QLabel("Font-File")
         layout.addWidget(message)
 
         self.ttfread_fontfile = QComboBox()
@@ -75,34 +75,40 @@ class FontTool(QWidget):
         self.qimage_label = QLabel()
         layout.addWidget(self.qimage_label)
 
-        self.ttfread_text.textChanged.connect(self.preview)  # type: ignore
-        self.ttfread_space.valueChanged.connect(self.preview)  # type: ignore
-        self.ttfread_fontfile.currentTextChanged.connect(self.preview)  # type: ignore
-
         font_paths = QStandardPaths.standardLocations(QStandardPaths.FontsLocation)
 
+        self.fontfiles = {}
         for fpath in font_paths:  # go through all font paths
             if not os.path.isdir(fpath):
                 continue
             for filename in Path(fpath).rglob("*.ttf"):
-                self.ttfread_fontfile.addItem(str(filename))
+                self.fontfiles[str(os.path.basename(filename))] = str(filename)
             for filename in Path(fpath).rglob("*.otf"):
-                self.ttfread_fontfile.addItem(str(filename))
+                self.fontfiles[str(os.path.basename(filename))] = str(filename)
+
+        self.ttfread_fontfile.addItems(list(self.fontfiles))
+        self.ttfread_fontfile.setEditable(True)
+        self.ttfread_fontfile.setInsertPolicy(QComboBox.NoInsert)
+        self.ttfread_fontfile.completer().setCompletionMode(QCompleter.PopupCompletion)
+
+        self.ttfread_text.textChanged.connect(self.preview)  # type: ignore
+        self.ttfread_space.valueChanged.connect(self.preview)  # type: ignore
+        self.ttfread_fontfile.currentTextChanged.connect(self.preview)  # type: ignore
 
         def open_font():
             self.hide()
-            fontfile = self.ttfread_fontfile.currentText()
+            fontfile = self.fontfiles.get(self.ttfread_fontfile.currentText())
             self.app.args.ttfread_text = self.ttfread_text.toPlainText()
             self.app.args.ttfread_height = self.ttfread_height.value()
             self.app.args.ttfread_space = self.ttfread_space.value()
             self.app.args.ttfread_border = self.ttfread_border.value()
 
             if self.app.load_drawing(fontfile, no_setup=True):
-                #self.app.update_object_setup()
-                #self.app.global_changed(0)
-                #self.app.update_drawing()
-                #self.app.create_menubar()
-                #self.app.create_toolbar()
+                # self.app.update_object_setup()
+                # self.app.global_changed(0)
+                # self.app.update_drawing()
+                # self.app.create_menubar()
+                # self.app.create_toolbar()
                 pass
 
         self.button_open = QPushButton("Open")
@@ -113,11 +119,13 @@ class FontTool(QWidget):
         self.button_close.clicked.connect(self.close)
         layout.addWidget(self.button_close)
 
+        self.preview()
+
     def preview(self, value=0):  # pylint: disable=W0613
         scale = 0.1
         text = self.ttfread_text.toPlainText()
         space = self.ttfread_space.value()
-        fontfile = self.ttfread_fontfile.currentText()
+        fontfile = self.fontfiles.get(self.ttfread_fontfile.currentText())
 
         ctx = {
             "last": (),
