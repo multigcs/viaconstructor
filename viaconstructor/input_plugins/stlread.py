@@ -144,6 +144,19 @@ class DrawReader(DrawReaderBase):
                     min_z = min(min_z, value_z)
                     max_z = max(max_z, value_z)
 
+        """
+        zlayers = {}
+        for vert in verts:
+            #print(vert[2])
+            if vert[2] not in zlayers:
+                zlayers[vert[2]] = 0
+            zlayers[vert[2]] += 1
+
+        for h, n in zlayers.items():
+            if n > 2:
+                print("### ", h, n)
+        """
+
         mesh = meshcut.TriangleMesh(verts, faces)
         self.diff_z = max_z - min_z
 
