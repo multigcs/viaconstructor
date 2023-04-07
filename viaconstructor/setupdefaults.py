@@ -520,6 +520,18 @@ def setup_defaults(_) -> dict:
                 "title": _("toolchange post cmd"),
                 "tooltip": _("add gcode after tool-change"),
             },
+            "spindle_on_pre": {
+                "default": "",
+                "type": "mstr",
+                "title": _("spindle on pre cmd"),
+                "tooltip": _("add gcode before turning the spindle on"),
+            },
+            "spindle_off_post": {
+                "default": "",
+                "type": "mstr",
+                "title": _("spindle off post cmd"),
+                "tooltip": _("add gcode after turning the spindle off"),
+            },
             "comments": {
                 "default": True,
                 "type": "bool",

@@ -173,6 +173,8 @@ class fakeOffset:
                         "g54": False,
                         "toolchange_pre": "",
                         "toolchange_post": "",
+                        "spindle_on_pre": "M07 (start mist)",
+                        "spindle_off_post": "M09 (stop coolant)",
                     },
                 },
                 "tablewidget": "",
@@ -189,6 +191,7 @@ G40 (No Offsets)
 G90 (Absolute-Mode)
 G64 P0.05
 M05 (Spindle off)
+M09 (stop coolant)
 F1000
 G00 Z20.000000
 
@@ -206,6 +209,7 @@ G00 Z20.000000
 (--------------------------------------------------)
 G00 Z20.0
 M06 T1
+M07 (start mist)
 M03 S10000 (Spindle on / CW)
 G04 P1 (pause in sec)
 G00 X22.000000 Y24.828427
@@ -265,6 +269,7 @@ G03 X-0.181071 Y8.008214 I1.987767 J-0.220863
 (- end -)
 G00 Z20.000000
 M05 (Spindle off)
+M09 (stop coolant)
 G00 X0.000000 Y0.000000
 M02
 """,
