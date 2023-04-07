@@ -167,10 +167,10 @@ class PostProcessorGcodeGrbl(PostProcessor):
         if self.tool_running != 0 and self.tool_running == speed:
             return
         if self.project["setup"]["machine"]["spindle_on_pre"]:
-                for part in self.project["setup"]["machine"]["spindle_on_pre"].split(
-                    "\n"
-                ):
-                    self.gcode.append(part)
+            for part in self.project["setup"]["machine"]["spindle_on_pre"].split(
+                "\n"
+            ):
+                self.gcode.append(part)
         cmd = "M03"
         if self.speed != speed:
             self.speed = speed
