@@ -26,6 +26,9 @@ TWO_PI = math.pi * 2
 # ########## helper Functions ###########
 def external_command(cmd: str):
     known_paths = {
+        "camotics": [
+            "/Applications/CAMotics.app/Contents/MacOS/camotics",
+        ],
         "camotics.exe": [
             "c:\\Program Files\\CAMotics\\camotics.exe",
             "c:\\Program Files (x86)\\CAMotics\\camotics.exe",
