@@ -54,6 +54,15 @@ class PostProcessorHpgl(PostProcessor):
     def tool(self, number="1") -> None:
         self.hpgl.append(f"SP{number}")
 
+    def coolant_mist(self) -> None:
+        pass
+
+    def coolant_flood(self) -> None:
+        pass
+
+    def coolant_off(self) -> None:
+        pass
+
     def spindle_cw(self, speed: int, pause: int = 1) -> None:  # pylint: disable=W0613
         self.toolrun = True
 

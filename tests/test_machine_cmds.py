@@ -16,6 +16,8 @@ class fakeOffset:
                 "pause": 1,
                 "rate_h": 10000,
                 "rate_v": 1000,
+                "mist": False,
+                "flood": False,
             },
             "tabs": {"active": False},
             "leads": {"in": False, "out": False},

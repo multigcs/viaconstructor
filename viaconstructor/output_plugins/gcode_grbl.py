@@ -163,6 +163,15 @@ class PostProcessorGcodeGrbl(PostProcessor):
             ):
                 self.gcode.append(part)
 
+    def coolant_mist(self) -> None:
+        self.gcode.append("M07 (mist on)")
+
+    def coolant_flood(self) -> None:
+        self.gcode.append("M08 (flood on)")
+
+    def coolant_off(self) -> None:
+        self.gcode.append("M09 (coolant off)")
+
     def spindle_cw(self, speed: int, pause: int = 1) -> None:
         if self.tool_running != 0 and self.tool_running == speed:
             return

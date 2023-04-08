@@ -5,7 +5,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
-"POT-Creation-Date: 2023-04-04 09:32+0200\n"
+"POT-Creation-Date: 2023-04-08 23:13+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -139,6 +139,18 @@ msgid "Pause"
 msgstr ""
 
 msgid "tool spin up time (G04 Pn)"
+msgstr ""
+
+msgid "Mist"
+msgstr ""
+
+msgid "activate mist"
+msgstr ""
+
+msgid "Flood"
+msgstr ""
+
+msgid "activate flood"
 msgstr ""
 
 msgid "Tools"
@@ -343,6 +355,18 @@ msgid "toolchange post cmd"
 msgstr ""
 
 msgid "add gcode after tool-change"
+msgstr ""
+
+msgid "spindle on pre cmd"
+msgstr ""
+
+msgid "add gcode before turning the spindle on"
+msgstr ""
+
+msgid "spindle off post cmd"
+msgstr ""
+
+msgid "add gcode after turning the spindle off"
 msgstr ""
 
 msgid "Comments in output"
@@ -609,6 +633,12 @@ msgstr ""
 msgid "Calculation"
 msgstr ""
 
+msgid "Font-Tool"
+msgstr ""
+
+msgid "open fonttool"
+msgstr ""
+
 msgid "select this row"
 msgstr ""
 
@@ -624,10 +654,16 @@ msgstr ""
 msgid "move down"
 msgstr ""
 
-msgid "rotate left"
+msgid "CCW"
 msgstr ""
 
-msgid "rotate right"
+msgid "rotate counter clockwise"
+msgstr ""
+
+msgid "CW"
+msgstr ""
+
+msgid "rotate clockwise"
 msgstr ""
 
 msgid "scale"

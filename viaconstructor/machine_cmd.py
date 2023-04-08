@@ -60,6 +60,15 @@ class PostProcessor:
     def tool(self, number="1") -> None:
         pass
 
+    def coolant_mist(self) -> None:
+        pass
+
+    def coolant_flood(self) -> None:
+        pass
+
+    def coolant_off(self) -> None:
+        pass
+
     def spindle_off(self) -> None:
         pass
 
@@ -653,6 +662,8 @@ def polylines2machine_cmd(project: dict, post: PostProcessor) -> str:
                     vertex_data = vertex_data_cache(polyline)
                     is_closed = polyline.is_closed()
 
+                    coolant_mist = polyline.setup["tool"]["mist"]
+                    coolant_flood = polyline.setup["tool"]["flood"]
                     max_depth = polyline.setup["mill"]["depth"]
                     step = polyline.setup["mill"]["step"]
                     if step >= -0.01:
@@ -750,6 +761,11 @@ def polylines2machine_cmd(project: dict, post: PostProcessor) -> str:
                     depth = max(depth, max_depth)
                     min_depth = polyline.setup["mill"]["start_depth"]
                     depth = min(depth, min_depth)
+
+                    if coolant_mist:
+                        post.coolant_mist()
+                    if coolant_flood:
+                        post.coolant_flood()
 
                     if (
                         project["setup"]["machine"]["mode"] == "mill"
@@ -1032,6 +1048,10 @@ def polylines2machine_cmd(project: dict, post: PostProcessor) -> str:
                     else:
                         last_pos = points[-1]
                     order += 1
+
+                    if coolant_mist or coolant_flood:
+                        post.coolant_off()
+
                 else:
                     break
 

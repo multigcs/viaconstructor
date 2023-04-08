@@ -172,6 +172,20 @@ def setup_defaults(_) -> dict:
                 "unit": "s",
                 "per_object": True,
             },
+            "mist": {
+                "default": False,
+                "type": "bool",
+                "per_object": True,
+                "title": _("Mist"),
+                "tooltip": _("activate mist"),
+            },
+            "flood": {
+                "default": False,
+                "type": "bool",
+                "per_object": True,
+                "title": _("Flood"),
+                "tooltip": _("activate flood"),
+            },
             "tooltable": {
                 "type": "table",
                 "selectable": True,
