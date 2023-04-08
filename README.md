@@ -64,6 +64,7 @@ pip3 install -r requirements.txt
 ### running on macos/osx
 ```
 git clone https://github.com/multigcs/viaconstructor.git
+cd viaconstructor
 brew install python@3.10
 /usr/local/bin/python3 -m pip install -r requirements-install.txt
 /usr/local/bin/python3 -m viaconstructor tests/data/simple.dxf
