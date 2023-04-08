@@ -166,9 +166,7 @@ class PostProcessorGcodeLinuxCNC(PostProcessor):
         if self.tool_running != 0 and self.tool_running == speed:
             return
         if self.project["setup"]["machine"]["spindle_on_pre"]:
-            for part in self.project["setup"]["machine"]["spindle_on_pre"].split(
-                "\n"
-            ):
+            for part in self.project["setup"]["machine"]["spindle_on_pre"].split("\n"):
                 self.gcode.append(part)
         cmd = "M03"
         if self.speed != speed:
@@ -189,9 +187,7 @@ class PostProcessorGcodeLinuxCNC(PostProcessor):
     def spindle_ccw(self, speed: int, pause: int = 1) -> None:
         # no if self.tool_running != 0 and self.tool_running == speed test?
         if self.project["setup"]["machine"]["spindle_on_pre"]:
-            for part in self.project["setup"]["machine"]["spindle_on_pre"].split(
-                "\n"
-            ):
+            for part in self.project["setup"]["machine"]["spindle_on_pre"].split("\n"):
                 self.gcode.append(part)
         cmd = "M04"
         if self.speed != speed:
