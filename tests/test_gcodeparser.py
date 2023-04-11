@@ -1774,6 +1774,7 @@ from viaconstructor.preview_plugins import gcode as gcodeparser
                 "scale": 1.0,
                 "spindle": {"dir": "OFF", "rpm": 10000.0},
                 "position": {"X": 0.0, "Y": 0.0, "Z": 5.0},
+                "minmax": {},
             },
             [-22.0, -22.0, -9.0, 92.0, 42.0, 5.0],
             [114.0, 64.0, 14.0],

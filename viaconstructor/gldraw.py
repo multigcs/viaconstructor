@@ -1386,6 +1386,8 @@ def draw_machinecode_path(project: dict) -> bool:
                     )
                     GL.glEnd()
                 draw_line(line[0], line[1], line[2], project, tool_number)
+            project["outputMinMax"] = gcode_parser.get_minmax()
+
         elif project["suffix"] in {"hpgl", "hpg"}:
             project["setup"]["machine"]["g54"] = False
             project["setup"]["workpiece"]["offset_z"] = 0.0
@@ -1393,6 +1395,8 @@ def draw_machinecode_path(project: dict) -> bool:
             toolpath = hpgl_parser.get_path()
             for line in toolpath:
                 draw_line(line[0], line[1], line[2], project)
+            project["outputMinMax"] = gcode_parser.get_minmax()
+
     except Exception as error_string:  # pylint: disable=W0703:
         print(f"ERROR: parsing machine_cmd: {error_string}")
         return False

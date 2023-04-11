@@ -170,6 +170,7 @@ class ViaConstructor:  # pylint: disable=R0904
         "gllist": [],
         "maxOuter": [],
         "minMax": [],
+        "outputMinMax": [],
         "table": [],
         "glwidget": None,
         "imgwidget": None,
@@ -196,6 +197,7 @@ class ViaConstructor:  # pylint: disable=R0904
     save_starts = "no"
     combobjwidget = None
     status_bar: Optional[QStatusBar] = None
+    infotext_widget: Optional[QPlainTextEdit] = None
     main: Optional[QMainWindow] = None
     toolbar: Optional[QToolBar] = None
     menubar: Optional[QMenuBar] = None
@@ -775,6 +777,16 @@ class ViaConstructor:  # pylint: disable=R0904
             draw_all_gl(self.project)
 
         self.info = f"{round(self.project['minMax'][2] - self.project['minMax'][0], 2)}x{round(self.project['minMax'][3] - self.project['minMax'][1], 2)}mm"
+
+        infotext = f"Drawing: {self.info}\n"
+        if self.project["outputMinMax"]:
+            infotext += "Machine-Limits:\n"
+            infotext += f" X: {round(self.project['outputMinMax'][0])} mm -> {round(self.project['outputMinMax'][3])} mm\n"
+            infotext += f" Y: {round(self.project['outputMinMax'][1])} mm -> {round(self.project['outputMinMax'][4])} mm\n"
+            infotext += f" Z: {round(self.project['outputMinMax'][2])} mm -> {round(self.project['outputMinMax'][5])} mm\n"
+        if self.infotext_widget is not None:
+            self.infotext_widget.setPlainText(infotext)
+
         if self.main:
             self.main.setWindowTitle("viaConstructor")
         self.status_bar_message(f"{self.info} - calculate..done")
@@ -3068,11 +3080,15 @@ class ViaConstructor:  # pylint: disable=R0904
         object_vbox.addWidget(self.combobjwidget, stretch=0)
         object_vbox.addWidget(self.tabobjwidget, stretch=1)
 
+        self.infotext_widget = QPlainTextEdit()
+        self.infotext_widget.setPlainText("info:")
+
         ltabwidget = QTabWidget()
         ltabwidget.addTab(self.tabwidget, _("&Global"))
         ltabwidget.addTab(self.objwidget, _("&Objects"))
-
         ltabwidget.addTab(self.project["layerwidget"], _("&Layers"))
+        ltabwidget.addTab(self.infotext_widget, _("&Infos"))
+
         left_gridlayout.addWidget(ltabwidget)
 
         if self.combobjwidget is not None:

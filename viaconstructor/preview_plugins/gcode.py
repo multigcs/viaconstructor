@@ -24,6 +24,7 @@ class GcodeParser:
             "tool": None,
             "spindle": {"dir": "OFF", "rpm": 0},
             "position": {"X": 0.0, "Y": 0.0, "Z": 0.0},
+            "minmax": {},
         }
 
         self.path: list[list] = []
