@@ -7,6 +7,7 @@ import json
 import math
 import os
 import re
+import subprocess
 import sys
 import threading
 import time
@@ -18,21 +19,15 @@ from typing import Optional, Union
 import ezdxf
 import setproctitle
 from PyQt5.QtCore import Qt  # pylint: disable=E0611
-from PyQt5.QtGui import (  # pylint: disable=E0611
-    QFont,
-    QIcon,
-    QImage,
-    QPalette,
-    QPixmap,
-    QStandardItem,
-    QStandardItemModel,
-)
+from PyQt5.QtGui import QFont, QIcon, QImage, QPalette, QPixmap  # pylint: disable=E0611
 from PyQt5.QtWidgets import (  # pylint: disable=E0611
     QAction,
     QApplication,
     QCheckBox,
     QColorDialog,
     QComboBox,
+    QDialog,
+    QDialogButtonBox,
     QDoubleSpinBox,
     QFileDialog,
     QGridLayout,
@@ -52,7 +47,6 @@ from PyQt5.QtWidgets import (  # pylint: disable=E0611
     QTableWidgetItem,
     QTabWidget,
     QToolBar,
-    QTreeView,
     QVBoxLayout,
     QWidget,
 )
@@ -60,25 +54,32 @@ from PyQt5.QtWidgets import (  # pylint: disable=E0611
 from .calc import (
     angle_of_line,
     clean_segments,
+    external_command,
     find_tool_offsets,
     get_nearest_line,
     lines_to_path,
+    get_tmp_prefix,
     mirror_objects,
     move_object,
     move_objects,
     object2points,
     objects2minmax,
     objects2polyline_offsets,
+    points_to_boundingbox,
+    points_to_center,
     rotate_object,
     rotate_objects,
+    scale_object,
     scale_objects,
     segments2objects,
 )
 from .draw2d import CanvasWidget
 from .draw2d import draw_all as draw_all_2d
+from .fonttool import FontTool
 from .gldraw import GLWidget
 from .gldraw import draw_all as draw_all_gl
 from .machine_cmd import polylines2machine_cmd
+from .output_plugins.gcode_grbl import PostProcessorGcodeGrbl
 from .output_plugins.gcode_linuxcnc import PostProcessorGcodeLinuxCNC
 from .output_plugins.hpgl import PostProcessorHpgl
 from .preview_plugins.gcode import GcodeParser
@@ -110,6 +111,10 @@ for reader in ("dxfread", "hpglread", "stlread", "svgread", "ttfread", "imgread"
 
 DEBUG = False
 TIMESTAMP = 0
+
+TEMP_PREFIX = get_tmp_prefix()
+openscad = external_command("openscad")
+camotics = external_command("camotics")
 
 
 def eprint(message, *args, **kwargs):  # pylint: disable=W0613
@@ -147,7 +152,7 @@ if lang:
         sys.stderr.write(f"WARNING: localedir not found {localedir}\n")
 
 
-class ViaConstructor:
+class ViaConstructor:  # pylint: disable=R0904
     """viaconstructor main class."""
 
     LAYER_REGEX = re.compile(
@@ -168,6 +173,7 @@ class ViaConstructor:
         "gllist": [],
         "maxOuter": [],
         "minMax": [],
+        "outputMinMax": [],
         "table": [],
         "glwidget": None,
         "imgwidget": None,
@@ -187,11 +193,14 @@ class ViaConstructor:
         "draw_reader": None,
         "origin": [0.0, 0.0],
         "layers": {},
+        "object_active": "",
     }
     info = ""
     save_tabs = "no"
     save_starts = "no"
+    combobjwidget = None
     status_bar: Optional[QStatusBar] = None
+    infotext_widget: Optional[QPlainTextEdit] = None
     main: Optional[QMainWindow] = None
     toolbar: Optional[QToolBar] = None
     menubar: Optional[QMenuBar] = None
@@ -281,29 +290,32 @@ class ViaConstructor:
         debug("run_calculation: offsets")
 
         # create toolpath from objects
-        unit = psetup["machine"]["unit"]
-        diameter = psetup["tool"]["diameter"]
-        if unit == "inch":
-            diameter *= 25.4
         self.project["offsets"] = objects2polyline_offsets(
-            diameter,
+            psetup,
             self.project["objects"],
             self.project["maxOuter"],
-            psetup["mill"]["small_circles"],
         )
 
         # create machine commands
         debug("run_calculation: machine_commands")
-        output_plugin: Union[PostProcessorHpgl, PostProcessorGcodeLinuxCNC]
+        output_plugin: Union[
+            PostProcessorHpgl, PostProcessorGcodeLinuxCNC, PostProcessorGcodeGrbl
+        ]
         if self.project["setup"]["machine"]["plugin"] == "gcode_linuxcnc":
             output_plugin = PostProcessorGcodeLinuxCNC(
-                self.project["setup"]["machine"]["comments"]
+                self.project,
+            )
+            self.project["suffix"] = output_plugin.suffix()
+            self.project["axis"] = output_plugin.axis()
+        elif self.project["setup"]["machine"]["plugin"] == "gcode_grbl":
+            output_plugin = PostProcessorGcodeGrbl(
+                self.project,
             )
             self.project["suffix"] = output_plugin.suffix()
             self.project["axis"] = output_plugin.axis()
         elif self.project["setup"]["machine"]["plugin"] == "hpgl":
             output_plugin = PostProcessorHpgl(
-                self.project["setup"]["machine"]["comments"]
+                self.project,
             )
             self.project["suffix"] = output_plugin.suffix()
             self.project["axis"] = output_plugin.axis()
@@ -474,6 +486,9 @@ class ViaConstructor:
 
         debug("run_calculation: done")
 
+    def _toolbar_fonttool(self) -> None:
+        self.font_tool.show()
+
     def _toolbar_flipx(self) -> None:
         mirror_objects(self.project["objects"], self.project["minMax"], vertical=True)
         self.project["minMax"] = objects2minmax(self.project["objects"])
@@ -494,7 +509,16 @@ class ViaConstructor:
 
     def _toolbar_nest(self) -> None:
         int_scale = 100000
-        obj_dist = max(self.project["setup"]["tool"]["diameter"] * 3, 1.0)
+
+        diameter = None
+        for entry in self.project["setup"]["tool"]["tooltable"]:
+            if self.project["setup"]["tool"]["number"] == entry["number"]:
+                diameter = entry["diameter"]
+        if diameter is None:
+            print("ERROR: nest: TOOL not found")
+            return
+
+        obj_dist = max(diameter * 3, 1.0)
         items = []
         mapping = {}
         for obj_idx, obj_data in self.project["objects"].items():
@@ -609,6 +633,10 @@ class ViaConstructor:
             self.toolbuttons[title][9].setChecked(True)
         else:
             self.toolbuttons[title][9].setChecked(False)
+            self.project["maxOuter"] = find_tool_offsets(self.project["objects"])
+            self.combobjwidget.clear()  # type: ignore
+            for idx in self.project["objects"]:
+                self.combobjwidget.addItem(idx.split(":")[0])  # type: ignore
 
     def _toolbar_toggle_object_selector(self) -> None:
         """delete selector."""
@@ -706,6 +734,52 @@ class ViaConstructor:
         else:
             self.status_bar_message(f"{self.info} - save dxf..cancel")
 
+    def _toolbar_save_project(self) -> None:
+        """save project."""
+        self.status_bar_message(f"{self.info} - save project..")
+        file_dialog = QFileDialog(self.main)
+        file_dialog.setNameFilters(["vcp (*.vcp)"])
+        filename_default = (
+            f"{'.'.join(self.project['filename_draw'].split('.')[:-1])}.vcp"
+        )
+        self.project[
+            "filename_machine_cmd"
+        ] = f"{'.'.join(self.project['filename_draw'].split('.')[:-1])}.vcp"
+        name = file_dialog.getSaveFileName(
+            self.main,
+            "Save File",
+            filename_default,
+            "vcp (*.vcp)",
+        )
+        if name[0]:
+            self.save_project(name[0])
+        self.status_bar_message(f"{self.info} - save vcp..done ({name[0]})")
+
+    def _toolbar_load_project(self) -> None:
+        """load project."""
+        self.status_bar_message(f"{self.info} - load project..")
+        file_dialog = QFileDialog(self.main)
+
+        suffix_list = ["*.vcp"]
+        name = file_dialog.getOpenFileName(
+            self.main,
+            "Load Project",
+            "",
+            f"project ( {' '.join(suffix_list)} )" "Load Project",
+            "",
+        )
+        if name[0] and self.load_project(name[0]):
+            self.update_object_setup()
+            self.global_changed(0)
+            self.update_drawing()
+
+            self.create_menubar()
+            self.create_toolbar()
+
+            self.status_bar_message(f"{self.info} - load project..done ({name[0]})")
+        else:
+            self.status_bar_message(f"{self.info} - load project..cancel")
+
     def _toolbar_load_drawing(self) -> None:
         """load drawing."""
         self.status_bar_message(f"{self.info} - load drawing..")
@@ -724,7 +798,7 @@ class ViaConstructor:
         )
 
         if name[0] and self.load_drawing(name[0]):
-            self.update_table()
+            self.update_object_setup()
             self.global_changed(0)
             self.update_drawing()
 
@@ -774,7 +848,7 @@ class ViaConstructor:
         if name[0] and self.setup_load(name[0]):
             self.project["status"] = "CHANGE"
             self.update_global_setup()
-            self.update_table()
+            self.update_object_setup()
             self.global_changed(0)
             self.update_drawing()
             self.project["status"] = "READY"
@@ -800,7 +874,7 @@ class ViaConstructor:
             if self.setup_load_string(self.project["draw_reader"].load_setup()):  # type: ignore
                 self.project["status"] = "CHANGE"
                 self.update_global_setup()
-                self.update_table()
+                self.update_object_setup()
                 self.global_changed(0)
                 self.prepare_segments()
                 self.update_drawing()
@@ -859,11 +933,85 @@ class ViaConstructor:
             draw_all_gl(self.project)
 
         self.info = f"{round(self.project['minMax'][2] - self.project['minMax'][0], 2)}x{round(self.project['minMax'][3] - self.project['minMax'][1], 2)}mm"
+
+        infotext = f"Drawing: {self.info}\n"
+        if self.project["outputMinMax"]:
+            infotext += "Machine-Limits:\n"
+            infotext += f" X: {round(self.project['outputMinMax'][0])} mm -> {round(self.project['outputMinMax'][3])} mm\n"
+            infotext += f" Y: {round(self.project['outputMinMax'][1])} mm -> {round(self.project['outputMinMax'][4])} mm\n"
+            infotext += f" Z: {round(self.project['outputMinMax'][2])} mm -> {round(self.project['outputMinMax'][5])} mm\n"
+        if self.infotext_widget is not None:
+            self.infotext_widget.setPlainText(infotext)
+
         if self.main:
             self.main.setWindowTitle("viaConstructor")
         self.status_bar_message(f"{self.info} - calculate..done")
         self.update_layers()
         debug("update_drawing: done")
+
+    def save_project(self, filename: str) -> bool:
+        object_diffs: dict = {}
+        obj_starts = {}
+        for idx, obj in self.project["objects"].items():
+            uid = idx.split(":")[1]
+            obj_start = obj.get("start")
+            if obj_start:
+                obj_starts[uid] = obj_start
+            for section, section_data in obj.setup.items():
+                section_diff = {}
+                for key, value in section_data.items():
+                    if value != self.project["setup"][section][key]:
+                        section_diff[key] = value
+                if section_diff:
+                    if uid not in object_diffs:
+                        object_diffs[uid] = {}
+                    object_diffs[uid][section] = section_diff
+
+        filename_draw = self.project["filename_draw"]
+        if filename_draw:
+            filename_draw = str(Path(filename_draw).resolve())
+        project_data = {
+            "filename_draw": filename_draw,
+            "general": self.project["setup"],
+            "tabs": self.project["tabs"],
+            "starts": obj_starts,
+            "objects": object_diffs,
+        }
+        project_json = json.dumps(project_data, indent=4, sort_keys=True)
+        open(filename, "w").write(project_json)
+        return True
+
+    def load_project(self, filename: str) -> bool:
+        project_json = open(filename, "r").read()
+        project_data = json.loads(project_json)
+        for sname in self.project["setup"]:
+            self.project["setup"][sname].update(project_data.get(sname, {}))
+
+        filename = project_data.get("filename_draw", "")
+        if filename and self.project["filename_draw"] != filename:
+            self.load_drawing(filename)
+
+        if "tabs" in project_data:
+            self.project["tabs"] = project_data["tabs"]
+
+        for idx, obj in self.project["objects"].items():
+            uid = idx.split(":")[1]
+            obj["setup"] = deepcopy(self.project["setup"])
+            if uid in project_data["objects"]:
+                for section, section_data in project_data["objects"][uid].items():
+                    for key, value in section_data.items():
+                        obj["setup"][section][key] = value
+            if "starts" in project_data and uid in project_data["starts"]:
+                obj["start"] = project_data["starts"][uid]
+
+        if self.project["status"] != "INIT":
+            self.project["status"] = "CHANGE"
+            self.update_global_setup()
+            self.update_object_setup()
+            self.global_changed(0)
+            self.update_drawing()
+            self.project["status"] = "READY"
+        return True
 
     def materials_select(self, material_idx) -> None:
         """calculates the milling feedrate and tool-speed for the selected material
@@ -871,24 +1019,35 @@ class ViaConstructor:
         """
         machine_feedrate = self.project["setup"]["machine"]["feedrate"]
         machine_toolspeed = self.project["setup"]["machine"]["tool_speed"]
-        tool_diameter = self.project["setup"]["tool"]["diameter"]
+
+        diameter = None
+        blades = 0
+        for entry in self.project["setup"]["tool"]["tooltable"]:
+            if self.project["setup"]["tool"]["number"] == entry["number"]:
+                diameter = entry["diameter"]
+                blades = entry["blades"]
+        if diameter is None:
+            print("ERROR: nest: TOOL not found")
+            return
+
         unit = self.project["setup"]["machine"]["unit"]
         if unit == "inch":
-            tool_diameter *= 25.4
-        tool_vc = self.project["setup"]["tool"]["materialtable"][material_idx]["vc"]
-        tool_speed = tool_vc * 1000 / (tool_diameter * math.pi)
+            diameter *= 25.4
+        tool_vc = self.project["setup"]["workpiece"]["materialtable"][material_idx][
+            "vc"
+        ]
+        tool_speed = tool_vc * 1000 / (diameter * math.pi)
         tool_speed = int(min(tool_speed, machine_toolspeed))
-        tool_blades = self.project["setup"]["tool"]["blades"]
-        if tool_diameter <= 4.0:
+        if diameter <= 4.0:
             fz_key = "fz4"
-        elif tool_diameter <= 8.0:
+        elif diameter <= 8.0:
             fz_key = "fz8"
         else:
             fz_key = "fz12"
-        material_fz = self.project["setup"]["tool"]["materialtable"][material_idx][
+        material_fz = self.project["setup"]["workpiece"]["materialtable"][material_idx][
             fz_key
         ]
-        feedrate = tool_speed * tool_blades * material_fz
+        feedrate = tool_speed * blades * material_fz
         feedrate = int(min(feedrate, machine_feedrate))
 
         info_test = []
@@ -911,33 +1070,38 @@ class ViaConstructor:
             return
 
         self.project["status"] = "CHANGE"
+        for obj in self.project["objects"].values():
+            if obj.setup["tool"]["rate_h"] == self.project["setup"]["tool"]["rate_h"]:
+                obj.setup["tool"]["rate_h"] = int(feedrate)
+            if obj.setup["tool"]["speed"] == self.project["setup"]["tool"]["speed"]:
+                obj.setup["tool"]["speed"] = int(tool_speed)
         self.project["setup"]["tool"]["rate_h"] = int(feedrate)
         self.project["setup"]["tool"]["speed"] = int(tool_speed)
         self.update_global_setup()
-        self.update_table()
+        self.update_object_setup()
         self.update_drawing()
         self.project["status"] = "READY"
 
     def tools_select(self, tool_idx) -> None:
         self.project["status"] = "CHANGE"
-        self.project["setup"]["tool"]["diameter"] = float(
-            self.project["setup"]["tool"]["tooltable"][tool_idx]["diameter"]
-        )
-        self.project["setup"]["tool"]["number"] = int(
+        old_tool_number = self.project["setup"]["tool"]["number"]
+        new_tool_number = int(
             self.project["setup"]["tool"]["tooltable"][tool_idx]["number"]
         )
-        self.project["setup"]["tool"]["blades"] = int(
-            self.project["setup"]["tool"]["tooltable"][tool_idx]["blades"]
-        )
+        self.project["setup"]["tool"]["number"] = new_tool_number
+        for obj in self.project["objects"].values():
+            if obj.setup["tool"]["number"] == old_tool_number:
+                obj.setup["tool"]["number"] = new_tool_number
         self.update_global_setup()
-        self.update_table()
+        self.update_object_setup()
+        self.global_changed(0)
         self.update_drawing()
         self.project["status"] = "READY"
 
     def table_select(self, section, name, row_idx) -> None:
         if section == "tool" and name == "tooltable":
             self.tools_select(row_idx)
-        elif section == "tool" and name == "materialtable":
+        elif section == "workpiece" and name == "materialtable":
             self.materials_select(row_idx)
 
     def color_select(self, section, name) -> None:
@@ -948,157 +1112,6 @@ class ViaConstructor:
         button.setStyleSheet(f"background-color:rgb({rgb})")
         button.setText(rgb)
         self.global_changed(0)
-
-    def object_changed(self, obj_idx, sname, ename, value) -> None:
-        """object changed."""
-        if self.project["status"] == "CHANGE":
-            return
-        entry_type = self.project["setup_defaults"][sname][ename]["type"]
-        if entry_type == "bool":
-            value = bool(value == 2)
-        elif entry_type == "select":
-            value = str(value)
-        elif entry_type == "float":
-            value = float(value)
-        elif entry_type == "int":
-            value = int(value)
-        elif entry_type == "str":
-            value = str(value)
-        elif entry_type == "table":
-            pass
-        elif entry_type == "color":
-            pass
-        else:
-            eprint(f"Unknown setup-type: {entry_type}")
-            value = None
-        self.project["objects"][obj_idx]["setup"][sname][ename] = value
-        if not self.args.laser:
-            self.project["maxOuter"] = find_tool_offsets(self.project["objects"])
-
-        if not self.project["setup"]["view"]["autocalc"]:
-            return
-        self.update_drawing()
-
-    def update_table(self) -> None:
-        """update objects table."""
-
-        selected = -1
-        if (
-            self.project["glwidget"]
-            and self.project["glwidget"].selection_set
-            and self.project["glwidget"].selector_mode in {"delete", "oselect"}
-        ):
-            selected = self.project["glwidget"].selection_set[2]
-
-        debug("update_table: clear")
-        self.project["objmodel"].clear()
-        self.project["objmodel"].setHorizontalHeaderLabels(["Object", "Value"])
-        # self.project["objwidget"].header().setDefaultSectionSize(180)
-        self.project["objwidget"].setModel(self.project["objmodel"])
-        root = self.project["objmodel"].invisibleRootItem()
-
-        if len(self.project["objects"]) >= 50:
-            debug(f"update_table: too many objects: {len(self.project['objects'])}")
-            return
-        debug("update_table: loading")
-        for obj_idx, obj in self.project["objects"].items():
-            if obj.get("layer", "").startswith("BREAKS:") or obj.get(
-                "layer", ""
-            ).startswith("_TABS"):
-                continue
-            root.appendRow(
-                [
-                    QStandardItem(
-                        f"#{obj_idx} {'closed' if obj['closed'] else 'open'}"
-                    ),
-                ]
-            )
-            obj_root = root.child(root.rowCount() - 1)
-            for sname in ("mill", "pockets", "tabs", "leads"):
-                obj_root.appendRow(
-                    [
-                        QStandardItem(sname),
-                    ]
-                )
-                section_root = obj_root.child(obj_root.rowCount() - 1)
-                for ename, entry in self.project["setup_defaults"][sname].items():
-                    value = obj["setup"][sname][ename]
-                    if entry.get("per_object"):
-                        title_cell = QStandardItem(ename)
-                        value_cell = QStandardItem("")
-                        section_root.appendRow([title_cell, value_cell])
-                        if entry["type"] == "bool":
-                            checkbox = QCheckBox(entry.get("title", ename))
-                            checkbox.setChecked(value)
-                            checkbox.setToolTip(
-                                entry.get("tooltip", f"{sname}/{ename}")
-                            )
-                            checkbox.stateChanged.connect(partial(self.object_changed, obj_idx, sname, ename))  # type: ignore
-                            self.project["objwidget"].setIndexWidget(
-                                value_cell.index(), checkbox
-                            )
-                        elif entry["type"] == "select":
-                            combobox = QComboBox()
-                            for option in entry["options"]:
-                                combobox.addItem(option[0])
-                            combobox.setCurrentText(value)
-                            combobox.setToolTip(
-                                entry.get("tooltip", f"{sname}/{ename}")
-                            )
-                            combobox.currentTextChanged.connect(partial(self.object_changed, obj_idx, sname, ename))  # type: ignore
-                            self.project["objwidget"].setIndexWidget(
-                                value_cell.index(), combobox
-                            )
-                        elif entry["type"] == "float":
-                            dspinbox = QDoubleSpinBox()
-                            dspinbox.setDecimals(entry.get("decimals", 4))
-                            dspinbox.setSingleStep(entry.get("step", 1.0))
-                            dspinbox.setMinimum(entry["min"])
-                            dspinbox.setMaximum(entry["max"])
-                            dspinbox.setValue(value)
-                            dspinbox.setToolTip(
-                                entry.get("tooltip", f"{sname}/{ename}")
-                            )
-                            dspinbox.valueChanged.connect(partial(self.object_changed, obj_idx, sname, ename))  # type: ignore
-                            self.project["objwidget"].setIndexWidget(
-                                value_cell.index(), dspinbox
-                            )
-                        elif entry["type"] == "int":
-                            spinbox = QSpinBox()
-                            spinbox.setSingleStep(entry.get("step", 1))
-                            spinbox.setMinimum(entry["min"])
-                            spinbox.setMaximum(entry["max"])
-                            spinbox.setValue(value)
-                            spinbox.setToolTip(entry.get("tooltip", f"{sname}/{ename}"))
-                            spinbox.valueChanged.connect(partial(self.object_changed, obj_idx, sname, ename))  # type: ignore
-                            self.project["objwidget"].setIndexWidget(
-                                value_cell.index(), spinbox
-                            )
-                        elif entry["type"] == "str":
-                            lineedit = QLineEdit()
-                            lineedit.setText(value)
-                            lineedit.setToolTip(
-                                entry.get("tooltip", f"{sname}/{ename}")
-                            )
-                            lineedit.textChanged.connect(partial(self.object_changed, obj_idx, sname, ename))  # type: ignore
-                            self.project["objwidget"].setIndexWidget(
-                                value_cell.index(), lineedit
-                            )
-                        elif entry["type"] == "table":
-                            pass
-                        elif entry["type"] == "color":
-                            pass
-                        else:
-                            eprint(f"Unknown setup-type: {entry['type']}")
-
-            index = self.project["objmodel"].indexFromItem(obj_root)
-            if obj_idx == selected:
-                self.project["objwidget"].expand(index)
-            else:
-                self.project["objwidget"].collapse(index)
-
-        # self.project["objwidget"].expandAll()
-        debug("update_table: done")
 
     def update_starts(self) -> None:
         """update starts."""
@@ -1150,7 +1163,113 @@ class ViaConstructor:
         if self.save_tabs == "yes" and self.project["draw_reader"]:
             self.project["draw_reader"].save_tabs(self.project["tabs"]["data"])
 
-    def global_changed(self, value) -> None:  # pylint: disable=W0613
+    def object_changed(self, value=0) -> None:  # pylint: disable=W0613
+        """object setup changed."""
+
+        titles = {
+            "mill": "Mill",
+            "tool": "Tool",
+            "pockets": "Pockets",
+            "tabs": "Tabs",
+            "leads": "Leads",
+        }
+
+        if self.project["status"] == "CHANGE":
+            return
+
+        object_active = self.project["object_active"]
+        setup_data = self.project["setup"]
+
+        for obj_idx, obj in self.project["objects"].items():
+            if obj_idx.startswith(f"{object_active}:"):
+                setup_data = obj["setup"]
+
+        tab_idx = 0
+        for sname in self.project["setup_defaults"]:
+            show_section = False
+            changed_section = False
+            for entry in self.project["setup_defaults"][sname].values():
+                if entry.get("per_object", False):
+                    show_section = True
+            if not show_section:
+                continue
+            for ename, entry in self.project["setup_defaults"][sname].items():
+                if not entry.get("per_object", False):
+                    continue
+                if entry["type"] == "bool":
+                    setup_data[sname][ename] = entry["widget_obj"].isChecked()
+                elif entry["type"] == "select":
+                    setup_data[sname][ename] = entry["widget_obj"].currentText()
+                elif entry["type"] == "float":
+                    setup_data[sname][ename] = entry["widget_obj"].value()
+                elif entry["type"] == "int":
+                    setup_data[sname][ename] = entry["widget_obj"].value()
+                elif entry["type"] == "str":
+                    setup_data[sname][ename] = entry["widget_obj"].text()
+                elif entry["type"] == "mstr":
+                    setup_data[sname][ename] = entry["widget_obj"].toPlainText()
+                elif entry["type"] == "table":
+                    for row_idx in range(entry["widget_obj"].rowCount()):
+                        col_idx = 0
+                        for key, col_type in entry["columns"].items():
+                            if entry["widget_obj"].item(row_idx, col_idx + 1) is None:
+                                print("TABLE_ERROR")
+                                continue
+                            if col_type["type"] == "str":
+                                value = (
+                                    entry["widget_obj"]
+                                    .item(row_idx, col_idx + 1)
+                                    .text()
+                                )
+                                setup_data[sname][ename][row_idx][key] = str(value)
+                            elif col_type["type"] == "mstr":
+                                value = (
+                                    entry["widget_obj"]
+                                    .item(row_idx, col_idx + 1)
+                                    .toPlainText()
+                                )
+                                setup_data[sname][ename][row_idx][key] = str(value)
+                            elif col_type["type"] == "int":
+                                value = (
+                                    entry["widget_obj"]
+                                    .item(row_idx, col_idx + 1)
+                                    .text()
+                                )
+                                setup_data[sname][ename][row_idx][key] = int(value)
+                            elif col_type["type"] == "float":
+                                value = (
+                                    entry["widget_obj"]
+                                    .item(row_idx, col_idx + 1)
+                                    .text()
+                                )
+                                setup_data[sname][ename][row_idx][key] = float(value)
+                            col_idx += 1
+                elif entry["type"] == "color":
+                    pass
+                else:
+                    eprint(f"Unknown setup-type: {entry['type']}")
+                if setup_data[sname][ename] != self.project["setup"][sname][ename]:
+                    entry["widget_obj_label"].setStyleSheet("color: black")
+                    changed_section = True
+                else:
+                    entry["widget_obj_label"].setStyleSheet("color: lightgray")
+            if changed_section:
+                self.tabobjwidget.setTabText(tab_idx, f">{titles.get(sname, sname)}<")
+            else:
+                self.tabobjwidget.setTabText(tab_idx, f"{titles.get(sname, sname)}")
+            tab_idx += 1
+
+        if setup_data["mill"]["step"] >= 0.0:
+            setup_data["mill"]["step"] = -0.05
+
+        if not self.project["draw_reader"]:
+            return
+
+        if not self.project["setup"]["view"]["autocalc"]:
+            return
+        self.update_drawing()
+
+    def global_changed(self, value=0) -> None:  # pylint: disable=W0613
         """global setup changed."""
         if self.project["status"] == "CHANGE":
             return
@@ -1167,6 +1286,8 @@ class ViaConstructor:
                     self.project["setup"][sname][ename] = entry["widget"].value()
                 elif entry["type"] == "str":
                     self.project["setup"][sname][ename] = entry["widget"].text()
+                elif entry["type"] == "mstr":
+                    self.project["setup"][sname][ename] = entry["widget"].toPlainText()
                 elif entry["type"] == "table":
                     for row_idx in range(entry["widget"].rowCount()):
                         col_idx = 0
@@ -1177,6 +1298,15 @@ class ViaConstructor:
                             if col_type["type"] == "str":
                                 value = (
                                     entry["widget"].item(row_idx, col_idx + 1).text()
+                                )
+                                self.project["setup"][sname][ename][row_idx][key] = str(
+                                    value
+                                )
+                            elif col_type["type"] == "mstr":
+                                value = (
+                                    entry["widget"]
+                                    .item(row_idx, col_idx + 1)
+                                    .toPlainText()
                                 )
                                 self.project["setup"][sname][ename][row_idx][key] = str(
                                     value
@@ -1210,7 +1340,7 @@ class ViaConstructor:
         self.project["segments"] = deepcopy(self.project["segments_org"])
         self.project["segments"] = clean_segments(self.project["segments"])
         for obj in self.project["objects"].values():
-            for sect in ("tool", "mill", "pockets", "tabs", "leads"):
+            for sect in ("mill", "tool", "pockets", "tabs", "leads"):
                 for key, global_value in self.project["setup"][sect].items():
                     # change object value only if the value changed and the value diffs again the last value in global
                     if (
@@ -1220,7 +1350,7 @@ class ViaConstructor:
                         obj["setup"][sect][key] = self.project["setup"][sect][key]
 
         self.project["maxOuter"] = find_tool_offsets(self.project["objects"])
-        self.update_table()
+        self.update_object_setup()
 
         if not self.project["setup"]["view"]["autocalc"]:
             return
@@ -1319,7 +1449,7 @@ class ViaConstructor:
 
             self.project["status"] = "CHANGE"
             self.update_global_setup()
-            self.update_table()
+            self.update_object_setup()
             self.global_changed(0)
             self.update_drawing()
             self.project["status"] = "READY"
@@ -1432,6 +1562,30 @@ class ViaConstructor:
                 False,
                 _("File"),
                 "exit",
+                None,
+            ],
+            _("Load project"): [
+                "open.png",
+                "",
+                _("Load project"),
+                self._toolbar_load_project,
+                False,
+                True,
+                False,
+                _("Project"),
+                "",
+                None,
+            ],
+            _("Save project"): [
+                "save.png",
+                "",
+                _("Save project"),
+                self._toolbar_save_project,
+                False,
+                True,
+                False,
+                _("Project"),
+                "",
                 None,
             ],
             _("Save Machine-Commands"): [
@@ -1608,7 +1762,7 @@ class ViaConstructor:
                 _("nesting workpiece"),
                 self._toolbar_nest,
                 HAVE_NEST,
-                True,
+                HAVE_NEST,
                 False,
                 _("Nesting"),
                 "",
@@ -1652,7 +1806,7 @@ class ViaConstructor:
             ],
             _("Repair-Selector"): [
                 "repair.png",
-                "Ctrl+F",
+                "",
                 _("Repair-Selector"),
                 self._toolbar_toggle_repair_selector,
                 True,
@@ -1698,6 +1852,30 @@ class ViaConstructor:
                 "",
                 None,
             ],
+            _("openscad preview"): [
+                "openscad.png",
+                "F5",
+                _("view in openscad"),
+                self.open_preview_in_openscad,
+                openscad is not None,
+                openscad is not None,
+                False,
+                _("Simulation"),
+                "",
+                None,
+            ],
+            _("camotics preview"): [
+                "camotics.png",
+                "F5",
+                _("view in camotics"),
+                self.open_preview_in_camotics,
+                camotics is not None,
+                camotics is not None,
+                False,
+                _("Simulation"),
+                "",
+                None,
+            ],
             _("redraw"): [
                 "redraw.png",
                 "F5",
@@ -1708,6 +1886,18 @@ class ViaConstructor:
                 False,
                 _("Calculation"),
                 "",
+                None,
+            ],
+            _("Font-Tool"): [
+                "fonts.png",
+                "Ctrl+F",
+                _("open fonttool"),
+                self._toolbar_fonttool,
+                False,
+                True,
+                False,
+                _("Tools"),
+                "exit",
                 None,
             ],
         }
@@ -1783,6 +1973,8 @@ class ViaConstructor:
                     entry["widget"].setValue(self.project["setup"][sname][ename])
                 elif entry["type"] == "str":
                     entry["widget"].setText(self.project["setup"][sname][ename])
+                elif entry["type"] == "mstr":
+                    entry["widget"].setPlainText(self.project["setup"][sname][ename])
                 elif entry["type"] == "table":
                     # add empty row if not exist
                     first_element = list(entry["columns"].keys())[0]
@@ -1914,6 +2106,13 @@ class ViaConstructor:
                     lineedit.textChanged.connect(self.global_changed)  # type: ignore
                     hlayout.addWidget(lineedit)
                     entry["widget"] = lineedit
+                elif entry["type"] == "mstr":
+                    mlineedit = QPlainTextEdit()
+                    mlineedit.setPlainText(self.project["setup"][sname][ename])
+                    mlineedit.setToolTip(entry.get("tooltip", f"{sname}/{ename}"))
+                    mlineedit.textChanged.connect(self.global_changed)  # type: ignore
+                    hlayout.addWidget(mlineedit)
+                    entry["widget"] = mlineedit
                 elif entry["type"] == "table":
                     # add empty row if not exist
                     first_element = list(entry["columns"].keys())[0]
@@ -1962,7 +2161,7 @@ class ViaConstructor:
                                 item,
                             )
                             # if entry["columns"][key].get("ro", False):
-                            #    item.setFlags(QtCore.Qt.ItemIsEditable)
+                            #    item.setFlags(Qt.ItemIsEditable)
                             table.resizeColumnToContents(col_idx + idxf_offset)
                     table.itemChanged.connect(self.global_changed)  # type: ignore
                     vlayout.addWidget(table)
@@ -1977,6 +2176,584 @@ class ViaConstructor:
                 ulabel = QLabel(unit)
                 ulabel.setFont(QFont("Arial", 9))
                 hlayout.addWidget(ulabel)
+
+    def setup_select_object(self, value):
+        if self.project["status"] != "READY":
+            return
+        self.project["status"] = "CHANGE"
+        obj_idx = value.split(":")[0]
+        self.combobjwidget.setCurrentText(obj_idx)
+        self.project["object_active"] = obj_idx
+        self.update_object_setup()
+        self.project["status"] = "READY"
+
+        if self.project["engine"] == "2D":
+            draw_all_2d(self.project)
+        else:
+            draw_all_gl(self.project)
+
+    def update_object_setup(self) -> None:
+        object_active = self.project["object_active"]
+        setup_data = self.project["setup"]
+
+        titles = {
+            "mill": "M&ill",
+            "tool": "&Tool",
+            "workpiece": "&Workpiece",
+            "pockets": "P&ockets",
+            "tabs": "Ta&bs",
+            "leads": "Lea&ds",
+            "machine": "M&achine",
+            "view": "&View",
+        }
+
+        for obj_idx, obj in self.project["objects"].items():
+            if obj_idx.startswith(f"{object_active}:"):
+                setup_data = obj["setup"]
+
+        tab_idx = 0
+        for sname in self.project["setup_defaults"]:
+            show_section = False
+            changed_section = False
+            for entry in self.project["setup_defaults"][sname].values():
+                if entry.get("per_object", False):
+                    show_section = True
+            if not show_section:
+                continue
+            for ename, entry in self.project["setup_defaults"][sname].items():
+                if not entry.get("per_object", False):
+                    continue
+
+                if setup_data[sname][ename] != self.project["setup"][sname][ename]:
+                    entry["widget_obj_label"].setStyleSheet("color: black")
+                    changed_section = True
+                else:
+                    entry["widget_obj_label"].setStyleSheet("color: lightgray")
+
+                if entry["type"] == "bool":
+                    entry["widget_obj"].setChecked(setup_data[sname][ename])
+                elif entry["type"] == "select":
+                    entry["widget_obj"].setCurrentText(setup_data[sname][ename])
+                elif entry["type"] == "float":
+                    entry["widget_obj"].setValue(setup_data[sname][ename])
+                elif entry["type"] == "int":
+                    entry["widget_obj"].setValue(setup_data[sname][ename])
+                elif entry["type"] == "str":
+                    entry["widget_obj"].setText(setup_data[sname][ename])
+                elif entry["type"] == "mstr":
+                    entry["widget_obj"].setPlainText(setup_data[sname][ename])
+                elif entry["type"] == "table":
+                    # add empty row if not exist
+                    first_element = list(entry["columns"].keys())[0]
+
+                    if (
+                        entry.get("column_defaults") is not None
+                        and str(setup_data[sname][ename][-1][first_element]) != ""
+                    ):
+                        new_row = {}
+                        for key, default in entry["column_defaults"].items():
+                            new_row[key] = default
+                        setup_data[sname][ename].append(new_row)
+
+                    table = entry["widget_obj"]
+                    table.setRowCount(len(setup_data[sname][ename]))
+                    idxf_offset = 0
+                    table.setColumnCount(len(entry["columns"]))
+                    if entry["selectable"]:
+                        table.setColumnCount(len(entry["columns"]) + 1)
+                        table.setHorizontalHeaderItem(0, QTableWidgetItem("Select"))
+                        idxf_offset = 1
+                    for col_idx, title in enumerate(entry["columns"]):
+                        table.setHorizontalHeaderItem(
+                            col_idx + idxf_offset, QTableWidgetItem(title)
+                        )
+                    for row_idx, row in enumerate(setup_data[sname][ename]):
+                        if entry["selectable"]:
+                            button = QPushButton()
+                            button.setIcon(
+                                QIcon(
+                                    os.path.join(
+                                        self.module_root, "icons", "select.png"
+                                    )
+                                )
+                            )
+                            button.setToolTip(_("select this row"))
+                            button.clicked.connect(partial(self.table_select, sname, ename, row_idx))  # type: ignore
+                            table.setCellWidget(row_idx, 0, button)
+                            table.resizeColumnToContents(0)
+                        for col_idx, key in enumerate(entry["columns"]):
+                            table.setItem(
+                                row_idx,
+                                col_idx + idxf_offset,
+                                QTableWidgetItem(str(row[key])),
+                            )
+                            table.resizeColumnToContents(col_idx + idxf_offset)
+                elif entry["type"] == "color":
+                    pass
+                else:
+                    eprint(f"Unknown setup-type: {entry['type']}")
+
+            if changed_section:
+                self.tabobjwidget.setTabText(tab_idx, f">{titles.get(sname, sname)}<")
+            else:
+                self.tabobjwidget.setTabText(tab_idx, f"{titles.get(sname, sname)}")
+            tab_idx += 1
+
+    def create_object_setup(self, tabwidget) -> None:
+        for sname in self.project["setup_defaults"]:
+            show_section = False
+            for entry in self.project["setup_defaults"][sname].values():
+                if entry.get("per_object", False):
+                    show_section = True
+            if not show_section:
+                continue
+
+            titles = {
+                "mill": "Mill",
+                "tool": "Tool",
+                "pockets": "Pockets",
+                "tabs": "Tabs",
+                "leads": "Leads",
+            }
+            vcontainer = QWidget()
+            vlayout = QVBoxLayout(vcontainer)
+            vlayout.setContentsMargins(0, 0, 0, 0)
+            tabwidget.addTab(vcontainer, titles.get(sname, sname))
+
+            for ename, entry in self.project["setup_defaults"][sname].items():
+                if not entry.get("per_object", False):
+                    continue
+
+                container = QWidget()
+                hlayout = QHBoxLayout(container)
+                hlayout.setContentsMargins(10, 0, 10, 0)
+                entry["widget_obj_label"] = QLabel(entry.get("title", ename))
+                hlayout.addWidget(entry["widget_obj_label"])
+                vlayout.addWidget(container)
+                hlayout.addStretch(1)
+                if entry["type"] == "bool":
+                    checkbox = QCheckBox(entry.get("title", ename))
+                    checkbox.setChecked(self.project["setup"][sname][ename])
+                    checkbox.setToolTip(entry.get("tooltip", f"{sname}/{ename}"))
+                    checkbox.stateChanged.connect(self.object_changed)  # type: ignore
+                    hlayout.addWidget(checkbox)
+                    entry["widget_obj"] = checkbox
+                elif entry["type"] == "select":
+                    combobox = QComboBox()
+                    for option in entry["options"]:
+                        combobox.addItem(option[0])
+                    combobox.setCurrentText(self.project["setup"][sname][ename])
+                    combobox.setToolTip(entry.get("tooltip", f"{sname}/{ename}"))
+                    combobox.currentTextChanged.connect(self.object_changed)  # type: ignore
+                    hlayout.addWidget(combobox)
+                    entry["widget_obj"] = combobox
+                elif entry["type"] == "color":
+                    color = self.project["setup"][sname][ename]
+                    rgb = f"{color[0] * 255:1.0f},{color[1] * 255:1.0f},{color[2] * 255:1.0f}"
+                    button = QPushButton(rgb)
+                    button.setStyleSheet(f"background-color:rgb({rgb})")
+                    button.setToolTip(entry.get("tooltip", f"{sname}/{ename}"))
+                    button.clicked.connect(partial(self.color_select, sname, ename))  # type: ignore
+                    hlayout.addWidget(button)
+                    entry["widget_obj"] = button
+                elif entry["type"] == "float":
+                    dspinbox = QDoubleSpinBox()
+                    dspinbox.setDecimals(entry.get("decimals", 4))
+                    dspinbox.setSingleStep(entry.get("step", 1.0))
+                    dspinbox.setMinimum(entry["min"])
+                    dspinbox.setMaximum(entry["max"])
+                    dspinbox.setValue(self.project["setup"][sname][ename])
+                    dspinbox.setToolTip(entry.get("tooltip", f"{sname}/{ename}"))
+                    dspinbox.valueChanged.connect(self.object_changed)  # type: ignore
+                    hlayout.addWidget(dspinbox)
+                    entry["widget_obj"] = dspinbox
+                elif entry["type"] == "int":
+                    spinbox = QSpinBox()
+                    spinbox.setSingleStep(entry.get("step", 1))
+                    spinbox.setMinimum(entry["min"])
+                    spinbox.setMaximum(entry["max"])
+                    spinbox.setValue(self.project["setup"][sname][ename])
+                    spinbox.setToolTip(entry.get("tooltip", f"{sname}/{ename}"))
+                    spinbox.valueChanged.connect(self.object_changed)  # type: ignore
+                    hlayout.addWidget(spinbox)
+                    entry["widget_obj"] = spinbox
+                elif entry["type"] == "str":
+                    lineedit = QLineEdit()
+                    lineedit.setText(self.project["setup"][sname][ename])
+                    lineedit.setToolTip(entry.get("tooltip", f"{sname}/{ename}"))
+                    lineedit.textChanged.connect(self.object_changed)  # type: ignore
+                    hlayout.addWidget(lineedit)
+                    entry["widget_obj"] = lineedit
+                elif entry["type"] == "mstr":
+                    mlineedit = QPlainTextEdit()
+                    mlineedit.setPlainText(self.project["setup"][sname][ename])
+                    mlineedit.setToolTip(entry.get("tooltip", f"{sname}/{ename}"))
+                    mlineedit.textChanged.connect(self.object_changed)  # type: ignore
+                    hlayout.addWidget(mlineedit)
+                    entry["widget_obj"] = mlineedit
+                elif entry["type"] == "table":
+                    # add empty row if not exist
+                    first_element = list(entry["columns"].keys())[0]
+                    if (
+                        entry.get("column_defaults") is not None
+                        and str(self.project["setup"][sname][ename][-1][first_element])
+                        != ""
+                    ):
+                        new_row = {}
+                        for key, default in entry["column_defaults"].items():
+                            new_row[key] = default
+                        self.project["setup"][sname][ename].append(new_row)
+
+                    table = QTableWidget()
+                    table.setToolTip(entry.get("tooltip", f"{sname}/{ename}"))
+                    table.setRowCount(len(self.project["setup"][sname][ename]))
+                    idxf_offset = 0
+                    table.setColumnCount(len(entry["columns"]))
+                    if entry["selectable"]:
+                        table.setColumnCount(len(entry["columns"]) + 1)
+                        table.setHorizontalHeaderItem(0, QTableWidgetItem("Select"))
+                        idxf_offset = 1
+                    for col_idx, title in enumerate(entry["columns"]):
+                        table.setHorizontalHeaderItem(
+                            col_idx + idxf_offset, QTableWidgetItem(title)
+                        )
+                    for row_idx, row in enumerate(self.project["setup"][sname][ename]):
+                        if entry["selectable"]:
+                            button = QPushButton()
+                            button.setIcon(
+                                QIcon(
+                                    os.path.join(
+                                        self.module_root, "icons", "select.png"
+                                    )
+                                )
+                            )
+                            button.setToolTip(_("select this row"))
+                            button.clicked.connect(partial(self.table_select, sname, ename, row_idx))  # type: ignore
+                            table.setCellWidget(row_idx, 0, button)
+                            table.resizeColumnToContents(0)
+                        for col_idx, key in enumerate(entry["columns"]):
+                            item = QTableWidgetItem(str(row[key]))
+                            table.setItem(
+                                row_idx,
+                                col_idx + idxf_offset,
+                                item,
+                            )
+                            # if entry["columns"][key].get("ro", False):
+                            #    item.setFlags(Qt.ItemIsEditable)
+                            table.resizeColumnToContents(col_idx + idxf_offset)
+                    table.itemChanged.connect(self.object_changed)  # type: ignore
+                    vlayout.addWidget(table)
+                    entry["widget_obj"] = table
+                else:
+                    eprint(f"Unknown setup-type: {entry['type']}")
+
+                unit = entry.get("unit", "")
+                if unit == "LINEARMEASURE":
+                    unit = self.project["setup"]["machine"]["unit"]
+
+                ulabel = QLabel(unit)
+                ulabel.setFont(QFont("Arial", 9))
+                hlayout.addWidget(ulabel)
+
+        def object_move(spinbox_steps, checkbox_childs, direction):
+            object_active = self.project["object_active"]
+            with_childs = checkbox_childs.isChecked()
+            diff = spinbox_steps.value()
+            step_x = 0.0
+            step_y = 0.0
+            if direction == "left":
+                step_x = -diff
+            elif direction == "right":
+                step_x = diff
+            elif direction == "up":
+                step_y = diff
+            elif direction == "down":
+                step_y = -diff
+
+            object_active_obj = None
+            for obj_idx, obj in self.project["objects"].items():
+                if obj_idx.startswith(f"{object_active}:"):
+                    object_active_obj = obj
+
+            move_object(object_active_obj, step_x, step_y)
+            if with_childs:
+                for inner in object_active_obj["inner_objects"]:
+                    move_object(self.project["objects"][inner], step_x, step_y)
+
+            self.update_tabs_data()
+            self.update_drawing()
+
+        vcontainer = QWidget()
+        vlayout = QVBoxLayout(vcontainer)
+        vlayout.setContentsMargins(0, 0, 0, 0)
+
+        vlayout.addWidget(QLabel("Move:"))
+
+        vlayout.addWidget(QLabel("Steps"))
+
+        dspinbox = QDoubleSpinBox()
+        dspinbox.setDecimals(4)
+        dspinbox.setSingleStep(1.0)
+        dspinbox.setMinimum(0.0)
+        dspinbox.setMaximum(1000.0)
+        dspinbox.setValue(1.0)
+        dspinbox.setToolTip("")
+        vlayout.addWidget(dspinbox)
+
+        checkbox = QCheckBox("with childs")
+        checkbox.setChecked(True)
+        checkbox.setToolTip("move all childs")
+        vlayout.addWidget(checkbox)
+
+        gcontainer = QWidget()
+        glayout = QGridLayout()
+        gcontainer.setLayout(glayout)
+        vlayout.addWidget(gcontainer)
+
+        button = QPushButton("Left")
+        button.setToolTip(_("move left"))
+        button.clicked.connect(partial(object_move, dspinbox, checkbox, "left"))  # type: ignore
+        glayout.addWidget(button, 1, 0)
+
+        button = QPushButton("Right")
+        button.setToolTip(_("move right"))
+        button.clicked.connect(partial(object_move, dspinbox, checkbox, "right"))  # type: ignore
+        glayout.addWidget(button, 1, 2)
+
+        button = QPushButton("Up")
+        button.setToolTip(_("move up"))
+        button.clicked.connect(partial(object_move, dspinbox, checkbox, "up"))  # type: ignore
+        glayout.addWidget(button, 0, 1)
+
+        button = QPushButton("Down")
+        button.setToolTip(_("move down"))
+        button.clicked.connect(partial(object_move, dspinbox, checkbox, "down"))  # type: ignore
+        glayout.addWidget(button, 2, 1)
+
+        def object_rotate(spinbox_angle, checkbox_childs, direction):
+            object_active = self.project["object_active"]
+            with_childs = checkbox_childs.isChecked()
+            diff = spinbox_angle.value()
+            if direction == "ccw":
+                angle = diff
+            elif direction == "cw":
+                angle = -diff
+
+            object_active_obj = None
+            for obj_idx, obj in self.project["objects"].items():
+                if obj_idx.startswith(f"{object_active}:"):
+                    object_active_obj = obj
+
+            center = points_to_center(object2points(object_active_obj))
+
+            rotate_object(
+                object_active_obj, center[0], center[1], angle * math.pi / 180.0
+            )
+            if with_childs:
+                for inner in object_active_obj["inner_objects"]:
+                    rotate_object(
+                        self.project["objects"][inner],
+                        center[0],
+                        center[1],
+                        angle * math.pi / 180.0,
+                    )
+
+            self.update_tabs_data()
+            self.update_drawing()
+
+        vlayout.addWidget(QLabel("Rotate:"))
+        vlayout.addWidget(QLabel("Angle"))
+
+        dspinbox = QDoubleSpinBox()
+        dspinbox.setDecimals(4)
+        dspinbox.setSingleStep(1.0)
+        dspinbox.setMinimum(0.0)
+        dspinbox.setMaximum(360.0)
+        dspinbox.setValue(45.0)
+        dspinbox.setToolTip("")
+        vlayout.addWidget(dspinbox)
+
+        checkbox = QCheckBox("with childs")
+        checkbox.setChecked(True)
+        checkbox.setToolTip("move all childs")
+        vlayout.addWidget(checkbox)
+
+        gcontainer = QWidget()
+        glayout = QGridLayout()
+        gcontainer.setLayout(glayout)
+        vlayout.addWidget(gcontainer)
+
+        button = QPushButton(_("CCW"))
+        button.setToolTip(_("rotate counter clockwise"))
+        button.clicked.connect(partial(object_rotate, dspinbox, checkbox, "ccw"))  # type: ignore
+        glayout.addWidget(button, 0, 0)
+
+        button = QPushButton(_("CW"))
+        button.setToolTip(_("rotate clockwise"))
+        button.clicked.connect(partial(object_rotate, dspinbox, checkbox, "cw"))  # type: ignore
+        glayout.addWidget(button, 0, 1)
+
+        def object_scale(spinbox_scale, checkbox_childs):
+            object_active = self.project["object_active"]
+            with_childs = checkbox_childs.isChecked()
+            scale = spinbox_scale.value()
+
+            object_active_obj = None
+            for obj_idx, obj in self.project["objects"].items():
+                if obj_idx.startswith(f"{object_active}:"):
+                    object_active_obj = obj
+
+            center = points_to_center(object2points(object_active_obj))
+            move_object(object_active_obj, -center[0], -center[1])
+            scale_object(object_active_obj, scale)
+            move_object(object_active_obj, center[0], center[1])
+            if with_childs:
+                for inner in object_active_obj["inner_objects"]:
+                    center = points_to_center(
+                        object2points(self.project["objects"][inner])
+                    )
+                    move_object(self.project["objects"][inner], -center[0], -center[1])
+                    scale_object(self.project["objects"][inner], scale)
+                    move_object(self.project["objects"][inner], center[0], center[1])
+
+            self.update_tabs_data()
+            self.update_drawing()
+
+        vlayout.addWidget(QLabel("Scale:"))
+        vlayout.addWidget(QLabel("Scale"))
+
+        dspinbox = QDoubleSpinBox()
+        dspinbox.setDecimals(4)
+        dspinbox.setSingleStep(1.0)
+        dspinbox.setMinimum(0.0)
+        dspinbox.setMaximum(1000.0)
+        dspinbox.setValue(1.1)
+        dspinbox.setToolTip("scale multiplier")
+        vlayout.addWidget(dspinbox)
+
+        checkbox = QCheckBox("with childs")
+        checkbox.setChecked(True)
+        checkbox.setToolTip("move all childs")
+        vlayout.addWidget(checkbox)
+
+        gcontainer = QWidget()
+        glayout = QGridLayout()
+        gcontainer.setLayout(glayout)
+        vlayout.addWidget(gcontainer)
+
+        button = QPushButton("Scale")
+        button.setToolTip(_("scale"))
+        button.clicked.connect(partial(object_scale, dspinbox, checkbox))  # type: ignore
+        glayout.addWidget(button, 0, 0)
+
+        def clone_object(obj_idx, offset_x=0, offset_y=0):
+            if not obj_idx:
+                return None
+            main_idx = obj_idx.split(":")[0]
+            main_uid = obj_idx.split(":")[1]
+            idx_list = [oid.split(":")[0] for oid in self.project["objects"]]
+            sub_idx = 1
+            while f"{main_idx},{sub_idx}" in idx_list:
+                sub_idx += 1
+            new_obj_idx = f"{main_idx},{sub_idx}:{main_uid}"
+            self.project["objects"][new_obj_idx] = deepcopy(
+                self.project["objects"][obj_idx]
+            )
+
+            move_object(
+                self.project["objects"][new_obj_idx],
+                offset_x,
+                offset_y,
+            )
+            return new_obj_idx
+
+        def object_copy(checkbox_childs, offset_direction):
+            object_active = self.project["object_active"]
+            with_childs = checkbox_childs.isChecked()
+
+            object_active_obj = None
+            object_active_obj_idx = ""
+            for obj_idx, obj in self.project["objects"].items():
+                if obj_idx.startswith(f"{object_active}:"):
+                    object_active_obj = obj
+                    object_active_obj_idx = obj_idx
+
+            bounding_box = points_to_boundingbox(
+                object2points(self.project["objects"][object_active_obj_idx])
+            )
+            offset_x = 0
+            offset_y = 0
+            if offset_direction == "left":
+                offset_x = (
+                    0 - (bounding_box[2] - bounding_box[0]) - bounding_box[0] - 10
+                )
+            elif offset_direction == "right":
+                offset_x = (
+                    (self.project["minMax"][2] - self.project["minMax"][0])
+                    - bounding_box[0]
+                    + 10
+                )
+            elif offset_direction == "top":
+                offset_y = (
+                    (self.project["minMax"][3] - self.project["minMax"][1])
+                    - bounding_box[1]
+                    + 10
+                )
+            elif offset_direction == "bottom":
+                offset_y = (
+                    0 - (bounding_box[3] - bounding_box[1]) - bounding_box[1] - 10
+                )
+
+            new_obj_idx = clone_object(object_active_obj_idx, offset_x, offset_y)
+            if new_obj_idx is not None and with_childs:
+                for inner in object_active_obj["inner_objects"]:
+                    clone_object(inner, offset_x, offset_y)
+
+            self.combobjwidget.clear()
+            for idx in self.project["objects"]:
+                self.combobjwidget.addItem(idx.split(":")[0])
+
+            self.project["maxOuter"] = find_tool_offsets(self.project["objects"])
+
+            self.setup_select_object(new_obj_idx)
+
+            self.update_tabs_data()
+            self.update_drawing()
+
+        vlayout.addWidget(QLabel("Copy:"))
+
+        checkbox = QCheckBox("with childs")
+        checkbox.setChecked(True)
+        checkbox.setToolTip("move all childs")
+        vlayout.addWidget(checkbox)
+
+        gcontainer = QWidget()
+        glayout = QGridLayout()
+        gcontainer.setLayout(glayout)
+        vlayout.addWidget(gcontainer)
+
+        button = QPushButton("Clone Top")
+        button.setToolTip(_("clone object"))
+        button.clicked.connect(partial(object_copy, checkbox, "top"))  # type: ignore
+        glayout.addWidget(button, 0, 1)
+
+        button = QPushButton("Clone Left")
+        button.setToolTip(_("clone object"))
+        button.clicked.connect(partial(object_copy, checkbox, "left"))  # type: ignore
+        glayout.addWidget(button, 1, 0)
+
+        button = QPushButton("Clone Right")
+        button.setToolTip(_("clone object"))
+        button.clicked.connect(partial(object_copy, checkbox, "right"))  # type: ignore
+        glayout.addWidget(button, 1, 2)
+
+        button = QPushButton("Clone Bottom")
+        button.setToolTip(_("clone object"))
+        button.clicked.connect(partial(object_copy, checkbox, "bottom"))  # type: ignore
+        glayout.addWidget(button, 2, 1)
+
+        vlayout.addStretch(1)
+        tabwidget.addTab(vcontainer, _("Manipulate"))
 
     def update_tabs_data(self) -> None:
         self.project["tabs"]["data"] = []
@@ -2003,7 +2780,7 @@ class ViaConstructor:
         debug("prepare_segments: setup")
         for obj in self.project["objects"].values():
             obj["setup"] = {}
-            for sect in ("tool", "mill", "pockets", "tabs", "leads"):
+            for sect in ("mill", "tool", "pockets", "tabs", "leads"):
                 obj["setup"][sect] = deepcopy(self.project["setup"][sect])
             layer = obj.get("layer")
             if layer.startswith(("BREAKS:", "_TABS")):
@@ -2037,7 +2814,7 @@ class ViaConstructor:
             self.project["maxOuter"] = find_tool_offsets(self.project["objects"])
         debug("prepare_segments: done")
 
-    def load_drawing(self, filename: str) -> bool:
+    def load_drawing(self, filename: str, no_setup: bool = False) -> bool:
         # clean project
         debug("load_drawing: cleanup")
         self.project["filename_draw"] = ""
@@ -2061,15 +2838,53 @@ class ViaConstructor:
 
         # find plugin
         debug("load_drawing: start")
-        suffix = filename.split(".")[-1].lower()
-        for reader_plugin in reader_plugins.values():
+        suffix = filename.rsplit(".", maxsplit=1)[-1].lower()
+
+        reader_plugin_list = []
+        for plugin_name, reader_plugin in reader_plugins.items():
             if suffix in reader_plugin.suffix(self.args):
-                if self.main is not None and hasattr(reader_plugin, "preload_setup"):
-                    reader_plugin.preload_setup(filename, self.args)
-                self.project["draw_reader"] = reader_plugin(filename, self.args)
-                if reader_plugin.can_save_tabs:
-                    self.save_tabs = "ask"
-                break
+                reader_plugin_list.append(plugin_name)
+
+        if not reader_plugin_list:
+            return False
+
+        if len(reader_plugin_list) == 1:
+            plugin_name = reader_plugin_list[0]
+        elif self.main is None:
+            plugin_name = reader_plugin_list[0]
+        else:
+            dialog = QDialog()
+            dialog.setWindowTitle(_("Reader-Selection"))
+
+            dialog.buttonBox = QDialogButtonBox(QDialogButtonBox.Ok)  # type: ignore
+            dialog.buttonBox.accepted.connect(dialog.accept)  # type: ignore
+
+            dialog.layout = QVBoxLayout()  # type: ignore
+            message = QLabel(_("Import-Options"))
+            dialog.layout.addWidget(message)  # type: ignore
+
+            combobox = QComboBox()
+            for plugin_name in reader_plugin_list:
+                combobox.addItem(plugin_name)  # type: ignore
+            dialog.layout.addWidget(combobox)  # type: ignore
+
+            dialog.layout.addWidget(dialog.buttonBox)  # type: ignore
+            dialog.setLayout(dialog.layout)  # type: ignore
+
+            if dialog.exec():
+                plugin_name = combobox.currentText()
+                reader_plugin = reader_plugins[plugin_name]
+
+        reader_plugin = reader_plugins[plugin_name]
+        if (
+            not no_setup
+            and self.main is not None
+            and hasattr(reader_plugin, "preload_setup")
+        ):
+            reader_plugin.preload_setup(filename, self.args)
+        self.project["draw_reader"] = reader_plugin(filename, self.args)
+        if reader_plugin.can_save_tabs:
+            self.save_tabs = "ask"
 
         if self.project["draw_reader"]:
             debug("load_drawing: get segments")
@@ -2087,8 +2902,16 @@ class ViaConstructor:
                 self.project["setup"]["view"]["autocalc"] = False
                 self.project["setup"]["view"]["path"] = "minimal"
                 self.project["setup"]["view"]["object_ids"] = False
+                self.project["setup"]["pockets"]["active"] = False
 
             self.project["origin"] = objects2minmax(self.project["objects"])[0:2]
+
+            if self.combobjwidget is not None:
+                self.combobjwidget.clear()
+                for idx in self.project["objects"]:
+                    self.combobjwidget.addItem(idx.split(":")[0])
+                self.combobjwidget.setCurrentText(self.project["object_active"])
+
             return True
 
         eprint(f"ERROR: can not load file: {filename}")
@@ -2098,30 +2921,113 @@ class ViaConstructor:
     def open_preview_in_openscad(self):
         if self.project["suffix"] in {"ngc", "gcode"} and self.project["machine_cmd"]:
             parser = GcodeParser(self.project["machine_cmd"])
-            scad_data = parser.openscad(self.project["setup"]["tool"]["diameter"])
-            open("/tmp/viaconstructor-preview.scad", "w").write(scad_data)
+
+            diameter = None
+            for entry in self.project["setup"]["tool"]["tooltable"]:
+                if self.project["setup"]["tool"]["number"] == entry["number"]:
+                    diameter = entry["diameter"]
+            if diameter is None:
+                print("ERROR: nest: TOOL not found")
+                return
+
+            scad_data = parser.openscad(diameter)
+            open(f"{TEMP_PREFIX}viaconstructor-preview.scad", "w").write(scad_data)
 
             def openscad_show():
-                os.system("/usr/bin/openscad /tmp/viaconstructor-preview.scad")
+                process = subprocess.Popen(
+                    [openscad, f"{TEMP_PREFIX}viaconstructor-preview.scad"]
+                )
+                while True:
+                    time.sleep(0.5)
+                    return_code = process.poll()
+                    if return_code is not None:
+                        break
                 self.project["preview_open"].setEnabled(True)
+                os.remove(f"{TEMP_PREFIX}viaconstructor-preview.scad")
 
             self.project["preview_open"].setEnabled(False)
             threading.Thread(target=openscad_show).start()
 
+    def open_preview_in_camotics(self):
+        if self.project["suffix"] in {"ngc", "gcode"} and self.project["machine_cmd"]:
+            units = "metric"
+            if self.project["setup"]["machine"]["unit"] == "inch":
+                units = "imperial"
+
+            tools = {}
+            for obj in self.project["objects"].values():
+
+                diameter = None
+                for entry in self.project["setup"]["tool"]["tooltable"]:
+                    if obj.setup["tool"]["number"] == entry["number"]:
+                        diameter = entry["diameter"]
+                if diameter is None:
+                    print("ERROR: nest: TOOL not found")
+                    return
+
+                tools[obj.setup["tool"]["number"]] = {
+                    "units": units,
+                    "shape": "cylindrical",
+                    "length": abs(self.project["setup"]["mill"]["step"] * 1.5),
+                    "diameter": diameter,
+                    "description": "",
+                }
+
+            camotics_data = {
+                "units": units,
+                "resolution-mode": "high",
+                "resolution": 0.294723,
+                "tools": tools,
+                "files": [
+                    f"{TEMP_PREFIX}viaconstructor-preview.ngc",
+                ],
+            }
+
+            open(f"{TEMP_PREFIX}viaconstructor-preview.ngc", "w").write(
+                self.project["machine_cmd"]
+            )
+            open(f"{TEMP_PREFIX}viaconstructor-preview.camotics", "w").write(
+                json.dumps(camotics_data, indent=4, sort_keys=True)
+            )
+
+            def camotics_show():
+                process = subprocess.Popen(
+                    [camotics, f"{TEMP_PREFIX}viaconstructor-preview.camotics"]
+                )
+                while True:
+                    time.sleep(0.5)
+                    return_code = process.poll()
+                    if return_code is not None:
+                        break
+                os.remove(f"{TEMP_PREFIX}viaconstructor-preview.camotics")
+                os.remove(f"{TEMP_PREFIX}viaconstructor-preview.ngc")
+
+            threading.Thread(target=camotics_show).start()
+
     def generate_preview(self):
         if self.project["suffix"] in {"ngc", "gcode"} and self.project["machine_cmd"]:
             parser = GcodeParser(self.project["machine_cmd"])
-            scad_data = parser.openscad(self.project["setup"]["tool"]["diameter"])
-            open("/tmp/viaconstructor-preview.scad", "w").write(scad_data)
+
+            diameter = None
+            for entry in self.project["setup"]["tool"]["tooltable"]:
+                if self.project["setup"]["tool"]["number"] == entry["number"]:
+                    diameter = entry["diameter"]
+            if diameter is None:
+                print("ERROR: nest: TOOL not found")
+                return
+
+            scad_data = parser.openscad(diameter)
+            open(f"{TEMP_PREFIX}viaconstructor-preview.scad", "w").write(scad_data)
 
             def openscad_convert():
                 os.system(
-                    "/usr/bin/openscad -o /tmp/viaconstructor-preview.png /tmp/viaconstructor-preview.scad"
+                    f"{openscad} -o {TEMP_PREFIX}viaconstructor-preview.png {TEMP_PREFIX}viaconstructor-preview.scad"
                 )
-                image = QImage("/tmp/viaconstructor-preview.png")
+                image = QImage(f"{TEMP_PREFIX}viaconstructor-preview.png")
                 self.project["imgwidget"].setPixmap(QPixmap.fromImage(image))
                 self.project["preview_generate"].setEnabled(True)
                 self.project["preview_generate"].setText(_("generate Preview"))
+                os.remove(f"{TEMP_PREFIX}viaconstructor-preview.scad")
 
             self.project["preview_generate"].setEnabled(False)
             self.project["preview_generate"].setText(
@@ -2204,7 +3110,21 @@ class ViaConstructor:
 
         # load drawing #
         debug("main: load drawing")
-        if self.args.filename and self.load_drawing(self.args.filename):
+
+        if self.args.filename and self.args.filename.endswith(".vcp"):
+            self.load_project(self.args.filename)
+            # save and exit
+            if self.args.dxf:
+                self.update_drawing()
+                eprint(f"saving dawing to file: {self.args.dxf}")
+                self.save_objects_as_dxf(self.args.dxf)
+                sys.exit(0)
+            if self.args.output:
+                self.update_drawing()
+                eprint(f"saving machine_cmd to file: {self.args.output}")
+                open(self.args.output, "w").write(self.project["machine_cmd"])
+                sys.exit(0)
+        elif self.args.filename and self.load_drawing(self.args.filename):
             # save and exit
             if self.args.dxf:
                 self.update_drawing()
@@ -2251,40 +3171,45 @@ class ViaConstructor:
         self.status_bar_message(f"{self.info} - startup")
 
         self.project["textwidget"] = QPlainTextEdit()
-        self.project["objwidget"] = QTreeView()
-        self.project["objmodel"] = QStandardItemModel()
-        self.update_table()
         left_gridlayout = QGridLayout()
-        left_gridlayout.addWidget(QLabel("Objects-Settings:"))
 
         self.project["layerwidget"] = QTableWidget()
         self.project["layerwidget"].clicked.connect(self.toggle_layer)
         self.project["layerwidget"].setRowCount(0)
         self.project["layerwidget"].setColumnCount(2)
 
-        ltabwidget = QTabWidget()
-        ltabwidget.addTab(self.project["objwidget"], _("&Objects"))
-        ltabwidget.addTab(self.project["layerwidget"], _("&Layers"))
-
-        left_gridlayout.addWidget(ltabwidget)
-
         tabwidget = QTabWidget()
         tabwidget.addTab(self.project["glwidget"], _("&3D-View"))
         tabwidget.addTab(self.project["textwidget"], _("&Machine-Output"))
 
-        if os.path.isfile("/usr/bin/openscad"):
+        if openscad or camotics:
             preview = QWidget()
             preview.setContentsMargins(0, 0, 0, 0)
             preview_vbox = QVBoxLayout(preview)
             preview_vbox.setContentsMargins(0, 0, 0, 0)
-            self.project["preview_generate"] = QPushButton(_("generate Preview"))
-            self.project["preview_generate"].setToolTip(_("this may take some time"))
-            self.project["preview_generate"].pressed.connect(self.generate_preview)
-            preview_vbox.addWidget(self.project["preview_generate"])
-            self.project["preview_open"] = QPushButton(_("view in openscad"))
-            self.project["preview_open"].setToolTip(_("open's preview in openscad"))
-            self.project["preview_open"].pressed.connect(self.open_preview_in_openscad)
-            preview_vbox.addWidget(self.project["preview_open"])
+            if openscad:
+                self.project["preview_generate"] = QPushButton(_("generate Preview"))
+                self.project["preview_generate"].setToolTip(
+                    _("this may take some time")
+                )
+                self.project["preview_generate"].pressed.connect(self.generate_preview)
+                preview_vbox.addWidget(self.project["preview_generate"])
+                self.project["preview_open"] = QPushButton(_("view in openscad"))
+                self.project["preview_open"].setToolTip(_("open's preview in openscad"))
+                self.project["preview_open"].pressed.connect(
+                    self.open_preview_in_openscad
+                )
+                preview_vbox.addWidget(self.project["preview_open"])
+            if camotics:
+                self.project["preview_open2"] = QPushButton(_("view in camotics"))
+                self.project["preview_open2"].setToolTip(
+                    _("open's preview in camotics")
+                )
+                self.project["preview_open2"].pressed.connect(
+                    self.open_preview_in_camotics
+                )
+                preview_vbox.addWidget(self.project["preview_open2"])
+
             preview_vbox.addWidget(self.project["imgwidget"])
             tabwidget.addTab(preview, _("&Preview"))
 
@@ -2296,11 +3221,47 @@ class ViaConstructor:
 
         vbox = QVBoxLayout(left_widget)
         vbox.setContentsMargins(0, 0, 0, 0)
-        vbox.addWidget(QLabel(_("Global-Settings:")))
+        # vbox.addWidget(QLabel(_("Global-Settings:")))
 
         self.tabwidget = QTabWidget()
         self.create_global_setup(self.tabwidget)
-        vbox.addWidget(self.tabwidget, stretch=1)
+
+        self.tabobjwidget = QTabWidget()
+        self.create_object_setup(self.tabobjwidget)
+
+        self.objwidget = QWidget()
+        object_vbox = QVBoxLayout(self.objwidget)
+        object_vbox.setContentsMargins(0, 0, 0, 0)
+
+        self.combobjwidget = QComboBox()
+        self.combobjwidget.addItem("0")
+        self.combobjwidget.setCurrentText("0")
+        self.combobjwidget.setToolTip("Global/Object settings")
+        self.combobjwidget.currentTextChanged.connect(self.setup_select_object)  # type: ignore
+
+        object_vbox.addWidget(QLabel(_("Object:")))
+        object_vbox.addWidget(self.combobjwidget, stretch=0)
+        object_vbox.addWidget(self.tabobjwidget, stretch=1)
+
+        self.infotext_widget = QPlainTextEdit()
+        self.infotext_widget.setPlainText("info:")
+
+        ltabwidget = QTabWidget()
+        ltabwidget.addTab(self.tabwidget, _("&Global"))
+        ltabwidget.addTab(self.objwidget, _("&Objects"))
+        ltabwidget.addTab(self.project["layerwidget"], _("&Layers"))
+        ltabwidget.addTab(self.infotext_widget, _("&Infos"))
+
+        left_gridlayout.addWidget(ltabwidget)
+
+        if self.combobjwidget is not None:
+            self.combobjwidget.clear()
+            for idx in self.project["objects"]:
+                self.combobjwidget.addItem(idx.split(":")[0])
+            self.project["object_active"] = "0"
+            self.combobjwidget.setCurrentText(self.project["object_active"])
+
+        self.update_object_setup()
 
         bottom_container = QWidget()
         bottom_container.setContentsMargins(0, 0, 0, 0)
@@ -2313,6 +3274,9 @@ class ViaConstructor:
         hlay = QHBoxLayout(self.project["window"])
         hlay.addWidget(left_widget, stretch=1)
         hlay.addWidget(right_widget, stretch=3)
+
+        # Tools
+        self.font_tool = FontTool(self)
 
         self.main.resize(1600, 1200)
         self.main.show()

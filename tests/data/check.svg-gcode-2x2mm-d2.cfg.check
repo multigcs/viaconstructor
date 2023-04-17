@@ -9,9 +9,6 @@ G40 (No Offsets)
 G90 (Absolute-Mode)
 G64 P0.02
 M05 (Spindle off)
-M06 T1
-M03 S10000 (Spindle on / CW)
-G04 P1 (pause in sec)
 F100
 G00 Z5.000000
 
@@ -19,7 +16,7 @@ G00 Z5.000000
 (--------------------------------------------------)
 (Level: 1)
 (Order: 0)
-(Object: 1.0)
+(Object: 1:2b9b0b198a84f5b82169b2ae35a0ab6a.0)
 (Distance: 185.229mm)
 (Closed: True)
 (isPocket: False)
@@ -27,6 +24,10 @@ G00 Z5.000000
 (Tool-Diameter: 2.0mm)
 (Tool-Offset: 1.0mm inside)
 (--------------------------------------------------)
+G00 Z5.0
+M06 T1
+M03 S10000 (Spindle on / CW)
+G04 P1 (pause in sec)
 G00 X48.454686 Y56.330400
 (- Depth: -2.0mm -)
 F100
@@ -56,7 +57,7 @@ G01 X48.454686 Y56.330400
 (--------------------------------------------------)
 (Level: 1)
 (Order: 1)
-(Object: 2.0)
+(Object: 2:5b579ae9cb4ca755e5996f9421fd67ce.0)
 (Distance: 73.8822mm)
 (Closed: True)
 (isPocket: False)
@@ -98,7 +99,7 @@ G01 X97.952515 Y148.920645
 (--------------------------------------------------)
 (Level: 1)
 (Order: 2)
-(Object: 3.0)
+(Object: 3:dc09e48e0e1dd4635876bd4bc10aafd5.0)
 (Distance: 117.9097mm)
 (Closed: True)
 (isPocket: False)
@@ -128,7 +129,7 @@ G01 X102.218391
 (--------------------------------------------------)
 (Level: 0)
 (Order: 3)
-(Object: 0.0)
+(Object: 0:4cd2639977f28ee3cde2fb909eaa5edb.0)
 (Distance: 641.0386mm)
 (Closed: True)
 (isPocket: False)

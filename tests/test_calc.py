@@ -558,7 +558,7 @@ def test_find_tool_offsets(objects, expected):
                 ),
             ],
             {
-                0: VcObject(
+                "0:8e4bfaa42b72193ab62f81d19ce497b7": VcObject(
                     {
                         "segments": [
                             VcSegment(
@@ -600,7 +600,7 @@ def test_find_tool_offsets(objects, expected):
                         "layer": "0",
                     }
                 ),
-                1: VcObject(
+                "1:25e319fcf0222e867027739f33abcfe6": VcObject(
                     {
                         "segments": [
                             VcSegment(
@@ -949,9 +949,21 @@ def test_objects2polyline_offsets(
     diameter, objects, max_outer, small_circles, expected
 ):
     result = []
-    for _idx, line in calc.objects2polyline_offsets(
-        diameter, objects, max_outer, small_circles
-    ).items():
+
+    setup = {
+        "tool": {
+            "tooltable": [
+                {
+                    "number": 1,
+                    "diameter": diameter,
+                }
+            ]
+        },
+        "machine": {"unit": "mm"},
+        "mill": {"small_circles": False},
+    }
+
+    for _idx, line in calc.objects2polyline_offsets(setup, objects, max_outer).items():
         for axis in line.vertex_data().tolist():
             for value in axis:
                 result.append(round(value, 6))

@@ -24,6 +24,7 @@ class GcodeParser:
             "tool": None,
             "spindle": {"dir": "OFF", "rpm": 0},
             "position": {"X": 0.0, "Y": 0.0, "Z": 0.0},
+            "minmax": {},
         }
 
         self.path: list[list] = []
@@ -42,7 +43,16 @@ class GcodeParser:
                 ldata[cmd] = float(match[1])
             if first == "M":
                 if ldata["M"] == 6:
-                    self.state["tool"] = int(ldata["T"])
+                    if self.state["tool"] != int(ldata["T"]):
+                        self.state["tool"] = int(ldata["T"])
+                        self.path.append(
+                            [
+                                self.state["position"],
+                                self.state["position"],
+                                self.state["spindle"]["dir"],
+                                f"TOOLCHANGE:{self.state['tool']}",
+                            ]
+                        )
                 elif ldata["M"] == 5:
                     self.state["spindle"]["dir"] = "OFF"
                 elif ldata["M"] == 3:
@@ -140,10 +150,6 @@ class GcodeParser:
                     segment[0][axis] = round(segment[0][axis], 6)
                     segment[1][axis] = round(segment[1][axis], 6)
         return self.path
-
-    def draw(self, draw_function, user_data=()) -> None:
-        for line in self.path:
-            draw_function(line[0], line[1], line[2], *user_data)
 
     def openscad(self, tool_diameter: float) -> str:
         # code from https://github.com/pvdbrand/cnc-3d-gcode-viewer

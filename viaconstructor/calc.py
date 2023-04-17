@@ -1,7 +1,12 @@
 """viaconstructor calculation functions."""
 
+import hashlib
 import math
+import os
+import platform
+import shutil
 from copy import deepcopy
+from pathlib import Path
 
 import ezdxf
 
@@ -16,6 +21,39 @@ from .ext.cavaliercontours import cavaliercontours as cavc
 from .vc_types import VcObject
 
 TWO_PI = math.pi * 2
+
+
+# ########## helper Functions ###########
+def external_command(cmd: str):
+    known_paths = {
+        "camotics": [
+            "/Applications/CAMotics.app/Contents/MacOS/camotics",
+        ],
+        "camotics.exe": [
+            "c:\\Program Files\\CAMotics\\camotics.exe",
+            "c:\\Program Files (x86)\\CAMotics\\camotics.exe",
+        ],
+        "openscad.exe": [
+            "c:\\Program Files\\OpenSCAD\\openscad.exe",
+            "c:\\Program Files (x86)\\OpenSCAD\\openscad.exe",
+        ],
+    }
+    if platform.system().lower() == "windows":
+        cmd = f"{cmd}.exe"
+    path = shutil.which(cmd)
+    if path is None:
+        if cmd in known_paths:
+            for known_path in known_paths[cmd]:
+                if os.path.isfile(known_path):
+                    path = known_path
+                    break
+    return path
+
+
+def get_tmp_prefix() -> str:
+    if platform.system().lower() == "windows":
+        return str(os.path.join(Path.home())) + "\\"
+    return "/tmp/"
 
 
 # ########## Misc Functions ###########
@@ -243,6 +281,13 @@ def points_to_boundingbox(points):
     return (min_x, min_y, max_x, max_y)
 
 
+def points_to_center(points):
+    bounding_box = points_to_boundingbox(points)
+    center_x = bounding_box[0] + (bounding_box[2] - bounding_box[0]) / 2.0
+    center_y = bounding_box[1] + (bounding_box[3] - bounding_box[1]) / 2.0
+    return (center_x, center_y)
+
+
 # ########## Object & Segments Functions ###########
 
 
@@ -451,7 +496,23 @@ def segments2objects(segments):
                 if inside:
                     reverse_object(obj)
 
-            objects[obj_idx] = obj
+            min_x = obj.segments[0].start[0]
+            min_y = obj.segments[0].start[1]
+            max_x = obj.segments[0].start[0]
+            max_y = obj.segments[0].start[1]
+            for segment in obj.segments:
+                min_x = min(min_x, segment.start[0], segment.end[0])
+                min_y = min(min_y, segment.start[1], segment.end[1])
+                max_x = max(max_x, segment.start[0], segment.end[0])
+                max_y = max(max_y, segment.start[1], segment.end[1])
+            uid = hashlib.md5(
+                f"{int(min_x * 100)}_{int(min_y * 100)}_{int(max_x * 100)}_{int(max_y * 100)}".encode(
+                    "utf-8"
+                )
+            ).hexdigest()
+            obj_uid = f"{obj_idx}:{uid}"
+
+            objects[obj_uid] = obj
             obj_idx += 1
             last = None
 
@@ -829,7 +890,6 @@ def do_pockets(  # pylint: disable=R0913
         output_lines = lines_to_path(
             lines, max_vdist=abs_tool_radius * 2, max_dist=abs_tool_radius * 2
         )
-        print("##output_lines", len(output_lines))
         if output_lines:
             last = output_lines[0]
             polyline = []
@@ -1193,9 +1253,12 @@ def object2polyline_offsets(
     return polyline_offsets
 
 
-def objects2polyline_offsets(diameter, objects, max_outer, small_circles=False):
+def objects2polyline_offsets(setup, objects, max_outer):
     """calculates the offset line(s) of all objects"""
     polyline_offsets = {}
+
+    unit = setup["machine"]["unit"]
+    small_circles = setup["mill"]["small_circles"]
 
     part_l = len(objects)
     part_n = 0
@@ -1206,12 +1269,22 @@ def objects2polyline_offsets(diameter, objects, max_outer, small_circles=False):
                 continue
             if len(obj.outer_objects) != level:
                 continue
-
             percent = round((part_n + 1) * 100 / part_l, 1)
             if int(percent) != int(last_percent):
                 print(f"calc offset path: {percent}%", end="\r")
             last_percent = int(percent)
             part_n += 1
+
+            diameter = None
+            for entry in setup["tool"]["tooltable"]:
+                if obj.setup["tool"]["number"] == entry["number"]:
+                    diameter = entry["diameter"]
+            if diameter is None:
+                print("ERROR: TOOL not found")
+                break
+
+            if unit == "inch":
+                diameter *= 25.4
 
             obj_copy = deepcopy(obj)
             do_reverse = 0
@@ -1330,7 +1403,7 @@ def mirror_objects(
 
 
 def rotate_objects(objects: dict, min_max: list[float]) -> None:
-    """rotates an object"""
+    """rotates all object"""
     for obj in objects.values():
         for segment in obj.segments:
             for ptype in ("start", "end", "center"):
@@ -1342,8 +1415,19 @@ def rotate_objects(objects: dict, min_max: list[float]) -> None:
     mirror_objects(objects, min_max, horizontal=True)
 
 
+def scale_object(obj: VcObject, scale: float) -> None:
+    """scale an object"""
+    for segment in obj.segments:
+        for ptype in ("start", "end", "center"):
+            if ptype in segment:
+                segment[ptype] = (
+                    segment[ptype][0] * scale,
+                    segment[ptype][1] * scale,
+                )
+
+
 def scale_objects(objects: dict, scale: float) -> None:
-    """rotates an object"""
+    """scale all object"""
     for obj in objects.values():
         for segment in obj.segments:
             for ptype in ("start", "end", "center"):

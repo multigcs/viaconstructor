@@ -10,6 +10,15 @@ class fakeOffset:
         self.closed = closed
         self.setup = {
             "mill": mill,
+            "tool": {
+                "number": 1,
+                "speed": 10000,
+                "pause": 1,
+                "rate_h": 10000,
+                "rate_v": 1000,
+                "mist": False,
+                "flood": False,
+            },
             "tabs": {"active": False},
             "leads": {"in": False, "out": False},
             "pockets": {
@@ -134,6 +143,15 @@ class fakeOffset:
                         "pause": 1,
                         "rate_h": 10000,
                         "rate_v": 1000,
+                        "tooltable": [
+                            {
+                                "blades": 3,
+                                "diameter": 4.0,
+                                "lenght": 10.0,
+                                "name": "Holz-Fr\u00e4ser (klein)",
+                                "number": 1,
+                            },
+                        ],
                     },
                     "mill": {
                         "G64": 0.05,
@@ -155,6 +173,10 @@ class fakeOffset:
                         "unit": "mm",
                         "comments": True,
                         "g54": False,
+                        "toolchange_pre": "",
+                        "toolchange_post": "",
+                        "spindle_on_pre": "M07 (start mist)",
+                        "spindle_off_post": "M09 (stop coolant)",
                     },
                 },
                 "tablewidget": "",
@@ -171,9 +193,7 @@ G40 (No Offsets)
 G90 (Absolute-Mode)
 G64 P0.05
 M05 (Spindle off)
-M06 T1
-M03 S10000 (Spindle on / CW)
-G04 P1 (pause in sec)
+M09 (stop coolant)
 F1000
 G00 Z20.000000
 
@@ -189,6 +209,11 @@ G00 Z20.000000
 (Tool-Diameter: 4.0mm)
 (Tool-Offset: 2.0mm inside)
 (--------------------------------------------------)
+G00 Z20.0
+M06 T1
+M07 (start mist)
+M03 S10000 (Spindle on / CW)
+G04 P1 (pause in sec)
 G00 X22.000000 Y24.828427
 (- Depth: -4.0mm -)
 F1000
@@ -246,6 +271,7 @@ G03 X-0.181071 Y8.008214 I1.987767 J-0.220863
 (- end -)
 G00 Z20.000000
 M05 (Spindle off)
+M09 (stop coolant)
 G00 X0.000000 Y0.000000
 M02
 """,
@@ -253,6 +279,8 @@ M02
     ],
 )
 def test_polylines2machine_cmd(project, expected):
-    result = machine_cmd.polylines2machine_cmd(project, PostProcessorGcodeLinuxCNC())
+    result = machine_cmd.polylines2machine_cmd(
+        project, PostProcessorGcodeLinuxCNC(project)
+    )
     print(result)
     assert result == expected

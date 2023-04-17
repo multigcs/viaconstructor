@@ -173,12 +173,12 @@ class GLWidget(QGLWidget):
         GL.glViewport(0, 0, width, height)
         self.initializeGL()
 
-    def draw_tool(self, tool_pos, spindle) -> None:  # pylint: disable=C0103
-        blades = self.project["setup"]["tool"]["blades"]
-        radius = self.project["setup"]["tool"]["diameter"] / 2.0
+    def draw_tool(self, tool_pos, spindle, diameter) -> None:  # pylint: disable=C0103
+        blades = 2
+        radius = diameter / 2.0
         height = max(
             -self.project["setup"]["mill"]["depth"] + 5,
-            self.project["setup"]["tool"]["diameter"] * 3,
+            diameter * 3,
         )
         shaft_height = height * 2
         angle = -self.project["simulation_cnt"]
@@ -408,6 +408,7 @@ class GLWidget(QGLWidget):
             if sim_step < len(self.project["simulation_data"]):
                 next_pos = self.project["simulation_data"][sim_step][1]
                 spindle = self.project["simulation_data"][sim_step][4]
+                diameter = self.project["simulation_data"][sim_step][2]
 
                 if self.project["simulation"]:
                     dist = calc_distance3d(last_pos, next_pos)
@@ -427,7 +428,7 @@ class GLWidget(QGLWidget):
                             self.project["simulation_pos"] = 0
                             self.project["simulation"] = False
 
-                self.draw_tool(self.project["simulation_last"], spindle)
+                self.draw_tool(self.project["simulation_last"], spindle, diameter)
 
         GL.glPopMatrix()
 
@@ -563,10 +564,13 @@ class GLWidget(QGLWidget):
                         self.selection = ()
                     elif self.selector_mode == "delete":
                         self.selection_set = self.selection
-                        self.project["app"].update_table()
+                        # self.project["app"].update_object_setup()
+                        self.project["app"].setup_select_object(self.selection_set[2])
                     elif self.selector_mode == "oselect":
                         self.selection_set = self.selection
-                        self.project["app"].update_table()
+                        # self.project["app"].update_object_setup()
+                        self.project["app"].setup_select_object(self.selection_set[2])
+
                     elif self.selector_mode == "repair":
                         obj_idx = self.selection[2]
                         self.project["segments_org"].append(
@@ -609,7 +613,7 @@ class GLWidget(QGLWidget):
                 elif self.selector_mode == "delete":
                     obj_idx = self.selection[2]
                     del self.project["objects"][obj_idx]
-                    self.project["app"].update_table()
+                    self.project["app"].update_object_setup()
                     self.update_drawing()
                     self.update()
                     self.selection = ()
@@ -841,6 +845,8 @@ def draw_grid(project: dict) -> None:
     """draws the grid"""
     GL.glNormal3f(0, 0, 1)
     min_max = project["minMax"]
+    if not min_max:
+        return
     size = project["setup"]["view"]["grid_size"]
     start_x = int(min_max[0] / size) * size - size
     end_x = int(min_max[2] / size) * size + size
@@ -987,23 +993,30 @@ def draw_grid(project: dict) -> None:
         GL.glEnd()
 
 
-def draw_object_ids(project: dict) -> None:
+def draw_object_ids(project: dict, selected: int = -1) -> None:
     """draws the object id's as text"""
     GL.glNormal3f(0, 0, 1)
-    GL.glLineWidth(2)
-    GL.glColor3f(0.63, 0.36, 0.11)
-    GL.glBegin(GL.GL_LINES)
     for obj_idx, obj in project["objects"].items():
+
+        if obj_idx.split(":")[0] == selected:
+            GL.glLineWidth(2)
+            GL.glColor3f(1.0, 1.0, 1.01)
+        else:
+            GL.glLineWidth(2)
+            GL.glColor3f(0.63, 0.36, 0.11)
+
+        GL.glBegin(GL.GL_LINES)
+
         if obj.get("layer", "").startswith("BREAKS:") or obj.get(
             "layer", ""
         ).startswith("_TABS"):
             continue
         p_x = obj["segments"][0]["start"][0]
         p_y = obj["segments"][0]["start"][1]
-        for (x_1, y_1), (x_2, y_2) in font.lines_for_text(f"#{obj_idx}"):
+        for (x_1, y_1), (x_2, y_2) in font.lines_for_text(f"#{obj_idx.split(':')[0]}"):
             GL.glVertex3f(p_x + x_1, p_y + y_1, 5.0)
             GL.glVertex3f(p_x + x_2, p_y + y_2, 5.0)
-    GL.glEnd()
+        GL.glEnd()
 
 
 def draw_object_edges(project: dict, selected: int = -1) -> None:
@@ -1044,12 +1057,11 @@ def draw_object_edges(project: dict, selected: int = -1) -> None:
             if odepth > depth:
                 continue
 
-            if obj_idx == selected:
-                GL.glLineWidth(5)
-                GL.glColor4f(1.0, 0.0, 0.0, 1.0)
+            if obj_idx.split(":")[0] == selected:
+                GL.glLineWidth(4)
+                GL.glColor4f(1.0, 1.0, 1.0, 1.0)
             else:
                 GL.glLineWidth(2)
-                # GL.glColor4f(1.0, 1.0, 1.0, 1.0)
                 GL.glColor3f(*color)
 
             # side
@@ -1310,7 +1322,9 @@ def draw_object_faces(project: dict) -> None:
         """
 
 
-def draw_line(p_1: dict, p_2: dict, options: str, project: dict) -> None:
+def draw_line(
+    p_1: dict, p_2: dict, options: str, project: dict, tool_number: int = 0
+) -> None:
     """callback function for Parser to draw the lines"""
     if project["setup"]["machine"]["g54"]:
         p_from = (p_1["X"], p_1["Y"], p_1["Z"])
@@ -1330,26 +1344,59 @@ def draw_line(p_1: dict, p_2: dict, options: str, project: dict) -> None:
             p_2["Y"] - project["setup"]["workpiece"]["offset_y"] * unitscale,
             p_2["Z"] - project["setup"]["workpiece"]["offset_z"] * unitscale,
         )
-    line_width = project["setup"]["tool"]["diameter"]
+
+    if tool_number != 0:
+        diameter = None
+        for entry in project["setup"]["tool"]["tooltable"]:
+            if tool_number == entry["number"]:
+                diameter = entry["diameter"]
+        if diameter is None:
+            print("ERROR: draw_line: TOOL not found")
+            return
+    else:
+        diameter = 1
+
     mode = project["setup"]["view"]["path"]
-
-    project["simulation_data"].append((p_from, p_to, line_width, mode, options))
-
-    draw_mill_line(p_from, p_to, line_width, mode, options)
+    project["simulation_data"].append((p_from, p_to, diameter, mode, options))
+    draw_mill_line(p_from, p_to, diameter, mode, options)
 
 
 def draw_machinecode_path(project: dict) -> bool:
     """draws the machinecode path"""
     project["simulation_data"] = []
     GL.glLineWidth(2)
+    tool_number = 0
     try:
         if project["suffix"] in {"ngc", "gcode"}:
-            parser = GcodeParser(project["machine_cmd"])
-            parser.draw(draw_line, (project,))
+            gcode_parser = GcodeParser(project["machine_cmd"])
+            toolpath = gcode_parser.get_path()
+            for line in toolpath:
+                if len(line) > 3 and line[3].startswith("TOOLCHANGE:"):
+                    new_tool = line[3].split(":")[1]
+                    tool_number = int(new_tool)
+                    GL.glBegin(GL.GL_LINES)
+                    draw_text(
+                        f"TC:{new_tool}",
+                        line[0]["X"],
+                        line[0]["Y"],
+                        line[0]["Z"],
+                        0.2,
+                        True,
+                        True,
+                    )
+                    GL.glEnd()
+                draw_line(line[0], line[1], line[2], project, tool_number)
+            project["outputMinMax"] = gcode_parser.get_minmax()
+
         elif project["suffix"] in {"hpgl", "hpg"}:
             project["setup"]["machine"]["g54"] = False
             project["setup"]["workpiece"]["offset_z"] = 0.0
-            HpglParser(project["machine_cmd"]).draw(draw_line, (project,))
+            hpgl_parser = HpglParser(project["machine_cmd"])
+            toolpath = hpgl_parser.get_path()
+            for line in toolpath:
+                draw_line(line[0], line[1], line[2], project)
+            project["outputMinMax"] = gcode_parser.get_minmax()
+
     except Exception as error_string:  # pylint: disable=W0703:
         print(f"ERROR: parsing machine_cmd: {error_string}")
         return False
@@ -1357,6 +1404,8 @@ def draw_machinecode_path(project: dict) -> bool:
 
 
 def draw_all(project: dict) -> None:
+    selected = project["object_active"]
+
     project["gllist"] = GL.glGenLists(1)
     GL.glNewList(project["gllist"], GL.GL_COMPILE)
     draw_grid(project)
@@ -1370,15 +1419,7 @@ def draw_all(project: dict) -> None:
             print("error while drawing machine commands")
 
     if project["setup"]["view"]["object_ids"]:
-        draw_object_ids(project)
-
-    selected = -1
-    if (
-        project["glwidget"]
-        and project["glwidget"].selection_set
-        and project["glwidget"].selector_mode in {"delete", "oselect"}
-    ):
-        selected = project["glwidget"].selection_set[2]
+        draw_object_ids(project, selected=selected)
 
     draw_object_edges(project, selected=selected)
     if project["setup"]["view"]["polygon_show"]:

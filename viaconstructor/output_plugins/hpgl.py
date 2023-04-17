@@ -5,8 +5,10 @@ from ..machine_cmd import PostProcessor  # pylint: disable=E0402
 
 
 class PostProcessorHpgl(PostProcessor):
-    def __init__(self, comments=True):
-        self.comments = comments
+    def __init__(self, project):
+        self.project = project
+        self.comments = self.project["setup"]["machine"]["comments"]
+        self.project = project
         self.hpgl: list[str] = []
         self.last_x: int = 0
         self.last_y: int = 0
@@ -51,6 +53,15 @@ class PostProcessorHpgl(PostProcessor):
 
     def tool(self, number="1") -> None:
         self.hpgl.append(f"SP{number}")
+
+    def coolant_mist(self) -> None:
+        pass
+
+    def coolant_flood(self) -> None:
+        pass
+
+    def coolant_off(self) -> None:
+        pass
 
     def spindle_cw(self, speed: int, pause: int = 1) -> None:  # pylint: disable=W0613
         self.toolrun = True

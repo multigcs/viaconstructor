@@ -5,7 +5,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
-"POT-Creation-Date: 2023-03-27 16:02+0200\n"
+"POT-Creation-Date: 2023-04-11 17:05+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -111,6 +111,18 @@ msgstr ""
 msgid "how order the objects"
 msgstr ""
 
+msgid "Number"
+msgstr ""
+
+msgid "setting the Tool-Number to load in gcode"
+msgstr ""
+
+msgid "Speed"
+msgstr ""
+
+msgid "setting the Tool-Speed in RPM"
+msgstr ""
+
 msgid "Feed-Rate(Horizontal)"
 msgstr ""
 
@@ -123,46 +135,28 @@ msgstr ""
 msgid "the Vertical Feetrate"
 msgstr ""
 
-msgid "Number"
-msgstr ""
-
-msgid "setting the Tool-Number to load in gcode"
-msgstr ""
-
-msgid "Diameter"
-msgstr ""
-
-msgid "setting the Tool-Diameter to calculate the Offsets"
-msgstr ""
-
-msgid "Blades"
-msgstr ""
-
-msgid "number ob blades"
-msgstr ""
-
-msgid "Speed"
-msgstr ""
-
-msgid "setting the Tool-Speed in RPM"
-msgstr ""
-
 msgid "Pause"
 msgstr ""
 
 msgid "tool spin up time (G04 Pn)"
 msgstr ""
 
+msgid "Mist"
+msgstr ""
+
+msgid "activate mist"
+msgstr ""
+
+msgid "Flood"
+msgstr ""
+
+msgid "activate flood"
+msgstr ""
+
 msgid "Tools"
 msgstr ""
 
 msgid "tooltable"
-msgstr ""
-
-msgid "Materials"
-msgstr ""
-
-msgid "materialtable"
 msgstr ""
 
 msgid "original"
@@ -205,6 +199,12 @@ msgid "Offset Z"
 msgstr ""
 
 msgid "Offset Z (G54)"
+msgstr ""
+
+msgid "Materials"
+msgstr ""
+
+msgid "materialtable"
 msgstr ""
 
 msgid "Pocket"
@@ -306,6 +306,9 @@ msgstr ""
 msgid "gcode_linuxcnc"
 msgstr ""
 
+msgid "gcode_grbl"
+msgstr ""
+
 msgid "hpgl"
 msgstr ""
 
@@ -340,6 +343,30 @@ msgid "Unit of the machine"
 msgstr ""
 
 msgid "machine supports g54"
+msgstr ""
+
+msgid "toolchange pre cmd"
+msgstr ""
+
+msgid "add gcode before tool-change"
+msgstr ""
+
+msgid "toolchange post cmd"
+msgstr ""
+
+msgid "add gcode after tool-change"
+msgstr ""
+
+msgid "spindle on pre cmd"
+msgstr ""
+
+msgid "add gcode before turning the spindle on"
+msgstr ""
+
+msgid "spindle off post cmd"
+msgstr ""
+
+msgid "add gcode after turning the spindle off"
 msgstr ""
 
 msgid "Comments in output"
@@ -477,6 +504,15 @@ msgstr ""
 msgid "Exit application"
 msgstr ""
 
+msgid "Load project"
+msgstr ""
+
+msgid "Project"
+msgstr ""
+
+msgid "Save project"
+msgstr ""
+
 msgid "Save Machine-Commands"
 msgstr ""
 
@@ -576,6 +612,18 @@ msgstr ""
 msgid "stop/reset simulation"
 msgstr ""
 
+msgid "openscad preview"
+msgstr ""
+
+msgid "view in openscad"
+msgstr ""
+
+msgid "camotics preview"
+msgstr ""
+
+msgid "view in camotics"
+msgstr ""
+
 msgid "redraw"
 msgstr ""
 
@@ -585,19 +633,58 @@ msgstr ""
 msgid "Calculation"
 msgstr ""
 
+msgid "Font-Tool"
+msgstr ""
+
+msgid "open fonttool"
+msgstr ""
+
 msgid "select this row"
+msgstr ""
+
+msgid "move left"
+msgstr ""
+
+msgid "move right"
+msgstr ""
+
+msgid "move up"
+msgstr ""
+
+msgid "move down"
+msgstr ""
+
+msgid "CCW"
+msgstr ""
+
+msgid "rotate counter clockwise"
+msgstr ""
+
+msgid "CW"
+msgstr ""
+
+msgid "rotate clockwise"
+msgstr ""
+
+msgid "scale"
+msgstr ""
+
+msgid "clone object"
+msgstr ""
+
+msgid "Manipulate"
+msgstr ""
+
+msgid "Reader-Selection"
+msgstr ""
+
+msgid "Import-Options"
 msgstr ""
 
 msgid "generate Preview"
 msgstr ""
 
 msgid "generating preview image with openscad.... please wait"
-msgstr ""
-
-msgid "&Objects"
-msgstr ""
-
-msgid "&Layers"
 msgstr ""
 
 msgid "&3D-View"
@@ -609,14 +696,26 @@ msgstr ""
 msgid "this may take some time"
 msgstr ""
 
-msgid "view in openscad"
+msgid "open's preview in openscad"
 msgstr ""
 
-msgid "open's preview in openscad"
+msgid "open's preview in camotics"
 msgstr ""
 
 msgid "&Preview"
 msgstr ""
 
-msgid "Global-Settings:"
+msgid "Object:"
+msgstr ""
+
+msgid "&Global"
+msgstr ""
+
+msgid "&Objects"
+msgstr ""
+
+msgid "&Layers"
+msgstr ""
+
+msgid "&Infos"
 msgstr ""
