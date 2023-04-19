@@ -153,7 +153,7 @@ bdist_deb:
 	python3 setup.py --command-packages=stdeb.command bdist_deb
 	ls -l deb_dist/*.deb
 
-bdist_rpm: 
+bdist_rpm:
 	python setup.py bdist_rpm
 
 appimage: bdist_deb

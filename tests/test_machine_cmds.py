@@ -173,6 +173,7 @@ class fakeOffset:
                         "unit": "mm",
                         "comments": True,
                         "g54": False,
+                        "supports_toolchange": True,
                         "toolchange_pre": "",
                         "toolchange_post": "",
                         "spindle_on_pre": "M07 (start mist)",
