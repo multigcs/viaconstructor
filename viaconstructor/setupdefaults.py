@@ -522,6 +522,12 @@ def setup_defaults(_) -> dict:
                 "title": _("machine supports g54"),
                 "tooltip": _("machine supports g54"),
             },
+            "supports_toolchange": {
+                "default": True,
+                "type": "bool",
+                "title": _("machine supports toolchange"),
+                "tooltip": _("machine supports toolchange"),
+            },
             "toolchange_pre": {
                 "default": "",
                 "type": "mstr",
