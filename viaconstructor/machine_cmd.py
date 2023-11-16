@@ -751,7 +751,8 @@ def polylines2machine_cmd(project: dict, post: PostProcessor) -> str:
                     # toolchange
                     if project["setup"]["machine"]["mode"] == "mill":
                         post.move(z_pos=fast_move_z)
-                        post.tool(polyline.setup["tool"]["number"])
+                        if project["setup"]["machine"]["supports_toolchange"]:
+                            post.tool(polyline.setup["tool"]["number"])
                         post.spindle_cw(
                             polyline.setup["tool"]["speed"],
                             polyline.setup["tool"]["pause"],

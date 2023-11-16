@@ -5,7 +5,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
-"POT-Creation-Date: 2023-04-11 17:05+0200\n"
+"POT-Creation-Date: 2023-04-20 09:25+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -343,6 +343,9 @@ msgid "Unit of the machine"
 msgstr ""
 
 msgid "machine supports g54"
+msgstr ""
+
+msgid "machine supports toolchange"
 msgstr ""
 
 msgid "toolchange pre cmd"

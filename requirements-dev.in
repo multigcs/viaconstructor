@@ -6,7 +6,7 @@ black==22.3.0
 pylint==2.14.4
 mypy==0.941
 markdown==3.3.7
-pdoc3==0.10.0
+pdoc==14.1.0
 isort==5.10.1
 stdeb==0.10.0
 twine==4.0.2

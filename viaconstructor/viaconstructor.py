@@ -75,7 +75,6 @@ from .calc import (
 )
 from .draw2d import CanvasWidget
 from .draw2d import draw_all as draw_all_2d
-from .fonttool import FontTool
 from .gldraw import GLWidget
 from .gldraw import draw_all as draw_all_gl
 from .machine_cmd import polylines2machine_cmd
@@ -84,6 +83,8 @@ from .output_plugins.gcode_linuxcnc import PostProcessorGcodeLinuxCNC
 from .output_plugins.hpgl import PostProcessorHpgl
 from .preview_plugins.gcode import GcodeParser
 from .setupdefaults import setup_defaults
+from .tools.font import FontTool
+from .tools.gear import GearTool
 
 try:
     from .ext.nest2D.nest2D import (  # pylint: disable=E0611
@@ -488,6 +489,9 @@ class ViaConstructor:  # pylint: disable=R0904
 
     def _toolbar_fonttool(self) -> None:
         self.font_tool.show()
+
+    def _toolbar_geartool(self) -> None:
+        self.gear_tool.show()
 
     def _toolbar_flipx(self) -> None:
         mirror_objects(self.project["objects"], self.project["minMax"], vertical=True)
@@ -1900,6 +1904,18 @@ class ViaConstructor:  # pylint: disable=R0904
                 "exit",
                 None,
             ],
+            _("Gear-Tool"): [
+                "gears.png",
+                "Ctrl+G",
+                _("open geartool"),
+                self._toolbar_geartool,
+                False,
+                True,
+                False,
+                _("Tools"),
+                "exit",
+                None,
+            ],
         }
 
     def create_toolbar(self) -> None:
@@ -3277,6 +3293,7 @@ class ViaConstructor:  # pylint: disable=R0904
 
         # Tools
         self.font_tool = FontTool(self)
+        self.gear_tool = GearTool(self)
 
         self.main.resize(1600, 1200)
         self.main.show()

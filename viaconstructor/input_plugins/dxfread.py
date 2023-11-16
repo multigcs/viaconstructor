@@ -265,7 +265,7 @@ class DrawReader(DrawReaderBase):
         layer = element.dxf.layer
         color = element.dxf.color
         if color == 256:
-            color = self.layer_colors[layer]
+            color = self.layer_colors.get(layer) or 1
 
         if self.color_layers:
             colorname = dxfcolors[color][3] or f"c{color}"

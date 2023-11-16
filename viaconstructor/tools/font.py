@@ -15,7 +15,7 @@ from PyQt5.QtWidgets import (  # pylint: disable=E0611
     QWidget,
 )
 
-from .calc import point_of_line, quadratic_bezier
+from ..calc import point_of_line, quadratic_bezier
 
 
 class FontTool(QWidget):
