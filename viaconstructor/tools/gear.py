@@ -1,5 +1,8 @@
+import tempfile
+
+import ezdxf
 import numpy
-from PyQt5.QtCore import QLineF, Qt  # pylint: disable=E0611
+from PyQt5.QtCore import QLineF, QRect, Qt  # pylint: disable=E0611
 from PyQt5.QtGui import QPainter, QPen, QPixmap  # pylint: disable=E0611
 from PyQt5.QtWidgets import (  # pylint: disable=E0611
     QDoubleSpinBox,
@@ -31,8 +34,8 @@ def deg2rad(x):
 
 
 def generate(
-    teeth_count=8,
-    tooth_width=1.0,
+    teeth_count=20,
+    tooth_width=2.0,
     pressure_angle=0.1,
     backlash=0.0,
     frame_count=16,
@@ -55,7 +58,7 @@ def generate(
     )
 
     outer_circle = Point(0.0, 0.0).buffer(outer_radius)
-    print(outer_circle)
+    # print(outer_circle)
 
     poly_list = []
     prev_X = None
@@ -109,7 +112,7 @@ class GearTool(QWidget):
         self.gear_teeth.setSingleStep(1)
         self.gear_teeth.setMinimum(3)
         self.gear_teeth.setMaximum(1000)
-        self.gear_teeth.setValue(10)
+        self.gear_teeth.setValue(20)
         layout.addWidget(self.gear_teeth)
 
         label = QLabel("Width")
@@ -119,7 +122,7 @@ class GearTool(QWidget):
         self.gear_width.setSingleStep(0.1)
         self.gear_width.setMinimum(-100000)
         self.gear_width.setMaximum(100000)
-        self.gear_width.setValue(1.0)
+        self.gear_width.setValue(2.0)
         layout.addWidget(self.gear_width)
 
         label = QLabel("Angle")
@@ -157,6 +160,51 @@ class GearTool(QWidget):
 
         def open_gear():
             self.hide()
+            teeth = self.gear_teeth.value()
+            width = self.gear_width.value()
+            angle = self.gear_angle.value()
+            backlash = self.gear_backlash.value()
+            hole = self.gear_hole.value()
+
+            gpoly, pitch_radius = generate(
+                teeth_count=teeth,
+                tooth_width=width,
+                pressure_angle=deg2rad(angle),
+                backlash=backlash,
+                frame_count=16,
+            )
+
+            temp_file = tempfile.NamedTemporaryFile(
+                prefix=f"gear_{teeth}_{width}_{angle}_{backlash}_", suffix=".dxf"
+            )
+            temp_file.close()
+            output_file = temp_file.name
+            print(f"saving gear to tempfile: {output_file}")
+
+            doc = ezdxf.new("R2010")
+            msp = doc.modelspace()
+            doc.units = ezdxf.units.MM
+
+            points = gpoly.exterior.coords
+            last = points[-1]
+            for point in points:
+                msp.add_line(
+                    last,
+                    point,
+                    dxfattribs={"layer": "0"},
+                )
+                last = point
+
+            circle = msp.add_circle((0, 0), radius=hole / 2, dxfattribs={"layer": "0"})
+
+            for vport in doc.viewports.get_config("*Active"):  # type: ignore
+                vport.dxf.grid_on = True
+            if hasattr(ezdxf, "zoom"):
+                ezdxf.zoom.extents(msp)  # type: ignore
+            doc.saveas(output_file)
+
+            if self.app.load_drawing(output_file, no_setup=True):
+                pass
 
         self.gear_teeth.valueChanged.connect(self.preview)  # type: ignore
         self.gear_width.valueChanged.connect(self.preview)  # type: ignore
@@ -180,7 +228,7 @@ class GearTool(QWidget):
         width = self.gear_width.value()
         angle = self.gear_angle.value()
         backlash = self.gear_backlash.value()
-        # hole = self.gear_hole.value()
+        hole = self.gear_hole.value()
 
         gpoly, pitch_radius = generate(
             teeth_count=teeth,
@@ -190,7 +238,12 @@ class GearTool(QWidget):
             frame_count=16,
         )
 
-        canvas = QPixmap(300, 300)
+        canvas_w = 400
+        canvas_h = 400
+        off_x = canvas_w / 2
+        off_y = canvas_h / 2
+
+        canvas = QPixmap(canvas_w, canvas_h)
         self.qimage_label.setPixmap(canvas)
         self.qimage_label.adjustSize()
         self.qimage_label.pixmap().fill(Qt.white)
@@ -203,12 +256,20 @@ class GearTool(QWidget):
         for point in points:
             self.painter.drawLine(
                 QLineF(
-                    last[0] * scale + 150,
-                    last[1] * scale + 150,
-                    point[0] * scale + 150,
-                    point[1] * scale + 150,
+                    last[0] * scale + off_x,
+                    last[1] * scale + off_y,
+                    point[0] * scale + off_x,
+                    point[1] * scale + off_y,
                 )
             )
             last = point
+
+        square = QRect(
+            off_x - hole / 2 * scale,
+            off_y - hole / 2 * scale,
+            hole * scale,
+            hole * scale,
+        )
+        self.painter.drawEllipse(square)
 
         self.painter.end()
