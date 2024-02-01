@@ -537,7 +537,7 @@ def get_nearest_free_object(
         # find nearest
         if offset_num not in milling and (  # pylint: disable=R0916
             (
-                offset.level == level
+                (level == -1 or offset.level == level)
                 and offset.setup["tool"]["number"] == tool
                 and offset.setup["mill"]["active"]
             )
@@ -634,7 +634,11 @@ def polylines2machine_cmd(project: dict, post: PostProcessor) -> str:
     polylines_len = len(polylines.keys())
     polylines_n = 0
     last_percent = -1
-    for level in range(project["maxOuter"], -1, -1):
+
+    levels = range(project["maxOuter"], -1, -1)
+    # ignore levels
+    #levels = [-1]
+    for level in levels:
         for tool in tools:
             while True:
                 (
