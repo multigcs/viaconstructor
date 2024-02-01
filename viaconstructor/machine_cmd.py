@@ -516,12 +516,16 @@ def get_nearest_free_object(
     last_pos: list,
     milling: set,
     objectorder: str,
+    master_idx: str,
 ) -> tuple:
     found: bool = False
     nearest_dist: Union[None, float] = None
     nearest_idx: int = 0
     nearest_point = 0
     for offset_num, offset in polylines.items():
+        if master_idx and master_idx not in offset.outer_objects and master_idx != offset.obj_idx:
+            continue
+
         # no order
         if (
             objectorder == "unordered" and offset_num not in milling
@@ -635,430 +639,442 @@ def polylines2machine_cmd(project: dict, post: PostProcessor) -> str:
     polylines_n = 0
     last_percent = -1
 
-    levels = range(project["maxOuter"], -1, -1)
-    # ignore levels
-    #levels = [-1]
-    for level in levels:
-        for tool in tools:
-            while True:
-                (
-                    found,
-                    nearest_idx,
-                    nearest_point,
-                    nearest_dist,
-                ) = get_nearest_free_object(
-                    polylines,
-                    level,
-                    tool,
-                    last_pos,
-                    milling,
-                    objectorder,
-                )
-                if found:
-                    percent = round((polylines_n + 1) * 100 / polylines_len, 1)
-                    if int(percent) != int(last_percent):
-                        print(f"generating machine commands: {percent}%", end="\r")
-                    last_percent = int(percent)
-                    polylines_n += 1
+    master_ids = []
+    if objectorder == "per_object":
+        # TODO: reorder master_ids (nearest)
+        for obj_idx, obj_data in project["objects"].items():
+            if not obj_data.outer_objects:
+                print(obj_idx, obj_data.outer_objects)
+                master_ids.append(obj_idx)
+    else:
+        master_ids = [""]
 
-                    milling.add(nearest_idx)
-                    polyline = polylines[nearest_idx]
-                    vertex_data = vertex_data_cache(polyline)
-                    is_closed = polyline.is_closed()
+    for master_idx in master_ids:
+        levels = range(project["maxOuter"], -1, -1)
+        # ignore levels
+        #levels = [-1]
+        for level in levels:
+            for tool in tools:
+                while True:
+                    (
+                        found,
+                        nearest_idx,
+                        nearest_point,
+                        nearest_dist,
+                    ) = get_nearest_free_object(
+                        polylines,
+                        level,
+                        tool,
+                        last_pos,
+                        milling,
+                        objectorder,
+                        master_idx,
+                    )
+                    if found:
+                        percent = round((polylines_n + 1) * 100 / polylines_len, 1)
+                        if int(percent) != int(last_percent):
+                            print(f"generating machine commands: {percent}%", end="\r")
+                        last_percent = int(percent)
+                        polylines_n += 1
 
-                    coolant_mist = polyline.setup["tool"]["mist"]
-                    coolant_flood = polyline.setup["tool"]["flood"]
-                    max_depth = polyline.setup["mill"]["depth"]
-                    step = polyline.setup["mill"]["step"]
-                    if step >= -0.01:
-                        step = -0.01
-                    if unit == "inch":
-                        unitscale = 25.4
-                        max_depth *= unitscale
-                        step *= unitscale
+                        milling.add(nearest_idx)
+                        polyline = polylines[nearest_idx]
+                        vertex_data = vertex_data_cache(polyline)
+                        is_closed = polyline.is_closed()
 
-                    if polyline.setup["tabs"]["active"]:
-                        polyline.setup["tabs"]["data"] = tabs["data"]
-                    else:
-                        polyline.setup["tabs"]["data"] = []
+                        coolant_mist = polyline.setup["tool"]["mist"]
+                        coolant_flood = polyline.setup["tool"]["flood"]
+                        max_depth = polyline.setup["mill"]["depth"]
+                        step = polyline.setup["mill"]["step"]
+                        if step >= -0.01:
+                            step = -0.01
+                        if unit == "inch":
+                            unitscale = 25.4
+                            max_depth *= unitscale
+                            step *= unitscale
 
-                    if is_closed:
-                        points = rotate_list(vertex2points(vertex_data), nearest_point)
-                    elif nearest_point != 0:
-                        # redir open line and reverse bulge
-                        x_start = list(vertex_data[0])
-                        x_start.reverse()
-                        y_start = list(vertex_data[1])
-                        y_start.reverse()
-                        bulges = list(vertex_data[2])
-                        bulges.reverse()
-                        bulges = rotate_list(bulges, 1)
-                        for num, _point in enumerate(bulges):
-                            bulges[num] = -bulges[num]
-                        points = vertex2points((x_start, y_start, bulges))
-                    else:
-                        points = vertex2points(vertex_data)
-
-                    helix_mode = polyline.setup["mill"]["helix_mode"]
-                    if not is_closed:
-                        helix_mode = False
-                    # if polyline.is_pocket > 0:
-                    #    helix_mode = False
-
-                    # get object distance
-                    obj_distance = 0
-                    point = [0, 0]
-                    last = points[0]
-                    for point in points:
-                        obj_distance += calc_distance(point, last)
-                        last = point
-                    if is_closed:
-                        obj_distance += calc_distance(point, points[0])
-
-                    diameter = None
-                    for entry in project["setup"]["tool"]["tooltable"]:
-                        if polyline.setup["tool"]["number"] == entry["number"]:
-                            diameter = entry["diameter"]
-                    if diameter is None:
-                        print("ERROR: TOOL not found")
-                        break
-
-                    if project["setup"]["machine"]["comments"]:
-                        post.separation()
-                        post.comment(
-                            "--------------------------------------------------"
-                        )
-                        post.comment(f"Level: {level}")
-                        post.comment(f"Order: {order}")
-                        post.comment(f"Object: {nearest_idx}")
-                        post.comment(
-                            f"Distance: {round(obj_distance * unitscale, 4)}{unit}"
-                        )
-                        post.comment(f"Closed: {is_closed}")
-                        post.comment(f"isPocket: {polyline.is_pocket != 0}")
-                        if (
-                            project["setup"]["machine"]["mode"] != "laser"
-                            and "Z" in project["axis"]
-                        ):
-                            post.comment(
-                                f"Depth: {polyline.setup['mill']['depth']}{unit} / {polyline.setup['mill']['step']}{unit}"
-                            )
-                        post.comment(f"Tool-Diameter: {diameter}{unit}")
-                        if polyline.tool_offset:
-                            post.comment(
-                                f"Tool-Offset: {diameter / 2.0}{unit} {polyline.tool_offset}"
-                            )
-                        post.comment(
-                            "--------------------------------------------------"
-                        )
-
-                    # toolchange
-                    if project["setup"]["machine"]["mode"] == "mill":
-                        post.move(z_pos=fast_move_z)
-                        if project["setup"]["machine"]["supports_toolchange"]:
-                            post.tool(polyline.setup["tool"]["number"])
-                        post.spindle_cw(
-                            polyline.setup["tool"]["speed"],
-                            polyline.setup["tool"]["pause"],
-                        )
-
-                    depth = step
-                    depth = max(depth, max_depth)
-                    min_depth = polyline.setup["mill"]["start_depth"]
-                    depth = min(depth, min_depth)
-
-                    if coolant_mist:
-                        post.coolant_mist()
-                    if coolant_flood:
-                        post.coolant_flood()
-
-                    if (
-                        project["setup"]["machine"]["mode"] == "mill"
-                        and "Z" in project["axis"]
-                    ):
-                        if not (was_pocket and nearest_dist < diameter):
-                            post.move(z_pos=fast_move_z)
-                        elif helix_mode:
-                            post.move(z_pos=0.0)
+                        if polyline.setup["tabs"]["active"]:
+                            polyline.setup["tabs"]["data"] = tabs["data"]
                         else:
-                            post.move(z_pos=depth)
+                            polyline.setup["tabs"]["data"] = []
 
-                    was_pocket = polyline.is_pocket > 0
-
-                    if (
-                        project["setup"]["machine"]["mode"] != "mill"
-                        or "Z" not in project["axis"]
-                    ):
-                        depth = 0.0
-                        post.move(z_pos=depth)
-
-                    lead_in_active = polyline.setup["leads"]["in"]
-                    lead_out_active = polyline.setup["leads"]["out"]
-                    if not is_closed:
-                        # only on closed contours
-                        lead_in_active = "off"
-                        lead_out_active = "off"
-                    if not polyline.start:
-                        # only if a start point is set
-                        lead_in_active = "off"
-                        lead_out_active = "off"
-                    if max_depth < step:
-                        # lead-out only on single pathes
-                        lead_out_active = "off"
-
-                    if lead_in_active != "off":
-                        lead_in_lenght = polyline.setup["leads"]["in_lenght"]
-                        line_angle = angle_of_line(points[0], points[1])
-                        if lead_in_active == "straight":
-                            lead_in_x = points[0][0] - lead_in_lenght * math.sin(
-                                line_angle
-                            )
-                            lead_in_y = points[0][1] + lead_in_lenght * math.cos(
-                                line_angle
-                            )
+                        if is_closed:
+                            points = rotate_list(vertex2points(vertex_data), nearest_point)
+                        elif nearest_point != 0:
+                            # redir open line and reverse bulge
+                            x_start = list(vertex_data[0])
+                            x_start.reverse()
+                            y_start = list(vertex_data[1])
+                            y_start.reverse()
+                            bulges = list(vertex_data[2])
+                            bulges.reverse()
+                            bulges = rotate_list(bulges, 1)
+                            for num, _point in enumerate(bulges):
+                                bulges[num] = -bulges[num]
+                            points = vertex2points((x_start, y_start, bulges))
                         else:
-                            lead_radius = lead_in_lenght * 2 / math.pi
-                            if polyline.setup["mill"]["reverse"]:
-                                lead_in_center_x = points[0][
-                                    0
-                                ] + lead_radius * math.sin(line_angle)
-                                lead_in_center_y = points[0][
-                                    1
-                                ] - lead_radius * math.cos(line_angle)
-                                lead_in_x = lead_in_center_x + lead_radius * math.sin(
-                                    line_angle - HALF_PI
-                                )
-                                lead_in_y = lead_in_center_y - lead_radius * math.cos(
-                                    line_angle - HALF_PI
-                                )
-                            else:
-                                line_angle = (
-                                    angle_of_line(points[0], points[1]) + math.pi
-                                )
-                                lead_in_center_x = points[0][
-                                    0
-                                ] + lead_radius * math.sin(line_angle)
-                                lead_in_center_y = points[0][
-                                    1
-                                ] - lead_radius * math.cos(line_angle)
-                                lead_in_x = lead_in_center_x + lead_radius * math.sin(
-                                    line_angle + HALF_PI
-                                )
-                                lead_in_y = lead_in_center_y - lead_radius * math.cos(
-                                    line_angle + HALF_PI
-                                )
-                        post.move(x_pos=lead_in_x, y_pos=lead_in_y)
-                    else:
-                        post.move(x_pos=points[0][0], y_pos=points[0][1])
+                            points = vertex2points(vertex_data)
 
-                    if lead_out_active != "off":
-                        lead_out_lenght = polyline.setup["leads"]["out_lenght"]
-                        line_angle = angle_of_line(points[0], points[1])
-                        if lead_out_active == "straight":
-                            lead_out_x = points[0][0] - lead_out_lenght * math.sin(
-                                line_angle
-                            )
-                            lead_out_y = points[0][1] + lead_out_lenght * math.cos(
-                                line_angle
-                            )
-                        else:
-                            lead_radius = lead_out_lenght * 2 / math.pi
-                            if polyline.setup["mill"]["reverse"]:
-                                lead_out_center_x = points[0][
-                                    0
-                                ] + lead_radius * math.sin(line_angle)
-                                lead_out_center_y = points[0][
-                                    1
-                                ] - lead_radius * math.cos(line_angle)
-                                lead_out_x = lead_out_center_x + lead_radius * math.sin(
-                                    line_angle + HALF_PI
-                                )
-                                lead_out_y = lead_out_center_y - lead_radius * math.cos(
-                                    line_angle + HALF_PI
-                                )
-                            else:
-                                line_angle = (
-                                    angle_of_line(points[0], points[1]) + math.pi
-                                )
-                                lead_out_center_x = points[0][
-                                    0
-                                ] + lead_radius * math.sin(line_angle)
-                                lead_out_center_y = points[0][
-                                    1
-                                ] - lead_radius * math.cos(line_angle)
-                                lead_out_x = lead_out_center_x + lead_radius * math.sin(
-                                    line_angle - HALF_PI
-                                )
-                                lead_out_y = lead_out_center_y - lead_radius * math.cos(
-                                    line_angle - HALF_PI
-                                )
-
-                    last_depth = 0.0
-                    passes = 1
-                    while True:
-                        depth = max(depth, max_depth)
-
-                        if (
-                            project["setup"]["machine"]["mode"] != "laser"
-                            and "Z" in project["axis"]
-                        ):
-                            if project["setup"]["machine"]["comments"]:
-                                post.comment(f"- Depth: {depth}{unit} -")
-
+                        helix_mode = polyline.setup["mill"]["helix_mode"]
                         if not is_closed:
+                            helix_mode = False
+                        # if polyline.is_pocket > 0:
+                        #    helix_mode = False
+
+                        # get object distance
+                        obj_distance = 0
+                        point = [0, 0]
+                        last = points[0]
+                        for point in points:
+                            obj_distance += calc_distance(point, last)
+                            last = point
+                        if is_closed:
+                            obj_distance += calc_distance(point, points[0])
+
+                        diameter = None
+                        for entry in project["setup"]["tool"]["tooltable"]:
+                            if polyline.setup["tool"]["number"] == entry["number"]:
+                                diameter = entry["diameter"]
+                        if diameter is None:
+                            print("ERROR: TOOL not found")
+                            break
+
+                        if project["setup"]["machine"]["comments"]:
+                            post.separation()
+                            post.comment(
+                                "--------------------------------------------------"
+                            )
+                            post.comment(f"Level: {level}")
+                            post.comment(f"Order: {order}")
+                            post.comment(f"Object: {nearest_idx}")
+                            post.comment(
+                                f"Distance: {round(obj_distance * unitscale, 4)}{unit}"
+                            )
+                            post.comment(f"Closed: {is_closed}")
+                            post.comment(f"isPocket: {polyline.is_pocket != 0}")
                             if (
-                                project["setup"]["machine"]["mode"] == "mill"
+                                project["setup"]["machine"]["mode"] != "laser"
                                 and "Z" in project["axis"]
                             ):
-                                post.move(z_pos=fast_move_z)
-                            post.move(x_pos=points[0][0], y_pos=points[0][1])
+                                post.comment(
+                                    f"Depth: {polyline.setup['mill']['depth']}{unit} / {polyline.setup['mill']['step']}{unit}"
+                                )
+                            post.comment(f"Tool-Diameter: {diameter}{unit}")
+                            if polyline.tool_offset:
+                                post.comment(
+                                    f"Tool-Offset: {diameter / 2.0}{unit} {polyline.tool_offset}"
+                                )
+                            post.comment(
+                                "--------------------------------------------------"
+                            )
 
-                        if (
-                            project["setup"]["machine"]["mode"] != "laser"
-                            and "Z" in project["axis"]
-                        ):
-                            post.feedrate(polyline.setup["tool"]["rate_v"])
-                            if helix_mode:
-                                post.linear(z_pos=last_depth)
-                            else:
-                                post.linear(z_pos=depth)
-                            post.feedrate(polyline.setup["tool"]["rate_h"])
-
-                        if (
-                            project["setup"]["machine"]["mode"] != "mill"
-                            or "Z" not in project["axis"]
-                        ):
+                        # toolchange
+                        if project["setup"]["machine"]["mode"] == "mill":
+                            post.move(z_pos=fast_move_z)
+                            if project["setup"]["machine"]["supports_toolchange"]:
+                                post.tool(polyline.setup["tool"]["number"])
                             post.spindle_cw(
                                 polyline.setup["tool"]["speed"],
                                 polyline.setup["tool"]["pause"],
                             )
 
-                        if lead_in_active != "off":
+                        depth = step
+                        depth = max(depth, max_depth)
+                        min_depth = polyline.setup["mill"]["start_depth"]
+                        depth = min(depth, min_depth)
 
+                        if coolant_mist:
+                            post.coolant_mist()
+                        if coolant_flood:
+                            post.coolant_flood()
+
+                        if (
+                            project["setup"]["machine"]["mode"] == "mill"
+                            and "Z" in project["axis"]
+                        ):
+                            if not (was_pocket and nearest_dist < diameter):
+                                post.move(z_pos=fast_move_z)
+                            elif helix_mode:
+                                post.move(z_pos=0.0)
+                            else:
+                                post.move(z_pos=depth)
+
+                        was_pocket = polyline.is_pocket > 0
+
+                        if (
+                            project["setup"]["machine"]["mode"] != "mill"
+                            or "Z" not in project["axis"]
+                        ):
+                            depth = 0.0
+                            post.move(z_pos=depth)
+
+                        lead_in_active = polyline.setup["leads"]["in"]
+                        lead_out_active = polyline.setup["leads"]["out"]
+                        if not is_closed:
+                            # only on closed contours
+                            lead_in_active = "off"
+                            lead_out_active = "off"
+                        if not polyline.start:
+                            # only if a start point is set
+                            lead_in_active = "off"
+                            lead_out_active = "off"
+                        if max_depth < step:
+                            # lead-out only on single pathes
+                            lead_out_active = "off"
+
+                        if lead_in_active != "off":
+                            lead_in_lenght = polyline.setup["leads"]["in_lenght"]
+                            line_angle = angle_of_line(points[0], points[1])
                             if lead_in_active == "straight":
+                                lead_in_x = points[0][0] - lead_in_lenght * math.sin(
+                                    line_angle
+                                )
+                                lead_in_y = points[0][1] + lead_in_lenght * math.cos(
+                                    line_angle
+                                )
+                            else:
+                                lead_radius = lead_in_lenght * 2 / math.pi
+                                if polyline.setup["mill"]["reverse"]:
+                                    lead_in_center_x = points[0][
+                                        0
+                                    ] + lead_radius * math.sin(line_angle)
+                                    lead_in_center_y = points[0][
+                                        1
+                                    ] - lead_radius * math.cos(line_angle)
+                                    lead_in_x = lead_in_center_x + lead_radius * math.sin(
+                                        line_angle - HALF_PI
+                                    )
+                                    lead_in_y = lead_in_center_y - lead_radius * math.cos(
+                                        line_angle - HALF_PI
+                                    )
+                                else:
+                                    line_angle = (
+                                        angle_of_line(points[0], points[1]) + math.pi
+                                    )
+                                    lead_in_center_x = points[0][
+                                        0
+                                    ] + lead_radius * math.sin(line_angle)
+                                    lead_in_center_y = points[0][
+                                        1
+                                    ] - lead_radius * math.cos(line_angle)
+                                    lead_in_x = lead_in_center_x + lead_radius * math.sin(
+                                        line_angle + HALF_PI
+                                    )
+                                    lead_in_y = lead_in_center_y - lead_radius * math.cos(
+                                        line_angle + HALF_PI
+                                    )
+                            post.move(x_pos=lead_in_x, y_pos=lead_in_y)
+                        else:
+                            post.move(x_pos=points[0][0], y_pos=points[0][1])
+
+                        if lead_out_active != "off":
+                            lead_out_lenght = polyline.setup["leads"]["out_lenght"]
+                            line_angle = angle_of_line(points[0], points[1])
+                            if lead_out_active == "straight":
+                                lead_out_x = points[0][0] - lead_out_lenght * math.sin(
+                                    line_angle
+                                )
+                                lead_out_y = points[0][1] + lead_out_lenght * math.cos(
+                                    line_angle
+                                )
+                            else:
+                                lead_radius = lead_out_lenght * 2 / math.pi
+                                if polyline.setup["mill"]["reverse"]:
+                                    lead_out_center_x = points[0][
+                                        0
+                                    ] + lead_radius * math.sin(line_angle)
+                                    lead_out_center_y = points[0][
+                                        1
+                                    ] - lead_radius * math.cos(line_angle)
+                                    lead_out_x = lead_out_center_x + lead_radius * math.sin(
+                                        line_angle + HALF_PI
+                                    )
+                                    lead_out_y = lead_out_center_y - lead_radius * math.cos(
+                                        line_angle + HALF_PI
+                                    )
+                                else:
+                                    line_angle = (
+                                        angle_of_line(points[0], points[1]) + math.pi
+                                    )
+                                    lead_out_center_x = points[0][
+                                        0
+                                    ] + lead_radius * math.sin(line_angle)
+                                    lead_out_center_y = points[0][
+                                        1
+                                    ] - lead_radius * math.cos(line_angle)
+                                    lead_out_x = lead_out_center_x + lead_radius * math.sin(
+                                        line_angle - HALF_PI
+                                    )
+                                    lead_out_y = lead_out_center_y - lead_radius * math.cos(
+                                        line_angle - HALF_PI
+                                    )
+
+                        last_depth = 0.0
+                        passes = 1
+                        while True:
+                            depth = max(depth, max_depth)
+
+                            if (
+                                project["setup"]["machine"]["mode"] != "laser"
+                                and "Z" in project["axis"]
+                            ):
+                                if project["setup"]["machine"]["comments"]:
+                                    post.comment(f"- Depth: {depth}{unit} -")
+
+                            if not is_closed:
+                                if (
+                                    project["setup"]["machine"]["mode"] == "mill"
+                                    and "Z" in project["axis"]
+                                ):
+                                    post.move(z_pos=fast_move_z)
+                                post.move(x_pos=points[0][0], y_pos=points[0][1])
+
+                            if (
+                                project["setup"]["machine"]["mode"] != "laser"
+                                and "Z" in project["axis"]
+                            ):
+                                post.feedrate(polyline.setup["tool"]["rate_v"])
+                                if helix_mode:
+                                    post.linear(z_pos=last_depth)
+                                else:
+                                    post.linear(z_pos=depth)
+                                post.feedrate(polyline.setup["tool"]["rate_h"])
+
+                            if (
+                                project["setup"]["machine"]["mode"] != "mill"
+                                or "Z" not in project["axis"]
+                            ):
+                                post.spindle_cw(
+                                    polyline.setup["tool"]["speed"],
+                                    polyline.setup["tool"]["pause"],
+                                )
+
+                            if lead_in_active != "off":
+
+                                if lead_in_active == "straight":
+                                    post.linear(
+                                        x_pos=points[0][0],
+                                        y_pos=points[0][1],
+                                    )
+                                else:
+                                    if polyline.setup["mill"]["reverse"]:
+                                        post.arc_cw(
+                                            x_pos=points[0][0],
+                                            y_pos=points[0][1],
+                                            i_pos=(lead_in_center_x - lead_in_x),
+                                            j_pos=(lead_in_center_y - lead_in_y),
+                                        )
+                                    else:
+                                        post.arc_ccw(
+                                            x_pos=points[0][0],
+                                            y_pos=points[0][1],
+                                            i_pos=(lead_in_center_x - lead_in_x),
+                                            j_pos=(lead_in_center_y - lead_in_y),
+                                        )
+                                lead_in_active = "off"
+
+                            trav_distance = 0
+                            last = points[0]
+                            for point in points:
+                                if helix_mode:
+                                    trav_distance += calc_distance(point, last)
+                                    depth_diff = depth - last_depth
+                                    set_depth = last_depth + (
+                                        trav_distance / obj_distance * depth_diff
+                                    )
+                                else:
+                                    set_depth = depth
+                                segment2machine_cmd(
+                                    project,
+                                    post,
+                                    last,
+                                    point,
+                                    set_depth,
+                                    max_depth,
+                                    polyline.setup["tabs"],
+                                    polyline.setup["tool"],
+                                )
+                                last = point
+
+                            if is_closed:
+                                point = points[0]
+
+                                if helix_mode:
+                                    trav_distance += calc_distance(point, last)
+                                    depth_diff = depth - last_depth
+                                    set_depth = last_depth + (
+                                        trav_distance / obj_distance * depth_diff
+                                    )
+                                else:
+                                    set_depth = depth
+                                segment2machine_cmd(
+                                    project,
+                                    post,
+                                    last,
+                                    point,
+                                    set_depth,
+                                    max_depth,
+                                    polyline.setup["tabs"],
+                                    polyline.setup["tool"],
+                                )
+
+                            last_depth = depth
+
+                            zoffset = 0.0
+                            if project["setup"]["machine"]["mode"] == "laser_z":
+                                zoffset = step
+                            if depth <= max_depth - zoffset:
+                                if helix_mode:
+                                    helix_mode = False
+                                    continue
+                                break
+                            depth += step
+
+                            if (
+                                project["setup"]["machine"]["mode"] == "laser"
+                                and polyline.setup["mill"]["passes"] == passes
+                            ) or "Z" not in project["axis"]:
+                                break
+
+                            passes += 1
+
+                        if lead_out_active != "off":
+                            if lead_out_active == "straight":
                                 post.linear(
-                                    x_pos=points[0][0],
-                                    y_pos=points[0][1],
+                                    x_pos=lead_out_x,
+                                    y_pos=lead_out_y,
                                 )
                             else:
                                 if polyline.setup["mill"]["reverse"]:
                                     post.arc_cw(
-                                        x_pos=points[0][0],
-                                        y_pos=points[0][1],
-                                        i_pos=(lead_in_center_x - lead_in_x),
-                                        j_pos=(lead_in_center_y - lead_in_y),
+                                        x_pos=lead_out_x,
+                                        y_pos=lead_out_y,
+                                        i_pos=(lead_out_center_x - points[0][0]),
+                                        j_pos=(lead_out_center_y - points[0][1]),
                                     )
                                 else:
                                     post.arc_ccw(
-                                        x_pos=points[0][0],
-                                        y_pos=points[0][1],
-                                        i_pos=(lead_in_center_x - lead_in_x),
-                                        j_pos=(lead_in_center_y - lead_in_y),
+                                        x_pos=lead_out_x,
+                                        y_pos=lead_out_y,
+                                        i_pos=(lead_out_center_x - points[0][0]),
+                                        j_pos=(lead_out_center_y - points[0][1]),
                                     )
-                            lead_in_active = "off"
+                            lead_out_active = "off"
 
-                        trav_distance = 0
-                        last = points[0]
-                        for point in points:
-                            if helix_mode:
-                                trav_distance += calc_distance(point, last)
-                                depth_diff = depth - last_depth
-                                set_depth = last_depth + (
-                                    trav_distance / obj_distance * depth_diff
-                                )
-                            else:
-                                set_depth = depth
-                            segment2machine_cmd(
-                                project,
-                                post,
-                                last,
-                                point,
-                                set_depth,
-                                max_depth,
-                                polyline.setup["tabs"],
-                                polyline.setup["tool"],
-                            )
-                            last = point
+                        if project["setup"]["machine"]["mode"] != "mill":
+                            post.spindle_off()
 
                         if is_closed:
-                            point = points[0]
-
-                            if helix_mode:
-                                trav_distance += calc_distance(point, last)
-                                depth_diff = depth - last_depth
-                                set_depth = last_depth + (
-                                    trav_distance / obj_distance * depth_diff
-                                )
-                            else:
-                                set_depth = depth
-                            segment2machine_cmd(
-                                project,
-                                post,
-                                last,
-                                point,
-                                set_depth,
-                                max_depth,
-                                polyline.setup["tabs"],
-                                polyline.setup["tool"],
-                            )
-
-                        last_depth = depth
-
-                        zoffset = 0.0
-                        if project["setup"]["machine"]["mode"] == "laser_z":
-                            zoffset = step
-                        if depth <= max_depth - zoffset:
-                            if helix_mode:
-                                helix_mode = False
-                                continue
-                            break
-                        depth += step
-
-                        if (
-                            project["setup"]["machine"]["mode"] == "laser"
-                            and polyline.setup["mill"]["passes"] == passes
-                        ) or "Z" not in project["axis"]:
-                            break
-
-                        passes += 1
-
-                    if lead_out_active != "off":
-                        if lead_out_active == "straight":
-                            post.linear(
-                                x_pos=lead_out_x,
-                                y_pos=lead_out_y,
-                            )
+                            last_pos = points[0]
                         else:
-                            if polyline.setup["mill"]["reverse"]:
-                                post.arc_cw(
-                                    x_pos=lead_out_x,
-                                    y_pos=lead_out_y,
-                                    i_pos=(lead_out_center_x - points[0][0]),
-                                    j_pos=(lead_out_center_y - points[0][1]),
-                                )
-                            else:
-                                post.arc_ccw(
-                                    x_pos=lead_out_x,
-                                    y_pos=lead_out_y,
-                                    i_pos=(lead_out_center_x - points[0][0]),
-                                    j_pos=(lead_out_center_y - points[0][1]),
-                                )
-                        lead_out_active = "off"
+                            last_pos = points[-1]
+                        order += 1
 
-                    if project["setup"]["machine"]["mode"] != "mill":
-                        post.spindle_off()
+                        if coolant_mist or coolant_flood:
+                            post.coolant_off()
 
-                    if is_closed:
-                        last_pos = points[0]
                     else:
-                        last_pos = points[-1]
-                    order += 1
-
-                    if coolant_mist or coolant_flood:
-                        post.coolant_off()
-
-                else:
-                    break
+                        break
 
     machine_cmd_end(project, post)
     print("")

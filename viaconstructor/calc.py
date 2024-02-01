@@ -820,6 +820,8 @@ def points2offsets(
     polyline_offset.layer = obj.layer
     polyline_offset.color = obj.color
     polyline_offset.setup = obj.setup
+    polyline_offset.obj_idx = parent_id
+    polyline_offset.outer_objects = obj.outer_objects
     polyline_offset.start = obj.start
     polyline_offset.is_pocket = is_pocket
     polyline_offset.fixed_direction = False
@@ -1019,6 +1021,8 @@ def do_pockets(  # pylint: disable=R0913
         polyline_offset.layer = obj.layer
         polyline_offset.color = obj.color
         polyline_offset.setup = obj.setup
+        polyline_offset.obj_idx = obj_idx
+        polyline_offset.outer_objects = obj.outer_objects
         polyline_offset.start = obj.start
         polyline_offset.is_pocket = 1
         polyline_offset.fixed_direction = True
@@ -1039,6 +1043,8 @@ def do_pockets(  # pylint: disable=R0913
                 polyline_offset.layer = obj.layer
                 polyline_offset.color = obj.color
                 polyline_offset.setup = obj.setup
+                polyline_offset.obj_idx = parent_id
+                polyline_offset.outer_objects = obj.outer_objects
                 polyline_offset.start = obj.start
                 polyline_offset.is_pocket = 1
                 polyline_offset.fixed_direction = False
@@ -1158,6 +1164,8 @@ def object2polyline_offsets(
             over_polyline.level = len(obj.outer_objects)
             over_polyline.start = obj.start
             over_polyline.setup = obj.setup
+            over_polyline.obj_idx = obj_idx
+            over_polyline.outer_objects = obj.outer_objects
             over_polyline.layer = obj.layer
             over_polyline.color = obj.color
             over_polyline.is_pocket = 0
@@ -1193,6 +1201,8 @@ def object2polyline_offsets(
                 polyline_offset.start = obj.start
                 polyline_offset.tool_offset = tool_offset
                 polyline_offset.setup = obj.setup
+                polyline_offset.obj_idx = obj_idx
+                polyline_offset.outer_objects = obj.outer_objects
                 polyline_offset.layer = obj.layer
                 polyline_offset.color = obj.color
                 polyline_offset.is_pocket = 0
@@ -1226,6 +1236,8 @@ def object2polyline_offsets(
             polyline_offset.start = obj.start
             polyline_offset.tool_offset = tool_offset
             polyline_offset.setup = obj.setup
+            polyline_offset.obj_idx = obj_idx
+            polyline_offset.outer_objects = obj.outer_objects
             polyline_offset.layer = obj.layer
             polyline_offset.color = obj.color
             polyline_offset.is_pocket = 0
@@ -1240,6 +1252,8 @@ def object2polyline_offsets(
     else:
         polyline.level = max_outer
         polyline.setup = obj.setup
+        polyline.obj_idx = obj_idx
+        polyline.outer_objects = obj.outer_objects
         polyline.tool_offset = tool_offset
         polyline.start = obj.start
         polyline.layer = obj.layer

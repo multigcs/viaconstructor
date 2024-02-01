@@ -117,6 +117,7 @@ def setup_defaults(_) -> dict:
                 "options": (
                     ("nearest", _("nearest")),
                     ("unordered", _("unordered")),
+                    ("per_object", _("per_object")),
                 ),
                 "title": _("Object-Order"),
                 "tooltip": _("how order the objects"),
