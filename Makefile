@@ -146,8 +146,8 @@ gettext:
 dist:
 	python3 setup.py sdist
 
-pypi: dist docker-run-dist-check
-	twine upload -u meister23 --verbose dist/viaconstructor*
+pypi: dist
+	twine upload --verbose dist/viaconstructor*
 
 bdist_deb:
 	python3 setup.py --command-packages=stdeb.command bdist_deb
