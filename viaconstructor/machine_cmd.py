@@ -644,7 +644,6 @@ def polylines2machine_cmd(project: dict, post: PostProcessor) -> str:
         # TODO: reorder master_ids (nearest)
         for obj_idx, obj_data in project["objects"].items():
             if not obj_data.outer_objects:
-                print(obj_idx, obj_data.outer_objects)
                 master_ids.append(obj_idx)
     else:
         master_ids = [""]
