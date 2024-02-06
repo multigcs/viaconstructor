@@ -265,10 +265,10 @@ class GearTool(QWidget):
             last = point
 
         square = QRect(
-            off_x - hole / 2 * scale,
-            off_y - hole / 2 * scale,
-            hole * scale,
-            hole * scale,
+            int(off_x - hole / 2 * scale),
+            int(off_y - hole / 2 * scale),
+            int(hole * scale),
+            int(hole * scale),
         )
         self.painter.drawEllipse(square)
 
