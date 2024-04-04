@@ -172,6 +172,7 @@ class fakeOffset:
                         "mode": "mill",
                         "unit": "mm",
                         "comments": True,
+                        "arcs": "ij",
                         "g54": False,
                         "supports_toolchange": True,
                         "toolchange_pre": "",
