@@ -54,30 +54,18 @@ class HpglParser:
                 # if len(params) == 4:
                 #    resolution = params[3]
                 radius = calc_distance((last_x, last_y), (center_x, center_y))
-                start_angle = (
-                    angle_of_line((last_x, last_y), (center_x, center_y))
-                    * 180
-                    / math.pi
-                )
+                start_angle = angle_of_line((last_x, last_y), (center_x, center_y)) * 180 / math.pi
                 if angle < 0:
                     for angle_set in range(0, int(abs(angle)) + 1):
-                        new_x = center_x + radius * math.sin(
-                            (start_angle + angle_set) * math.pi / 180 + math.pi / 2
-                        )
-                        new_y = center_y + radius * math.cos(
-                            (start_angle + angle_set) * math.pi / 180 + math.pi / 2
-                        )
+                        new_x = center_x + radius * math.sin((start_angle + angle_set) * math.pi / 180 + math.pi / 2)
+                        new_y = center_y + radius * math.cos((start_angle + angle_set) * math.pi / 180 + math.pi / 2)
                         self.linear_move({"X": new_x, "Y": new_y}, False)
                         last_x = new_x
                         last_y = new_y
                 else:
                     for angle_set in range(int(abs(angle)), -1, -1):
-                        new_x = center_x - radius * math.sin(
-                            (start_angle + angle_set) * math.pi / 180 + math.pi / 2
-                        )
-                        new_y = center_y - radius * math.cos(
-                            (start_angle + angle_set) * math.pi / 180 + math.pi / 2
-                        )
+                        new_x = center_x - radius * math.sin((start_angle + angle_set) * math.pi / 180 + math.pi / 2)
+                        new_y = center_y - radius * math.cos((start_angle + angle_set) * math.pi / 180 + math.pi / 2)
                         self.linear_move({"X": new_x, "Y": new_y}, False)
                         last_x = new_x
                         last_y = new_y
@@ -151,9 +139,7 @@ class HpglParser:
                     segment[1][axis] = round(segment[1][axis], 6)
         return self.path
 
-    def linear_move(
-        self, cords: dict, fast: bool = False  # pylint: disable=W0613
-    ) -> None:
+    def linear_move(self, cords: dict, fast: bool = False) -> None:  # pylint: disable=W0613
         for axis in self.state["position"]:
             if axis not in cords:
                 cords[axis] = self.state["position"][axis]
@@ -173,9 +159,7 @@ class HpglParser:
         h_x2_div_d = 4.0 * arc_r * arc_r - diff_x * diff_x - diff_y * diff_y
         if h_x2_div_d < 0:
             print("### ARC ERROR ###")
-            self.path.append(
-                [self.state["position"], cords, self.state["spindle"]["dir"]]
-            )
+            self.path.append([self.state["position"], cords, self.state["spindle"]["dir"]])
             self.state["position"] = cords
             return
         h_x2_div_d = -math.sqrt(h_x2_div_d) / math.hypot(diff_x, diff_y)
@@ -198,9 +182,7 @@ class HpglParser:
         center_y = last_pos["Y"] + j
         if radius is None:
             radius = calc_distance((center_x, center_y), (last_pos["X"], last_pos["Y"]))
-        start_angle = angle_of_line(
-            (center_x, center_y), (last_pos["X"], last_pos["Y"])
-        )
+        start_angle = angle_of_line((center_x, center_y), (last_pos["X"], last_pos["Y"]))
         end_angle = angle_of_line((center_x, center_y), (cords["X"], cords["Y"]))
 
         if angle_dir == 2:

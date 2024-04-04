@@ -38,9 +38,7 @@ class PostProcessorHpgl(PostProcessor):
         self.toolrun = False
         self.hpgl.append("PU")
 
-    def machine_offsets(
-        self, offsets: tuple[float, float, float] = (0.0, 0.0, 0.0), soft: bool = True
-    ) -> None:
+    def machine_offsets(self, offsets: tuple[float, float, float] = (0.0, 0.0, 0.0), soft: bool = True) -> None:
         self.offsets = offsets
 
     def program_end(self) -> None:
@@ -150,9 +148,7 @@ class PostProcessorHpgl(PostProcessor):
         if x_pos is not None and y_pos is not None:
             center_x = self.last_x + i_pos * self.scale
             center_y = self.last_y + j_pos * self.scale
-            self.arc_move(
-                self.last_x, self.last_y, self.x_pos, self.y_pos, center_x, center_y, 2
-            )
+            self.arc_move(self.last_x, self.last_y, self.x_pos, self.y_pos, center_x, center_y, 2)
             self.last_x = self.x_pos
             self.last_y = self.y_pos
 
@@ -174,9 +170,7 @@ class PostProcessorHpgl(PostProcessor):
         if x_pos is not None and y_pos is not None:
             center_x = self.last_x + i_pos * self.scale
             center_y = self.last_y + j_pos * self.scale
-            self.arc_move(
-                self.last_x, self.last_y, self.x_pos, self.y_pos, center_x, center_y, 3
-            )
+            self.arc_move(self.last_x, self.last_y, self.x_pos, self.y_pos, center_x, center_y, 3)
             self.last_x = self.x_pos
             self.last_y = self.y_pos
 

@@ -1,4 +1,5 @@
 import math
+
 from ..machine_cmd import PostProcessor  # pylint: disable=E0402
 
 
@@ -75,15 +76,11 @@ class PostProcessorGcodeLinuxCNC(PostProcessor):
             else:
                 self.gcode.append("G42")
 
-    def machine_offsets(
-        self, offsets: tuple[float, float, float] = (0.0, 0.0, 0.0), soft: bool = True
-    ) -> None:
+    def machine_offsets(self, offsets: tuple[float, float, float] = (0.0, 0.0, 0.0), soft: bool = True) -> None:
         self.offsets_reset = False
         if not soft and offsets != (0.0, 0.0, 0.0):
             self.offsets_reset = True
-            self.gcode.append(
-                f"G10 L2 P1 X{offsets[0]:.6f} Y{offsets[1]:.6f} Z{offsets[2]:.6f} (workpiece offsets for G54)"
-            )
+            self.gcode.append(f"G10 L2 P1 X{offsets[0]:.6f} Y{offsets[1]:.6f} Z{offsets[2]:.6f} (workpiece offsets for G54)")
             self.gcode.append("G54")
         if soft:
             self.offsets = (
@@ -127,15 +124,11 @@ class PostProcessorGcodeLinuxCNC(PostProcessor):
                 self.spindle_off()
 
             if self.project["setup"]["machine"]["toolchange_pre"]:
-                for part in self.project["setup"]["machine"]["toolchange_pre"].split(
-                    "\n"
-                ):
+                for part in self.project["setup"]["machine"]["toolchange_pre"].split("\n"):
                     self.gcode.append(part)
             self.gcode.append(f"M06 T{number}")
             if self.project["setup"]["machine"]["toolchange_post"]:
-                for part in self.project["setup"]["machine"]["toolchange_post"].split(
-                    "\n"
-                ):
+                for part in self.project["setup"]["machine"]["toolchange_post"].split("\n"):
                     self.gcode.append(part)
 
             # tool to safe z
@@ -159,9 +152,7 @@ class PostProcessorGcodeLinuxCNC(PostProcessor):
             self.gcode.append("M05")
         self.tool_running = 0
         if self.project["setup"]["machine"]["spindle_off_post"]:
-            for part in self.project["setup"]["machine"]["spindle_off_post"].split(
-                "\n"
-            ):
+            for part in self.project["setup"]["machine"]["spindle_off_post"].split("\n"):
                 self.gcode.append(part)
 
     def coolant_mist(self) -> None:
@@ -228,9 +219,7 @@ class PostProcessorGcodeLinuxCNC(PostProcessor):
         if line:
             self.gcode.append("G01 " + " ".join(line))
 
-    def arc_cw(
-        self, x_pos=None, y_pos=None, z_pos=None, i_pos=None, j_pos=None, r_pos=None
-    ) -> None:
+    def arc_cw(self, x_pos=None, y_pos=None, z_pos=None, i_pos=None, j_pos=None, r_pos=None) -> None:
         line = []
         if x_pos is not None and self.x_pos != x_pos:
             line.append(f"X{round((x_pos + self.offsets[0]) * self.scale, 6):.6f}")
@@ -255,9 +244,7 @@ class PostProcessorGcodeLinuxCNC(PostProcessor):
         if line:
             self.gcode.append("G02 " + " ".join(line))
 
-    def arc_ccw(
-        self, x_pos=None, y_pos=None, z_pos=None, i_pos=None, j_pos=None, r_pos=None
-    ) -> None:
+    def arc_ccw(self, x_pos=None, y_pos=None, z_pos=None, i_pos=None, j_pos=None, r_pos=None) -> None:
         line = []
         if x_pos is not None and self.x_pos != x_pos:
             line.append(f"X{round((x_pos + self.offsets[0]) * self.scale, 6):.6f}")

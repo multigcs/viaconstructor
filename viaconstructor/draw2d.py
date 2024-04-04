@@ -150,9 +150,7 @@ class CanvasWidget(QLabel):  # pylint: disable=R0903
                     sel_dist = -1
                     for tab_idx, tab in enumerate(self.project["tabs"]["data"]):
                         tab_pos = line_center_2d(tab[0], tab[1])
-                        dist = calc_distance(
-                            (self.mouse_pos_x, self.mouse_pos_y), tab_pos
-                        )
+                        dist = calc_distance((self.mouse_pos_x, self.mouse_pos_y), tab_pos)
                         if sel_dist < 0 or dist < sel_dist:
                             sel_dist = dist
                             sel_idx = tab_idx
@@ -191,25 +189,8 @@ class CanvasWidget(QLabel):  # pylint: disable=R0903
         min_max = self.project["minMax"]
         mouse_pos_x = mouse_pos.x()
         mouse_pos_y = self.screen_h - mouse_pos.y()
-        real_pos_x = (
-            (
-                (mouse_pos_x / self.screen_w - 0.5 + self.trans_x)
-                / painter["scale"]
-                / painter["scale_xyz"]
-            )
-            + (self.size_x / 2)
-            + min_max[0]
-        )
-        real_pos_y = (
-            (
-                (mouse_pos_y / self.screen_h - 0.5 + self.trans_y)
-                / painter["scale"]
-                / painter["scale_xyz"]
-                * self.aspect
-            )
-            + (self.size_y / 2)
-            + min_max[1]
-        )
+        real_pos_x = ((mouse_pos_x / self.screen_w - 0.5 + self.trans_x) / painter["scale"] / painter["scale_xyz"]) + (self.size_x / 2) + min_max[0]
+        real_pos_y = ((mouse_pos_y / self.screen_h - 0.5 + self.trans_y) / painter["scale"] / painter["scale_xyz"] * self.aspect) + (self.size_y / 2) + min_max[1]
         return (real_pos_x, real_pos_y)
 
     def mouseMoveEvent(self, event) -> None:  # pylint: disable=C0103
@@ -220,44 +201,24 @@ class CanvasWidget(QLabel):  # pylint: disable=R0903
             self.trans_y = self.trans_y_last - moffset.y() / self.screen_h * self.aspect
             draw_all(self.project)
         elif self.selector_mode == "tab":
-            (self.mouse_pos_x, self.mouse_pos_y) = self.mouse_pos_to_real_pos(
-                event.pos()
-            )
-            self.selection = found_next_tab_point(
-                (self.mouse_pos_x, self.mouse_pos_y), self.project["offsets"]
-            )
+            (self.mouse_pos_x, self.mouse_pos_y) = self.mouse_pos_to_real_pos(event.pos())
+            self.selection = found_next_tab_point((self.mouse_pos_x, self.mouse_pos_y), self.project["offsets"])
             draw_all(self.project)
         elif self.selector_mode == "start":
-            (self.mouse_pos_x, self.mouse_pos_y) = self.mouse_pos_to_real_pos(
-                event.pos()
-            )
-            self.selection = found_next_point_on_segment(
-                (self.mouse_pos_x, self.mouse_pos_y), self.project["objects"]
-            )
+            (self.mouse_pos_x, self.mouse_pos_y) = self.mouse_pos_to_real_pos(event.pos())
+            self.selection = found_next_point_on_segment((self.mouse_pos_x, self.mouse_pos_y), self.project["objects"])
             draw_all(self.project)
         elif self.selector_mode == "delete":
-            (self.mouse_pos_x, self.mouse_pos_y) = self.mouse_pos_to_real_pos(
-                event.pos()
-            )
-            self.selection = found_next_segment_point(
-                (self.mouse_pos_x, self.mouse_pos_y), self.project["objects"]
-            )
+            (self.mouse_pos_x, self.mouse_pos_y) = self.mouse_pos_to_real_pos(event.pos())
+            self.selection = found_next_segment_point((self.mouse_pos_x, self.mouse_pos_y), self.project["objects"])
             draw_all(self.project)
         elif self.selector_mode == "oselect":
-            (self.mouse_pos_x, self.mouse_pos_y) = self.mouse_pos_to_real_pos(
-                event.pos()
-            )
-            self.selection = found_next_segment_point(
-                (self.mouse_pos_x, self.mouse_pos_y), self.project["objects"]
-            )
+            (self.mouse_pos_x, self.mouse_pos_y) = self.mouse_pos_to_real_pos(event.pos())
+            self.selection = found_next_segment_point((self.mouse_pos_x, self.mouse_pos_y), self.project["objects"])
             draw_all(self.project)
         elif self.selector_mode == "repair":
-            (self.mouse_pos_x, self.mouse_pos_y) = self.mouse_pos_to_real_pos(
-                event.pos()
-            )
-            self.selection = found_next_open_segment_point(
-                (self.mouse_pos_x, self.mouse_pos_y), self.project["objects"]
-            )
+            (self.mouse_pos_x, self.mouse_pos_y) = self.mouse_pos_to_real_pos(event.pos())
+            self.selection = found_next_open_segment_point((self.mouse_pos_x, self.mouse_pos_y), self.project["objects"])
             if self.selection:
                 selection_end = found_next_open_segment_point(
                     (self.mouse_pos_x, self.mouse_pos_y),
@@ -411,9 +372,7 @@ def draw_mill_line(
     draw_line_2d(p_from, p_to)
 
 
-def draw_object_edges(
-    project: dict, selected: int = -1  # pylint: disable=W0613
-) -> None:
+def draw_object_edges(project: dict, selected: int = -1) -> None:  # pylint: disable=W0613
     """draws the edges of an object"""
     unit = project["setup"]["machine"]["unit"]
     depth = project["setup"]["mill"]["depth"]
@@ -426,9 +385,7 @@ def draw_object_edges(
 
     depths = []
     for obj in project["objects"].values():
-        if obj.get("layer", "").startswith("BREAKS:") or obj.get(
-            "layer", ""
-        ).startswith("_TABS"):
+        if obj.get("layer", "").startswith("BREAKS:") or obj.get("layer", "").startswith("_TABS"):
             continue
         odepth = obj["setup"]["mill"]["depth"]
         if odepth not in depths:
@@ -437,9 +394,7 @@ def draw_object_edges(
 
     painter["ctx"].setPen(QPen(QtCore.Qt.white, 2, QtCore.Qt.SolidLine))  # type: ignore  # pylint: disable=I1101
     for _obj_idx, obj in project["objects"].items():
-        if obj.get("layer", "").startswith("BREAKS:") or obj.get(
-            "layer", ""
-        ).startswith("_TABS"):
+        if obj.get("layer", "").startswith("BREAKS:") or obj.get("layer", "").startswith("_TABS"):
             continue
 
         for segment in obj.segments:
@@ -570,11 +525,7 @@ def draw_all(project: dict) -> None:
             print("error while drawing machine commands")
 
     selected = -1
-    if (
-        project["glwidget"]
-        and project["glwidget"].selection_set
-        and project["glwidget"].selector_mode in {"delete", "oselect"}
-    ):
+    if project["glwidget"] and project["glwidget"].selection_set and project["glwidget"].selector_mode in {"delete", "oselect"}:
         selected = project["glwidget"].selection_set[2]
 
     draw_object_edges(project, selected=selected)

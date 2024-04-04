@@ -108,9 +108,7 @@ class GcodeParser:
                     if "R" in cords:
                         self.arc_move_r(self.state["move_mode"], cords, cords["R"])
                     elif "I" in ldata and "J" in ldata:
-                        self.arc_move_ij(
-                            self.state["move_mode"], cords, ldata["I"], ldata["J"]
-                        )
+                        self.arc_move_ij(self.state["move_mode"], cords, ldata["I"], ldata["J"])
 
         minp = {}
         maxp = {}
@@ -162,26 +160,18 @@ class GcodeParser:
         stock_y = size[1] + tool_diameter * 4
         stock_z = size[2] - minmax[5]
         tool_length = stock_z + 10
-        scad_data = [
-            f"module tool() {{cylinder(h={tool_length},d={tool_diameter},center=false,$fn={8});}}"
-        ]
-        scad_data.append(
-            f"module stock() {{translate(v=[{minmax[0] - tool_diameter * 2},{minmax[1] - tool_diameter * 2},{-stock_z}]) cube(size=[{stock_x},{stock_y},{stock_z}],center=false);}}"
-        )
+        scad_data = [f"module tool() {{cylinder(h={tool_length},d={tool_diameter},center=false,$fn={8});}}"]
+        scad_data.append(f"module stock() {{translate(v=[{minmax[0] - tool_diameter * 2},{minmax[1] - tool_diameter * 2},{-stock_z}]) cube(size=[{stock_x},{stock_y},{stock_z}],center=false);}}")
         scad_data.append("difference() {")
         scad_data.append("  stock();")
         scad_data.append("  union() {")
         for (s_x, s_y, s_z), (e_x, e_y, e_z) in zip(movements, movements[1:]):
-            scad_data.append(
-                f"    hull() {{translate(v=[{s_x},{s_y},{s_z}]) tool(); translate(v=[{e_x},{e_y},{e_z-0.01}]) tool();}}"
-            )
+            scad_data.append(f"    hull() {{translate(v=[{s_x},{s_y},{s_z}]) tool(); translate(v=[{e_x},{e_y},{e_z-0.01}]) tool();}}")
         scad_data.append("  }")
         scad_data.append("}")
         return "\n".join(scad_data)
 
-    def linear_move(
-        self, cords: dict, fast: bool = False  # pylint: disable=W0613
-    ) -> None:
+    def linear_move(self, cords: dict, fast: bool = False) -> None:  # pylint: disable=W0613
         for axis in self.state["position"]:
             if axis in cords:
                 cords[axis] /= self.state["scale"]
@@ -206,9 +196,7 @@ class GcodeParser:
         h_x2_div_d = 4.0 * arc_r * arc_r - diff_x * diff_x - diff_y * diff_y
         if h_x2_div_d < 0:
             print("### ARC ERROR ###")
-            self.path.append(
-                [self.state["position"], cords, self.state["spindle"]["dir"]]
-            )
+            self.path.append([self.state["position"], cords, self.state["spindle"]["dir"]])
             self.state["position"] = cords
             return
         h_x2_div_d = -math.sqrt(h_x2_div_d) / math.hypot(diff_x, diff_y)
@@ -233,9 +221,7 @@ class GcodeParser:
         center_y = last_pos["Y"] + j
         if radius is None:
             radius = calc_distance((center_x, center_y), (last_pos["X"], last_pos["Y"]))
-        start_angle = angle_of_line(
-            (center_x, center_y), (last_pos["X"], last_pos["Y"])
-        )
+        start_angle = angle_of_line((center_x, center_y), (last_pos["X"], last_pos["Y"]))
         end_angle = angle_of_line((center_x, center_y), (cords["X"], cords["Y"]))
 
         if angle_dir == 2:

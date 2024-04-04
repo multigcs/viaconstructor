@@ -131,9 +131,7 @@ class DrawReader(DrawReaderBase):
         if filename.lower().endswith(".dxf"):
             doc = ezdxf.readfile(filename)
             for layer in doc.layers:
-                dxfread_select_layers[layer.dxf.name] = QCheckBox(
-                    f"select layer: {layer.dxf.name}"
-                )
+                dxfread_select_layers[layer.dxf.name] = QCheckBox(f"select layer: {layer.dxf.name}")
                 dxfread_select_layers[layer.dxf.name].setChecked(True)
                 dialog.layout.addWidget(dxfread_select_layers[layer.dxf.name])
 
@@ -150,20 +148,14 @@ class DrawReader(DrawReaderBase):
                         selection.append(layer)
                 args.dxfread_select_layers = selection
 
-    def __init__(
-        self, filename: str, args: argparse.Namespace = None
-    ):  # pylint: disable=W0613
+    def __init__(self, filename: str, args: argparse.Namespace = None):  # pylint: disable=W0613
         """converting dxf into single segments."""
         self.filename = filename
-        if self.filename.lower().endswith(".svg") and os.path.isfile(
-            "/usr/share/inkscape/extensions/dxf_outlines.py"
-        ):
+        if self.filename.lower().endswith(".svg") and os.path.isfile("/usr/share/inkscape/extensions/dxf_outlines.py"):
             print("INFO: converting svg to dxf with inkscape")
             print("    you can disable this with: --dxfread-no-svg")
             _fd, tmp_path = tempfile.mkstemp()
-            os.system(
-                f"cd /usr/share/inkscape/extensions/ ; python3 dxf_outlines.py --output='{tmp_path}' '{os.path.realpath(self.filename)}'"
-            )
+            os.system(f"cd /usr/share/inkscape/extensions/ ; python3 dxf_outlines.py --output='{tmp_path}' '{os.path.realpath(self.filename)}'")
             self.doc = ezdxf.readfile(tmp_path)
             os.remove(tmp_path)
         elif self.filename.lower().endswith(BITMAP_FORMATS) and potrace:
@@ -173,15 +165,11 @@ class DrawReader(DrawReaderBase):
 
             if not self.filename.lower().endswith(".bmp"):
                 _fd2, tmp_path2 = tempfile.mkstemp()
-                os.system(
-                    f"{convert} '{os.path.realpath(self.filename)}' '{tmp_path2}.bmp'"
-                )
+                os.system(f"{convert} '{os.path.realpath(self.filename)}' '{tmp_path2}.bmp'")
                 os.system(f"{potrace} -b dxf -o '{tmp_path}' '{tmp_path2}.bmp'")
                 os.remove(f"{tmp_path2}.bmp")
             else:
-                os.system(
-                    f"{potrace} -b dxf -o '{tmp_path}' '{os.path.realpath(self.filename)}'"
-                )
+                os.system(f"{potrace} -b dxf -o '{tmp_path}' '{os.path.realpath(self.filename)}'")
             self.doc = ezdxf.readfile(tmp_path)
             os.remove(tmp_path)
         else:
@@ -290,9 +278,7 @@ class DrawReader(DrawReaderBase):
             text_offset = (offset[0] + pos[0], offset[1] + pos[1])
             text_offset = (offset[0] + pos[0], offset[1] + pos[1])
             for path in paths:
-                self._add_path(
-                    path, text_offset, pscale=scale, layer=layer, color=color
-                )
+                self._add_path(path, text_offset, pscale=scale, layer=layer, color=color)
 
         elif dxftype == "LINE":
             dist = calc_distance(
@@ -338,11 +324,7 @@ class DrawReader(DrawReaderBase):
                 adiff += 360.0
 
             # fixing 132_2000.dxf
-            if (
-                element.dxf.extrusion
-                and len(element.dxf.extrusion) == 3
-                and element.dxf.extrusion[2] == -1.0
-            ):
+            if element.dxf.extrusion and len(element.dxf.extrusion) == 3 and element.dxf.extrusion[2] == -1.0:
                 element.dxf.center = (-element.dxf.center[0], element.dxf.center[1])
 
             # split arcs in maximum 20mm long segments and minimum 45°
@@ -382,10 +364,8 @@ class DrawReader(DrawReaderBase):
                                     ),
                                     "bulge": bulge,
                                     "center": (
-                                        (element.dxf.center[0] + offset[0])
-                                        * self.scale,
-                                        (element.dxf.center[1] + offset[1])
-                                        * self.scale,
+                                        (element.dxf.center[0] + offset[0]) * self.scale,
+                                        (element.dxf.center[1] + offset[1]) * self.scale,
                                     ),
                                 }
                             )
@@ -545,9 +525,7 @@ class DrawReader(DrawReaderBase):
 
         delete_layers = []
         for layer in self.doc.layers:
-            if layer.dxf.name.startswith("BREAKS:") or layer.dxf.name.startswith(
-                "_TABS"
-            ):
+            if layer.dxf.name.startswith("BREAKS:") or layer.dxf.name.startswith("_TABS"):
                 delete_layers.append(layer.dxf.name)
 
         for layer_name in delete_layers:
@@ -563,9 +541,7 @@ class DrawReader(DrawReaderBase):
         try:
             self.doc.saveas(self.filename)
         except Exception as save_error:  # pylint: disable=W0703
-            print(
-                f"ERROR while saving tabs to dxf file ({self.filename}): {save_error}"
-            )
+            print(f"ERROR while saving tabs to dxf file ({self.filename}): {save_error}")
 
     def save_starts(self, objects: dict) -> None:
 
@@ -598,9 +574,7 @@ class DrawReader(DrawReaderBase):
         try:
             self.doc.saveas(self.filename)
         except Exception as save_error:  # pylint: disable=W0703
-            print(
-                f"ERROR while saving tabs to dxf file ({self.filename}): {save_error}"
-            )
+            print(f"ERROR while saving tabs to dxf file ({self.filename}): {save_error}")
 
     def save_setup(self, setup: str) -> None:
 
@@ -625,24 +599,17 @@ class DrawReader(DrawReaderBase):
 
         tabs_layer = self.doc.layers.add("_CAMCFG")
         tabs_layer.color = 1
-        self.model_space.add_mtext(
-            setup, dxfattribs={"style": "DejaVu Sans", "layer": "_CAMCFG"}
-        )
+        self.model_space.add_mtext(setup, dxfattribs={"style": "DejaVu Sans", "layer": "_CAMCFG"})
         try:
             self.doc.saveas(self.filename)
             self.cam_setup = setup
         except Exception as save_error:  # pylint: disable=W0703
-            print(
-                f"ERROR while saving setup to dxf file ({self.filename}): {save_error}"
-            )
+            print(f"ERROR while saving setup to dxf file ({self.filename}): {save_error}")
 
     @staticmethod
     def suffix(args: argparse.Namespace = None) -> list[str]:
         suffixes = ["dxf"]
-        if not hasattr(args, "dxfread_no_bmp") or (
-            not args.dxfread_no_svg
-            and os.path.isfile("/usr/share/inkscape/extensions/dxf_outlines.py")
-        ):
+        if not hasattr(args, "dxfread_no_bmp") or (not args.dxfread_no_svg and os.path.isfile("/usr/share/inkscape/extensions/dxf_outlines.py")):
             suffixes.append("svg")
         if not hasattr(args, "dxfread_no_bmp") or (not args.dxfread_no_bmp and potrace):
             if convert:

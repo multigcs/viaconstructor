@@ -945,9 +945,7 @@ def test_object2vertex(obj, expected, expected_minmax):
         ),
     ],
 )
-def test_objects2polyline_offsets(
-    diameter, objects, max_outer, small_circles, expected
-):
+def test_objects2polyline_offsets(diameter, objects, max_outer, small_circles, expected):
     result = []
 
     setup = {

@@ -281,8 +281,6 @@ M02
     ],
 )
 def test_polylines2machine_cmd(project, expected):
-    result = machine_cmd.polylines2machine_cmd(
-        project, PostProcessorGcodeLinuxCNC(project)
-    )
+    result = machine_cmd.polylines2machine_cmd(project, PostProcessorGcodeLinuxCNC(project))
     print(result)
     assert result == expected

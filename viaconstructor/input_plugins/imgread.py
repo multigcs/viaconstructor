@@ -29,9 +29,7 @@ class DrawReader(DrawReaderBase):
             action="store_true",
         )
 
-    def __init__(
-        self, filename: str, args: argparse.Namespace = None  # pylint: disable=W0613
-    ):
+    def __init__(self, filename: str, args: argparse.Namespace = None):  # pylint: disable=W0613
         """slicing and converting stl into single segments."""
         self.filename = filename
         self.segments = []

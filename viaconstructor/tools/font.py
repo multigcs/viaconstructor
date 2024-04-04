@@ -156,8 +156,7 @@ class FontTool(QWidget):
                     continue
                 face.load_char(
                     char,
-                    freetype.FT_LOAD_DEFAULT  # pylint: disable=E1101
-                    | freetype.FT_LOAD_NO_BITMAP,  # pylint: disable=E1101
+                    freetype.FT_LOAD_DEFAULT | freetype.FT_LOAD_NO_BITMAP,  # pylint: disable=E1101  # pylint: disable=E1101
                 )
                 face.glyph.outline.decompose(
                     ctx,
@@ -175,9 +174,7 @@ class FontTool(QWidget):
         self.painter.end()
 
     def draw_line_preview(self, point, ctx):
-        self.painter.drawLine(
-            QLineF(ctx["last"][0], 90 - ctx["last"][1], point[0], 90 - point[1])
-        )
+        self.painter.drawLine(QLineF(ctx["last"][0], 90 - ctx["last"][1], point[0], 90 - point[1]))
 
     def move_to(self, point_a, ctx):
         point = (

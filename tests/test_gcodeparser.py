@@ -1781,9 +1781,7 @@ from viaconstructor.preview_plugins import gcode as gcodeparser
         ),
     ],
 )
-def test_GcodeParser_get_path(
-    gcode, expected, expected_state, expected_minmax, expected_size
-):
+def test_GcodeParser_get_path(gcode, expected, expected_state, expected_minmax, expected_size):
     parser = gcodeparser.GcodeParser(gcode)
     result = parser.get_path(rounding=True)
     state = parser.get_state()

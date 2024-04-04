@@ -45,9 +45,7 @@ class DrawReaderBase:
             draw_function(segment.start, segment.end, *user_data)
 
     def _add_line(self, start, end, layer="0", scale=1.0, bulge=0.0) -> list[float]:
-        dist = calc_distance(
-            (start[0] * scale, start[1] * scale), (end[0] * scale, end[1] * scale)
-        )
+        dist = calc_distance((start[0] * scale, start[1] * scale), (end[0] * scale, end[1] * scale))
         if dist > 0.001:
             self.segments.append(
                 VcSegment(

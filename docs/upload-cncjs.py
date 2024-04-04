@@ -17,15 +17,9 @@ parser.add_argument(
     type=str,
     default="http://192.168.10.50:8000",
 )
-parser.add_argument(
-    "-U", "--username", help="cncjs api username", type=str, default="viaconstructor"
-)
-parser.add_argument(
-    "-P", "--password", help="cncjs api password", type=str, default="password"
-)
-parser.add_argument(
-    "-p", "--port", help="cncjs serial port", type=str, default="/dev/ttyACM0"
-)
+parser.add_argument("-U", "--username", help="cncjs api username", type=str, default="viaconstructor")
+parser.add_argument("-P", "--password", help="cncjs api password", type=str, default="password")
+parser.add_argument("-p", "--port", help="cncjs serial port", type=str, default="/dev/ttyACM0")
 args = parser.parse_args()
 
 
@@ -41,9 +35,7 @@ if response.text and response.text[0] == "{":
     gcode = open(args.filename, "r").read()
     url = f"{args.url}/api/gcode"
     myobj = {"port": args.port, "name": "test.ngc", "gcode": gcode}
-    response = requests.post(
-        url, json=myobj, headers={"Authorization": f"Bearer {token}"}
-    )
+    response = requests.post(url, json=myobj, headers={"Authorization": f"Bearer {token}"})
     data = json.loads(response.text)
 else:
     print("Login-error:", response.text)

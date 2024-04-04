@@ -64,13 +64,9 @@ def generate(
     prev_X = None
     ll = 2 * tooth_width / pitch_radius
     for theta in numpy.linspace(0, ll, frame_count):
-        X = rotation(
-            profile + numpy.array((-theta * pitch_radius, pitch_radius)), theta
-        )
+        X = rotation(profile + numpy.array((-theta * pitch_radius, pitch_radius)), theta)
         if prev_X is not None:
-            poly_list.append(
-                MultiPoint([x for x in X] + [x for x in prev_X]).convex_hull
-            )
+            poly_list.append(MultiPoint([x for x in X] + [x for x in prev_X]).convex_hull)
         prev_X = X
 
     def circle_sector(angle, r):
@@ -174,9 +170,7 @@ class GearTool(QWidget):
                 frame_count=16,
             )
 
-            temp_file = tempfile.NamedTemporaryFile(
-                prefix=f"gear_{teeth}_{width}_{angle}_{backlash}_", suffix=".dxf"
-            )
+            temp_file = tempfile.NamedTemporaryFile(prefix=f"gear_{teeth}_{width}_{angle}_{backlash}_", suffix=".dxf")
             temp_file.close()
             output_file = temp_file.name
             print(f"saving gear to tempfile: {output_file}")

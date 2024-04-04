@@ -72,13 +72,9 @@ def main() -> int:
 
     # draw grid
     for pos_x in range(0, int(size[0]), 10):
-        draw_line(
-            {"X": pos_x, "Y": 0.0}, {"X": pos_x, "Y": size[1]}, color=(27, 27, 27)
-        )
+        draw_line({"X": pos_x, "Y": 0.0}, {"X": pos_x, "Y": size[1]}, color=(27, 27, 27))
     for pos_y in range(0, int(size[1]), 10):
-        draw_line(
-            {"X": 0.0, "Y": pos_y}, {"X": size[0], "Y": pos_y}, color=(27, 27, 27)
-        )
+        draw_line({"X": 0.0, "Y": pos_y}, {"X": size[0], "Y": pos_y}, color=(27, 27, 27))
 
     # draw path
     gcode_parser.draw(draw_line)
@@ -100,9 +96,7 @@ def main() -> int:
         pygame.init()  # pylint: disable=E1101
         pygame.display.set_caption(f"gcodepreview ({filename})")
         screen = pygame.display.set_mode((screen_width, screen_height))
-        screen.blit(
-            pygame.image.fromstring(out.tobytes(), out.size, out.mode).convert(), (0, 0)
-        )
+        screen.blit(pygame.image.fromstring(out.tobytes(), out.size, out.mode).convert(), (0, 0))
         pygame.display.flip()
         while True:
             for events in pygame.event.get():

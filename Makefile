@@ -54,10 +54,10 @@ isort_check: pyvenv
 	pyvenv/bin/python -m isort --check --profile black */*py viaconstructor/*/*.py
 
 black: pyvenv
-	pyvenv/bin/python -m black */*py viaconstructor/*/*.py
+	pyvenv/bin/python -m black -l 200 */*py viaconstructor/*/*.py
 
 black_check: pyvenv
-	pyvenv/bin/python -m black --check */*py viaconstructor/*/*.py
+	pyvenv/bin/python -m black -l 200 --check */*py viaconstructor/*/*.py
 
 lint: flake8 pylint mypy
 

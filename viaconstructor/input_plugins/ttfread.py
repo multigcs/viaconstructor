@@ -133,8 +133,7 @@ class DrawReader(DrawReaderBase):
                 continue
             face.load_char(
                 char,
-                freetype.FT_LOAD_DEFAULT  # pylint: disable=E1101
-                | freetype.FT_LOAD_NO_BITMAP,  # pylint: disable=E1101
+                freetype.FT_LOAD_DEFAULT | freetype.FT_LOAD_NO_BITMAP,  # pylint: disable=E1101  # pylint: disable=E1101
             )
             face.glyph.outline.decompose(
                 ctx,

@@ -8,9 +8,7 @@ from ..input_plugins_base import DrawReaderBase
 
 
 class DrawReader(DrawReaderBase):
-    def __init__(
-        self, filename: str, args: argparse.Namespace = None
-    ):  # pylint: disable=W0613
+    def __init__(self, filename: str, args: argparse.Namespace = None):  # pylint: disable=W0613
         """converting hpgl into single segments."""
         self.filename = filename
         self.segments: list[dict] = []
@@ -79,19 +77,11 @@ class DrawReader(DrawReaderBase):
                 # if len(params) == 4:
                 #    resolution = params[3]
                 radius = calc_distance((last_x, last_y), (center_x, center_y))
-                start_angle = (
-                    angle_of_line((last_x, last_y), (center_x, center_y))
-                    * 180
-                    / math.pi
-                )
+                start_angle = angle_of_line((last_x, last_y), (center_x, center_y)) * 180 / math.pi
                 if angle < 0:
                     for angle_set in range(0, int(abs(angle)) + 1):
-                        new_x = center_x + radius * math.sin(
-                            (start_angle + angle_set) * math.pi / 180 + math.pi / 2
-                        )
-                        new_y = center_y + radius * math.cos(
-                            (start_angle + angle_set) * math.pi / 180 + math.pi / 2
-                        )
+                        new_x = center_x + radius * math.sin((start_angle + angle_set) * math.pi / 180 + math.pi / 2)
+                        new_y = center_y + radius * math.cos((start_angle + angle_set) * math.pi / 180 + math.pi / 2)
                         self._add_line(
                             (last_x, last_y),
                             (new_x, new_y),
@@ -100,12 +90,8 @@ class DrawReader(DrawReaderBase):
                         last_y = new_y
                 else:
                     for angle_set in range(int(abs(angle)), -1, -1):
-                        new_x = center_x - radius * math.sin(
-                            (start_angle + angle_set) * math.pi / 180 + math.pi / 2
-                        )
-                        new_y = center_y - radius * math.cos(
-                            (start_angle + angle_set) * math.pi / 180 + math.pi / 2
-                        )
+                        new_x = center_x - radius * math.sin((start_angle + angle_set) * math.pi / 180 + math.pi / 2)
+                        new_y = center_y - radius * math.cos((start_angle + angle_set) * math.pi / 180 + math.pi / 2)
                         self._add_line(
                             (last_x, last_y),
                             (new_x, new_y),

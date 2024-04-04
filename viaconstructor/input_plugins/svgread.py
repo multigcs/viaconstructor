@@ -62,9 +62,7 @@ class DrawReader(DrawReaderBase):
         if dialog.exec():
             args.svgread_as_lines = svgread_as_lines.isChecked()
 
-    def __init__(
-        self, filename: str, args: argparse.Namespace = None
-    ):  # pylint: disable=W0613
+    def __init__(self, filename: str, args: argparse.Namespace = None):  # pylint: disable=W0613
         """converting svg into single segments."""
         self.filename = filename
         self.segments: list[dict] = []
@@ -181,9 +179,7 @@ class DrawReader(DrawReaderBase):
         self.size.append(self.min_max[2] - self.min_max[0])
         self.size.append(self.min_max[3] - self.min_max[1])
 
-    def add_arc(
-        self, center, radius, start_angle=0.0, end_angle=360.0, layer="0"
-    ) -> None:
+    def add_arc(self, center, radius, start_angle=0.0, end_angle=360.0, layer="0") -> None:
         adiff = end_angle - start_angle
         if adiff < 0.0:
             adiff += 360.0
@@ -279,9 +275,7 @@ class DrawReader(DrawReaderBase):
             open(self.filename, "w").write("\n".join(svgdata).strip())
             self.cam_setup = setup
         except Exception as save_error:  # pylint: disable=W0703
-            print(
-                f"ERROR while saving setup to svg file ({self.filename}): {save_error}"
-            )
+            print(f"ERROR while saving setup to svg file ({self.filename}): {save_error}")
 
     @staticmethod
     def suffix(args: argparse.Namespace = None) -> list[str]:  # pylint: disable=W0613

@@ -11,9 +11,7 @@ from PIL import Image, ImageDraw, ImageFont
 reader_plugins: dict = {}
 for reader in ("dxfread", "hpglread", "stlread", "svgread", "ttfread"):
     try:
-        drawing_reader = importlib.import_module(
-            f".{reader}", "viaconstructor.input_plugins"
-        )
+        drawing_reader = importlib.import_module(f".{reader}", "viaconstructor.input_plugins")
         reader_plugins[reader] = drawing_reader.DrawReader
     except Exception as reader_error:  # pylint: disable=W0703
         print(f"ERRO while loading input plugin {reader}: {reader_error}")
@@ -112,9 +110,7 @@ def main() -> int:
         pygame.init()  # pylint: disable=E1101
         pygame.display.set_caption(f"dxfpreview ({filename})")
         screen = pygame.display.set_mode((screen_width, screen_height))
-        screen.blit(
-            pygame.image.fromstring(out.tobytes(), out.size, out.mode).convert(), (0, 0)
-        )
+        screen.blit(pygame.image.fromstring(out.tobytes(), out.size, out.mode).convert(), (0, 0))
         pygame.display.flip()
         while True:
             for events in pygame.event.get():

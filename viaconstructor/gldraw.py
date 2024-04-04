@@ -134,9 +134,7 @@ class GLWidget(QGLWidget):
         width = height * self.aspect
 
         if self.ortho:
-            GL.glOrtho(
-                -height * 2.5, height * 2.5, -width * 2.5, width * 2.5, -1000, 1000
-            )
+            GL.glOrtho(-height * 2.5, height * 2.5, -width * 2.5, width * 2.5, -1000, 1000)
         else:
             GL.glFrustum(-height, height, -width, width, 0.5, 100.0)
 
@@ -419,10 +417,7 @@ class GLWidget(QGLWidget):
                         pdist = 1.0
                     self.project["simulation_last"] = next_pos
                     if pdist >= 1.0:
-                        if (
-                            self.project["simulation_pos"]
-                            < len(self.project["simulation_data"]) - 1
-                        ):
+                        if self.project["simulation_pos"] < len(self.project["simulation_data"]) - 1:
                             self.project["simulation_pos"] += 1
                         else:
                             self.project["simulation_pos"] = 0
@@ -597,9 +592,7 @@ class GLWidget(QGLWidget):
                     sel_dist = -1
                     for tab_idx, tab in enumerate(self.project["tabs"]["data"]):
                         tab_pos = line_center_2d(tab[0], tab[1])
-                        dist = calc_distance(
-                            (self.mouse_pos_x, self.mouse_pos_y), tab_pos
-                        )
+                        dist = calc_distance((self.mouse_pos_x, self.mouse_pos_y), tab_pos)
                         if sel_dist < 0 or dist < sel_dist:
                             sel_dist = dist
                             sel_idx = tab_idx
@@ -636,25 +629,8 @@ class GLWidget(QGLWidget):
         min_max = self.project["minMax"]
         mouse_pos_x = mouse_pos.x()
         mouse_pos_y = self.screen_h - mouse_pos.y()
-        real_pos_x = (
-            (
-                (mouse_pos_x / self.screen_w - 0.5 + self.trans_x)
-                / self.scale
-                / self.scale_xyz
-            )
-            + (self.size_x / 2)
-            + min_max[0]
-        )
-        real_pos_y = (
-            (
-                (mouse_pos_y / self.screen_h - 0.5 + self.trans_y)
-                / self.scale
-                / self.scale_xyz
-                * self.aspect
-            )
-            + (self.size_y / 2)
-            + min_max[1]
-        )
+        real_pos_x = ((mouse_pos_x / self.screen_w - 0.5 + self.trans_x) / self.scale / self.scale_xyz) + (self.size_x / 2) + min_max[0]
+        real_pos_y = ((mouse_pos_y / self.screen_h - 0.5 + self.trans_y) / self.scale / self.scale_xyz * self.aspect) + (self.size_y / 2) + min_max[1]
         return (real_pos_x, real_pos_y)
 
     def mouseMoveEvent(self, event) -> None:  # pylint: disable=C0103
@@ -664,40 +640,20 @@ class GLWidget(QGLWidget):
             self.trans_x = self.trans_x_last + moffset.x() / self.screen_w
             self.trans_y = self.trans_y_last - moffset.y() / self.screen_h * self.aspect
         elif self.selector_mode == "tab":
-            (self.mouse_pos_x, self.mouse_pos_y) = self.mouse_pos_to_real_pos(
-                event.pos()
-            )
-            self.selection = found_next_tab_point(
-                (self.mouse_pos_x, self.mouse_pos_y), self.project["offsets"]
-            )
+            (self.mouse_pos_x, self.mouse_pos_y) = self.mouse_pos_to_real_pos(event.pos())
+            self.selection = found_next_tab_point((self.mouse_pos_x, self.mouse_pos_y), self.project["offsets"])
         elif self.selector_mode == "start":
-            (self.mouse_pos_x, self.mouse_pos_y) = self.mouse_pos_to_real_pos(
-                event.pos()
-            )
-            self.selection = found_next_point_on_segment(
-                (self.mouse_pos_x, self.mouse_pos_y), self.project["objects"]
-            )
+            (self.mouse_pos_x, self.mouse_pos_y) = self.mouse_pos_to_real_pos(event.pos())
+            self.selection = found_next_point_on_segment((self.mouse_pos_x, self.mouse_pos_y), self.project["objects"])
         elif self.selector_mode == "delete":
-            (self.mouse_pos_x, self.mouse_pos_y) = self.mouse_pos_to_real_pos(
-                event.pos()
-            )
-            self.selection = found_next_segment_point(
-                (self.mouse_pos_x, self.mouse_pos_y), self.project["objects"]
-            )
+            (self.mouse_pos_x, self.mouse_pos_y) = self.mouse_pos_to_real_pos(event.pos())
+            self.selection = found_next_segment_point((self.mouse_pos_x, self.mouse_pos_y), self.project["objects"])
         elif self.selector_mode == "oselect":
-            (self.mouse_pos_x, self.mouse_pos_y) = self.mouse_pos_to_real_pos(
-                event.pos()
-            )
-            self.selection = found_next_segment_point(
-                (self.mouse_pos_x, self.mouse_pos_y), self.project["objects"]
-            )
+            (self.mouse_pos_x, self.mouse_pos_y) = self.mouse_pos_to_real_pos(event.pos())
+            self.selection = found_next_segment_point((self.mouse_pos_x, self.mouse_pos_y), self.project["objects"])
         elif self.selector_mode == "repair":
-            (self.mouse_pos_x, self.mouse_pos_y) = self.mouse_pos_to_real_pos(
-                event.pos()
-            )
-            self.selection = found_next_open_segment_point(
-                (self.mouse_pos_x, self.mouse_pos_y), self.project["objects"]
-            )
+            (self.mouse_pos_x, self.mouse_pos_y) = self.mouse_pos_to_real_pos(event.pos())
+            self.selection = found_next_open_segment_point((self.mouse_pos_x, self.mouse_pos_y), self.project["objects"])
             if self.selection:
                 selection_end = found_next_open_segment_point(
                     (self.mouse_pos_x, self.mouse_pos_y),
@@ -980,16 +936,12 @@ def draw_grid(project: dict) -> None:
         # Size-X
         GL.glColor3f(1.0, 0.0, 0.0)
         GL.glBegin(GL.GL_LINES)
-        draw_text(
-            f"{round(size_x, 2)}", center_x, start_y - 5 - 6, mill_depth, 0.5, True
-        )
+        draw_text(f"{round(size_x, 2)}", center_x, start_y - 5 - 6, mill_depth, 0.5, True)
         GL.glEnd()
         # Size-Y
         GL.glColor3f(0.0, 0.0, 1.0)
         GL.glBegin(GL.GL_LINES)
-        draw_text(
-            f"{round(size_y, 2)}", end_x + 5, center_y, mill_depth, 0.5, False, True
-        )
+        draw_text(f"{round(size_y, 2)}", end_x + 5, center_y, mill_depth, 0.5, False, True)
         GL.glEnd()
 
 
@@ -1007,9 +959,7 @@ def draw_object_ids(project: dict, selected: int = -1) -> None:
 
         GL.glBegin(GL.GL_LINES)
 
-        if obj.get("layer", "").startswith("BREAKS:") or obj.get(
-            "layer", ""
-        ).startswith("_TABS"):
+        if obj.get("layer", "").startswith("BREAKS:") or obj.get("layer", "").startswith("_TABS"):
             continue
         p_x = obj["segments"][0]["start"][0]
         p_y = obj["segments"][0]["start"][1]
@@ -1033,9 +983,7 @@ def draw_object_edges(project: dict, selected: int = -1) -> None:
 
     depths = []
     for obj in project["objects"].values():
-        if obj.get("layer", "").startswith("BREAKS:") or obj.get(
-            "layer", ""
-        ).startswith("_TABS"):
+        if obj.get("layer", "").startswith("BREAKS:") or obj.get("layer", "").startswith("_TABS"):
             continue
         odepth = obj["setup"]["mill"]["depth"]
         if odepth not in depths:
@@ -1044,9 +992,7 @@ def draw_object_edges(project: dict, selected: int = -1) -> None:
     for depth in depths:
         GL.glNormal3f(0, 0, 1)
         for obj_idx, obj in project["objects"].items():
-            if obj.get("layer", "").startswith("BREAKS:") or obj.get(
-                "layer", ""
-            ).startswith("_TABS"):
+            if obj.get("layer", "").startswith("BREAKS:") or obj.get("layer", "").startswith("_TABS"):
                 continue
 
             color = (1.0, 1.0, 1.0)
@@ -1079,9 +1025,7 @@ def draw_object_edges(project: dict, selected: int = -1) -> None:
                 if segment.bulge != 0.0 and interpolate:
                     last_x = segment.start[0]
                     last_y = segment.start[1]
-                    for point in bulge_points(
-                        segment.start, segment.end, segment.bulge
-                    ):
+                    for point in bulge_points(segment.start, segment.end, segment.bulge):
                         GL.glVertex3f(last_x, last_y, 0.0)
                         GL.glVertex3f(point[0], point[1], 0.0)
                         last_x = point[0]
@@ -1100,9 +1044,7 @@ def draw_object_edges(project: dict, selected: int = -1) -> None:
                     if segment.bulge != 0.0 and interpolate:
                         last_x = segment.start[0]
                         last_y = segment.start[1]
-                        for point in bulge_points(
-                            segment.start, segment.end, segment.bulge
-                        ):
+                        for point in bulge_points(segment.start, segment.end, segment.bulge):
                             GL.glVertex3f(last_x, last_y, depth)
                             GL.glVertex3f(point[0], point[1], depth)
                             last_x = point[0]
@@ -1182,9 +1124,7 @@ def draw_object_faces(project: dict) -> None:
 
     depths = []
     for obj in project["objects"].values():
-        if obj.get("layer", "").startswith("BREAKS:") or obj.get(
-            "layer", ""
-        ).startswith("_TABS"):
+        if obj.get("layer", "").startswith("BREAKS:") or obj.get("layer", "").startswith("_TABS"):
             continue
         odepth = obj["setup"]["mill"]["depth"]
         if odepth not in depths:
@@ -1198,9 +1138,7 @@ def draw_object_faces(project: dict) -> None:
         # object faces (side)
         GL.glBegin(GL.GL_TRIANGLES)
         for obj in project["objects"].values():
-            if obj.get("layer", "").startswith("BREAKS:") or obj.get(
-                "layer", ""
-            ).startswith("_TABS"):
+            if obj.get("layer", "").startswith("BREAKS:") or obj.get("layer", "").startswith("_TABS"):
                 continue
 
             odepth = obj["setup"]["mill"]["depth"]
@@ -1213,9 +1151,7 @@ def draw_object_faces(project: dict) -> None:
                 last_x = segment.start[0]
                 last_y = segment.start[1]
                 if segment.bulge != 0.0 and interpolate:
-                    for point in bulge_points(
-                        segment.start, segment.end, segment.bulge
-                    ):
+                    for point in bulge_points(segment.start, segment.end, segment.bulge):
                         add_triangle(
                             (last_x, last_y, 0.0),
                             (last_x, last_y, depth),
@@ -1251,14 +1187,10 @@ def draw_object_faces(project: dict) -> None:
         gluTessCallback(tess, GLU_TESS_BEGIN, GL.glBegin)
         gluTessCallback(tess, GLU_TESS_VERTEX, GL.glVertex)
         gluTessCallback(tess, GLU_TESS_END, GL.glEnd)
-        gluTessCallback(
-            tess, GLU_TESS_COMBINE, lambda _points, _vertices, _weights: _points
-        )
+        gluTessCallback(tess, GLU_TESS_COMBINE, lambda _points, _vertices, _weights: _points)
         gluTessBeginPolygon(tess, 0)
         for obj in project["objects"].values():
-            if obj.get("layer", "").startswith("BREAKS:") or obj.get(
-                "layer", ""
-            ).startswith("_TABS"):
+            if obj.get("layer", "").startswith("BREAKS:") or obj.get("layer", "").startswith("_TABS"):
                 continue
 
             odepth = obj["setup"]["mill"]["depth"]
@@ -1273,9 +1205,7 @@ def draw_object_faces(project: dict) -> None:
                     p_xy = (segment.start[0], segment.start[1], depth)
                     gluTessVertex(tess, p_xy, p_xy)
                     if segment.bulge != 0.0 and interpolate:
-                        for point in bulge_points(
-                            segment.start, segment.end, segment.bulge
-                        ):
+                        for point in bulge_points(segment.start, segment.end, segment.bulge):
                             p_xy = (point[0], point[1], depth)
                             gluTessVertex(tess, p_xy, p_xy)
                     p_xy = (segment.end[0], segment.end[1], depth)
@@ -1322,9 +1252,7 @@ def draw_object_faces(project: dict) -> None:
         """
 
 
-def draw_line(
-    p_1: dict, p_2: dict, options: str, project: dict, tool_number: int = 0
-) -> None:
+def draw_line(p_1: dict, p_2: dict, options: str, project: dict, tool_number: int = 0) -> None:
     """callback function for Parser to draw the lines"""
     if project["setup"]["machine"]["g54"]:
         p_from = (p_1["X"], p_1["Y"], p_1["Z"])
