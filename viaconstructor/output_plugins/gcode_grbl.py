@@ -1,3 +1,4 @@
+import math
 from ..machine_cmd import PostProcessor  # pylint: disable=E0402
 
 
@@ -5,6 +6,7 @@ class PostProcessorGcodeGrbl(PostProcessor):
     def __init__(self, project):
         self.project = project
         self.comments = self.project["setup"]["machine"]["comments"]
+        self.arcs = self.project["setup"]["machine"]["arcs"]
         self.gcode: list[str] = []
         self.x_pos: float = None
         self.y_pos: float = None
@@ -240,12 +242,17 @@ class PostProcessorGcodeGrbl(PostProcessor):
         if z_pos is not None and self.z_pos != z_pos:
             line.append(f"Z{(z_pos + self.offsets[2]) * self.scale:.12f}")
             self.z_pos = z_pos
-        if i_pos is not None:
-            line.append(f"I{i_pos:.12f}")
-        if j_pos is not None:
-            line.append(f"J{j_pos:.12f}")
-        if r_pos is not None:
-            line.append(f"R{r_pos:.12f}")
+        if self.arcs == "r":
+            if i_pos is not None and j_pos is not None:
+                r_pos = math.dist((0, 0), (i_pos, j_pos))
+                line.append(f"R{r_pos:.12f}")
+        else:
+            if i_pos is not None:
+                line.append(f"I{i_pos:.12f}")
+            if j_pos is not None:
+                line.append(f"J{j_pos:.12f}")
+            if r_pos is not None:
+                line.append(f"R{r_pos:.12f}")
         if line:
             self.gcode.append("G02 " + " ".join(line))
 
@@ -262,12 +269,17 @@ class PostProcessorGcodeGrbl(PostProcessor):
         if z_pos is not None and self.z_pos != z_pos:
             line.append(f"Z{(z_pos + self.offsets[2]) * self.scale:.12f}")
             self.z_pos = z_pos
-        if i_pos is not None:
-            line.append(f"I{i_pos:.12f}")
-        if j_pos is not None:
-            line.append(f"J{j_pos:.12f}")
-        if r_pos is not None:
-            line.append(f"R{r_pos:.12f}")
+        if self.arcs == "r":
+            if i_pos is not None and j_pos is not None:
+                r_pos = math.dist((0, 0), (i_pos, j_pos))
+                line.append(f"R{r_pos:.12f}")
+        else:
+            if i_pos is not None:
+                line.append(f"I{i_pos:.12f}")
+            if j_pos is not None:
+                line.append(f"J{j_pos:.12f}")
+            if r_pos is not None:
+                line.append(f"R{r_pos:.12f}")
         if line:
             self.gcode.append("G03 " + " ".join(line))
 

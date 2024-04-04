@@ -517,6 +517,16 @@ def setup_defaults(_) -> dict:
                 "title": _("Unit"),
                 "tooltip": _("Unit of the machine"),
             },
+            "arcs": {
+                "default": "ij",
+                "type": "select",
+                "options": (
+                    ("ij", _("offset")),
+                    ("r", _("radius")),
+                ),
+                "title": _("Arcs-Mode (G2/G3)"),
+                "tooltip": _("Arcs-Mode - G2/G3 with IJ or R (experimental)"),
+            },
             "g54": {
                 "default": False,
                 "type": "bool",
