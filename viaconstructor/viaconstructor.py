@@ -40,8 +40,10 @@ from PyQt5.QtWidgets import (  # pylint: disable=E0611
     QMessageBox,
     QPlainTextEdit,
     QPushButton,
+    QScrollArea,
     QSizePolicy,
     QSpinBox,
+    QSplitter,
     QStatusBar,
     QTableWidget,
     QTableWidgetItem,
@@ -1774,9 +1776,12 @@ class ViaConstructor:  # pylint: disable=R0904
 
     def create_global_setup(self, tabwidget) -> None:
         for sname in self.project["setup_defaults"]:
+            scrollarea = QScrollArea()
+            scrollarea.setWidgetResizable(True)
             vcontainer = QWidget()
             vlayout = QVBoxLayout(vcontainer)
             vlayout.setContentsMargins(0, 0, 0, 0)
+            scrollarea.setWidget(vcontainer)
 
             titles = {
                 "mill": "M&ill",
@@ -1788,7 +1793,7 @@ class ViaConstructor:  # pylint: disable=R0904
                 "machine": "M&achine",
                 "view": "&View",
             }
-            tabwidget.addTab(vcontainer, titles.get(sname, sname))
+            tabwidget.addTab(scrollarea, titles.get(sname, sname))
             for ename, entry in self.project["setup_defaults"][sname].items():
                 container = QWidget()
                 hlayout = QHBoxLayout(container)
@@ -2036,10 +2041,13 @@ class ViaConstructor:  # pylint: disable=R0904
                 "tabs": "Tabs",
                 "leads": "Leads",
             }
+            scrollarea = QScrollArea()
+            scrollarea.setWidgetResizable(True)
             vcontainer = QWidget()
             vlayout = QVBoxLayout(vcontainer)
             vlayout.setContentsMargins(0, 0, 0, 0)
-            tabwidget.addTab(vcontainer, titles.get(sname, sname))
+            scrollarea.setWidget(vcontainer)
+            tabwidget.addTab(scrollarea, titles.get(sname, sname))
 
             for ename, entry in self.project["setup_defaults"][sname].items():
                 if not entry.get("per_object", False):
@@ -2192,9 +2200,12 @@ class ViaConstructor:  # pylint: disable=R0904
             self.update_tabs_data()
             self.update_drawing()
 
+        scrollarea = QScrollArea()
+        scrollarea.setWidgetResizable(True)
         vcontainer = QWidget()
         vlayout = QVBoxLayout(vcontainer)
         vlayout.setContentsMargins(0, 0, 0, 0)
+        scrollarea.setWidget(vcontainer)
 
         vlayout.addWidget(QLabel("Move:"))
 
@@ -2442,7 +2453,7 @@ class ViaConstructor:  # pylint: disable=R0904
         glayout.addWidget(button, 2, 1)
 
         vlayout.addStretch(1)
-        tabwidget.addTab(vcontainer, _("Manipulate"))
+        tabwidget.addTab(scrollarea, _("Manipulate"))
 
     def update_tabs_data(self) -> None:
         self.project["tabs"]["data"] = []
@@ -2924,14 +2935,22 @@ class ViaConstructor:  # pylint: disable=R0904
         right_widget.setLayout(right_gridlayout)
 
         hlay = QHBoxLayout(self.project["window"])
-        hlay.addWidget(left_widget, stretch=1)
-        hlay.addWidget(right_widget, stretch=3)
+        splitter = QSplitter(Qt.Horizontal)
+        hlay.addWidget(splitter)
+
+        splitter.addWidget(left_widget)
+        splitter.addWidget(right_widget)
+
+        mwin_width = 1200
+        mwin_height = 800
+        lratio = 0.24
+        splitter.setSizes([int(mwin_width*lratio), int(mwin_height*(1.0-lratio))])
 
         # Tools
         self.font_tool = FontTool(self)
         self.gear_tool = GearTool(self)
 
-        self.main.resize(1600, 1200)
+        self.main.resize(mwin_width, mwin_height)
         self.main.show()
         debug("main: gui ready")
 
