@@ -2935,6 +2935,7 @@ class ViaConstructor:  # pylint: disable=R0904
         right_widget.setLayout(right_gridlayout)
 
         hlay = QHBoxLayout(self.project["window"])
+        hlay.setContentsMargins(0, 0, 0, 0)
         splitter = QSplitter(Qt.Horizontal)
         hlay.addWidget(splitter)
 
