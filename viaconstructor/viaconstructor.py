@@ -1795,17 +1795,19 @@ class ViaConstructor:  # pylint: disable=R0904
             }
             tabwidget.addTab(scrollarea, titles.get(sname, sname))
             for ename, entry in self.project["setup_defaults"][sname].items():
+                helptext = entry.get("tooltip", f"{sname}/{ename}")
                 container = QWidget()
                 hlayout = QHBoxLayout(container)
                 hlayout.setContentsMargins(10, 0, 10, 0)
                 label = QLabel(entry.get("title", ename))
+                label.setToolTip(helptext)
                 hlayout.addWidget(label)
                 vlayout.addWidget(container)
                 hlayout.addStretch(1)
                 if entry["type"] == "bool":
                     checkbox = QCheckBox(entry.get("title", ename))
                     checkbox.setChecked(self.project["setup"][sname][ename])
-                    checkbox.setToolTip(entry.get("tooltip", f"{sname}/{ename}"))
+                    checkbox.setToolTip(helptext)
                     checkbox.stateChanged.connect(self.global_changed)  # type: ignore
                     hlayout.addWidget(checkbox)
                     entry["widget"] = checkbox
@@ -1814,7 +1816,7 @@ class ViaConstructor:  # pylint: disable=R0904
                     for option in entry["options"]:
                         combobox.addItem(option[0])
                     combobox.setCurrentText(self.project["setup"][sname][ename])
-                    combobox.setToolTip(entry.get("tooltip", f"{sname}/{ename}"))
+                    combobox.setToolTip(helptext)
                     combobox.currentTextChanged.connect(self.global_changed)  # type: ignore
                     hlayout.addWidget(combobox)
                     entry["widget"] = combobox
@@ -1823,7 +1825,7 @@ class ViaConstructor:  # pylint: disable=R0904
                     rgb = f"{color[0] * 255:1.0f},{color[1] * 255:1.0f},{color[2] * 255:1.0f}"
                     button = QPushButton(rgb)
                     button.setStyleSheet(f"background-color:rgb({rgb})")
-                    button.setToolTip(entry.get("tooltip", f"{sname}/{ename}"))
+                    button.setToolTip(helptext)
                     button.clicked.connect(partial(self.color_select, sname, ename))  # type: ignore
                     hlayout.addWidget(button)
                     entry["widget"] = button
@@ -1834,7 +1836,7 @@ class ViaConstructor:  # pylint: disable=R0904
                     dspinbox.setMinimum(entry["min"])
                     dspinbox.setMaximum(entry["max"])
                     dspinbox.setValue(self.project["setup"][sname][ename])
-                    dspinbox.setToolTip(entry.get("tooltip", f"{sname}/{ename}"))
+                    dspinbox.setToolTip(helptext)
                     dspinbox.valueChanged.connect(self.global_changed)  # type: ignore
                     hlayout.addWidget(dspinbox)
                     entry["widget"] = dspinbox
@@ -1844,21 +1846,21 @@ class ViaConstructor:  # pylint: disable=R0904
                     spinbox.setMinimum(entry["min"])
                     spinbox.setMaximum(entry["max"])
                     spinbox.setValue(self.project["setup"][sname][ename])
-                    spinbox.setToolTip(entry.get("tooltip", f"{sname}/{ename}"))
+                    spinbox.setToolTip(helptext)
                     spinbox.valueChanged.connect(self.global_changed)  # type: ignore
                     hlayout.addWidget(spinbox)
                     entry["widget"] = spinbox
                 elif entry["type"] == "str":
                     lineedit = QLineEdit()
                     lineedit.setText(self.project["setup"][sname][ename])
-                    lineedit.setToolTip(entry.get("tooltip", f"{sname}/{ename}"))
+                    lineedit.setToolTip(helptext)
                     lineedit.textChanged.connect(self.global_changed)  # type: ignore
                     hlayout.addWidget(lineedit)
                     entry["widget"] = lineedit
                 elif entry["type"] == "mstr":
                     mlineedit = QPlainTextEdit()
                     mlineedit.setPlainText(self.project["setup"][sname][ename])
-                    mlineedit.setToolTip(entry.get("tooltip", f"{sname}/{ename}"))
+                    mlineedit.setToolTip(helptext)
                     mlineedit.textChanged.connect(self.global_changed)  # type: ignore
                     hlayout.addWidget(mlineedit)
                     entry["widget"] = mlineedit
@@ -1872,7 +1874,7 @@ class ViaConstructor:  # pylint: disable=R0904
                         self.project["setup"][sname][ename].append(new_row)
 
                     table = QTableWidget()
-                    label.setToolTip(entry.get("tooltip", f"{sname}/{ename}"))
+                    label.setToolTip(helptext)
                     table.setRowCount(len(self.project["setup"][sname][ename]))
                     idxf_offset = 0
                     table.setColumnCount(len(entry["columns"]))
@@ -2052,18 +2054,19 @@ class ViaConstructor:  # pylint: disable=R0904
             for ename, entry in self.project["setup_defaults"][sname].items():
                 if not entry.get("per_object", False):
                     continue
-
+                helptext = entry.get("tooltip", f"{sname}/{ename}")
                 container = QWidget()
                 hlayout = QHBoxLayout(container)
                 hlayout.setContentsMargins(10, 0, 10, 0)
                 entry["widget_obj_label"] = QLabel(entry.get("title", ename))
+                entry["widget_obj_label"].setToolTip(helptext)
                 hlayout.addWidget(entry["widget_obj_label"])
                 vlayout.addWidget(container)
                 hlayout.addStretch(1)
                 if entry["type"] == "bool":
                     checkbox = QCheckBox(entry.get("title", ename))
                     checkbox.setChecked(self.project["setup"][sname][ename])
-                    checkbox.setToolTip(entry.get("tooltip", f"{sname}/{ename}"))
+                    checkbox.setToolTip(helptext)
                     checkbox.stateChanged.connect(self.object_changed)  # type: ignore
                     hlayout.addWidget(checkbox)
                     entry["widget_obj"] = checkbox
@@ -2072,7 +2075,7 @@ class ViaConstructor:  # pylint: disable=R0904
                     for option in entry["options"]:
                         combobox.addItem(option[0])
                     combobox.setCurrentText(self.project["setup"][sname][ename])
-                    combobox.setToolTip(entry.get("tooltip", f"{sname}/{ename}"))
+                    combobox.setToolTip(helptext)
                     combobox.currentTextChanged.connect(self.object_changed)  # type: ignore
                     hlayout.addWidget(combobox)
                     entry["widget_obj"] = combobox
@@ -2081,7 +2084,7 @@ class ViaConstructor:  # pylint: disable=R0904
                     rgb = f"{color[0] * 255:1.0f},{color[1] * 255:1.0f},{color[2] * 255:1.0f}"
                     button = QPushButton(rgb)
                     button.setStyleSheet(f"background-color:rgb({rgb})")
-                    button.setToolTip(entry.get("tooltip", f"{sname}/{ename}"))
+                    button.setToolTip(helptext)
                     button.clicked.connect(partial(self.color_select, sname, ename))  # type: ignore
                     hlayout.addWidget(button)
                     entry["widget_obj"] = button
@@ -2092,7 +2095,7 @@ class ViaConstructor:  # pylint: disable=R0904
                     dspinbox.setMinimum(entry["min"])
                     dspinbox.setMaximum(entry["max"])
                     dspinbox.setValue(self.project["setup"][sname][ename])
-                    dspinbox.setToolTip(entry.get("tooltip", f"{sname}/{ename}"))
+                    dspinbox.setToolTip(helptext)
                     dspinbox.valueChanged.connect(self.object_changed)  # type: ignore
                     hlayout.addWidget(dspinbox)
                     entry["widget_obj"] = dspinbox
@@ -2102,21 +2105,21 @@ class ViaConstructor:  # pylint: disable=R0904
                     spinbox.setMinimum(entry["min"])
                     spinbox.setMaximum(entry["max"])
                     spinbox.setValue(self.project["setup"][sname][ename])
-                    spinbox.setToolTip(entry.get("tooltip", f"{sname}/{ename}"))
+                    spinbox.setToolTip(helptext)
                     spinbox.valueChanged.connect(self.object_changed)  # type: ignore
                     hlayout.addWidget(spinbox)
                     entry["widget_obj"] = spinbox
                 elif entry["type"] == "str":
                     lineedit = QLineEdit()
                     lineedit.setText(self.project["setup"][sname][ename])
-                    lineedit.setToolTip(entry.get("tooltip", f"{sname}/{ename}"))
+                    lineedit.setToolTip(helptext)
                     lineedit.textChanged.connect(self.object_changed)  # type: ignore
                     hlayout.addWidget(lineedit)
                     entry["widget_obj"] = lineedit
                 elif entry["type"] == "mstr":
                     mlineedit = QPlainTextEdit()
                     mlineedit.setPlainText(self.project["setup"][sname][ename])
-                    mlineedit.setToolTip(entry.get("tooltip", f"{sname}/{ename}"))
+                    mlineedit.setToolTip(helptext)
                     mlineedit.textChanged.connect(self.object_changed)  # type: ignore
                     hlayout.addWidget(mlineedit)
                     entry["widget_obj"] = mlineedit
@@ -2130,7 +2133,7 @@ class ViaConstructor:  # pylint: disable=R0904
                         self.project["setup"][sname][ename].append(new_row)
 
                     table = QTableWidget()
-                    table.setToolTip(entry.get("tooltip", f"{sname}/{ename}"))
+                    table.setToolTip(helptext)
                     table.setRowCount(len(self.project["setup"][sname][ename]))
                     idxf_offset = 0
                     table.setColumnCount(len(entry["columns"]))
@@ -2945,7 +2948,7 @@ class ViaConstructor:  # pylint: disable=R0904
         mwin_width = 1200
         mwin_height = 800
         lratio = 0.24
-        splitter.setSizes([int(mwin_width*lratio), int(mwin_height*(1.0-lratio))])
+        splitter.setSizes([int(mwin_width * lratio), int(mwin_height * (1.0 - lratio))])
 
         # Tools
         self.font_tool = FontTool(self)
