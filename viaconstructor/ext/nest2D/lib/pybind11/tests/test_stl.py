@@ -1,8 +1,6 @@
 import pytest
-
+from pybind11_tests import ConstructorStats, UserType
 from pybind11_tests import stl as m
-from pybind11_tests import UserType
-from pybind11_tests import ConstructorStats
 
 
 def test_vector(doc):
@@ -105,15 +103,15 @@ def test_move_out_container():
     assert [x.value for x in moved_out_list] == [0, 1, 2]
 
 
-@pytest.mark.skipif(not hasattr(m, "has_optional"), reason='no <optional>')
+@pytest.mark.skipif(not hasattr(m, "has_optional"), reason="no <optional>")
 def test_optional():
     assert m.double_or_zero(None) == 0
     assert m.double_or_zero(42) == 84
-    pytest.raises(TypeError, m.double_or_zero, 'foo')
+    pytest.raises(TypeError, m.double_or_zero, "foo")
 
     assert m.half_or_none(0) is None
     assert m.half_or_none(42) == 21
-    pytest.raises(TypeError, m.half_or_none, 'foo')
+    pytest.raises(TypeError, m.half_or_none, "foo")
 
     assert m.test_nullopt() == 42
     assert m.test_nullopt(None) == 42
@@ -128,15 +126,15 @@ def test_optional():
     assert m.nodefer_none_optional(None)
 
 
-@pytest.mark.skipif(not hasattr(m, "has_exp_optional"), reason='no <experimental/optional>')
+@pytest.mark.skipif(not hasattr(m, "has_exp_optional"), reason="no <experimental/optional>")
 def test_exp_optional():
     assert m.double_or_zero_exp(None) == 0
     assert m.double_or_zero_exp(42) == 84
-    pytest.raises(TypeError, m.double_or_zero_exp, 'foo')
+    pytest.raises(TypeError, m.double_or_zero_exp, "foo")
 
     assert m.half_or_none_exp(0) is None
     assert m.half_or_none_exp(42) == 21
-    pytest.raises(TypeError, m.half_or_none_exp, 'foo')
+    pytest.raises(TypeError, m.half_or_none_exp, "foo")
 
     assert m.test_nullopt_exp() == 42
     assert m.test_nullopt_exp(None) == 42
@@ -149,7 +147,7 @@ def test_exp_optional():
     pytest.raises(TypeError, m.test_no_assign_exp, 43)
 
 
-@pytest.mark.skipif(not hasattr(m, "load_variant"), reason='no <variant>')
+@pytest.mark.skipif(not hasattr(m, "load_variant"), reason="no <variant>")
 def test_variant(doc):
     assert m.load_variant(1) == "int"
     assert m.load_variant("1") == "std::string"
@@ -215,9 +213,9 @@ def test_missing_header_message():
 def test_function_with_string_and_vector_string_arg():
     """Check if a string is NOT implicitly converted to a list, which was the
     behavior before fix of issue #1258"""
-    assert m.func_with_string_or_vector_string_arg_overload(('A', 'B', )) == 2
-    assert m.func_with_string_or_vector_string_arg_overload(['A', 'B']) == 2
-    assert m.func_with_string_or_vector_string_arg_overload('A') == 3
+    assert m.func_with_string_or_vector_string_arg_overload(("A", "B", )) == 2
+    assert m.func_with_string_or_vector_string_arg_overload(["A", "B"]) == 2
+    assert m.func_with_string_or_vector_string_arg_overload("A") == 3
 
 
 def test_stl_ownership():
@@ -236,6 +234,6 @@ def test_array_cast_sequence():
 def test_issue_1561():
     """ check fix for issue #1561 """
     bar = m.Issue1561Outer()
-    bar.list = [m.Issue1561Inner('bar')]
+    bar.list = [m.Issue1561Inner("bar")]
     bar.list
-    assert bar.list[0].data == 'bar'
+    assert bar.list[0].data == "bar"

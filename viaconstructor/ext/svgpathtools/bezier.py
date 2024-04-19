@@ -4,13 +4,15 @@ Note:  Bezier curves here are always represented by the tuple of their control
 points given by their standard representation."""
 
 # External dependencies:
-from __future__ import division, absolute_import, print_function
-from math import factorial as fac, ceil, log, sqrt
+from __future__ import absolute_import, division, print_function
+
+from math import ceil, log, sqrt
+from math import factorial as fac
+
 from numpy import poly1d
 
 # Internal dependencies
-from .polytools import real, imag, polyroots, polyroots01
-
+from .polytools import imag, polyroots, polyroots01, real
 
 # Evaluation ##################################################################
 

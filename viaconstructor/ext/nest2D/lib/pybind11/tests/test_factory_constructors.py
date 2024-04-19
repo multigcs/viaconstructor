@@ -1,9 +1,9 @@
-import pytest
 import re
 
+import pytest
+from pybind11_tests import ConstructorStats
 from pybind11_tests import factory_constructors as m
 from pybind11_tests.factory_constructors import tag
-from pybind11_tests import ConstructorStats
 
 
 def test_init_factory_basic():
@@ -288,7 +288,7 @@ def test_no_placement_new(capture):
     with capture:
         a = m.NoPlacementNew(123)
 
-    found = re.search(r'^operator new called, returning (\d+)\n$', str(capture))
+    found = re.search(r"^operator new called, returning (\d+)\n$", str(capture))
     assert found
     assert a.i == 123
     with capture:
@@ -299,7 +299,7 @@ def test_no_placement_new(capture):
     with capture:
         b = m.NoPlacementNew()
 
-    found = re.search(r'^operator new called, returning (\d+)\n$', str(capture))
+    found = re.search(r"^operator new called, returning (\d+)\n$", str(capture))
     assert found
     assert b.i == 100
     with capture:
@@ -327,7 +327,7 @@ def create_and_destroy(*args):
 
 
 def strip_comments(s):
-    return re.sub(r'\s+#.*', '', s)
+    return re.sub(r"\s+#.*", "", s)
 
 
 def test_reallocations(capture, msg):

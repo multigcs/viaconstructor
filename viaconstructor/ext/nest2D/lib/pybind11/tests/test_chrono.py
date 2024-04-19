@@ -1,5 +1,6 @@
-from pybind11_tests import chrono as m
 import datetime
+
+from pybind11_tests import chrono as m
 
 
 def test_chrono_system_clock():

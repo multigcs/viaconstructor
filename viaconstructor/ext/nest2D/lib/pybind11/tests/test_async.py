@@ -1,9 +1,10 @@
 import asyncio
+
 import pytest
 from pybind11_tests import async_module as m
 
 
-@pytest.fixture
+@pytest.fixture()
 def event_loop():
     loop = asyncio.new_event_loop()
     yield loop

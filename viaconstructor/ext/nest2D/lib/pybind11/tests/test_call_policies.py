@@ -1,6 +1,6 @@
 import pytest
-from pybind11_tests import call_policies as m
 from pybind11_tests import ConstructorStats
+from pybind11_tests import call_policies as m
 
 
 def test_keep_alive_argument(capture):

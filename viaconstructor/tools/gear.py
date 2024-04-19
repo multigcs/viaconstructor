@@ -80,7 +80,7 @@ def generate(
 
     # Generate the full gear
     gear_poly = Point(0.0, 0.0).buffer(outer_radius)
-    for _i in range(0, teeth_count):
+    for _i in range(teeth_count):
         gear_poly = rotate(
             gear_poly.difference(tooth_poly),
             (2 * numpy.pi) / teeth_count,

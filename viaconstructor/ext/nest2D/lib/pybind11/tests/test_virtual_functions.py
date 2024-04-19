@@ -1,7 +1,6 @@
 import pytest
-
-from pybind11_tests import virtual_functions as m
 from pybind11_tests import ConstructorStats
+from pybind11_tests import virtual_functions as m
 
 
 def test_override(capture, msg):
@@ -11,18 +10,18 @@ def test_override(capture, msg):
             self.data = "Hello world"
 
         def run(self, value):
-            print('ExtendedExampleVirt::run(%i), calling parent..' % value)
+            print("ExtendedExampleVirt::run(%i), calling parent.." % value)
             return super(ExtendedExampleVirt, self).run(value + 1)
 
         def run_bool(self):
-            print('ExtendedExampleVirt::run_bool()')
+            print("ExtendedExampleVirt::run_bool()")
             return False
 
         def get_string1(self):
             return "override1"
 
         def pure_virtual(self):
-            print('ExtendedExampleVirt::pure_virtual(): %s' % self.data)
+            print("ExtendedExampleVirt::pure_virtual(): %s" % self.data)
 
     class ExtendedExampleVirt2(ExtendedExampleVirt):
         def __init__(self, state):
@@ -68,7 +67,7 @@ def test_override(capture, msg):
     assert cstats.alive() == 3
     del ex12, ex12p, ex12p2
     assert cstats.alive() == 0
-    assert cstats.values() == ['10', '11', '17']
+    assert cstats.values() == ["10", "11", "17"]
     assert cstats.copy_constructions == 0
     assert cstats.move_constructions >= 0
 
@@ -199,8 +198,8 @@ def test_move_support():
     del ncv1, ncv2
     assert nc_stats.alive() == 0
     assert mv_stats.alive() == 0
-    assert nc_stats.values() == ['4', '9', '9', '9']
-    assert mv_stats.values() == ['4', '5', '7', '7']
+    assert nc_stats.values() == ["4", "9", "9", "9"]
+    assert mv_stats.values() == ["4", "5", "7", "7"]
     assert nc_stats.copy_constructions == 0
     assert mv_stats.copy_constructions == 1
     assert nc_stats.move_constructions >= 0
@@ -333,7 +332,7 @@ def test_inherited_virtuals():
 
     class DT(m.D_Tpl):
         def say_something(self, times):
-            return "DT says:" + (' quack' * times)
+            return "DT says:" + (" quack" * times)
 
         def unlucky_number(self):
             return 1234
@@ -349,7 +348,7 @@ def test_inherited_virtuals():
 
     class DT2(DT):
         def say_something(self, times):
-            return "DT2: " + ('QUACK' * times)
+            return "DT2: " + ("QUACK" * times)
 
         def unlucky_number(self):
             return -3

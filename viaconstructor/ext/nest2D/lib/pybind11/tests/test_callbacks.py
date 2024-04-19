@@ -1,6 +1,7 @@
+from threading import Thread
+
 import pytest
 from pybind11_tests import callbacks as m
-from threading import Thread
 
 
 def test_callbacks():

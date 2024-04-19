@@ -1,6 +1,8 @@
-import ctypes, pathlib
-import numpy as np
+import ctypes
+import pathlib
 import platform
+
+import numpy as np
 
 module_root = pathlib.Path(__file__).resolve().parent
 if platform.system().lower() == "windows":
@@ -10,17 +12,17 @@ else:
 c_lib = ctypes.CDLL(libname)
 
 class _PointStruct(ctypes.Structure):
-    _fields_ = [('x', ctypes.c_double),
-                ('y', ctypes.c_double)]
+    _fields_ = [("x", ctypes.c_double),
+                ("y", ctypes.c_double)]
 
 class _VertexStruct(ctypes.Structure):
-    _fields_ = [('x', ctypes.c_double),
-                ('y', ctypes.c_double),
-                ('bulge', ctypes.c_double)]
+    _fields_ = [("x", ctypes.c_double),
+                ("y", ctypes.c_double),
+                ("bulge", ctypes.c_double)]
 
 # CAVC_PLINE_NEW
 c_lib.cavc_pline_new.argtypes = [
-    np.ctypeslib.ndpointer(dtype=np.double, ndim=2, flags='C_CONTIGUOUS'),
+    np.ctypeslib.ndpointer(dtype=np.double, ndim=2, flags="C_CONTIGUOUS"),
     ctypes.c_uint32,
     ctypes.c_int]
 c_lib.cavc_pline_new.restype = ctypes.c_void_p
@@ -44,7 +46,7 @@ c_lib.cavc_pline_vertex_count.restype = ctypes.c_uint32
 # CAVC_PLINE_VERTEX_DATA
 c_lib.cavc_pline_vertex_data.argtypes = [
     ctypes.c_void_p,
-    np.ctypeslib.ndpointer(dtype=np.double, ndim=2, flags='C_CONTIGUOUS')]
+    np.ctypeslib.ndpointer(dtype=np.double, ndim=2, flags="C_CONTIGUOUS")]
 # void return
 
 # CAVC_PLINE_IS_CLOSED
@@ -54,7 +56,7 @@ c_lib.cavc_pline_is_closed.restype = ctypes.c_int
 # CAVC_PLINE_SET_VERTEX_DATA
 c_lib.cavc_pline_set_vertex_data.argtypes = [
     ctypes.c_void_p,
-    np.ctypeslib.ndpointer(dtype=np.double, ndim=2, flags='C_CONTIGUOUS'),
+    np.ctypeslib.ndpointer(dtype=np.double, ndim=2, flags="C_CONTIGUOUS"),
     ctypes.c_uint32]
 # void return
 

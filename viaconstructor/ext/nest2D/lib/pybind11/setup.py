@@ -2,42 +2,43 @@
 
 # Setup script for PyPI; use CMakeFile.txt to build extension modules
 
-from setuptools import setup
-from distutils.command.install_headers import install_headers
-from distutils.command.build_py import build_py
-from pybind11 import __version__
 import os
+from distutils.command.build_py import build_py
+from distutils.command.install_headers import install_headers
+
+from pybind11 import __version__
+from setuptools import setup
 
 package_data = [
-    'include/pybind11/detail/class.h',
-    'include/pybind11/detail/common.h',
-    'include/pybind11/detail/descr.h',
-    'include/pybind11/detail/init.h',
-    'include/pybind11/detail/internals.h',
-    'include/pybind11/detail/typeid.h',
-    'include/pybind11/attr.h',
-    'include/pybind11/buffer_info.h',
-    'include/pybind11/cast.h',
-    'include/pybind11/chrono.h',
-    'include/pybind11/common.h',
-    'include/pybind11/complex.h',
-    'include/pybind11/eigen.h',
-    'include/pybind11/embed.h',
-    'include/pybind11/eval.h',
-    'include/pybind11/functional.h',
-    'include/pybind11/iostream.h',
-    'include/pybind11/numpy.h',
-    'include/pybind11/operators.h',
-    'include/pybind11/options.h',
-    'include/pybind11/pybind11.h',
-    'include/pybind11/pytypes.h',
-    'include/pybind11/stl.h',
-    'include/pybind11/stl_bind.h',
+    "include/pybind11/detail/class.h",
+    "include/pybind11/detail/common.h",
+    "include/pybind11/detail/descr.h",
+    "include/pybind11/detail/init.h",
+    "include/pybind11/detail/internals.h",
+    "include/pybind11/detail/typeid.h",
+    "include/pybind11/attr.h",
+    "include/pybind11/buffer_info.h",
+    "include/pybind11/cast.h",
+    "include/pybind11/chrono.h",
+    "include/pybind11/common.h",
+    "include/pybind11/complex.h",
+    "include/pybind11/eigen.h",
+    "include/pybind11/embed.h",
+    "include/pybind11/eval.h",
+    "include/pybind11/functional.h",
+    "include/pybind11/iostream.h",
+    "include/pybind11/numpy.h",
+    "include/pybind11/operators.h",
+    "include/pybind11/options.h",
+    "include/pybind11/pybind11.h",
+    "include/pybind11/pytypes.h",
+    "include/pybind11/stl.h",
+    "include/pybind11/stl_bind.h",
 ]
 
 # Prevent installation of pybind11 headers by setting
 # PYBIND11_USE_CMAKE.
-if os.environ.get('PYBIND11_USE_CMAKE'):
+if os.environ.get("PYBIND11_USE_CMAKE"):
     headers = []
 else:
     headers = package_data
@@ -50,7 +51,7 @@ class InstallHeaders(install_headers):
             return
 
         for header in self.distribution.headers:
-            subdir = os.path.dirname(os.path.relpath(header, 'include/pybind11'))
+            subdir = os.path.dirname(os.path.relpath(header, "include/pybind11"))
             install_dir = os.path.join(self.install_dir, subdir)
             self.mkpath(install_dir)
 
@@ -63,40 +64,40 @@ class BuildPy(build_py):
     def build_package_data(self):
         build_py.build_package_data(self)
         for header in package_data:
-            target = os.path.join(self.build_lib, 'pybind11', header)
+            target = os.path.join(self.build_lib, "pybind11", header)
             self.mkpath(os.path.dirname(target))
             self.copy_file(header, target, preserve_mode=False)
 
 
 setup(
-    name='pybind11',
+    name="pybind11",
     version=__version__,
-    description='Seamless operability between C++11 and Python',
-    author='Wenzel Jakob',
-    author_email='wenzel.jakob@epfl.ch',
-    url='https://github.com/pybind/pybind11',
-    download_url='https://github.com/pybind/pybind11/tarball/v' + __version__,
-    packages=['pybind11'],
-    license='BSD',
+    description="Seamless operability between C++11 and Python",
+    author="Wenzel Jakob",
+    author_email="wenzel.jakob@epfl.ch",
+    url="https://github.com/pybind/pybind11",
+    download_url="https://github.com/pybind/pybind11/tarball/v" + __version__,
+    packages=["pybind11"],
+    license="BSD",
     headers=headers,
     zip_safe=False,
     cmdclass=dict(install_headers=InstallHeaders, build_py=BuildPy),
     classifiers=[
-        'Development Status :: 5 - Production/Stable',
-        'Intended Audience :: Developers',
-        'Topic :: Software Development :: Libraries :: Python Modules',
-        'Topic :: Utilities',
-        'Programming Language :: C++',
-        'Programming Language :: Python :: 2.7',
-        'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.2',
-        'Programming Language :: Python :: 3.3',
-        'Programming Language :: Python :: 3.4',
-        'Programming Language :: Python :: 3.5',
-        'Programming Language :: Python :: 3.6',
-        'License :: OSI Approved :: BSD License'
+        "Development Status :: 5 - Production/Stable",
+        "Intended Audience :: Developers",
+        "Topic :: Software Development :: Libraries :: Python Modules",
+        "Topic :: Utilities",
+        "Programming Language :: C++",
+        "Programming Language :: Python :: 2.7",
+        "Programming Language :: Python :: 3",
+        "Programming Language :: Python :: 3.2",
+        "Programming Language :: Python :: 3.3",
+        "Programming Language :: Python :: 3.4",
+        "Programming Language :: Python :: 3.5",
+        "Programming Language :: Python :: 3.6",
+        "License :: OSI Approved :: BSD License"
     ],
-    keywords='C++11, Python bindings',
+    keywords="C++11, Python bindings",
     long_description="""pybind11 is a lightweight header-only library that
 exposes C++ types in Python and vice versa, mainly to create Python bindings of
 existing C++ code. Its goals and syntax are similar to the excellent

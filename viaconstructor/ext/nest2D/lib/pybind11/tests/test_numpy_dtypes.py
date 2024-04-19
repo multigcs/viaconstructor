@@ -1,4 +1,5 @@
 import re
+
 import pytest
 from pybind11_tests import numpy_dtypes as m
 
@@ -8,29 +9,29 @@ with pytest.suppress(ImportError):
     import numpy as np
 
 
-@pytest.fixture(scope='module')
+@pytest.fixture(scope="module")
 def simple_dtype():
-    ld = np.dtype('longdouble')
-    return np.dtype({'names': ['bool_', 'uint_', 'float_', 'ldbl_'],
-                     'formats': ['?', 'u4', 'f4', 'f{}'.format(ld.itemsize)],
-                     'offsets': [0, 4, 8, (16 if ld.alignment > 4 else 12)]})
+    ld = np.dtype("longdouble")
+    return np.dtype({"names": ["bool_", "uint_", "float_", "ldbl_"],
+                     "formats": ["?", "u4", "f4", "f{}".format(ld.itemsize)],
+                     "offsets": [0, 4, 8, (16 if ld.alignment > 4 else 12)]})
 
 
-@pytest.fixture(scope='module')
+@pytest.fixture(scope="module")
 def packed_dtype():
-    return np.dtype([('bool_', '?'), ('uint_', 'u4'), ('float_', 'f4'), ('ldbl_', 'g')])
+    return np.dtype([("bool_", "?"), ("uint_", "u4"), ("float_", "f4"), ("ldbl_", "g")])
 
 
 def dt_fmt():
     from sys import byteorder
-    e = '<' if byteorder == 'little' else '>'
+    e = "<" if byteorder == "little" else ">"
     return ("{{'names':['bool_','uint_','float_','ldbl_'],"
             " 'formats':['?','" + e + "u4','" + e + "f4','" + e + "f{}'],"
             " 'offsets':[0,4,8,{}], 'itemsize':{}}}")
 
 
 def simple_dtype_fmt():
-    ld = np.dtype('longdouble')
+    ld = np.dtype("longdouble")
     simple_ld_off = 12 + 4 * (ld.alignment > 4)
     return dt_fmt().format(ld.itemsize, simple_ld_off, simple_ld_off + ld.itemsize)
 
@@ -38,22 +39,22 @@ def simple_dtype_fmt():
 def packed_dtype_fmt():
     from sys import byteorder
     return "[('bool_', '?'), ('uint_', '{e}u4'), ('float_', '{e}f4'), ('ldbl_', '{e}f{}')]".format(
-        np.dtype('longdouble').itemsize, e='<' if byteorder == 'little' else '>')
+        np.dtype("longdouble").itemsize, e="<" if byteorder == "little" else ">")
 
 
 def partial_ld_offset():
-    return 12 + 4 * (np.dtype('uint64').alignment > 4) + 8 + 8 * (
-        np.dtype('longdouble').alignment > 8)
+    return 12 + 4 * (np.dtype("uint64").alignment > 4) + 8 + 8 * (
+        np.dtype("longdouble").alignment > 8)
 
 
 def partial_dtype_fmt():
-    ld = np.dtype('longdouble')
+    ld = np.dtype("longdouble")
     partial_ld_off = partial_ld_offset()
     return dt_fmt().format(ld.itemsize, partial_ld_off, partial_ld_off + ld.itemsize)
 
 
 def partial_nested_fmt():
-    ld = np.dtype('longdouble')
+    ld = np.dtype("longdouble")
     partial_nested_off = 8 + 8 * (ld.alignment > 8)
     partial_ld_off = partial_ld_offset()
     partial_nested_size = partial_nested_off * 2 + partial_ld_off + ld.itemsize
@@ -68,12 +69,12 @@ def assert_equal(actual, expected_data, expected_dtype):
 def test_format_descriptors():
     with pytest.raises(RuntimeError) as excinfo:
         m.get_format_unbound()
-    assert re.match('^NumPy type info missing for .*UnboundStruct.*$', str(excinfo.value))
+    assert re.match("^NumPy type info missing for .*UnboundStruct.*$", str(excinfo.value))
 
-    ld = np.dtype('longdouble')
-    ldbl_fmt = ('4x' if ld.alignment > 4 else '') + ld.char
+    ld = np.dtype("longdouble")
+    ldbl_fmt = ("4x" if ld.alignment > 4 else "") + ld.char
     ss_fmt = "^T{?:bool_:3xI:uint_:f:float_:" + ldbl_fmt + ":ldbl_:}"
-    dbl = np.dtype('double')
+    dbl = np.dtype("double")
     partial_fmt = ("^T{?:bool_:3xI:uint_:f:float_:" +
                    str(4 * (dbl.alignment > 4) + dbl.itemsize + 8 * (ld.alignment > 8)) +
                    "xg:ldbl_:}")
@@ -86,14 +87,14 @@ def test_format_descriptors():
         "^T{" + nested_extra + "x" + partial_fmt + ":a:" + nested_extra + "x}",
         "^T{3s:a:3s:b:}",
         "^T{(3)4s:a:(2)i:b:(3)B:c:1x(4, 2)f:d:}",
-        '^T{q:e1:B:e2:}',
-        '^T{Zf:cflt:Zd:cdbl:}'
+        "^T{q:e1:B:e2:}",
+        "^T{Zf:cflt:Zd:cdbl:}"
     ]
 
 
 def test_dtype(simple_dtype):
     from sys import byteorder
-    e = '<' if byteorder == 'little' else '>'
+    e = "<" if byteorder == "little" else ">"
 
     assert m.print_dtypes() == [
         simple_dtype_fmt(),
@@ -110,14 +111,14 @@ def test_dtype(simple_dtype):
         "[('cflt', '" + e + "c8'), ('cdbl', '" + e + "c16')]"
     ]
 
-    d1 = np.dtype({'names': ['a', 'b'], 'formats': ['int32', 'float64'],
-                   'offsets': [1, 10], 'itemsize': 20})
-    d2 = np.dtype([('a', 'i4'), ('b', 'f4')])
-    assert m.test_dtype_ctors() == [np.dtype('int32'), np.dtype('float64'),
-                                    np.dtype('bool'), d1, d1, np.dtype('uint32'), d2]
+    d1 = np.dtype({"names": ["a", "b"], "formats": ["int32", "float64"],
+                   "offsets": [1, 10], "itemsize": 20})
+    d2 = np.dtype([("a", "i4"), ("b", "f4")])
+    assert m.test_dtype_ctors() == [np.dtype("int32"), np.dtype("float64"),
+                                    np.dtype("bool"), d1, d1, np.dtype("uint32"), d2]
 
-    assert m.test_dtype_methods() == [np.dtype('int32'), simple_dtype, False, True,
-                                      np.dtype('int32').itemsize, simple_dtype.itemsize]
+    assert m.test_dtype_methods() == [np.dtype("int32"), simple_dtype, False, True,
+                                      np.dtype("int32").itemsize, simple_dtype.itemsize]
 
     assert m.trailing_padding_dtype() == m.buffer_to_dtype(np.zeros(1, m.trailing_padding_dtype()))
 
@@ -149,7 +150,7 @@ def test_recarray(simple_dtype, packed_dtype):
                 "p:0,2,3,-5"
             ]
 
-    nested_dtype = np.dtype([('a', simple_dtype), ('b', packed_dtype)])
+    nested_dtype = np.dtype([("a", simple_dtype), ("b", packed_dtype)])
 
     arr = m.create_rec_nested(0)
     assert arr.dtype == nested_dtype
@@ -169,21 +170,21 @@ def test_recarray(simple_dtype, packed_dtype):
     arr = m.create_rec_partial(3)
     assert str(arr.dtype) == partial_dtype_fmt()
     partial_dtype = arr.dtype
-    assert '' not in arr.dtype.fields
+    assert "" not in arr.dtype.fields
     assert partial_dtype.itemsize > simple_dtype.itemsize
     assert_equal(arr, elements, simple_dtype)
     assert_equal(arr, elements, packed_dtype)
 
     arr = m.create_rec_partial_nested(3)
     assert str(arr.dtype) == partial_nested_fmt()
-    assert '' not in arr.dtype.fields
-    assert '' not in arr.dtype.fields['a'][0].fields
+    assert "" not in arr.dtype.fields
+    assert "" not in arr.dtype.fields["a"][0].fields
     assert arr.dtype.itemsize > partial_dtype.itemsize
-    np.testing.assert_equal(arr['a'], m.create_rec_partial(3))
+    np.testing.assert_equal(arr["a"], m.create_rec_partial(3))
 
 
 def test_array_constructors():
-    data = np.arange(1, 7, dtype='int32')
+    data = np.arange(1, 7, dtype="int32")
     for i in range(8):
         np.testing.assert_array_equal(m.test_array_ctors(10 + i), data.reshape((3, 2)))
         np.testing.assert_array_equal(m.test_array_ctors(20 + i), data.reshape((3, 2)))
@@ -202,15 +203,15 @@ def test_string_array():
         "a='abc',b='abc'"
     ]
     dtype = arr.dtype
-    assert arr['a'].tolist() == [b'', b'a', b'ab', b'abc']
-    assert arr['b'].tolist() == [b'', b'a', b'ab', b'abc']
+    assert arr["a"].tolist() == [b"", b"a", b"ab", b"abc"]
+    assert arr["b"].tolist() == [b"", b"a", b"ab", b"abc"]
     arr = m.create_string_array(False)
     assert dtype == arr.dtype
 
 
 def test_array_array():
     from sys import byteorder
-    e = '<' if byteorder == 'little' else '>'
+    e = "<" if byteorder == "little" else ">"
 
     arr = m.create_array_array(3)
     assert str(arr.dtype) == (
@@ -225,44 +226,44 @@ def test_array_array():
         "a={{S,T,U,V},{C,D,E,F},{M,N,O,P}},b={2000,2001}," +
         "c={20,21,22},d={{200,201},{210,211},{220,221},{230,231}}",
     ]
-    assert arr['a'].tolist() == [[b'ABCD', b'KLMN', b'UVWX'],
-                                 [b'WXYZ', b'GHIJ', b'QRST'],
-                                 [b'STUV', b'CDEF', b'MNOP']]
-    assert arr['b'].tolist() == [[0, 1], [1000, 1001], [2000, 2001]]
+    assert arr["a"].tolist() == [[b"ABCD", b"KLMN", b"UVWX"],
+                                 [b"WXYZ", b"GHIJ", b"QRST"],
+                                 [b"STUV", b"CDEF", b"MNOP"]]
+    assert arr["b"].tolist() == [[0, 1], [1000, 1001], [2000, 2001]]
     assert m.create_array_array(0).dtype == arr.dtype
 
 
 def test_enum_array():
     from sys import byteorder
-    e = '<' if byteorder == 'little' else '>'
+    e = "<" if byteorder == "little" else ">"
 
     arr = m.create_enum_array(3)
     dtype = arr.dtype
-    assert dtype == np.dtype([('e1', e + 'i8'), ('e2', 'u1')])
+    assert dtype == np.dtype([("e1", e + "i8"), ("e2", "u1")])
     assert m.print_enum_array(arr) == [
         "e1=A,e2=X",
         "e1=B,e2=Y",
         "e1=A,e2=X"
     ]
-    assert arr['e1'].tolist() == [-1, 1, -1]
-    assert arr['e2'].tolist() == [1, 2, 1]
+    assert arr["e1"].tolist() == [-1, 1, -1]
+    assert arr["e2"].tolist() == [1, 2, 1]
     assert m.create_enum_array(0).dtype == dtype
 
 
 def test_complex_array():
     from sys import byteorder
-    e = '<' if byteorder == 'little' else '>'
+    e = "<" if byteorder == "little" else ">"
 
     arr = m.create_complex_array(3)
     dtype = arr.dtype
-    assert dtype == np.dtype([('cflt', e + 'c8'), ('cdbl', e + 'c16')])
+    assert dtype == np.dtype([("cflt", e + "c8"), ("cdbl", e + "c16")])
     assert m.print_complex_array(arr) == [
         "c:(0,0.25),(0.5,0.75)",
         "c:(1,1.25),(1.5,1.75)",
         "c:(2,2.25),(2.5,2.75)"
     ]
-    assert arr['cflt'].tolist() == [0.0 + 0.25j, 1.0 + 1.25j, 2.0 + 2.25j]
-    assert arr['cdbl'].tolist() == [0.5 + 0.75j, 1.5 + 1.75j, 2.5 + 2.75j]
+    assert arr["cflt"].tolist() == [0.0 + 0.25j, 1.0 + 1.25j, 2.0 + 2.25j]
+    assert arr["cdbl"].tolist() == [0.5 + 0.75j, 1.5 + 1.75j, 2.5 + 2.75j]
     assert m.create_complex_array(0).dtype == dtype
 
 
@@ -284,13 +285,13 @@ def test_scalar_conversion():
             else:
                 with pytest.raises(TypeError) as excinfo:
                     func(arr[0])
-                assert 'incompatible function arguments' in str(excinfo.value)
+                assert "incompatible function arguments" in str(excinfo.value)
 
 
 def test_register_dtype():
     with pytest.raises(RuntimeError) as excinfo:
         m.register_dtype()
-    assert 'dtype is already registered' in str(excinfo.value)
+    assert "dtype is already registered" in str(excinfo.value)
 
 
 @pytest.unsupported_on_pypy

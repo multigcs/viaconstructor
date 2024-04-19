@@ -3,23 +3,28 @@ svgpathtools is built around: Path, Line, QuadraticBezier, CubicBezier, and
 Arc."""
 
 # External dependencies
-from __future__ import division, absolute_import, print_function
+from __future__ import absolute_import, division, print_function
+
 import re
+
 try:
     from collections.abc import MutableSequence  # noqa
 except ImportError:
     from collections import MutableSequence  # noqa
-from warnings import warn
-from operator import itemgetter
-import numpy as np
-from itertools import tee
 from functools import reduce
+from itertools import tee
+from operator import itemgetter
+from warnings import warn
+
+import numpy as np
+from numpy import angle as phase
+from numpy import arccos as acos
+from numpy import arcsin as asin
 
 # these imports were originally from math and cmath, now are from numpy
 # in order to encourage code that generalizes to vector inputs
-from numpy import sqrt, cos, sin, tan, arccos as acos, arcsin as asin, \
-    degrees, radians, log, pi, ceil
-from numpy import exp, sqrt as csqrt, angle as phase, isnan
+from numpy import ceil, cos, degrees, exp, isnan, log, pi, radians, sin, sqrt, tan
+from numpy import sqrt as csqrt
 
 try:
     from scipy.integrate import quad
@@ -28,11 +33,9 @@ except:
     _quad_available = False
 
 # Internal dependencies
-from .bezier import (bezier_intersections, bezier_bounding_box, split_bezier,
-                     bezier_by_line_intersections, polynomial2bezier,
-                     bezier2polynomial)
+from .bezier import bezier2polynomial, bezier_bounding_box, bezier_by_line_intersections, bezier_intersections, polynomial2bezier, split_bezier
 from .misctools import BugException
-from .polytools import rational_limit, polyroots, polyroots01, imag, real
+from .polytools import imag, polyroots01, rational_limit, real
 
 # To maintain forward/backward compatibility
 try:
@@ -40,8 +43,8 @@ try:
 except NameError:
     pass
 
-COMMANDS = set('MmZzLlHhVvCcSsQqTtAa')
-UPPERCASE = set('MZLHVCSQTA')
+COMMANDS = set("MmZzLlHhVvCcSsQqTtAa")
+UPPERCASE = set("MZLHVCSQTA")
 
 COMMAND_RE = re.compile("([MmZzLlHhVvCcSsQqTtAa])")
 FLOAT_RE = re.compile("[-+]?[0-9]*\.?[0-9]+(?:[eE][-+]?[0-9]+)?")
@@ -401,7 +404,7 @@ def segment_curvature(self, t, use_inf=False):
     ddz = self.derivative(t, n=2)
     dx, dy = dz.real, dz.imag
     ddx, ddy = ddz.real, ddz.imag
-    old_np_seterr = np.seterr(invalid='raise')
+    old_np_seterr = np.seterr(invalid="raise")
     try:
         kappa = abs(dx*ddy - dy*ddx)/sqrt(dx*dx + dy*dy)**3
     except (ZeroDivisionError, FloatingPointError):
@@ -602,7 +605,7 @@ class Line(object):
         return hash((self.start, self.end))
 
     def __repr__(self):
-        return 'Line(start=%s, end=%s)' % (self.start, self.end)
+        return "Line(start=%s, end=%s)" % (self.start, self.end)
 
     def __eq__(self, other):
         if not isinstance(other, Line):
@@ -847,7 +850,7 @@ class Line(object):
 
 class QuadraticBezier(object):
     # For compatibility with old pickle files.
-    _length_info = {'length': None, 'bpoints': None}
+    _length_info = {"length": None, "bpoints": None}
 
     def __init__(self, start, control, end):
         self.start = start
@@ -855,13 +858,13 @@ class QuadraticBezier(object):
         self.control = control
 
         # used to know if self._length needs to be updated
-        self._length_info = {'length': None, 'bpoints': None}
+        self._length_info = {"length": None, "bpoints": None}
 
     def __hash__(self):
         return hash((self.start, self.control, self.end))
 
     def __repr__(self):
-        return 'QuadraticBezier(start=%s, control=%s, end=%s)' % (
+        return "QuadraticBezier(start=%s, control=%s, end=%s)" % (
             self.start, self.control, self.end)
 
     def __eq__(self, other):
@@ -921,8 +924,8 @@ class QuadraticBezier(object):
 
     def length(self, t0=0, t1=1, error=None, min_depth=None):
         if t0 == 1 and t1 == 0:
-            if self._length_info['bpoints'] == self.bpoints():
-                return self._length_info['length']
+            if self._length_info["bpoints"] == self.bpoints():
+                return self._length_info["length"]
         a = self.start - 2*self.control + self.end
         b = 2*(self.control - self.start)
         a_dot_b = a.real*b.real + a.imag*b.imag
@@ -955,9 +958,9 @@ class QuadraticBezier(object):
                            abs(b) ** 2 / (2 * abs(a))
 
         if t0 == 1 and t1 == 0:
-            self._length_info['length'] = s
-            self._length_info['bpoints'] = self.bpoints()
-            return self._length_info['length']
+            self._length_info["length"] = s
+            self._length_info["bpoints"] = self.bpoints()
+            return self._length_info["length"]
         else:
             return s
 
@@ -1026,9 +1029,9 @@ class QuadraticBezier(object):
         """returns a copy of the QuadraticBezier object with its orientation
         reversed."""
         new_quad = QuadraticBezier(self.end, self.control, self.start)
-        if self._length_info['length']:
+        if self._length_info["length"]:
             new_quad._length_info = self._length_info
-            new_quad._length_info['bpoints'] = (
+            new_quad._length_info["bpoints"] = (
                 self.end, self.control, self.start)
         return new_quad
 
@@ -1102,8 +1105,8 @@ class QuadraticBezier(object):
 
 class CubicBezier(object):
     # For compatibility with old pickle files.
-    _length_info = {'length': None, 'bpoints': None, 'error': None,
-                    'min_depth': None}
+    _length_info = {"length": None, "bpoints": None, "error": None,
+                    "min_depth": None}
 
     def __init__(self, start, control1, control2, end):
         self.start = start
@@ -1112,14 +1115,14 @@ class CubicBezier(object):
         self.end = end
 
         # used to know if self._length needs to be updated
-        self._length_info = {'length': None, 'bpoints': None, 'error': None,
-                             'min_depth': None}
+        self._length_info = {"length": None, "bpoints": None, "error": None,
+                             "min_depth": None}
 
     def __hash__(self):
         return hash((self.start, self.control1, self.control2, self.end))
 
     def __repr__(self):
-        return 'CubicBezier(start=%s, control1=%s, control2=%s, end=%s)' % (
+        return "CubicBezier(start=%s, control1=%s, control2=%s, end=%s)" % (
             self.start, self.control1, self.control2, self.end)
 
     def __eq__(self, other):
@@ -1186,10 +1189,10 @@ class CubicBezier(object):
     def length(self, t0=0, t1=1, error=LENGTH_ERROR, min_depth=LENGTH_MIN_DEPTH):
         """Calculate the length of the path up to a certain position"""
         if t0 == 0 and t1 == 1:
-            if self._length_info['bpoints'] == self.bpoints() \
-                    and self._length_info['error'] >= error \
-                    and self._length_info['min_depth'] >= min_depth:
-                return self._length_info['length']
+            if self._length_info["bpoints"] == self.bpoints() \
+                    and self._length_info["error"] >= error \
+                    and self._length_info["min_depth"] >= min_depth:
+                return self._length_info["length"]
 
         # using scipy.integrate.quad is quick
         if _quad_available:
@@ -1200,11 +1203,11 @@ class CubicBezier(object):
                                error, min_depth, 0)
 
         if t0 == 0 and t1 == 1:
-            self._length_info['length'] = s
-            self._length_info['bpoints'] = self.bpoints()
-            self._length_info['error'] = error
-            self._length_info['min_depth'] = min_depth
-            return self._length_info['length']
+            self._length_info["length"] = s
+            self._length_info["bpoints"] = self.bpoints()
+            self._length_info["error"] = error
+            self._length_info["min_depth"] = min_depth
+            return self._length_info["length"]
         else:
             return s
 
@@ -1281,9 +1284,9 @@ class CubicBezier(object):
         reversed."""
         new_cub = CubicBezier(self.end, self.control2, self.control1,
                               self.start)
-        if self._length_info['length']:
+        if self._length_info["length"]:
             new_cub._length_info = self._length_info
-            new_cub._length_info['bpoints'] = (
+            new_cub._length_info["bpoints"] = (
                 self.end, self.control2, self.control1, self.start)
         return new_cub
 
@@ -2060,7 +2063,6 @@ class Arc(object):
         elif isinstance(other_seg, Arc):
             assert other_seg != self
 
-            import sys
 
             # From "Intersection of two circles", at
             # http://paulbourke.net/geometry/circlesphere/
@@ -2425,14 +2427,14 @@ class Path(MutableSequence):
     def __init__(self, *segments, **kw):
         self._length = None
         self._lengths = None
-        if 'closed' in kw:
-            self.closed = kw['closed']  # DEPRECATED
+        if "closed" in kw:
+            self.closed = kw["closed"]  # DEPRECATED
         if len(segments) >= 1:
             if isinstance(segments[0], str):
                 if len(segments) >= 2:
                     current_pos = segments[1]
-                elif 'current_pos' in kw:
-                    current_pos = kw['current_pos']
+                elif "current_pos" in kw:
+                    current_pos = kw["current_pos"]
                 else:
                     current_pos = 0j
                 self._segments = list()
@@ -2448,8 +2450,8 @@ class Path(MutableSequence):
             self._start = None
             self._end = None
 
-        if 'tree_element' in kw:
-            self._tree_element = kw['tree_element']
+        if "tree_element" in kw:
+            self._tree_element = kw["tree_element"]
 
     def __hash__(self):
         return hash((tuple(self._segments), self._closed))
@@ -2660,7 +2662,7 @@ class Path(MutableSequence):
         For an explanation of useSandT and use_closed_attrib, see the
         compatibility notes in the README."""
         if len(self) == 0:
-            return ''
+            return ""
         if use_closed_attrib:
             self_closed = self.iscontinuous() and self.isclosed()
             if self_closed:
@@ -2687,14 +2689,14 @@ class Path(MutableSequence):
                     _seg_start = seg_start - current_pos if current_pos is not None else seg_start
                 else:
                     _seg_start = seg_start
-                parts.append('M {},{}'.format(_seg_start.real, _seg_start.imag))
+                parts.append("M {},{}".format(_seg_start.real, _seg_start.imag))
     
             if isinstance(segment, Line):
                 if rel:
                     _seg_end = segment.end - seg_start
                 else:
                     _seg_end = segment.end
-                parts.append('L {},{}'.format(_seg_end.real, _seg_end.imag))
+                parts.append("L {},{}".format(_seg_end.real, _seg_end.imag))
             elif isinstance(segment, CubicBezier):
                 if useSandT and segment.is_smooth_from(previous_segment,
                                                        warning_on=False):
@@ -2706,7 +2708,7 @@ class Path(MutableSequence):
                         _seg_end = segment.end
                     args = (_seg_control2.real, _seg_control2.imag,
                             _seg_end.real, _seg_end.imag)
-                    parts.append('S {},{} {},{}'.format(*args))
+                    parts.append("S {},{} {},{}".format(*args))
                 else:
                     if rel:
                         _seg_control1 = segment.control1 - seg_start
@@ -2719,7 +2721,7 @@ class Path(MutableSequence):
                     args = (_seg_control1.real, _seg_control1.imag,
                             _seg_control2.real, _seg_control2.imag,
                             _seg_end.real, _seg_end.imag)
-                    parts.append('C {},{} {},{} {},{}'.format(*args))
+                    parts.append("C {},{} {},{} {},{}".format(*args))
             elif isinstance(segment, QuadraticBezier):
                 if useSandT and segment.is_smooth_from(previous_segment,
                                                        warning_on=False):
@@ -2728,7 +2730,7 @@ class Path(MutableSequence):
                     else:
                         _seg_end = segment.end
                     args = _seg_end.real, _seg_end.imag
-                    parts.append('T {},{}'.format(*args))
+                    parts.append("T {},{}".format(*args))
                 else:
                     if rel:
                         _seg_control = segment.control - seg_start
@@ -2738,7 +2740,7 @@ class Path(MutableSequence):
                         _seg_end = segment.end
                     args = (_seg_control.real, _seg_control.imag,
                             _seg_end.real, _seg_end.imag)
-                    parts.append('Q {},{} {},{}'.format(*args))
+                    parts.append("Q {},{} {},{}".format(*args))
     
             elif isinstance(segment, Arc):
                 if rel:
@@ -2748,14 +2750,14 @@ class Path(MutableSequence):
                 args = (segment.radius.real, segment.radius.imag,
                         segment.rotation,int(segment.large_arc),
                         int(segment.sweep),_seg_end.real, _seg_end.imag)
-                parts.append('A {},{} {} {:d},{:d} {},{}'.format(*args))
+                parts.append("A {},{} {} {:d},{:d} {},{}".format(*args))
             current_pos = segment.end
             previous_segment = segment
     
         if self_closed:
-            parts.append('Z')
+            parts.append("Z")
     
-        s = ' '.join(parts)
+        s = " ".join(parts)
         return s if not rel else s.lower()
 
     def joins_smoothly_with(self, previous, wrt_parameterization=False):
@@ -2848,13 +2850,13 @@ class Path(MutableSequence):
             previous_seg_in_path = self._segments[
                 (seg_idx - 1) % len(self._segments)]
             if not seg.joins_smoothly_with(previous_seg_in_path):
-                return float('inf')
+                return float("inf")
         elif np.isclose(t, 1) and (seg_idx != len(self) - 1 or
                                    self.end == self.start):
             next_seg_in_path = self._segments[
                 (seg_idx + 1) % len(self._segments)]
             if not next_seg_in_path.joins_smoothly_with(seg):
-                return float('inf')
+                return float("inf")
         dz = self.derivative(T)
         ddz = self.derivative(T, n=2)
         dx, dy = dz.real, dz.imag
@@ -3033,7 +3035,7 @@ class Path(MutableSequence):
                 else:
                     for i in range(i0 + 1, len(self)):
                         new_path.append(self[i])
-                    for i in range(0, i1):
+                    for i in range(i1):
                         new_path.append(self[i])
 
             # T0<T1 straight-forward case
@@ -3172,7 +3174,7 @@ class Path(MutableSequence):
                         pathdef, len(pathdef.split()) - len(elements)))
                 last_command = command  # Used by S and T
 
-            if command == 'M':
+            if command == "M":
                 # Moveto command.
                 x = elements.pop()
                 y = elements.pop()
@@ -3190,9 +3192,9 @@ class Path(MutableSequence):
                 # Implicit moveto commands are treated as lineto commands.
                 # So we set command to lineto here, in case there are
                 # further implicit commands after this moveto.
-                command = 'L'
+                command = "L"
 
-            elif command == 'Z':
+            elif command == "Z":
                 # Close path
                 if not (current_pos == start_pos):
                     segments.append(Line(current_pos, start_pos))
@@ -3200,7 +3202,7 @@ class Path(MutableSequence):
                 current_pos = start_pos
                 command = None
 
-            elif command == 'L':
+            elif command == "L":
                 x = elements.pop()
                 y = elements.pop()
                 pos = float(x) + float(y) * 1j
@@ -3209,7 +3211,7 @@ class Path(MutableSequence):
                 segments.append(Line(current_pos, pos))
                 current_pos = pos
 
-            elif command == 'H':
+            elif command == "H":
                 x = elements.pop()
                 pos = float(x) + current_pos.imag * 1j
                 if not absolute:
@@ -3217,7 +3219,7 @@ class Path(MutableSequence):
                 segments.append(Line(current_pos, pos))
                 current_pos = pos
 
-            elif command == 'V':
+            elif command == "V":
                 y = elements.pop()
                 pos = current_pos.real + float(y) * 1j
                 if not absolute:
@@ -3225,7 +3227,7 @@ class Path(MutableSequence):
                 segments.append(Line(current_pos, pos))
                 current_pos = pos
 
-            elif command == 'C':
+            elif command == "C":
                 control1 = float(elements.pop()) + float(elements.pop()) * 1j
                 control2 = float(elements.pop()) + float(elements.pop()) * 1j
                 end = float(elements.pop()) + float(elements.pop()) * 1j
@@ -3238,11 +3240,11 @@ class Path(MutableSequence):
                 segments.append(CubicBezier(current_pos, control1, control2, end))
                 current_pos = end
 
-            elif command == 'S':
+            elif command == "S":
                 # Smooth curve. First control point is the "reflection" of
                 # the second control point in the previous path.
 
-                if last_command not in 'CS':
+                if last_command not in "CS":
                     # If there is no previous command or if the previous command
                     # was not an C, c, S or s, assume the first control point is
                     # coincident with the current point.
@@ -3263,7 +3265,7 @@ class Path(MutableSequence):
                 segments.append(CubicBezier(current_pos, control1, control2, end))
                 current_pos = end
 
-            elif command == 'Q':
+            elif command == "Q":
                 control = float(elements.pop()) + float(elements.pop()) * 1j
                 end = float(elements.pop()) + float(elements.pop()) * 1j
 
@@ -3274,11 +3276,11 @@ class Path(MutableSequence):
                 segments.append(QuadraticBezier(current_pos, control, end))
                 current_pos = end
 
-            elif command == 'T':
+            elif command == "T":
                 # Smooth curve. Control point is the "reflection" of
                 # the second control point in the previous path.
 
-                if last_command not in 'QT':
+                if last_command not in "QT":
                     # If there is no previous command or if the previous command
                     # was not an Q, q, T or t, assume the first control point is
                     # coincident with the current point.
@@ -3297,7 +3299,7 @@ class Path(MutableSequence):
                 segments.append(QuadraticBezier(current_pos, control, end))
                 current_pos = end
 
-            elif command == 'A':
+            elif command == "A":
 
                 radius = float(elements.pop()) + float(elements.pop()) * 1j
                 rotation = float(elements.pop())
@@ -3312,12 +3314,12 @@ class Path(MutableSequence):
                     # Note: In browsers AFAIK, zero radius arcs are displayed
                     # as lines (see "examples/zero-radius-arcs.svg").
                     # Thus zero radius arcs are substituted for lines here.
-                    warn('Replacing degenerate (zero radius) Arc with a Line: '
-                         'Arc(start={}, radius={}, rotation={}, large_arc={}, '
-                         'sweep={}, end={})'.format(
+                    warn("Replacing degenerate (zero radius) Arc with a Line: "
+                         "Arc(start={}, radius={}, rotation={}, large_arc={}, "
+                         "sweep={}, end={})".format(
                         current_pos, radius, rotation, arc, sweep, end) +
-                         ' --> Line(start={}, end={})'
-                         ''.format(current_pos, end))
+                         " --> Line(start={}, end={})"
+                         "".format(current_pos, end))
                     segments.append(Line(current_pos, end))
                 else:
                     segments.append(

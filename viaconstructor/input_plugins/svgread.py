@@ -136,7 +136,7 @@ class DrawReader(DrawReaderBase):
                             last_x = segment.start.real
                             last_y = segment.start.imag
                             nump = int(segment.length() / 10) + 1
-                            for point_n in range(0, nump):
+                            for point_n in range(nump):
                                 pos = segment.point(point_n / nump)
                                 self._add_line(
                                     (last_x, height - last_y),
@@ -194,7 +194,7 @@ class DrawReader(DrawReaderBase):
         if steps > 0:
             astep = adiff / steps
             angle = start_angle
-            for _step_n in range(0, steps):  # pylint: disable=W0612
+            for _step_n in range(steps):  # pylint: disable=W0612
                 (start, end, bulge) = ezdxf.math.arc_to_bulge(
                     center,
                     angle / 180 * math.pi,

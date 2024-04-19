@@ -1,6 +1,6 @@
 import pytest
-from pybind11_tests import methods_and_attributes as m
 from pybind11_tests import ConstructorStats
+from pybind11_tests import methods_and_attributes as m
 
 
 def test_methods_and_attributes():

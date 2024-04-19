@@ -24,8 +24,8 @@ def test_vectorize(capture):
             my_func(x:int=3, y:float=4, z:float=3)
         """
         with capture:
-            a = np.array([[1, 2], [3, 4]], order='F')
-            b = np.array([[10, 20], [30, 40]], order='F')
+            a = np.array([[1, 2], [3, 4]], order="F")
+            b = np.array([[10, 20], [30, 40]], order="F")
             c = 3
             result = f(a, b, c)
             assert np.allclose(result, a * b * c)
@@ -71,7 +71,7 @@ def test_vectorize(capture):
             my_func(x:int=6, y:float=3, z:float=2)
         """
         with capture:
-            a, b, c = np.array([[1, 2, 3], [4, 5, 6]], order='F'), np.array([[2], [3]]), 2
+            a, b, c = np.array([[1, 2, 3], [4, 5, 6]], order="F"), np.array([[2], [3]]), 2
             assert np.allclose(f(a, b, c), a * b * c)
         assert capture == """
             my_func(x:int=1, y:float=2, z:float=2)
@@ -91,7 +91,7 @@ def test_vectorize(capture):
             my_func(x:int=6, y:float=3, z:float=2)
         """
         with capture:
-            a, b, c = np.array([[1, 2, 3], [4, 5, 6]], order='F')[::, ::2], np.array([[2], [3]]), 2
+            a, b, c = np.array([[1, 2, 3], [4, 5, 6]], order="F")[::, ::2], np.array([[2], [3]]), 2
             assert np.allclose(f(a, b, c), a * b * c)
         assert capture == """
             my_func(x:int=1, y:float=2, z:float=2)
@@ -125,9 +125,9 @@ def test_trivial_broadcasting():
         np.array([[1, 2, 3], [4, 5, 6]]), np.array([2, 3, 4]), 2) == trivial.non_trivial
     assert vectorized_is_trivial(
         np.array([[1, 2, 3], [4, 5, 6]]), np.array([[2], [3]]), 2) == trivial.non_trivial
-    z1 = np.array([[1, 2, 3, 4], [5, 6, 7, 8]], dtype='int32')
-    z2 = np.array(z1, dtype='float32')
-    z3 = np.array(z1, dtype='float64')
+    z1 = np.array([[1, 2, 3, 4], [5, 6, 7, 8]], dtype="int32")
+    z2 = np.array(z1, dtype="float32")
+    z3 = np.array(z1, dtype="float64")
     assert vectorized_is_trivial(z1, z2, z3) == trivial.c_trivial
     assert vectorized_is_trivial(1, z2, z3) == trivial.c_trivial
     assert vectorized_is_trivial(z1, 1, z3) == trivial.c_trivial
@@ -137,7 +137,7 @@ def test_trivial_broadcasting():
     assert vectorized_is_trivial(1, 1, z3[::2, ::2]) == trivial.non_trivial
     assert vectorized_is_trivial(z1, 1, z3[1::4, 1::4]) == trivial.c_trivial
 
-    y1 = np.array(z1, order='F')
+    y1 = np.array(z1, order="F")
     y2 = np.array(y1)
     y3 = np.array(y1)
     assert vectorized_is_trivial(y1, y2, y3) == trivial.f_trivial
@@ -167,10 +167,10 @@ def test_passthrough_arguments(doc):
             "arg5: m.numpy_vectorize.NonPODClass",
             "arg6: numpy.ndarray[float64]"]) + ") -> object")
 
-    b = np.array([[10, 20, 30]], dtype='float64')
+    b = np.array([[10, 20, 30]], dtype="float64")
     c = np.array([100, 200])  # NOT a vectorized argument
-    d = np.array([[1000], [2000], [3000]], dtype='int')
-    g = np.array([[1000000, 2000000, 3000000]], dtype='int')  # requires casting
+    d = np.array([[1000], [2000], [3000]], dtype="int")
+    g = np.array([[1000000, 2000000, 3000000]], dtype="int")  # requires casting
     assert np.all(
         m.vec_passthrough(1, b, c, d, 10000, m.NonPODClass(100000), g) ==
         np.array([[1111111, 2111121, 3111131],
@@ -180,8 +180,8 @@ def test_passthrough_arguments(doc):
 
 def test_method_vectorization():
     o = m.VectorizeTestClass(3)
-    x = np.array([1, 2], dtype='int')
-    y = np.array([[10], [20]], dtype='float32')
+    x = np.array([1, 2], dtype="int")
+    y = np.array([[10], [20]], dtype="float32")
     assert np.all(o.method(x, y) == [[14, 15], [24, 25]])
 
 

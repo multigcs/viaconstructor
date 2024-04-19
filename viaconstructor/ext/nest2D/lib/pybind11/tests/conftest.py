@@ -4,18 +4,19 @@ Extends output capture as needed by pybind11: ignore constructors, optional unor
 Adds docstring and exceptions message sanitizers: ignore Python 2 vs 3 differences.
 """
 
-import pytest
-import textwrap
+import contextlib
 import difflib
+import gc
+import platform
 import re
 import sys
-import contextlib
-import platform
-import gc
+import textwrap
 
-_unicode_marker = re.compile(r'u(\'[^\']*\')')
-_long_marker = re.compile(r'([0-9])L')
-_hexadecimal = re.compile(r'0x[0-9a-fA-F]+')
+import pytest
+
+_unicode_marker = re.compile(r"u(\'[^\']*\')")
+_long_marker = re.compile(r"([0-9])L")
+_hexadecimal = re.compile(r"0x[0-9a-fA-F]+")
 
 # test_async.py requires support for async and await
 collect_ignore = []
@@ -25,7 +26,7 @@ if sys.version_info[:2] < (3, 5):
 
 def _strip_and_dedent(s):
     """For triple-quote strings"""
-    return textwrap.dedent(s.lstrip('\n').rstrip())
+    return textwrap.dedent(s.lstrip("\n").rstrip())
 
 
 def _split_and_sort(s):
@@ -35,7 +36,7 @@ def _split_and_sort(s):
 
 def _make_explanation(a, b):
     """Explanation for a failed assert -- the a and b arguments are List[str]"""
-    return ["--- actual / +++ expected"] + [line.strip('\n') for line in difflib.ndiff(a, b)]
+    return ["--- actual / +++ expected"] + [line.strip("\n") for line in difflib.ndiff(a, b)]
 
 
 class Output(object):
@@ -107,7 +108,7 @@ class Capture(object):
         return Output(self.err)
 
 
-@pytest.fixture
+@pytest.fixture()
 def capture(capsys):
     """Extended `capsys` with context manager and custom equality operators"""
     return Capture(capsys)
@@ -148,7 +149,7 @@ def _sanitize_docstring(thing):
     return s
 
 
-@pytest.fixture
+@pytest.fixture()
 def doc():
     """Sanitize docstrings and add custom failure explanation"""
     return SanitizedString(_sanitize_docstring)
@@ -161,7 +162,7 @@ def _sanitize_message(thing):
     return s
 
 
-@pytest.fixture
+@pytest.fixture()
 def msg():
     """Sanitize messages and add custom failure explanation"""
     return SanitizedString(_sanitize_message)
@@ -170,7 +171,7 @@ def msg():
 # noinspection PyUnusedLocal
 def pytest_assertrepr_compare(op, left, right):
     """Hook to insert custom failure explanation"""
-    if hasattr(left, 'explanation'):
+    if hasattr(left, "explanation"):
         return left.explanation
 
 
@@ -184,8 +185,8 @@ def suppress(exception):
 
 
 def gc_collect():
-    ''' Run the garbage collector twice (needed when running
-    reference counting tests with PyPy) '''
+    """ Run the garbage collector twice (needed when running
+    reference counting tests with PyPy) """
     gc.collect()
     gc.collect()
 

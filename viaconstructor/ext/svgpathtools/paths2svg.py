@@ -4,47 +4,52 @@ See also the document.py submodule.
 """
 
 # External dependencies:
-from __future__ import division, absolute_import, print_function
+from __future__ import absolute_import, division, print_function
+
+import re
 from math import ceil
-from os import path as os_path, makedirs
+from os import makedirs
+from os import path as os_path
 from tempfile import gettempdir
-from xml.dom.minidom import parse as md_xml_parse
-from svgwrite import Drawing, text as txt
 from time import time
 from warnings import warn
-import re
+from xml.dom.minidom import parse as md_xml_parse
 
-# Internal dependencies
-from .path import Path, Line, is_path_segment
+from svgwrite import Drawing
+from svgwrite import text as txt
+
 from .misctools import open_in_browser
 
+# Internal dependencies
+from .path import Line, Path, is_path_segment
+
 # color shorthand for inputting color list as string of chars.
-color_dict = {'a': 'aqua',
-              'b': 'blue',
-              'c': 'cyan',
-              'd': 'darkblue',
-              'e': '',
-              'f': '',
-              'g': 'green',
-              'h': '',
-              'i': '',
-              'j': '',
-              'k': 'black',
-              'l': 'lime',
-              'm': 'magenta',
-              'n': 'brown',
-              'o': 'orange',
-              'p': 'pink',
-              'q': 'turquoise',
-              'r': 'red',
-              's': 'salmon',
-              't': 'tan',
-              'u': 'purple',
-              'v': 'violet',
-              'w': 'white',
-              'x': '',
-              'y': 'yellow',
-              'z': 'azure'}
+color_dict = {"a": "aqua",
+              "b": "blue",
+              "c": "cyan",
+              "d": "darkblue",
+              "e": "",
+              "f": "",
+              "g": "green",
+              "h": "",
+              "i": "",
+              "j": "",
+              "k": "black",
+              "l": "lime",
+              "m": "magenta",
+              "n": "brown",
+              "o": "orange",
+              "p": "pink",
+              "q": "turquoise",
+              "r": "red",
+              "s": "salmon",
+              "t": "tan",
+              "u": "purple",
+              "v": "violet",
+              "w": "white",
+              "x": "",
+              "y": "yellow",
+              "z": "azure"}
 
 
 def str2colorlist(s, default_color=None):
@@ -100,7 +105,7 @@ def disvg(paths=None, colors=None, filename=None, stroke_widths=None,
           mindim=600, dimensions=None, viewbox=None, text=None,
           text_path=None, font_size=None, attributes=None,
           svg_attributes=None, svgwrite_debug=False,
-          paths2Drawing=False, baseunit='px'):
+          paths2Drawing=False, baseunit="px"):
     """Creates (and optionally displays) an SVG file.
 
     REQUIRED INPUTS:
@@ -206,13 +211,13 @@ def disvg(paths=None, colors=None, filename=None, stroke_widths=None,
 
     _default_relative_node_radius = 5e-3
     _default_relative_stroke_width = 1e-3
-    _default_path_color = '#000000'  # black
-    _default_node_color = '#ff0000'  # red
+    _default_path_color = "#000000"  # black
+    _default_node_color = "#ff0000"  # red
     _default_font_size = 12
 
     if filename is None:
         timestamp = True if timestamp is None else timestamp
-        filename = os_path.join(gettempdir(), 'disvg_output.svg')
+        filename = os_path.join(gettempdir(), "disvg_output.svg")
 
     dirname = os_path.abspath(os_path.dirname(filename))
     if not os_path.exists(dirname):
@@ -221,8 +226,8 @@ def disvg(paths=None, colors=None, filename=None, stroke_widths=None,
     # append time stamp to filename
     if timestamp:
         fbname, fext = os_path.splitext(filename)
-        tstamp = str(time()).replace('.', '')
-        stfilename = os_path.split(fbname)[1] + '_' + tstamp + fext
+        tstamp = str(time()).replace(".", "")
+        stfilename = os_path.split(fbname)[1] + "_" + tstamp + fext
         filename = os_path.join(dirname, stfilename)
 
     # check paths and colors are set
@@ -261,14 +266,14 @@ def disvg(paths=None, colors=None, filename=None, stroke_widths=None,
     stuff2bound = []
     if viewbox:
         if not isinstance(viewbox, str):
-            viewbox = '%s %s %s %s' % viewbox
+            viewbox = "%s %s %s %s" % viewbox
         if dimensions is None:
-            dimensions = viewbox.split(' ')[2:4]
+            dimensions = viewbox.split(" ")[2:4]
     elif dimensions:
         dimensions = tuple(map(str, dimensions))
         def strip_units(s):
-            return re.search(r'\d*\.?\d*', s.strip()).group()
-        viewbox = '0 0 %s %s' % tuple(map(strip_units, dimensions))
+            return re.search(r"\d*\.?\d*", s.strip()).group()
+        viewbox = "0 0 %s %s" % tuple(map(strip_units, dimensions))
     else:
         if paths:
             stuff2bound += paths
@@ -350,10 +355,10 @@ def disvg(paths=None, colors=None, filename=None, stroke_widths=None,
                 ps = p
 
             if attributes:
-                good_attribs = {'d': ps}
+                good_attribs = {"d": ps}
                 for key in attributes[i]:
                     val = attributes[i][key]
-                    if key != 'd':
+                    if key != "d":
                         try:
                             dwg.path(ps, **{key: val})
                             good_attribs.update({key: val})
@@ -364,7 +369,7 @@ def disvg(paths=None, colors=None, filename=None, stroke_widths=None,
             else:
                 dwg.add(dwg.path(ps, stroke=colors[i],
                                  stroke_width=str(stroke_widths[i]),
-                                 fill='none'))
+                                 fill="none"))
 
     # add nodes (filled in circles)
     if nodes:
@@ -402,10 +407,10 @@ def disvg(paths=None, colors=None, filename=None, stroke_widths=None,
 
             # paragraph = dwg.add(dwg.g(font_size=font_size[idx]))
             # paragraph.add(dwg.textPath(ps, s))
-            pathid = 'tp' + str(idx)
+            pathid = "tp" + str(idx)
             dwg.defs.add(dwg.path(d=ps, id=pathid))
-            txter = dwg.add(dwg.text('', font_size=font_size[idx]))
-            txter.add(txt.TextPath('#'+pathid, s))
+            txter = dwg.add(dwg.text("", font_size=font_size[idx]))
+            txter.add(txt.TextPath("#"+pathid, s))
 
     if paths2Drawing:
         return dwg
@@ -414,7 +419,7 @@ def disvg(paths=None, colors=None, filename=None, stroke_widths=None,
 
     # re-open the svg, make the xml pretty, and save it again
     xmlstring = md_xml_parse(filename).toprettyxml()
-    with open(filename, 'w') as f:
+    with open(filename, "w") as f:
         f.write(xmlstring)
 
     # try to open in web browser
@@ -432,7 +437,7 @@ def wsvg(paths=None, colors=None, filename=None, stroke_widths=None,
          mindim=600, dimensions=None, viewbox=None, text=None,
          text_path=None, font_size=None, attributes=None,
          svg_attributes=None, svgwrite_debug=False,
-         paths2Drawing=False, baseunit='px'):
+         paths2Drawing=False, baseunit="px"):
     """Create SVG and write to disk.
 
     Note: This is identical to `disvg()` except that `openinbrowser`
@@ -460,7 +465,7 @@ def paths2Drawing(paths=None, colors=None, filename=None,
                   margin_size=0.1, mindim=600, dimensions=None,
                   viewbox=None, text=None, text_path=None,
                   font_size=None, attributes=None, svg_attributes=None,
-                  svgwrite_debug=False, paths2Drawing=True, baseunit='px'):
+                  svgwrite_debug=False, paths2Drawing=True, baseunit="px"):
     """Create and return `svg.Drawing` object.
 
     Note: This is identical to `disvg()` except that `paths2Drawing`

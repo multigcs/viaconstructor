@@ -1,6 +1,6 @@
 import pytest
-from pybind11_tests import opaque_types as m
 from pybind11_tests import ConstructorStats, UserType
+from pybind11_tests import opaque_types as m
 
 
 def test_string_list():

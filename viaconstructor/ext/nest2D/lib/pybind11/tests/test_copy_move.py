@@ -65,7 +65,7 @@ def test_move_and_copy_loads():
     assert c_m.alive() + c_mc.alive() + c_c.alive() == 0
 
 
-@pytest.mark.skipif(not m.has_optional, reason='no <optional>')
+@pytest.mark.skipif(not m.has_optional, reason="no <optional>")
 def test_move_and_copy_load_optional():
     """Tests move/copy loads of std::optional arguments"""
 

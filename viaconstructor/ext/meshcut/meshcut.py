@@ -3,6 +3,7 @@ Functions to slice a mesh. For now, computes planar cross-section
 """
 import numpy as np
 import numpy.linalg as la
+
 try:
     import scipy.spatial.distance as spdist
     USE_SCIPY = True
@@ -31,11 +32,11 @@ class TriangleMesh(object):
         self.verts = np.array(verts)
         # For each edge, contains the list of triangles it belongs to
         # If the mesh is closed, each edge belongs to 2 triangles
-        self.edges_to_tris = collections.defaultdict(lambda: [])
+        self.edges_to_tris = collections.defaultdict(list)
         # For each triangle, contains the edges it contains
         self.tris_to_edges = {}
         # For each vertex, the list of triangles it belongs to
-        self.verts_to_tris = collections.defaultdict(lambda: [])
+        self.verts_to_tris = collections.defaultdict(list)
 
         self.tris = tris
 
@@ -73,7 +74,7 @@ class Plane(object):
         self.n = normal / la.norm(normal)
 
     def __str__(self):
-        return 'plane(o=%s, n=%s)' % (self.orig, self.n)
+        return "plane(o=%s, n=%s)" % (self.orig, self.n)
 
 
 def point_to_plane_dist(p, plane):
@@ -181,7 +182,7 @@ def get_next_triangle(mesh, T, plane, intersection, dist_tol):
     elif intersection[0] == INTERSECT_VERTEX:
         tris = mesh.triangles_for_vert(intersection[2])
     else:
-        assert False, 'Invalid intersection[0] value : %d' % intersection[0]
+        assert False, "Invalid intersection[0] value : %d" % intersection[0]
 
     # Knowing where we come from is not enough. If an edge of the triangle
     # lies exactly on the plane, i.e. :
@@ -247,7 +248,7 @@ def _walk_polyline(tid, intersect, T, mesh, plane, dist_tol):
             intersect = intersections[1]
         else:
             assert la.norm(intersections[1][1] - p[-1]) < dist_tol, \
-                '%s not close to %s' % (str(p[-1]), str(intersections))
+                "%s not close to %s" % (str(p[-1]), str(intersections))
             intersect = intersections[0]
 
     return p, T
@@ -321,7 +322,7 @@ def pdist_squareformed_numpy(a):
     Returns: dist
     """
     a = np.array(a, dtype=np.float64)
-    a_sumrows = np.einsum('ij,ij->i', a, a)
+    a_sumrows = np.einsum("ij,ij->i", a, a)
     dist = a_sumrows[:, None] + a_sumrows - 2 * np.dot(a, a.T)
     np.fill_diagonal(dist, 0)
     return dist

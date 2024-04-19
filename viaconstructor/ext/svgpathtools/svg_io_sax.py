@@ -3,17 +3,17 @@
 """
 
 # External dependencies
-from __future__ import division, absolute_import, print_function
+from __future__ import absolute_import, division, print_function
+
 import os
-from xml.etree.ElementTree import iterparse, Element, ElementTree, SubElement
+from xml.etree.ElementTree import Element, ElementTree, SubElement, iterparse
+
+from .misctools import open_in_browser
 
 # Internal dependencies
-from .parser import parse_path
-from .parser import parse_transform
-from .svg_to_paths import (path2pathd, ellipse2pathd, line2pathd,
-                           polyline2pathd, polygon2pathd, rect2pathd)
-from .misctools import open_in_browser
+from .parser import parse_path, parse_transform
 from .path import *
+from .svg_to_paths import ellipse2pathd, line2pathd, path2pathd, polygon2pathd, polyline2pathd, rect2pathd
 
 # To maintain forward/backward compatibility
 try:
@@ -54,7 +54,7 @@ class SaxDocument:
         self.root_values = {}
         self.tree = []
         # remember location of original svg file
-        if filename is not None and os.path.dirname(filename) == '':
+        if filename is not None and os.path.dirname(filename) == "":
             self.original_filename = os.path.join(os.getcwd(), filename)
         else:
             self.original_filename = filename
@@ -68,8 +68,8 @@ class SaxDocument:
         stack = []
         values = {}
         matrix = None
-        for event, elem in iterparse(filename, events=('start', 'end')):
-            if event == 'start':
+        for event, elem in iterparse(filename, events=("start", "end")):
+            if event == "start":
                 stack.append((values, matrix))
                 if matrix is not None:
                     matrix = matrix.copy()  # copy of matrix
@@ -96,19 +96,19 @@ class SaxDocument:
                     continue
                 elif "g" == name:
                     continue
-                elif 'path' == name:
-                    values['d'] = path2pathd(values)
-                elif 'circle' == name:
+                elif "path" == name:
+                    values["d"] = path2pathd(values)
+                elif "circle" == name:
                     values["d"] = ellipse2pathd(values)
-                elif 'ellipse' == name:
+                elif "ellipse" == name:
                     values["d"] = ellipse2pathd(values)
-                elif 'line' == name:
+                elif "line" == name:
                     values["d"] = line2pathd(values)
-                elif 'polyline' == name:
+                elif "polyline" == name:
                     values["d"] = polyline2pathd(values)
-                elif 'polygon' == name:
+                elif "polygon" == name:
                     values["d"] = polygon2pathd(values)
-                elif 'rect' == name:
+                elif "rect" == name:
                     values["d"] = rect2pathd(values)
                 else:
                     continue
@@ -123,8 +123,8 @@ class SaxDocument:
     def flatten_all_paths(self):
         flat = []
         for values in self.tree:
-            pathd = values['d']
-            matrix = values['matrix']
+            pathd = values["d"]
+            matrix = values["matrix"]
             parsed_path = parse_path(pathd)
             if matrix is not None:
                 transform(parsed_path, matrix)
@@ -134,8 +134,8 @@ class SaxDocument:
     def get_pathd_and_matrix(self):
         flat = []
         for values in self.tree:
-            pathd = values['d']
-            matrix = values['matrix']
+            pathd = values["d"]
+            matrix = values["matrix"]
             flat.append((pathd, matrix))
         return flat
 
@@ -156,8 +156,8 @@ class SaxDocument:
             root.set(ATTR_VIEWBOX, viewbox)
         identity = np.identity(3)
         for values in self.tree:
-            pathd = values.get('d', '')
-            matrix = values.get('matrix', None)
+            pathd = values.get("d", "")
+            matrix = values.get("matrix", None)
             # path_value = parse_path(pathd)
 
             path = SubElement(root, NAME_PATH)
@@ -186,13 +186,13 @@ class SaxDocument:
         return ElementTree(root)
 
     def save(self, filename):
-        with open(filename, 'wb') as output_svg:
+        with open(filename, "wb") as output_svg:
             dom_tree = self.generate_dom()
             dom_tree.write(output_svg)
 
     def display(self, filename=None):
         """Displays/opens the doc using the OS's default application."""
         if filename is None:
-            filename = 'display_temp.svg'
+            filename = "display_temp.svg"
         self.save(filename)
         open_in_browser(filename)

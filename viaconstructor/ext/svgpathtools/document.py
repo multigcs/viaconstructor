@@ -34,24 +34,24 @@ A Big Problem:
 """
 
 # External dependencies
-from __future__ import division, absolute_import, print_function
-import os
+from __future__ import absolute_import, division, print_function
+
 import collections
-import xml.etree.ElementTree as etree
-from xml.etree.ElementTree import Element, SubElement, register_namespace
-from xml.dom.minidom import parseString
+import os
 import warnings
+import xml.etree.ElementTree as etree
 from io import StringIO
 from tempfile import gettempdir
 from time import time
+from xml.dom.minidom import parseString
+from xml.etree.ElementTree import Element, SubElement, register_namespace
+
+from .misctools import open_in_browser
 
 # Internal dependencies
-from .parser import parse_path
-from .parser import parse_transform
-from .svg_to_paths import (path2pathd, ellipse2pathd, line2pathd,
-                           polyline2pathd, polygon2pathd, rect2pathd)
-from .misctools import open_in_browser
+from .parser import parse_path, parse_transform
 from .path import *
+from .svg_to_paths import ellipse2pathd, line2pathd, path2pathd, polygon2pathd, polyline2pathd, rect2pathd
 
 # To maintain forward/backward compatibility
 try:
@@ -64,21 +64,21 @@ except ImportError:
     PathLike = string
 
 # Let xml.etree.ElementTree know about the SVG namespace
-SVG_NAMESPACE = {'svg': 'http://www.w3.org/2000/svg'}
-register_namespace('svg', 'http://www.w3.org/2000/svg')
+SVG_NAMESPACE = {"svg": "http://www.w3.org/2000/svg"}
+register_namespace("svg", "http://www.w3.org/2000/svg")
 
 # THESE MUST BE WRAPPED TO OUTPUT ElementTree.element objects
-CONVERSIONS = {'path': path2pathd,
-               'circle': ellipse2pathd,
-               'ellipse': ellipse2pathd,
-               'line': line2pathd,
-               'polyline': polyline2pathd,
-               'polygon': polygon2pathd,
-               'rect': rect2pathd}
+CONVERSIONS = {"path": path2pathd,
+               "circle": ellipse2pathd,
+               "ellipse": ellipse2pathd,
+               "line": line2pathd,
+               "polyline": polyline2pathd,
+               "polygon": polygon2pathd,
+               "rect": rect2pathd}
 
-CONVERT_ONLY_PATHS = {'path': path2pathd}
+CONVERT_ONLY_PATHS = {"path": path2pathd}
 
-SVG_GROUP_TAG = 'svg:g'
+SVG_GROUP_TAG = "svg:g"
 
 
 def flattened_paths(group, group_filter=lambda x: True,
@@ -103,13 +103,13 @@ def flattened_paths(group, group_filter=lambda x: True,
             `path_conversions=CONVERT_ONLY_PATHS`.
     """
     if not isinstance(group, Element):
-        raise TypeError('Must provide an xml.etree.Element object. '
-                        'Instead you provided {0}'.format(type(group)))
+        raise TypeError("Must provide an xml.etree.Element object. "
+                        "Instead you provided {0}".format(type(group)))
 
     # Stop right away if the group_selector rejects this group
     if not group_filter(group):
-        warnings.warn('The input group [{}] (id attribute: {}) was rejected by the group filter'
-                      .format(group, group.get('id')))
+        warnings.warn("The input group [{}] (id attribute: {}) was rejected by the group filter"
+                      .format(group, group.get("id")))
         return []
 
     # To handle the transforms efficiently, we'll traverse the tree of
@@ -117,12 +117,12 @@ def flattened_paths(group, group_filter=lambda x: True,
     # The first entry in the tuple is a group element and the second
     # entry is its transform. As we pop each entry in the stack, we
     # will add all its child group elements to the stack.
-    StackElement = collections.namedtuple('StackElement',
-                                          ['group', 'transform'])
+    StackElement = collections.namedtuple("StackElement",
+                                          ["group", "transform"])
 
     def new_stack_element(element, last_tf):
         return StackElement(element, last_tf.dot(
-            parse_transform(element.get('transform'))))
+            parse_transform(element.get("transform"))))
 
     def get_relevant_children(parent, last_tf):
         children = []
@@ -142,9 +142,9 @@ def flattened_paths(group, group_filter=lambda x: True,
         # accepts it.
         for key, converter in path_conversions.items():
             for path_elem in filter(path_filter, top.group.iterfind(
-                    'svg:'+key, SVG_NAMESPACE)):
+                    "svg:"+key, SVG_NAMESPACE)):
                 path_tf = top.transform.dot(
-                    parse_transform(path_elem.get('transform')))
+                    parse_transform(path_elem.get("transform")))
                 path = transform(parse_path(converter(path_elem)), path_tf)
                 path.element = path_elem
                 path.transform = path_tf
@@ -167,8 +167,8 @@ def flattened_paths_from_group(group_to_flatten, root, recursive=True,
     Otherwise, no paths will be returned."""
 
     if not any(group_to_flatten is descendant for descendant in root.iter()):
-        warnings.warn('The requested group_to_flatten is not a '
-                      'descendant of root')
+        warnings.warn("The requested group_to_flatten is not a "
+                      "descendant of root")
         # We will shortcut here, because it is impossible for any paths
         # to be returned anyhow.
         return []
@@ -207,7 +207,7 @@ def flattened_paths_from_group(group_to_flatten, root, recursive=True,
                     # group.
                     desired_groups.add(id(group))
                     for key in path_conversions.keys():
-                        for path_elem in group.iterfind('svg:'+key, SVG_NAMESPACE):
+                        for path_elem in group.iterfind("svg:"+key, SVG_NAMESPACE):
                             # Add each path in the parent groups to the list of paths
                             # that should be ignored. The user has not requested to
                             # flatten the paths of the parent groups, so we should not
@@ -216,7 +216,7 @@ def flattened_paths_from_group(group_to_flatten, root, recursive=True,
                 break
 
         if route is None:
-            raise ValueError('The group_to_flatten is not a descendant of the root!')
+            raise ValueError("The group_to_flatten is not a descendant of the root!")
 
     def desired_group_filter(x):
         return (id(x) in desired_groups) and group_filter(x)
@@ -250,7 +250,7 @@ class Document:
         self.original_filepath = os.path.abspath(filepath) if from_filepath else None
 
         if filepath is None:
-            self.tree = etree.ElementTree(Element('svg'))
+            self.tree = etree.ElementTree(Element("svg"))
         else:
             # parse svg to ElementTree object
             self.tree = etree.parse(filepath)
@@ -283,9 +283,9 @@ class Document:
             group = self.get_group(group)
         elif not isinstance(group, Element):
             raise TypeError(
-                'Must provide a list of strings that represent a nested '
-                'group name, or provide an xml.etree.Element object. '
-                'Instead you provided {0}'.format(group))
+                "Must provide a list of strings that represent a nested "
+                "group name, or provide an xml.etree.Element object. "
+                "Instead you provided {0}".format(group))
 
         if group is None:
             warnings.warn("Could not find the requested group!")
@@ -308,14 +308,14 @@ class Document:
 
         elif not isinstance(group, Element):
             raise TypeError(
-                'Must provide a list of strings or an xml.etree.Element '
-                'object. Instead you provided {0}'.format(group))
+                "Must provide a list of strings or an xml.etree.Element "
+                "object. Instead you provided {0}".format(group))
 
         else:
             # Make sure that the group belongs to this Document object
             if not self.contains_group(group):
-                warnings.warn('The requested group does not belong to '
-                              'this Document')
+                warnings.warn("The requested group does not belong to "
+                              "this Document")
 
         # TODO: It might be better to use duck-typing here with a try-except
         if isinstance(path, Path):
@@ -328,22 +328,22 @@ class Document:
             path_svg = path
         else:
             raise TypeError(
-                'Must provide a Path, a path segment type, or a valid '
-                'SVG path d-string. Instead you provided {0}'.format(path))
+                "Must provide a Path, a path segment type, or a valid "
+                "SVG path d-string. Instead you provided {0}".format(path))
 
         if attribs is None:
             attribs = {}
         else:
             attribs = attribs.copy()
 
-        attribs['d'] = path_svg
+        attribs["d"] = path_svg
 
-        return SubElement(group, 'path', attribs)
+        return SubElement(group, "path", attribs)
 
     def contains_group(self, group):
         return any(group is owned for owned in self.tree.iter())
 
-    def get_group(self, nested_names, name_attr='id'):
+    def get_group(self, nested_names, name_attr="id"):
         """Get a group from the tree, or None if the requested group
         does not exist. Use get_or_add_group(~) if you want a new group
         to be created if it did not already exist.
@@ -374,7 +374,7 @@ class Document:
 
         return group
 
-    def get_or_add_group(self, nested_names, name_attr='id'):
+    def get_or_add_group(self, nested_names, name_attr="id"):
         """Get a group from the tree, or add a new one with the given
         name structure.
 
@@ -408,7 +408,7 @@ class Document:
 
                 while nested_names:
                     next_name = nested_names.pop(0)
-                    group = self.add_group({'id': next_name}, group)
+                    group = self.add_group({"id": next_name}, group)
                 # Now nested_names will be empty, so the topmost
                 # while-loop will end
         return group
@@ -418,16 +418,16 @@ class Document:
         if parent is None:
             parent = self.tree.getroot()
         elif not self.contains_group(parent):
-            warnings.warn('The requested group {0} does not belong to '
-                          'this Document'.format(parent))
+            warnings.warn("The requested group {0} does not belong to "
+                          "this Document".format(parent))
 
         if group_attribs is None:
             group_attribs = {}
         else:
             group_attribs = group_attribs.copy()
 
-        return SubElement(parent, '{{{0}}}g'.format(
-            SVG_NAMESPACE['svg']), group_attribs)
+        return SubElement(parent, "{{{0}}}g".format(
+            SVG_NAMESPACE["svg"]), group_attribs)
 
     def __repr__(self):
         return etree.tostring(self.tree.getroot()).decode()
@@ -436,7 +436,7 @@ class Document:
         return parseString(repr(self)).toprettyxml(**kwargs)
 
     def save(self, filepath, prettify=False, **kwargs):
-        with open(filepath, 'w+') as output_svg:
+        with open(filepath, "w+") as output_svg:
             if prettify:
                 output_svg.write(self.pretty(**kwargs))
             else:
@@ -447,15 +447,15 @@ class Document:
 
         if filepath is None:
             if self.original_filepath is None: # created from empty Document
-                orig_name, ext = 'unnamed', '.svg'
+                orig_name, ext = "unnamed", ".svg"
             else:
                 orig_name, ext = \
                     os.path.splitext(os.path.basename(self.original_filepath))
-            tmp_name = orig_name + '_' + str(time()).replace('.', '-') + ext
+            tmp_name = orig_name + "_" + str(time()).replace(".", "-") + ext
             filepath = os.path.join(gettempdir(), tmp_name)
 
         # write to a (by default temporary) file
-        with open(filepath, 'w') as output_svg:
+        with open(filepath, "w") as output_svg:
             output_svg.write(repr(self))
 
         open_in_browser(filepath)

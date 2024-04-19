@@ -1,4 +1,4 @@
-from nest2D import Point, Box, Item, nest, SVGWriter
+from nest2D import Box, Item, Point, SVGWriter, nest
 
 
 def add_shape1(n, items):
@@ -46,5 +46,5 @@ def main():
     sw.save()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

@@ -2,11 +2,12 @@
 curves."""
 
 # External Dependencies
-from __future__ import division, absolute_import, print_function
+from __future__ import absolute_import, division, print_function
+
+from .misctools import isclose
 
 # Internal Dependencies
-from .path import Path, CubicBezier, Line
-from .misctools import isclose
+from .path import CubicBezier, Line, Path
 from .paths2svg import disvg
 
 
@@ -73,7 +74,7 @@ def smoothed_joint(seg0, seg1, maxjointsize=3, tightness=1.99):
     max_a = maxjointsize / 2
     a = min(max_a, min(seg1.length(), seg0.length()) / 20)
     if isinstance(seg0, Line) and isinstance(seg1, Line):
-        '''
+        """
         Note: Letting
             c(t) = elbow.point(t), v= the unit tangent of seg0 at 1, w = the
             unit tangent vector of seg1 at 0,
@@ -82,7 +83,7 @@ def smoothed_joint(seg0, seg1, maxjointsize=3, tightness=1.99):
             c(0)= Q-av, c(1)=Q+aw, c'(0) = bv, and c'(1) = bw
             where a and b are derived above/below from tightness and
             maxjointsize.
-        '''
+        """
 #        det = v.imag*w.real-v.real*w.imag
         # Note:
         # If det is negative, the curvature of elbow is negative for all
@@ -102,7 +103,7 @@ def smoothed_joint(seg0, seg1, maxjointsize=3, tightness=1.99):
         seg1_trimmed = Line(elbow.end, seg1.end)
         return seg0_trimmed, [elbow], seg1_trimmed
     elif isinstance(seg0, Line):
-        '''
+        """
         Note: Letting
             c(t) = elbow.point(t), v= the unit tangent of seg0 at 1,
             w = the unit tangent vector of seg1 at 0,
@@ -111,7 +112,7 @@ def smoothed_joint(seg0, seg1, maxjointsize=3, tightness=1.99):
             c(0)= Q-av, c(1)=Q, c'(0) = bv, and c'(1) = bw
             where a and b are derived above/below from tightness and
             maxjointsize.
-        '''
+        """
 #        det = v.imag*w.real-v.real*w.imag
         # Note: If g has the same sign as det, then the curvature of elbow is
         # negative for all real t if and only if b/a < 4

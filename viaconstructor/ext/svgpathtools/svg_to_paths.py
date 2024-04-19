@@ -2,11 +2,13 @@
 The main tool being the svg2paths() function."""
 
 # External dependencies
-from __future__ import division, absolute_import, print_function
-from xml.dom.minidom import parse
+from __future__ import absolute_import, division, print_function
+
 import os
-from io import StringIO
 import re
+from io import StringIO
+from xml.dom.minidom import parse
+
 try:
     from os import PathLike as FilePathLike
 except ImportError:
@@ -15,27 +17,26 @@ except ImportError:
 # Internal dependencies
 from .parser import parse_path
 
-
 COORD_PAIR_TMPLT = re.compile(
-    r'([\+-]?\d*[\.\d]\d*[eE][\+-]?\d+|[\+-]?\d*[\.\d]\d*)' +
-    r'(?:\s*,\s*|\s+|(?=-))' +
-    r'([\+-]?\d*[\.\d]\d*[eE][\+-]?\d+|[\+-]?\d*[\.\d]\d*)'
+    r"([\+-]?\d*[\.\d]\d*[eE][\+-]?\d+|[\+-]?\d*[\.\d]\d*)" +
+    r"(?:\s*,\s*|\s+|(?=-))" +
+    r"([\+-]?\d*[\.\d]\d*[eE][\+-]?\d+|[\+-]?\d*[\.\d]\d*)"
 )
 
 
 def path2pathd(path):
-    return path.get('d', '')
+    return path.get("d", "")
 
 
 def ellipse2pathd(ellipse):
     """converts the parameters from an ellipse or a circle to a string for a 
     Path object d-attribute"""
 
-    cx = ellipse.get('cx', 0)
-    cy = ellipse.get('cy', 0)
-    rx = ellipse.get('rx', None)
-    ry = ellipse.get('ry', None)
-    r = ellipse.get('r', None)
+    cx = ellipse.get("cx", 0)
+    cy = ellipse.get("cy", 0)
+    rx = ellipse.get("rx", None)
+    ry = ellipse.get("ry", None)
+    r = ellipse.get("r", None)
 
     if r is not None:
         rx = ry = float(r)
@@ -46,10 +47,10 @@ def ellipse2pathd(ellipse):
     cx = float(cx)
     cy = float(cy)
 
-    d = ''
-    d += 'M' + str(cx - rx) + ',' + str(cy)
-    d += 'a' + str(rx) + ',' + str(ry) + ' 0 1,0 ' + str(2 * rx) + ',0'
-    d += 'a' + str(rx) + ',' + str(ry) + ' 0 1,0 ' + str(-2 * rx) + ',0'
+    d = ""
+    d += "M" + str(cx - rx) + "," + str(cy)
+    d += "a" + str(rx) + "," + str(ry) + " 0 1,0 " + str(2 * rx) + ",0"
+    d += "a" + str(rx) + "," + str(ry) + " 0 1,0 " + str(-2 * rx) + ",0"
 
     return d
 
@@ -60,7 +61,7 @@ def polyline2pathd(polyline, is_polygon=False):
     if isinstance(polyline, str):
         points = polyline
     else:
-        points = COORD_PAIR_TMPLT.findall(polyline.get('points', ''))
+        points = COORD_PAIR_TMPLT.findall(polyline.get("points", ""))
 
     closed = (float(points[0][0]) == float(points[-1][0]) and
               float(points[0][1]) == float(points[-1][1]))
@@ -71,9 +72,9 @@ def polyline2pathd(polyline, is_polygon=False):
     if is_polygon and closed:
         points.append(points[0])
 
-    d = 'M' + 'L'.join('{0} {1}'.format(x,y) for x,y in points)
+    d = "M" + "L".join("{0} {1}".format(x,y) for x,y in points)
     if is_polygon or closed:
-        d += 'z'
+        d += "z"
     return d
 
 
@@ -91,14 +92,14 @@ def rect2pathd(rect):
     
     The rectangle will start at the (x,y) coordinate specified by the 
     rectangle object and proceed counter-clockwise."""
-    x, y = float(rect.get('x', 0)), float(rect.get('y', 0))
-    w, h = float(rect.get('width', 0)), float(rect.get('height', 0))
-    if 'rx' in rect or 'ry' in rect:
+    x, y = float(rect.get("x", 0)), float(rect.get("y", 0))
+    w, h = float(rect.get("width", 0)), float(rect.get("height", 0))
+    if "rx" in rect or "ry" in rect:
 
         # if only one, rx or ry, is present, use that value for both
         # https://developer.mozilla.org/en-US/docs/Web/SVG/Element/rect
-        rx = rect.get('rx', None)
-        ry = rect.get('ry', None)
+        rx = rect.get("rx", None)
+        ry = rect.get("ry", None)
         if rx is None:
             rx = ry or 0.
         if ry is None:
@@ -129,8 +130,8 @@ def rect2pathd(rect):
 
 def line2pathd(l):
     return (
-        'M' + l.attrib.get('x1', '0') + ' ' + l.attrib.get('y1', '0')
-        + 'L' + l.attrib.get('x2', '0') + ' ' + l.attrib.get('y2', '0')
+        "M" + l.attrib.get("x1", "0") + " " + l.attrib.get("y1", "0")
+        + "L" + l.attrib.get("x2", "0") + " " + l.attrib.get("y2", "0")
     )
 
 
@@ -189,47 +190,47 @@ def svg2paths(svg_file_location,
         return dict(list(zip(keys, values)))
 
     # Use minidom to extract path strings from input SVG
-    paths = [dom2dict(el) for el in doc.getElementsByTagName('path')]
-    d_strings = [el['d'] for el in paths]
+    paths = [dom2dict(el) for el in doc.getElementsByTagName("path")]
+    d_strings = [el["d"] for el in paths]
     attribute_dictionary_list = paths
 
     # Use minidom to extract polyline strings from input SVG, convert to
     # path strings, add to list
     if convert_polylines_to_paths:
-        plins = [dom2dict(el) for el in doc.getElementsByTagName('polyline')]
+        plins = [dom2dict(el) for el in doc.getElementsByTagName("polyline")]
         d_strings += [polyline2pathd(pl) for pl in plins]
         attribute_dictionary_list += plins
 
     # Use minidom to extract polygon strings from input SVG, convert to
     # path strings, add to list
     if convert_polygons_to_paths:
-        pgons = [dom2dict(el) for el in doc.getElementsByTagName('polygon')]
+        pgons = [dom2dict(el) for el in doc.getElementsByTagName("polygon")]
         d_strings += [polygon2pathd(pg) for pg in pgons]
         attribute_dictionary_list += pgons
 
     if convert_lines_to_paths:
-        lines = [dom2dict(el) for el in doc.getElementsByTagName('line')]
-        d_strings += [('M' + l['x1'] + ' ' + l['y1'] +
-                       'L' + l['x2'] + ' ' + l['y2']) for l in lines]
+        lines = [dom2dict(el) for el in doc.getElementsByTagName("line")]
+        d_strings += [("M" + l["x1"] + " " + l["y1"] +
+                       "L" + l["x2"] + " " + l["y2"]) for l in lines]
         attribute_dictionary_list += lines
 
     if convert_ellipses_to_paths:
-        ellipses = [dom2dict(el) for el in doc.getElementsByTagName('ellipse')]
+        ellipses = [dom2dict(el) for el in doc.getElementsByTagName("ellipse")]
         d_strings += [ellipse2pathd(e) for e in ellipses]
         attribute_dictionary_list += ellipses
 
     if convert_circles_to_paths:
-        circles = [dom2dict(el) for el in doc.getElementsByTagName('circle')]
+        circles = [dom2dict(el) for el in doc.getElementsByTagName("circle")]
         d_strings += [ellipse2pathd(c) for c in circles]
         attribute_dictionary_list += circles
 
     if convert_rectangles_to_paths:
-        rectangles = [dom2dict(el) for el in doc.getElementsByTagName('rect')]
+        rectangles = [dom2dict(el) for el in doc.getElementsByTagName("rect")]
         d_strings += [rect2pathd(r) for r in rectangles]
         attribute_dictionary_list += rectangles
 
     if return_svg_attributes:
-        svg_attributes = dom2dict(doc.getElementsByTagName('svg')[0])
+        svg_attributes = dom2dict(doc.getElementsByTagName("svg")[0])
         doc.unlink()
         path_list = [parse_path(d) for d in d_strings]
         return path_list, attribute_dictionary_list, svg_attributes

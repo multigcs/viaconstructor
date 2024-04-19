@@ -6,17 +6,17 @@
 #
 
 import os
-import sys
 import platform
 import re
+import sys
 import textwrap
+from collections import OrderedDict
+from glob import glob
+from multiprocessing import cpu_count
+from threading import Semaphore, Thread
 
 from clang import cindex
 from clang.cindex import CursorKind
-from collections import OrderedDict
-from glob import glob
-from threading import Thread, Semaphore
-from multiprocessing import cpu_count
 
 RECURSE_LIST = [
     CursorKind.TRANSLATION_UNIT,
@@ -46,13 +46,13 @@ PREFIX_BLACKLIST = [
 ]
 
 CPP_OPERATORS = {
-    '<=': 'le', '>=': 'ge', '==': 'eq', '!=': 'ne', '[]': 'array',
-    '+=': 'iadd', '-=': 'isub', '*=': 'imul', '/=': 'idiv', '%=':
-    'imod', '&=': 'iand', '|=': 'ior', '^=': 'ixor', '<<=': 'ilshift',
-    '>>=': 'irshift', '++': 'inc', '--': 'dec', '<<': 'lshift', '>>':
-    'rshift', '&&': 'land', '||': 'lor', '!': 'lnot', '~': 'bnot',
-    '&': 'band', '|': 'bor', '+': 'add', '-': 'sub', '*': 'mul', '/':
-    'div', '%': 'mod', '<': 'lt', '>': 'gt', '=': 'assign', '()': 'call'
+    "<=": "le", ">=": "ge", "==": "eq", "!=": "ne", "[]": "array",
+    "+=": "iadd", "-=": "isub", "*=": "imul", "/=": "idiv", "%=":
+    "imod", "&=": "iand", "|=": "ior", "^=": "ixor", "<<=": "ilshift",
+    ">>=": "irshift", "++": "inc", "--": "dec", "<<": "lshift", ">>":
+    "rshift", "&&": "land", "||": "lor", "!": "lnot", "~": "bnot",
+    "&": "band", "|": "bor", "+": "add", "-": "sub", "*": "mul", "/":
+    "div", "%": "mod", "<": "lt", ">": "gt", "=": "assign", "()": "call"
 }
 
 CPP_OPERATORS = OrderedDict(
@@ -67,95 +67,95 @@ class NoFilenamesError(ValueError):
 
 
 def d(s):
-    return s if isinstance(s, str) else s.decode('utf8')
+    return s if isinstance(s, str) else s.decode("utf8")
 
 
 def sanitize_name(name):
-    name = re.sub(r'type-parameter-0-([0-9]+)', r'T\1', name)
+    name = re.sub(r"type-parameter-0-([0-9]+)", r"T\1", name)
     for k, v in CPP_OPERATORS.items():
-        name = name.replace('operator%s' % k, 'operator_%s' % v)
-    name = re.sub('<.*>', '', name)
-    name = ''.join([ch if ch.isalnum() else '_' for ch in name])
-    name = re.sub('_$', '', re.sub('_+', '_', name))
-    return '__doc_' + name
+        name = name.replace("operator%s" % k, "operator_%s" % v)
+    name = re.sub("<.*>", "", name)
+    name = "".join([ch if ch.isalnum() else "_" for ch in name])
+    name = re.sub("_$", "", re.sub("_+", "_", name))
+    return "__doc_" + name
 
 
 def process_comment(comment):
-    result = ''
+    result = ""
 
     # Remove C++ comment syntax
-    leading_spaces = float('inf')
+    leading_spaces = float("inf")
     for s in comment.expandtabs(tabsize=4).splitlines():
         s = s.strip()
-        if s.startswith('/*'):
-            s = s[2:].lstrip('*')
-        elif s.endswith('*/'):
-            s = s[:-2].rstrip('*')
-        elif s.startswith('///'):
+        if s.startswith("/*"):
+            s = s[2:].lstrip("*")
+        elif s.endswith("*/"):
+            s = s[:-2].rstrip("*")
+        elif s.startswith("///"):
             s = s[3:]
-        if s.startswith('*'):
+        if s.startswith("*"):
             s = s[1:]
         if len(s) > 0:
             leading_spaces = min(leading_spaces, len(s) - len(s.lstrip()))
-        result += s + '\n'
+        result += s + "\n"
 
-    if leading_spaces != float('inf'):
+    if leading_spaces != float("inf"):
         result2 = ""
         for s in result.splitlines():
-            result2 += s[leading_spaces:] + '\n'
+            result2 += s[leading_spaces:] + "\n"
         result = result2
 
     # Doxygen tags
-    cpp_group = '([\w:]+)'
-    param_group = '([\[\w:\]]+)'
+    cpp_group = "([\w:]+)"
+    param_group = "([\[\w:\]]+)"
 
     s = result
-    s = re.sub(r'\\c\s+%s' % cpp_group, r'``\1``', s)
-    s = re.sub(r'\\a\s+%s' % cpp_group, r'*\1*', s)
-    s = re.sub(r'\\e\s+%s' % cpp_group, r'*\1*', s)
-    s = re.sub(r'\\em\s+%s' % cpp_group, r'*\1*', s)
-    s = re.sub(r'\\b\s+%s' % cpp_group, r'**\1**', s)
-    s = re.sub(r'\\ingroup\s+%s' % cpp_group, r'', s)
-    s = re.sub(r'\\param%s?\s+%s' % (param_group, cpp_group),
-               r'\n\n$Parameter ``\2``:\n\n', s)
-    s = re.sub(r'\\tparam%s?\s+%s' % (param_group, cpp_group),
-               r'\n\n$Template parameter ``\2``:\n\n', s)
+    s = re.sub(r"\\c\s+%s" % cpp_group, r"``\1``", s)
+    s = re.sub(r"\\a\s+%s" % cpp_group, r"*\1*", s)
+    s = re.sub(r"\\e\s+%s" % cpp_group, r"*\1*", s)
+    s = re.sub(r"\\em\s+%s" % cpp_group, r"*\1*", s)
+    s = re.sub(r"\\b\s+%s" % cpp_group, r"**\1**", s)
+    s = re.sub(r"\\ingroup\s+%s" % cpp_group, r"", s)
+    s = re.sub(r"\\param%s?\s+%s" % (param_group, cpp_group),
+               r"\n\n$Parameter ``\2``:\n\n", s)
+    s = re.sub(r"\\tparam%s?\s+%s" % (param_group, cpp_group),
+               r"\n\n$Template parameter ``\2``:\n\n", s)
 
     for in_, out_ in {
-        'return': 'Returns',
-        'author': 'Author',
-        'authors': 'Authors',
-        'copyright': 'Copyright',
-        'date': 'Date',
-        'remark': 'Remark',
-        'sa': 'See also',
-        'see': 'See also',
-        'extends': 'Extends',
-        'throw': 'Throws',
-        'throws': 'Throws'
+        "return": "Returns",
+        "author": "Author",
+        "authors": "Authors",
+        "copyright": "Copyright",
+        "date": "Date",
+        "remark": "Remark",
+        "sa": "See also",
+        "see": "See also",
+        "extends": "Extends",
+        "throw": "Throws",
+        "throws": "Throws"
     }.items():
-        s = re.sub(r'\\%s\s*' % in_, r'\n\n$%s:\n\n' % out_, s)
+        s = re.sub(r"\\%s\s*" % in_, r"\n\n$%s:\n\n" % out_, s)
 
-    s = re.sub(r'\\details\s*', r'\n\n', s)
-    s = re.sub(r'\\brief\s*', r'', s)
-    s = re.sub(r'\\short\s*', r'', s)
-    s = re.sub(r'\\ref\s*', r'', s)
+    s = re.sub(r"\\details\s*", r"\n\n", s)
+    s = re.sub(r"\\brief\s*", r"", s)
+    s = re.sub(r"\\short\s*", r"", s)
+    s = re.sub(r"\\ref\s*", r"", s)
 
-    s = re.sub(r'\\code\s?(.*?)\s?\\endcode',
+    s = re.sub(r"\\code\s?(.*?)\s?\\endcode",
                r"```\n\1\n```\n", s, flags=re.DOTALL)
 
     # HTML/TeX tags
-    s = re.sub(r'<tt>(.*?)</tt>', r'``\1``', s, flags=re.DOTALL)
-    s = re.sub(r'<pre>(.*?)</pre>', r"```\n\1\n```\n", s, flags=re.DOTALL)
-    s = re.sub(r'<em>(.*?)</em>', r'*\1*', s, flags=re.DOTALL)
-    s = re.sub(r'<b>(.*?)</b>', r'**\1**', s, flags=re.DOTALL)
-    s = re.sub(r'\\f\$(.*?)\\f\$', r'$\1$', s, flags=re.DOTALL)
-    s = re.sub(r'<li>', r'\n\n* ', s)
-    s = re.sub(r'</?ul>', r'', s)
-    s = re.sub(r'</li>', r'\n\n', s)
+    s = re.sub(r"<tt>(.*?)</tt>", r"``\1``", s, flags=re.DOTALL)
+    s = re.sub(r"<pre>(.*?)</pre>", r"```\n\1\n```\n", s, flags=re.DOTALL)
+    s = re.sub(r"<em>(.*?)</em>", r"*\1*", s, flags=re.DOTALL)
+    s = re.sub(r"<b>(.*?)</b>", r"**\1**", s, flags=re.DOTALL)
+    s = re.sub(r"\\f\$(.*?)\\f\$", r"$\1$", s, flags=re.DOTALL)
+    s = re.sub(r"<li>", r"\n\n* ", s)
+    s = re.sub(r"</?ul>", r"", s)
+    s = re.sub(r"</li>", r"\n\n", s)
 
-    s = s.replace('``true``', '``True``')
-    s = s.replace('``false``', '``False``')
+    s = s.replace("``true``", "``True``")
+    s = s.replace("``false``", "``False``")
 
     # Re-flow text
     wrapper = textwrap.TextWrapper()
@@ -163,31 +163,31 @@ def process_comment(comment):
     wrapper.replace_whitespace = True
     wrapper.drop_whitespace = True
     wrapper.width = 70
-    wrapper.initial_indent = wrapper.subsequent_indent = ''
+    wrapper.initial_indent = wrapper.subsequent_indent = ""
 
-    result = ''
+    result = ""
     in_code_segment = False
-    for x in re.split(r'(```)', s):
-        if x == '```':
+    for x in re.split(r"(```)", s):
+        if x == "```":
             if not in_code_segment:
-                result += '```\n'
+                result += "```\n"
             else:
-                result += '\n```\n\n'
+                result += "\n```\n\n"
             in_code_segment = not in_code_segment
         elif in_code_segment:
             result += x.strip()
         else:
-            for y in re.split(r'(?: *\n *){2,}', x):
-                wrapped = wrapper.fill(re.sub(r'\s+', ' ', y).strip())
-                if len(wrapped) > 0 and wrapped[0] == '$':
-                    result += wrapped[1:] + '\n'
+            for y in re.split(r"(?: *\n *){2,}", x):
+                wrapped = wrapper.fill(re.sub(r"\s+", " ", y).strip())
+                if len(wrapped) > 0 and wrapped[0] == "$":
+                    result += wrapped[1:] + "\n"
                     wrapper.initial_indent = \
-                        wrapper.subsequent_indent = ' ' * 4
+                        wrapper.subsequent_indent = " " * 4
                 else:
                     if len(wrapped) > 0:
-                        result += wrapped + '\n\n'
-                    wrapper.initial_indent = wrapper.subsequent_indent = ''
-    return result.rstrip().lstrip('\n')
+                        result += wrapped + "\n\n"
+                    wrapper.initial_indent = wrapper.subsequent_indent = ""
+    return result.rstrip().lstrip("\n")
 
 
 def extract(filename, node, prefix, output):
@@ -198,16 +198,16 @@ def extract(filename, node, prefix, output):
         sub_prefix = prefix
         if node.kind not in PREFIX_BLACKLIST:
             if len(sub_prefix) > 0:
-                sub_prefix += '_'
+                sub_prefix += "_"
             sub_prefix += d(node.spelling)
         for i in node.get_children():
             extract(filename, i, sub_prefix, output)
     if node.kind in PRINT_LIST:
-        comment = d(node.raw_comment) if node.raw_comment is not None else ''
+        comment = d(node.raw_comment) if node.raw_comment is not None else ""
         comment = process_comment(comment)
         sub_prefix = prefix
         if len(sub_prefix) > 0:
-            sub_prefix += '_'
+            sub_prefix += "_"
         if len(node.spelling) > 0:
             name = sanitize_name(sub_prefix + d(node.spelling))
             output.append((name, filename, comment))
@@ -227,7 +227,7 @@ class ExtractionThread(Thread):
             index = cindex.Index(
                 cindex.conf.lib.clang_createIndex(False, True))
             tu = index.parse(self.filename, self.parameters)
-            extract(self.filename, tu.cursor, '', self.output)
+            extract(self.filename, tu.cursor, "", self.output)
         finally:
             job_semaphore.release()
 
@@ -236,40 +236,40 @@ def read_args(args):
     parameters = []
     filenames = []
     if "-x" not in args:
-        parameters.extend(['-x', 'c++'])
+        parameters.extend(["-x", "c++"])
     if not any(it.startswith("-std=") for it in args):
-        parameters.append('-std=c++11')
+        parameters.append("-std=c++11")
 
-    if platform.system() == 'Darwin':
-        dev_path = '/Applications/Xcode.app/Contents/Developer/'
-        lib_dir = dev_path + 'Toolchains/XcodeDefault.xctoolchain/usr/lib/'
-        sdk_dir = dev_path + 'Platforms/MacOSX.platform/Developer/SDKs'
-        libclang = lib_dir + 'libclang.dylib'
+    if platform.system() == "Darwin":
+        dev_path = "/Applications/Xcode.app/Contents/Developer/"
+        lib_dir = dev_path + "Toolchains/XcodeDefault.xctoolchain/usr/lib/"
+        sdk_dir = dev_path + "Platforms/MacOSX.platform/Developer/SDKs"
+        libclang = lib_dir + "libclang.dylib"
 
         if os.path.exists(libclang):
             cindex.Config.set_library_path(os.path.dirname(libclang))
 
         if os.path.exists(sdk_dir):
             sysroot_dir = os.path.join(sdk_dir, next(os.walk(sdk_dir))[1][0])
-            parameters.append('-isysroot')
+            parameters.append("-isysroot")
             parameters.append(sysroot_dir)
-    elif platform.system() == 'Linux':
+    elif platform.system() == "Linux":
         # clang doesn't find its own base includes by default on Linux,
         # but different distros install them in different paths.
         # Try to autodetect, preferring the highest numbered version.
         def clang_folder_version(d):
-            return [int(ver) for ver in re.findall(r'(?<!lib)(?<!\d)\d+', d)]
+            return [int(ver) for ver in re.findall(r"(?<!lib)(?<!\d)\d+", d)]
         clang_include_dir = max((
             path
-            for libdir in ['lib64', 'lib', 'lib32']
-            for path in glob('/usr/%s/clang/*/include' % libdir)
+            for libdir in ["lib64", "lib", "lib32"]
+            for path in glob("/usr/%s/clang/*/include" % libdir)
             if os.path.isdir(path)
         ), default=None, key=clang_folder_version)
         if clang_include_dir:
-            parameters.extend(['-isystem', clang_include_dir])
+            parameters.extend(["-isystem", clang_include_dir])
 
     for item in args:
-        if item.startswith('-'):
+        if item.startswith("-"):
             parameters.append(item)
         else:
             filenames.append(item)
@@ -287,7 +287,7 @@ def extract_all(args):
         thr = ExtractionThread(filename, parameters, output)
         thr.start()
 
-    print('Waiting for jobs to finish ..', file=sys.stderr)
+    print("Waiting for jobs to finish ..", file=sys.stderr)
     for i in range(job_count):
         job_semaphore.acquire()
 
@@ -295,7 +295,7 @@ def extract_all(args):
 
 
 def write_header(comments, out_file=sys.stdout):
-    print('''/*
+    print("""/*
   This file contains docstrings for the Python bindings.
   Do not edit! These were automatically extracted by mkdoc.py
  */
@@ -318,7 +318,7 @@ def write_header(comments, out_file=sys.stdout):
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-variable"
 #endif
-''', file=out_file)
+""", file=out_file)
 
 
     name_ctr = 1
@@ -331,13 +331,13 @@ def write_header(comments, out_file=sys.stdout):
             name_prev = name
             name_ctr = 1
         print('\nstatic const char *%s =%sR"doc(%s)doc";' %
-              (name, '\n' if '\n' in comment else ' ', comment), file=out_file)
+              (name, "\n" if "\n" in comment else " ", comment), file=out_file)
 
-    print('''
+    print("""
 #if defined(__GNUG__)
 #pragma GCC diagnostic pop
 #endif
-''', file=out_file)
+""", file=out_file)
 
 
 def mkdoc(args):
@@ -357,7 +357,7 @@ def mkdoc(args):
 
     if out_path:
         try:
-            with open(out_path, 'w') as out_file:
+            with open(out_path, "w") as out_file:
                 write_header(comments, out_file)
         except:
             # In the event of an error, don't leave a partially-written
@@ -371,9 +371,9 @@ def mkdoc(args):
         write_header(comments)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     try:
         mkdoc(sys.argv[1:])
     except NoFilenamesError:
-        print('Syntax: %s [.. a list of header files ..]' % sys.argv[0])
+        print("Syntax: %s [.. a list of header files ..]" % sys.argv[0])
         exit(-1)

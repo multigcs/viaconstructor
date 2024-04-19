@@ -49,8 +49,8 @@ class DrawReader(DrawReaderBase):
             mid_value = tuple([mid_value] * len(pixel))
 
         height = image_data.height
-        for y_pos in range(0, image_data.height):
-            for x_pos in range(0, image_data.width):
+        for y_pos in range(image_data.height):
+            for x_pos in range(image_data.width):
                 pixel = image_data.getpixel((x_pos, y_pos))
                 if not laser_on and pixel < mid_value:
                     laser_on = True

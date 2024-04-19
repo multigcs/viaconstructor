@@ -1,7 +1,6 @@
 import pytest
-
+from pybind11_tests import ConstructorStats, UserType
 from pybind11_tests import class_ as m
-from pybind11_tests import UserType, ConstructorStats
 
 
 def test_repr():
@@ -70,19 +69,19 @@ def test_qualname(doc):
 
 
 def test_inheritance(msg):
-    roger = m.Rabbit('Rabbit')
+    roger = m.Rabbit("Rabbit")
     assert roger.name() + " is a " + roger.species() == "Rabbit is a parrot"
     assert m.pet_name_species(roger) == "Rabbit is a parrot"
 
-    polly = m.Pet('Polly', 'parrot')
+    polly = m.Pet("Polly", "parrot")
     assert polly.name() + " is a " + polly.species() == "Polly is a parrot"
     assert m.pet_name_species(polly) == "Polly is a parrot"
 
-    molly = m.Dog('Molly')
+    molly = m.Dog("Molly")
     assert molly.name() + " is a " + molly.species() == "Molly is a dog"
     assert m.pet_name_species(molly) == "Molly is a dog"
 
-    fred = m.Hamster('Fred')
+    fred = m.Hamster("Fred")
     assert fred.name() + " is a " + fred.species() == "Fred is a rodent"
 
     assert m.dog_bark(molly) == "Woof!"
@@ -260,12 +259,12 @@ def test_reentrant_implicit_conversion_failure(msg):
     # ensure that there is no runaway reentrant implicit conversion (#1035)
     with pytest.raises(TypeError) as excinfo:
         m.BogusImplicitConversion(0)
-    assert msg(excinfo.value) == '''
+    assert msg(excinfo.value) == """
         __init__(): incompatible constructor arguments. The following argument types are supported:
             1. m.class_.BogusImplicitConversion(arg0: m.class_.BogusImplicitConversion)
 
         Invoked with: 0
-    '''
+    """
 
 
 def test_error_after_conversions():

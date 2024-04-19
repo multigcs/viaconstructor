@@ -1,6 +1,6 @@
 import pytest
-from pybind11_tests import sequences_and_iterators as m
 from pybind11_tests import ConstructorStats
+from pybind11_tests import sequences_and_iterators as m
 
 
 def isclose(a, b, rel_tol=1e-05, abs_tol=0.0):
@@ -50,7 +50,7 @@ def test_sequence():
     cstats = ConstructorStats.get(m.Sequence)
 
     s = m.Sequence(5)
-    assert cstats.values() == ['of size', '5']
+    assert cstats.values() == ["of size", "5"]
 
     assert "Sequence" in repr(s)
     assert len(s) == 5
@@ -61,16 +61,16 @@ def test_sequence():
     assert isclose(s[0], 12.34) and isclose(s[3], 56.78)
 
     rev = reversed(s)
-    assert cstats.values() == ['of size', '5']
+    assert cstats.values() == ["of size", "5"]
 
     rev2 = s[::-1]
-    assert cstats.values() == ['of size', '5']
+    assert cstats.values() == ["of size", "5"]
 
     it = iter(m.Sequence(0))
     for _ in range(3):  # __next__ must continue to raise StopIteration
         with pytest.raises(StopIteration):
             next(it)
-    assert cstats.values() == ['of size', '0']
+    assert cstats.values() == ["of size", "0"]
 
     expected = [0, 56.78, 0, 0, 12.34]
     assert allclose(rev, expected)
@@ -78,7 +78,7 @@ def test_sequence():
     assert rev == rev2
 
     rev[0::2] = m.Sequence([2.0, 2.0, 2.0])
-    assert cstats.values() == ['of size', '3', 'from std::vector']
+    assert cstats.values() == ["of size", "3", "from std::vector"]
 
     assert allclose(rev, [2, 56.78, 2, 0, 2])
 
@@ -101,17 +101,17 @@ def test_sequence():
 
 
 def test_map_iterator():
-    sm = m.StringMap({'hi': 'bye', 'black': 'white'})
-    assert sm['hi'] == 'bye'
+    sm = m.StringMap({"hi": "bye", "black": "white"})
+    assert sm["hi"] == "bye"
     assert len(sm) == 2
-    assert sm['black'] == 'white'
+    assert sm["black"] == "white"
 
     with pytest.raises(KeyError):
-        assert sm['orange']
-    sm['orange'] = 'banana'
-    assert sm['orange'] == 'banana'
+        assert sm["orange"]
+    sm["orange"] = "banana"
+    assert sm["orange"] == "banana"
 
-    expected = {'hi': 'bye', 'black': 'white', 'orange': 'banana'}
+    expected = {"hi": "bye", "black": "white", "orange": "banana"}
     for k in sm:
         assert sm[k] == expected[k]
     for k, v in sm.items():

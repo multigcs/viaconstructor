@@ -1,5 +1,4 @@
 import pytest
-
 from pybind11_tests import local_bindings as m
 
 
@@ -33,8 +32,8 @@ def test_local_bindings():
     assert i2.get() == 11
     assert i2.get2() == 12
 
-    assert not hasattr(i1, 'get2')
-    assert not hasattr(i2, 'get3')
+    assert not hasattr(i1, "get2")
+    assert not hasattr(i2, "get3")
 
     # Loading within the local module
     assert m.local_value(i1) == 5
@@ -62,7 +61,7 @@ def test_duplicate_local():
     import pybind11_tests
     assert str(excinfo.value) == (
         'generic_type: type "LocalExternal" is already registered!'
-        if hasattr(pybind11_tests, 'class_') else 'test_class not enabled')
+        if hasattr(pybind11_tests, "class_") else "test_class not enabled")
 
 
 def test_stl_bind_local():
@@ -95,8 +94,8 @@ def test_stl_bind_local():
     d1["b"] = v1[1]
     d2["c"] = v2[0]
     d2["d"] = v2[1]
-    assert {i: d1[i].get() for i in d1} == {'a': 0, 'b': 1}
-    assert {i: d2[i].get() for i in d2} == {'c': 2, 'd': 3}
+    assert {i: d1[i].get() for i in d1} == {"a": 0, "b": 1}
+    assert {i: d2[i].get() for i in d2} == {"c": 2, "d": 3}
 
 
 def test_stl_bind_global():

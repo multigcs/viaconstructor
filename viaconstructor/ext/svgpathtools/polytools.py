@@ -1,8 +1,10 @@
 """This submodule contains tools for working with numpy.poly1d objects."""
 
 # External Dependencies
-from __future__ import division, absolute_import
+from __future__ import absolute_import, division
+
 from itertools import combinations
+
 import numpy as np
 
 # Internal Dependencies

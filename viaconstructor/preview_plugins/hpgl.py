@@ -56,7 +56,7 @@ class HpglParser:
                 radius = calc_distance((last_x, last_y), (center_x, center_y))
                 start_angle = angle_of_line((last_x, last_y), (center_x, center_y)) * 180 / math.pi
                 if angle < 0:
-                    for angle_set in range(0, int(abs(angle)) + 1):
+                    for angle_set in range(int(abs(angle)) + 1):
                         new_x = center_x + radius * math.sin((start_angle + angle_set) * math.pi / 180 + math.pi / 2)
                         new_y = center_y + radius * math.cos((start_angle + angle_set) * math.pi / 180 + math.pi / 2)
                         self.linear_move({"X": new_x, "Y": new_y}, False)

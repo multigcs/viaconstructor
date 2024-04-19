@@ -1,7 +1,7 @@
-from pybind11_tests import iostream as m
 import sys
-
 from contextlib import contextmanager
+
+from pybind11_tests import iostream as m
 
 try:
     # Python 3
@@ -41,16 +41,16 @@ def test_captured(capsys):
     m.captured_output(msg)
     stdout, stderr = capsys.readouterr()
     assert stdout == msg
-    assert stderr == ''
+    assert stderr == ""
 
     m.captured_output_default(msg)
     stdout, stderr = capsys.readouterr()
     assert stdout == msg
-    assert stderr == ''
+    assert stderr == ""
 
     m.captured_err(msg)
     stdout, stderr = capsys.readouterr()
-    assert stdout == ''
+    assert stdout == ""
     assert stderr == msg
 
 
@@ -62,7 +62,7 @@ def test_captured_large_string(capsys):
     m.captured_output_default(msg)
     stdout, stderr = capsys.readouterr()
     assert stdout == msg
-    assert stderr == ''
+    assert stderr == ""
 
 
 def test_guard_capture(capsys):
@@ -70,7 +70,7 @@ def test_guard_capture(capsys):
     m.guard_output(msg)
     stdout, stderr = capsys.readouterr()
     assert stdout == msg
-    assert stderr == ''
+    assert stderr == ""
 
 
 def test_series_captured(capture):
@@ -87,7 +87,7 @@ def test_flush(capfd):
     with m.ostream_redirect():
         m.noisy_function(msg, flush=False)
         stdout, stderr = capfd.readouterr()
-        assert stdout == ''
+        assert stdout == ""
 
         m.noisy_function(msg2, flush=True)
         stdout, stderr = capfd.readouterr()
@@ -106,15 +106,15 @@ def test_not_captured(capfd):
         m.raw_output(msg)
     stdout, stderr = capfd.readouterr()
     assert stdout == msg
-    assert stderr == ''
-    assert stream.getvalue() == ''
+    assert stderr == ""
+    assert stream.getvalue() == ""
 
     stream = StringIO()
     with redirect_stdout(stream):
         m.captured_output(msg)
     stdout, stderr = capfd.readouterr()
-    assert stdout == ''
-    assert stderr == ''
+    assert stdout == ""
+    assert stderr == ""
     assert stream.getvalue() == msg
 
 
@@ -124,16 +124,16 @@ def test_err(capfd):
     with redirect_stderr(stream):
         m.raw_err(msg)
     stdout, stderr = capfd.readouterr()
-    assert stdout == ''
+    assert stdout == ""
     assert stderr == msg
-    assert stream.getvalue() == ''
+    assert stream.getvalue() == ""
 
     stream = StringIO()
     with redirect_stderr(stream):
         m.captured_err(msg)
     stdout, stderr = capfd.readouterr()
-    assert stdout == ''
-    assert stderr == ''
+    assert stdout == ""
+    assert stderr == ""
     assert stream.getvalue() == msg
 
 
@@ -145,8 +145,8 @@ def test_multi_captured(capfd):
         m.captured_output("c")
         m.raw_output("d")
     stdout, stderr = capfd.readouterr()
-    assert stdout == 'bd'
-    assert stream.getvalue() == 'ac'
+    assert stdout == "bd"
+    assert stream.getvalue() == "ac"
 
 
 def test_dual(capsys):
@@ -163,14 +163,14 @@ def test_redirect(capfd):
         m.raw_output(msg)
     stdout, stderr = capfd.readouterr()
     assert stdout == msg
-    assert stream.getvalue() == ''
+    assert stream.getvalue() == ""
 
     stream = StringIO()
     with redirect_stdout(stream):
         with m.ostream_redirect():
             m.raw_output(msg)
     stdout, stderr = capfd.readouterr()
-    assert stdout == ''
+    assert stdout == ""
     assert stream.getvalue() == msg
 
     stream = StringIO()
@@ -178,7 +178,7 @@ def test_redirect(capfd):
         m.raw_output(msg)
     stdout, stderr = capfd.readouterr()
     assert stdout == msg
-    assert stream.getvalue() == ''
+    assert stream.getvalue() == ""
 
 
 def test_redirect_err(capfd):
@@ -192,7 +192,7 @@ def test_redirect_err(capfd):
             m.raw_err(msg2)
     stdout, stderr = capfd.readouterr()
     assert stdout == msg
-    assert stderr == ''
+    assert stderr == ""
     assert stream.getvalue() == msg2
 
 
@@ -208,7 +208,7 @@ def test_redirect_both(capfd):
                 m.raw_output(msg)
                 m.raw_err(msg2)
     stdout, stderr = capfd.readouterr()
-    assert stdout == ''
-    assert stderr == ''
+    assert stdout == ""
+    assert stderr == ""
     assert stream.getvalue() == msg
     assert stream2.getvalue() == msg2

@@ -2,7 +2,8 @@
 aren't specific to SVGs or related mathematical objects."""
 
 # External dependencies:
-from __future__ import division, absolute_import, print_function
+from __future__ import absolute_import, division, print_function
+
 import os
 import sys
 import webbrowser
@@ -17,7 +18,7 @@ def hex2rgb(value):
     >>> hex2rgb('#0000FF')
     (0, 0, 255)
     """
-    value = value.lstrip('#')
+    value = value.lstrip("#")
     lv = len(value)
     return tuple(int(value[i:i+lv//3], 16) for i in range(0, lv, lv//3))
 
@@ -31,7 +32,7 @@ def rgb2hex(rgb):
     >>> rgb2hex((0,0,255))
     '#0000FF'
     """
-    return ('#%02x%02x%02x' % tuple(rgb)).upper()
+    return ("#%02x%02x%02x" % tuple(rgb)).upper()
 
 
 def isclose(a, b, rtol=1e-5, atol=1e-8):

@@ -1,6 +1,6 @@
+from pybind11_tests import ConstructorStats
 from pybind11_tests import modules as m
 from pybind11_tests.modules import subsubmodule as ms
-from pybind11_tests import ConstructorStats
 
 
 def test_nested_modules():
@@ -34,7 +34,7 @@ def test_reference_internal():
     del b
     assert astats.alive() == 0
     assert bstats.alive() == 0
-    assert astats.values() == ['1', '2', '42', '43']
+    assert astats.values() == ["1", "2", "42", "43"]
     assert bstats.values() == []
     assert astats.default_constructions == 0
     assert bstats.default_constructions == 1
@@ -49,17 +49,19 @@ def test_reference_internal():
 
 
 def test_importing():
-    from pybind11_tests.modules import OD
     from collections import OrderedDict
 
+    from pybind11_tests.modules import OD
+
     assert OD is OrderedDict
-    assert str(OD([(1, 'a'), (2, 'b')])) == "OrderedDict([(1, 'a'), (2, 'b')])"
+    assert str(OD([(1, "a"), (2, "b")])) == "OrderedDict([(1, 'a'), (2, 'b')])"
 
 
 def test_pydoc():
     """Pydoc needs to be able to provide help() for everything inside a pybind11 module"""
-    import pybind11_tests
     import pydoc
+
+    import pybind11_tests
 
     assert pybind11_tests.__name__ == "pybind11_tests"
     assert pybind11_tests.__doc__ == "pybind11 test module"

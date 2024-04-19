@@ -4,8 +4,8 @@ from pybind11_tests import ConstructorStats
 pytestmark = pytest.requires_eigen_and_numpy
 
 with pytest.suppress(ImportError):
-    from pybind11_tests import eigen as m
     import numpy as np
+    from pybind11_tests import eigen as m
 
     ref = np.array([[ 0.,  3,  0,  0,  0, 11],
                     [22,  0,  0,  0, 17, 11],
@@ -70,7 +70,7 @@ def test_partially_fixed():
 
 
 def test_mutator_descriptors():
-    zr = np.arange(30, dtype='float32').reshape(5, 6)  # row-major
+    zr = np.arange(30, dtype="float32").reshape(5, 6)  # row-major
     zc = zr.reshape(6, 5).transpose()  # column-major
 
     m.fixed_mutator_r(zr)
@@ -79,15 +79,15 @@ def test_mutator_descriptors():
     m.fixed_mutator_a(zc)
     with pytest.raises(TypeError) as excinfo:
         m.fixed_mutator_r(zc)
-    assert ('(arg0: numpy.ndarray[float32[5, 6], flags.writeable, flags.c_contiguous]) -> None'
+    assert ("(arg0: numpy.ndarray[float32[5, 6], flags.writeable, flags.c_contiguous]) -> None"
             in str(excinfo.value))
     with pytest.raises(TypeError) as excinfo:
         m.fixed_mutator_c(zr)
-    assert ('(arg0: numpy.ndarray[float32[5, 6], flags.writeable, flags.f_contiguous]) -> None'
+    assert ("(arg0: numpy.ndarray[float32[5, 6], flags.writeable, flags.f_contiguous]) -> None"
             in str(excinfo.value))
     with pytest.raises(TypeError) as excinfo:
-        m.fixed_mutator_a(np.array([[1, 2], [3, 4]], dtype='float32'))
-    assert ('(arg0: numpy.ndarray[float32[5, 6], flags.writeable]) -> None'
+        m.fixed_mutator_a(np.array([[1, 2], [3, 4]], dtype="float32"))
+    assert ("(arg0: numpy.ndarray[float32[5, 6], flags.writeable]) -> None"
             in str(excinfo.value))
     zr.flags.writeable = False
     with pytest.raises(TypeError):
@@ -108,11 +108,11 @@ def test_cpp_casting():
     with pytest.raises(RuntimeError) as excinfo:
         # Can't reference m.fixed_c: it contains floats, m.cpp_ref_any wants doubles
         m.cpp_ref_any(m.fixed_c())
-    assert 'Unable to cast Python instance' in str(excinfo.value)
+    assert "Unable to cast Python instance" in str(excinfo.value)
     with pytest.raises(RuntimeError) as excinfo:
         # Can't reference m.fixed_r: it contains floats, m.cpp_ref_any wants doubles
         m.cpp_ref_any(m.fixed_r())
-    assert 'Unable to cast Python instance' in str(excinfo.value)
+    assert "Unable to cast Python instance" in str(excinfo.value)
     assert m.cpp_ref_any(m.ReturnTester.create()) == 1.
 
     assert m.cpp_ref_any(m.get_cm_ref()) == 21.
@@ -181,7 +181,7 @@ def test_negative_stride_from_python(msg):
         double_threer(): incompatible function arguments. The following argument types are supported:
             1. (arg0: numpy.ndarray[float32[1, 3], flags.writeable]) -> None
 
-        Invoked with: """ + repr(np.array([ 5.,  4.,  3.], dtype='float32'))  # noqa: E501 line too long
+        Invoked with: """ + repr(np.array([ 5.,  4.,  3.], dtype="float32"))  # noqa: E501 line too long
 
     with pytest.raises(TypeError) as excinfo:
         m.double_threec(second_col)
@@ -189,7 +189,7 @@ def test_negative_stride_from_python(msg):
         double_threec(): incompatible function arguments. The following argument types are supported:
             1. (arg0: numpy.ndarray[float32[3, 1], flags.writeable]) -> None
 
-        Invoked with: """ + repr(np.array([ 7.,  4.,  1.], dtype='float32'))  # noqa: E501 line too long
+        Invoked with: """ + repr(np.array([ 7.,  4.,  1.], dtype="float32"))  # noqa: E501 line too long
 
 
 def test_nonunit_stride_to_python():
@@ -375,7 +375,7 @@ def test_eigen_ref_mutators():
 
     orig = np.array([[1., 2, 3], [4, 5, 6], [7, 8, 9]])
     zr = np.array(orig)
-    zc = np.array(orig, order='F')
+    zc = np.array(orig, order="F")
     m.add_rm(zr, 1, 0, 100)
     assert np.all(zr == np.array([[1., 2, 3], [104, 5, 6], [7, 8, 9]]))
     m.add_cm(zc, 1, 0, 200)
@@ -508,7 +508,7 @@ def test_both_ref_mutators():
     expect = np.array([[0., 22, 20], [31, 37, 33], [41, 42, 38]])
     assert np.all(z == expect)
 
-    y = np.array(range(100), dtype='float64').reshape(10, 10)
+    y = np.array(range(100), dtype="float64").reshape(10, 10)
     y2 = m.incr_matrix_any(y, 10)  # np -> eigen -> np
     y3 = m.incr_matrix_any(y2[0::2, 0::2], -33)  # np -> eigen -> np slice -> np -> eigen -> np
     y4 = m.even_rows(y3)  # numpy -> eigen slice -> (... y3)
@@ -516,7 +516,7 @@ def test_both_ref_mutators():
     y6 = m.incr_matrix_any(y5, 1000)  # numpy -> eigen -> (... y5)
 
     # Apply same mutations using just numpy:
-    yexpect = np.array(range(100), dtype='float64').reshape(10, 10)
+    yexpect = np.array(range(100), dtype="float64").reshape(10, 10)
     yexpect += 10
     yexpect[0::2, 0::2] -= 33
     yexpect[0::4, 0::4] += 1000
@@ -531,10 +531,10 @@ def test_both_ref_mutators():
 def test_nocopy_wrapper():
     # get_elem requires a column-contiguous matrix reference, but should be
     # callable with other types of matrix (via copying):
-    int_matrix_colmajor = np.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]], order='F')
-    dbl_matrix_colmajor = np.array(int_matrix_colmajor, dtype='double', order='F', copy=True)
-    int_matrix_rowmajor = np.array(int_matrix_colmajor, order='C', copy=True)
-    dbl_matrix_rowmajor = np.array(int_matrix_rowmajor, dtype='double', order='C', copy=True)
+    int_matrix_colmajor = np.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]], order="F")
+    dbl_matrix_colmajor = np.array(int_matrix_colmajor, dtype="double", order="F", copy=True)
+    int_matrix_rowmajor = np.array(int_matrix_colmajor, order="C", copy=True)
+    dbl_matrix_rowmajor = np.array(int_matrix_rowmajor, dtype="double", order="C", copy=True)
 
     # All should be callable via get_elem:
     assert m.get_elem(int_matrix_colmajor) == 8
@@ -545,32 +545,32 @@ def test_nocopy_wrapper():
     # All but the second should fail with m.get_elem_nocopy:
     with pytest.raises(TypeError) as excinfo:
         m.get_elem_nocopy(int_matrix_colmajor)
-    assert ('get_elem_nocopy(): incompatible function arguments.' in str(excinfo.value) and
-            ', flags.f_contiguous' in str(excinfo.value))
+    assert ("get_elem_nocopy(): incompatible function arguments." in str(excinfo.value) and
+            ", flags.f_contiguous" in str(excinfo.value))
     assert m.get_elem_nocopy(dbl_matrix_colmajor) == 8
     with pytest.raises(TypeError) as excinfo:
         m.get_elem_nocopy(int_matrix_rowmajor)
-    assert ('get_elem_nocopy(): incompatible function arguments.' in str(excinfo.value) and
-            ', flags.f_contiguous' in str(excinfo.value))
+    assert ("get_elem_nocopy(): incompatible function arguments." in str(excinfo.value) and
+            ", flags.f_contiguous" in str(excinfo.value))
     with pytest.raises(TypeError) as excinfo:
         m.get_elem_nocopy(dbl_matrix_rowmajor)
-    assert ('get_elem_nocopy(): incompatible function arguments.' in str(excinfo.value) and
-            ', flags.f_contiguous' in str(excinfo.value))
+    assert ("get_elem_nocopy(): incompatible function arguments." in str(excinfo.value) and
+            ", flags.f_contiguous" in str(excinfo.value))
 
     # For the row-major test, we take a long matrix in row-major, so only the third is allowed:
     with pytest.raises(TypeError) as excinfo:
         m.get_elem_rm_nocopy(int_matrix_colmajor)
-    assert ('get_elem_rm_nocopy(): incompatible function arguments.' in str(excinfo.value) and
-            ', flags.c_contiguous' in str(excinfo.value))
+    assert ("get_elem_rm_nocopy(): incompatible function arguments." in str(excinfo.value) and
+            ", flags.c_contiguous" in str(excinfo.value))
     with pytest.raises(TypeError) as excinfo:
         m.get_elem_rm_nocopy(dbl_matrix_colmajor)
-    assert ('get_elem_rm_nocopy(): incompatible function arguments.' in str(excinfo.value) and
-            ', flags.c_contiguous' in str(excinfo.value))
+    assert ("get_elem_rm_nocopy(): incompatible function arguments." in str(excinfo.value) and
+            ", flags.c_contiguous" in str(excinfo.value))
     assert m.get_elem_rm_nocopy(int_matrix_rowmajor) == 8
     with pytest.raises(TypeError) as excinfo:
         m.get_elem_rm_nocopy(dbl_matrix_rowmajor)
-    assert ('get_elem_rm_nocopy(): incompatible function arguments.' in str(excinfo.value) and
-            ', flags.c_contiguous' in str(excinfo.value))
+    assert ("get_elem_rm_nocopy(): incompatible function arguments." in str(excinfo.value) and
+            ", flags.c_contiguous" in str(excinfo.value))
 
 
 def test_eigen_ref_life_support():
@@ -630,15 +630,15 @@ def test_named_arguments():
 
     with pytest.raises(ValueError) as excinfo:
         m.matrix_multiply(b, a)
-    assert str(excinfo.value) == 'Nonconformable matrices!'
+    assert str(excinfo.value) == "Nonconformable matrices!"
 
     with pytest.raises(ValueError) as excinfo:
         m.matrix_multiply(A=b, B=a)
-    assert str(excinfo.value) == 'Nonconformable matrices!'
+    assert str(excinfo.value) == "Nonconformable matrices!"
 
     with pytest.raises(ValueError) as excinfo:
         m.matrix_multiply(B=a, A=b)
-    assert str(excinfo.value) == 'Nonconformable matrices!'
+    assert str(excinfo.value) == "Nonconformable matrices!"
 
 
 @pytest.requires_eigen_and_scipy
