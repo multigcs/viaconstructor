@@ -747,19 +747,22 @@ class ViaConstructor:  # pylint: disable=R0904
 
         infotext = f"Drawing: {self.info}\n"
         if self.project["outputMinMax"]:
-            infotext += "Machine-Limits:\n"
+            infotext += "\nMachine-Limits:\n"
             infotext += f" X: {round(self.project['outputMinMax'][0])} mm -> {round(self.project['outputMinMax'][3])} mm\n"
             infotext += f" Y: {round(self.project['outputMinMax'][1])} mm -> {round(self.project['outputMinMax'][4])} mm\n"
             infotext += f" Z: {round(self.project['outputMinMax'][2])} mm -> {round(self.project['outputMinMax'][5])} mm\n"
+
         if self.infotext_widget is not None:
+            object_info = self.object_info(self.project["object_active"])
+            if object_info:
+                infotext += "\nActive Object:\n"
+                infotext += object_info
             self.infotext_widget.setPlainText(infotext)
 
         if self.main:
             self.main.setWindowTitle("viaConstructor")
         self.status_bar_message(f"{self.info} - calculate..done")
         self.update_layers()
-
-        self.object_info(self.project["object_active"])
 
         debug("update_drawing: done")
 
@@ -1935,19 +1938,25 @@ class ViaConstructor:  # pylint: disable=R0904
                 ulabel.setFont(QFont("Arial", 9))
                 hlayout.addWidget(ulabel)
 
-    def object_info(self, object_active):
-        object_active_obj = None
-        for obj_idx, obj in self.project["objects"].items():
-            if obj_idx.startswith(f"{object_active}:"):
-                object_active_obj = obj
-
+    def object_info_text(self, object_active_obj):
         if object_active_obj:
             min_x = 999999999999
             min_y = 999999999999
             max_x = -999999999999
             max_y = -999999999999
+            is_circle = True
+            last_bulge = None
+            last_center = None
             for segment in object_active_obj.segments:
-                for ptype in ("start", "end", "center"):
+                if last_center and segment.center != segment.center:
+                    is_circle = False
+                elif last_bulge and segment.bulge != last_bulge:
+                    is_circle = False
+                elif not segment.bulge:
+                    is_circle = False
+                last_bulge = segment.bulge
+                last_center = segment.center
+                for ptype in ("start", "end"):
                     if ptype in segment:
                         min_x = min(min_x, segment[ptype][0])
                         min_y = min(min_y, segment[ptype][1])
@@ -1955,10 +1964,37 @@ class ViaConstructor:  # pylint: disable=R0904
                         max_y = max(max_y, segment[ptype][1])
             diff_x = max_x - min_x
             diff_y = max_y - min_y
-            self.object_width.setText(f"Width: {diff_x}")
-            self.object_height.setText(f"Height: {diff_y}")
-            self.object_pos_x.setText(f"X: {min_x}")
-            self.object_pos_y.setText(f"Y: {min_y}")
+            center_x = min_x + diff_x / 2.0
+            center_y = min_y + diff_y / 2.0
+            info_text = []
+            info_text.append(f" X: {min_x}")
+            info_text.append(f" Y: {min_y}")
+            info_text.append(f" W: {diff_x}")
+            info_text.append(f" H: {diff_y}")
+            info_text.append(f" CX: {center_x}")
+            info_text.append(f" CY: {center_y}")
+            if is_circle:
+                info_text.append(f" Type: Circle")
+            elif not object_active_obj.closed:
+                info_text.append(f" Type: Line")
+            else:
+                info_text.append(f" Type: Polygon")
+            info_text.append(f" Outer: {len(object_active_obj.outer_objects)}")
+            info_text.append(f" Inner: {len(object_active_obj.inner_objects)}")
+            info_text.append(f" Layer: {object_active_obj.layer}")
+            return "\n".join(info_text)
+        return ""
+
+    def object_info(self, object_active):
+        object_active_obj = None
+        for obj_idx, obj in self.project["objects"].items():
+            if obj_idx.startswith(f"{object_active}:"):
+                object_active_obj = obj
+        info_text = ""
+        if object_active_obj:
+            info_text = self.object_info_text(object_active_obj)
+            self.object_infolabel.setText(info_text)
+        return info_text
 
     def setup_select_object(self, value):
         if self.project["status"] != "READY":
@@ -2257,14 +2293,8 @@ class ViaConstructor:  # pylint: disable=R0904
 
         vlayout.addWidget(QLabel("Info:"))
 
-        self.object_pos_x = QLabel("X: ???")
-        vlayout.addWidget(self.object_pos_x)
-        self.object_pos_y = QLabel("Y: ???")
-        vlayout.addWidget(self.object_pos_y)
-        self.object_width = QLabel("Width: ???")
-        vlayout.addWidget(self.object_width)
-        self.object_height = QLabel("Height: ???")
-        vlayout.addWidget(self.object_height)
+        self.object_infolabel = QLabel("")
+        vlayout.addWidget(self.object_infolabel)
 
         vlayout.addWidget(QLabel("Move:"))
 
