@@ -1,6 +1,9 @@
+import gettext
 import math
 import os
+import sys
 import tempfile
+from pathlib import Path
 
 import ezdxf
 from PyQt5.QtCore import QLineF, QRect, Qt  # pylint: disable=E0611
