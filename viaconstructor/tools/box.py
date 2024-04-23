@@ -1,19 +1,20 @@
-import os
 import math
+import os
 import tempfile
 
 import ezdxf
 from PyQt5.QtCore import QLineF, QRect, Qt  # pylint: disable=E0611
 from PyQt5.QtGui import QPainter, QPen, QPixmap  # pylint: disable=E0611
 from PyQt5.QtWidgets import (  # pylint: disable=E0611
+    QCheckBox,
     QDoubleSpinBox,
     QLabel,
     QPushButton,
     QSpinBox,
-    QCheckBox,
     QVBoxLayout,
     QWidget,
 )
+
 
 # i18n
 def no_translation(text):
