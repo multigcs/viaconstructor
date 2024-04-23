@@ -82,6 +82,7 @@ from .output_plugins.gcode_linuxcnc import PostProcessorGcodeLinuxCNC
 from .output_plugins.hpgl import PostProcessorHpgl
 from .preview_plugins.gcode import GcodeParser
 from .setupdefaults import setup_defaults
+from .tools.box import BoxTool
 from .tools.font import FontTool
 from .tools.gear import GearTool
 
@@ -323,6 +324,9 @@ class ViaConstructor:  # pylint: disable=R0904
 
     def _toolbar_geartool(self) -> None:
         self.gear_tool.show()
+
+    def _toolbar_boxtool(self) -> None:
+        self.box_tool.show()
 
     def _toolbar_flipx(self) -> None:
         mirror_objects(self.project["objects"], self.project["minMax"], vertical=True)
@@ -1658,6 +1662,18 @@ class ViaConstructor:  # pylint: disable=R0904
                 "exit",
                 None,
             ],
+            _("Box-Tool"): [
+                "box.png",
+                "Ctrl+G",
+                _("open boxtool"),
+                self._toolbar_boxtool,
+                False,
+                True,
+                False,
+                _("Tools"),
+                "exit",
+                None,
+            ],
         }
 
     def create_toolbar(self) -> None:
@@ -2953,6 +2969,7 @@ class ViaConstructor:  # pylint: disable=R0904
         # Tools
         self.font_tool = FontTool(self)
         self.gear_tool = GearTool(self)
+        self.box_tool = BoxTool(self)
 
         self.main.resize(mwin_width, mwin_height)
         self.main.show()
