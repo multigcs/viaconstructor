@@ -1974,11 +1974,11 @@ class ViaConstructor:  # pylint: disable=R0904
             info_text.append(f" CX: {center_x}")
             info_text.append(f" CY: {center_y}")
             if is_circle:
-                info_text.append(f" Type: Circle")
+                info_text.append(" Type: Circle")
             elif not object_active_obj.closed:
-                info_text.append(f" Type: Line")
+                info_text.append(" Type: Line")
             else:
-                info_text.append(f" Type: Polygon")
+                info_text.append(" Type: Polygon")
             info_text.append(f" Outer: {len(object_active_obj.outer_objects)}")
             info_text.append(f" Inner: {len(object_active_obj.inner_objects)}")
             info_text.append(f" Layer: {object_active_obj.layer}")

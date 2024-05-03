@@ -6,14 +6,11 @@ import tempfile
 from pathlib import Path
 
 import ezdxf
-from PyQt5.QtCore import QLineF, QRect, Qt  # pylint: disable=E0611
-from PyQt5.QtGui import QPainter, QPen, QPixmap  # pylint: disable=E0611
 from PyQt5.QtWidgets import (  # pylint: disable=E0611
     QCheckBox,
     QDoubleSpinBox,
     QLabel,
     QPushButton,
-    QSpinBox,
     QVBoxLayout,
     QWidget,
 )
@@ -145,7 +142,7 @@ class BoxTool(QWidget):
 
             # front and back
             points_fb = [(0, 0)]
-            for n in range(0, int(num_tooth_width)):
+            for n in range(int(num_tooth_width)):
                 points_fb.append((start_width + n * tooth_len * 2, 0))
                 if rad:
                     points_fb.append((start_width + n * tooth_len * 2, thickness - rad))
@@ -157,7 +154,7 @@ class BoxTool(QWidget):
                     points_fb.append((start_width + n * tooth_len * 2 + tooth_len, thickness))
                 points_fb.append((start_width + n * tooth_len * 2 + tooth_len, 0))
             points_fb.append((width, 0))
-            for n in range(0, int(num_tooth_height)):
+            for n in range(int(num_tooth_height)):
                 points_fb.append((width, start_height + n * tooth_len * 2))
                 if rad:
                     points_fb.append((width - thickness + rad, start_height + n * tooth_len * 2))
@@ -176,7 +173,7 @@ class BoxTool(QWidget):
                 points_fb.append((width, start_height + n * tooth_len * 2 + tooth_len))
             points_fb.append((width, height))
             if top:
-                for n in range(0, int(num_tooth_width)):
+                for n in range(int(num_tooth_width)):
                     points_fb.append((width - (start_width + n * tooth_len * 2), height))
                     if rad:
                         points_fb.append(
@@ -215,7 +212,7 @@ class BoxTool(QWidget):
                         )
                     points_fb.append((width - (start_width + n * tooth_len * 2 + tooth_len), height))
             points_fb.append((0, height))
-            for n in range(0, int(num_tooth_height)):
+            for n in range(int(num_tooth_height)):
                 points_fb.append((0, height - (start_height + n * tooth_len * 2)))
                 if rad:
                     points_fb.append((thickness - rad, height - (start_height + n * tooth_len * 2)))
@@ -241,7 +238,7 @@ class BoxTool(QWidget):
 
             # top and bottom
             points_top = [(0, thickness)]
-            for n in range(0, int(num_tooth_width)):
+            for n in range(int(num_tooth_width)):
                 if rad:
                     points_top.append((start_width + n * tooth_len * 2 - rad, thickness))
                     points_top.append((start_width + n * tooth_len * 2, thickness - rad, 1))
@@ -255,7 +252,7 @@ class BoxTool(QWidget):
                     points_top.append((start_width + n * tooth_len * 2 + tooth_len, 0))
                     points_top.append((start_width + n * tooth_len * 2 + tooth_len, thickness))
             points_top.append((width, thickness))
-            for n in range(0, int(num_tooth_depth)):
+            for n in range(int(num_tooth_depth)):
                 points_top.append((width, start_depth + n * tooth_len * 2))
                 if rad:
                     points_top.append((width - thickness + rad, start_depth + n * tooth_len * 2))
@@ -273,7 +270,7 @@ class BoxTool(QWidget):
                     points_top.append((width - thickness, start_depth + n * tooth_len * 2 + tooth_len))
                 points_top.append((width, start_depth + n * tooth_len * 2 + tooth_len))
             points_top.append((width, depth - thickness))
-            for n in range(0, int(num_tooth_width)):
+            for n in range(int(num_tooth_width)):
                 if rad:
                     points_top.append((width - (start_width + n * tooth_len * 2) + rad, depth - thickness))
                     points_top.append((width - (start_width + n * tooth_len * 2), depth - thickness + rad, 1))
@@ -303,7 +300,7 @@ class BoxTool(QWidget):
                         )
                     )
             points_top.append((0, depth - thickness))
-            for n in range(0, int(num_tooth_depth)):
+            for n in range(int(num_tooth_depth)):
                 if rad:
                     points_top.append((0, depth - (start_depth + n * tooth_len * 2)))
                     points_top.append((thickness - rad, depth - (start_depth + n * tooth_len * 2)))
@@ -326,7 +323,7 @@ class BoxTool(QWidget):
 
             # sides
             points_side = [(thickness, thickness)]
-            for n in range(0, int(num_tooth_depth)):
+            for n in range(int(num_tooth_depth)):
                 if rad:
                     points_side.append((start_depth + n * tooth_len * 2 - rad, thickness))
                     points_side.append((start_depth + n * tooth_len * 2, thickness - rad, 1))
@@ -340,7 +337,7 @@ class BoxTool(QWidget):
                     points_side.append((start_depth + n * tooth_len * 2 + tooth_len, 0))
                     points_side.append((start_depth + n * tooth_len * 2 + tooth_len, thickness))
             points_side.append((depth - thickness, thickness))
-            for n in range(0, int(num_tooth_height)):
+            for n in range(int(num_tooth_height)):
                 if rad:
                     points_side.append((depth - thickness, start_height + n * tooth_len * 2 - rad))
                     points_side.append((depth - thickness + rad, start_height + n * tooth_len * 2, 1))
@@ -364,7 +361,7 @@ class BoxTool(QWidget):
             else:
                 points_side.append((depth - thickness, height))
             if top:
-                for n in range(0, int(num_tooth_depth)):
+                for n in range(int(num_tooth_depth)):
                     if rad:
                         points_side.append(
                             (
@@ -408,7 +405,7 @@ class BoxTool(QWidget):
             else:
                 points_side.append((thickness, height))
 
-            for n in range(0, int(num_tooth_height)):
+            for n in range(int(num_tooth_height)):
                 if rad:
                     points_side.append((thickness, height - (start_height + n * tooth_len * 2) + rad))
                     points_side.append((thickness - rad, height - (start_height + n * tooth_len * 2), 1))

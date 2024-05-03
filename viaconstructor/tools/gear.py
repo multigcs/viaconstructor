@@ -57,7 +57,7 @@ def generate(
         ]
     )
 
-    outer_circle = Point(0.0, 0.0).buffer(outer_radius)
+    # outer_circle = Point(0.0, 0.0).buffer(outer_radius)
     # print(outer_circle)
 
     poly_list = []
@@ -189,7 +189,7 @@ class GearTool(QWidget):
                 )
                 last = point
 
-            circle = msp.add_circle((0, 0), radius=hole / 2, dxfattribs={"layer": "0"})
+            msp.add_circle((0, 0), radius=hole / 2, dxfattribs={"layer": "0"})
 
             for vport in doc.viewports.get_config("*Active"):  # type: ignore
                 vport.dxf.grid_on = True
