@@ -79,6 +79,12 @@ class DrawReader(DrawReaderBase):
             default=[],
             action="append",
         )
+        parser.add_argument(
+            "--dxfread-points",
+            help="dxfread: set radius for points to import as circle (0=disable)",
+            type=float,
+            default=0.1,
+        )
         if os.path.isfile("/usr/share/inkscape/extensions/dxf_outlines.py"):
             parser.add_argument(
                 "--dxfread-no-svg",
@@ -127,6 +133,16 @@ class DrawReader(DrawReaderBase):
         dxfread_scale.setValue(1.0)
         dialog.layout.addWidget(dxfread_scale)
 
+        label = QLabel("Points as Circle")
+        dialog.layout.addWidget(label)
+        dxfread_points = QDoubleSpinBox()
+        dxfread_points.setDecimals(4)
+        dxfread_points.setSingleStep(0.1)
+        dxfread_points.setMinimum(0.0)
+        dxfread_points.setMaximum(100000)
+        dxfread_points.setValue(0.1)
+        dialog.layout.addWidget(dxfread_points)
+
         dxfread_select_layers = {}
         if filename.lower().endswith(".dxf"):
             doc = ezdxf.readfile(filename)
@@ -141,6 +157,7 @@ class DrawReader(DrawReaderBase):
         if dialog.exec():
             args.dxfread_color_layers = dxfread_color_layers.isChecked()
             args.dxfread_scale = dxfread_scale.value()
+            args.dxfread_points = dxfread_points.value()
             if not args.dxfread_color_layers:
                 selection = []
                 for layer, stat in dxfread_select_layers.items():
@@ -150,6 +167,7 @@ class DrawReader(DrawReaderBase):
 
     def __init__(self, filename: str, args: argparse.Namespace = None):  # pylint: disable=W0613
         """converting dxf into single segments."""
+        self.args = args
         self.filename = filename
         if self.filename.lower().endswith(".svg") and os.path.isfile("/usr/share/inkscape/extensions/dxf_outlines.py"):
             print("INFO: converting svg to dxf with inkscape")
@@ -404,6 +422,49 @@ class DrawReader(DrawReaderBase):
                             }
                         )
                     )
+
+        elif dxftype in {"POINT"}:
+            if self.args.dxfread_points == 0.0:
+                return
+            radius = self.args.dxfread_points
+            adiff = 360.0
+            gstep = 45.0
+            steps = abs(math.ceil(adiff / gstep))
+            astep = adiff / steps
+            angle = 0
+            for _step_n in range(steps):  # pylint: disable=W0612
+                (start, end, bulge) = ezdxf.math.arc_to_bulge(
+                    element.dxf.location,
+                    angle / 180 * math.pi,
+                    (angle + astep) / 180 * math.pi,
+                    radius,
+                )
+                dist = calc_distance((start.x, start.y), (end.x, end.y))
+                if dist > self.MIN_DIST:
+                    self.segments.append(
+                        VcSegment(
+                            {
+                                "type": dxftype,
+                                "object": None,
+                                "layer": layer,
+                                "color": color,
+                                "start": (
+                                    (start.x + offset[0]) * self.scale,
+                                    (start.y + offset[1]) * self.scale,
+                                ),
+                                "end": (
+                                    (end.x + offset[0]) * self.scale,
+                                    (end.y + offset[1]) * self.scale,
+                                ),
+                                "bulge": bulge,
+                                "center": (
+                                    (element.dxf.location[0] + offset[0]) * self.scale,
+                                    (element.dxf.location[1] + offset[1]) * self.scale,
+                                ),
+                            }
+                        )
+                    )
+                angle += astep
 
         else:
             print("UNSUPPORTED TYPE: ", dxftype)

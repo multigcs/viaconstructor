@@ -189,7 +189,8 @@ class ViaConstructor:  # pylint: disable=R0904
         "origin": [0.0, 0.0],
         "layers": {},
         "object_active": "",
-        "layer_active": "",
+        "layersetup": {},
+        "layer_active": "0",
     }
     info = ""
     save_tabs = "no"
@@ -3394,8 +3395,9 @@ class ViaConstructor:  # pylint: disable=R0904
             self.lcombobjwidget.clear()
             for layer in self.project["layersetup"]:
                 self.lcombobjwidget.addItem(layer)
-            self.project["layer_active"] = list(self.project["layersetup"])[0]
-            self.lcombobjwidget.setCurrentText(self.project["layer_active"])
+            if self.project["layersetup"]:
+                self.project["layer_active"] = list(self.project["layersetup"])[0]
+                self.lcombobjwidget.setCurrentText(self.project["layer_active"])
 
         self.update_layer_setup()
         self.update_object_setup()

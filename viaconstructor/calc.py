@@ -405,6 +405,10 @@ def segments2objects(segments):
     obj_idx = 0
 
     part_l = num_unused_segments(segments)
+
+    if not part_l:
+        return objects
+
     last_percent = -1
     while True:
         found = False
@@ -1148,7 +1152,7 @@ def object2polyline_offsets(diameter, obj, obj_idx, max_outer, polyline_offsets,
     if obj.setup["mill"]["reverse"]:
         tool_radius = -tool_radius
 
-    is_circle = bool(obj.segments[0].type == "CIRCLE")
+    is_circle = bool(obj.segments[0].type in {"CIRCLE", "POINT"})
 
     vertex_data = object2vertex(obj)
     polyline = cavc.Polyline(vertex_data, is_closed=obj.closed)
