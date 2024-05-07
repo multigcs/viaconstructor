@@ -144,6 +144,10 @@ def machine_cmd_begin(project: dict, post: PostProcessor) -> None:
         post.feedrate(project["setup"]["tool"]["rate_h"])
     post.separation()
 
+    if project["setup"]["machine"]["init_post"]:
+        post.comment("extra init commands")
+        post.raw(project["setup"]["machine"]["init_post"])
+
 
 def machine_cmd_end(project: dict, post: PostProcessor) -> None:
     """machine_cmd-footer"""

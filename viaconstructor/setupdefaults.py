@@ -533,6 +533,12 @@ def setup_defaults(_) -> dict:
                 "title": _("machine supports g54"),
                 "tooltip": _("machine supports g54"),
             },
+            "init_post": {
+                "default": "",
+                "type": "mstr",
+                "title": _("extra init cmds"),
+                "tooltip": _("add gcode after init"),
+            },
             "supports_toolchange": {
                 "default": True,
                 "type": "bool",
