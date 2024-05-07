@@ -2946,15 +2946,21 @@ class ViaConstructor:  # pylint: disable=R0904
                             cmd = match[0].upper()
                             value = match[1]
                             if cmd == "MILL":
+                                self.project["layersetup"][layer]["mill"]["active"] = bool(value == "1")
                                 obj["setup"]["mill"]["active"] = bool(value == "1")
                             elif cmd in ("MILLDEPTH", "MD"):
+                                self.project["layersetup"][layer]["mill"]["depth"] = -abs(float(value))
                                 obj["setup"]["mill"]["depth"] = -abs(float(value))
                             elif cmd in ("SLICEDEPTH", "SD"):
+                                self.project["layersetup"][layer]["mill"]["step"] = -abs(float(value))
                                 obj["setup"]["mill"]["step"] = -abs(float(value))
                             elif cmd in ("FEEDXY", "FXY"):
+                                self.project["layersetup"][layer]["tool"]["rate_h"] = int(value)
                                 obj["setup"]["tool"]["rate_h"] = int(value)
                             elif cmd in ("FEEDZ", "FZ"):
+                                self.project["layersetup"][layer]["tool"]["rate_v"] = int(value)
                                 obj["setup"]["tool"]["rate_v"] = int(value)
+
         debug("prepare_segments: update_tabs_data")
         self.update_tabs_data()
         if not self.args.laser:
