@@ -77,7 +77,9 @@ you can simply extract this zip file to you disk and execute the start.bat:
 
 this zip-file includes python3.10.10 and all needed packages
 
-or 
+an older version can be found here:  https://www.multixmedia.org/viaconstructor-old.zip (better tested on windows)
+
+or via git-sources
 
 install python3.10.10 from: https://www.python.org/ftp/python/3.10.10/python-3.10.10-amd64.exe
 install git from: https://github.com/git-for-windows/git/releases/download/v2.40.0.windows.1/Git-2.40.0-64-bit.exe
