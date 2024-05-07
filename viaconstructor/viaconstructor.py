@@ -710,27 +710,6 @@ class ViaConstructor:  # pylint: disable=R0904
             self.project["draw_reader"].save_setup(json.dumps(self.project["setup"], indent=4, sort_keys=True))  # type: ignore
             self.status_bar_message(f"{self.info} - save setup to drawing..done")
 
-    def toggle_layer(self, item):
-        layer = self.project["layerwidget"].item(item.row(), 0).text()
-        self.project["layers"][layer] = not self.project["layers"][layer]
-        self.update_layers()
-
-        for obj in self.project["objects"].values():
-            layer = obj.get("layer")
-            if layer in self.project["layers"]:
-                obj["setup"]["mill"]["active"] = self.project["layers"][layer]
-
-        self.global_changed(0)
-
-    def update_layers(self) -> None:
-        if "layerwidget" in self.project:
-            self.project["layerwidget"].setRowCount(len(self.project["layers"]))
-            row_idx = 0
-            for layer, enabled in self.project["layers"].items():
-                self.project["layerwidget"].setItem(row_idx, 0, QTableWidgetItem(layer))
-                self.project["layerwidget"].setItem(row_idx, 1, QTableWidgetItem("enabled" if enabled else "disabled"))
-                row_idx += 1
-
     def update_drawing(self, draw_only=False) -> None:
         """update drawings."""
         if not self.project["draw_reader"]:
@@ -767,7 +746,6 @@ class ViaConstructor:  # pylint: disable=R0904
         if self.main:
             self.main.setWindowTitle("viaConstructor")
         self.status_bar_message(f"{self.info} - calculate..done")
-        self.update_layers()
 
         debug("update_drawing: done")
 
@@ -825,7 +803,6 @@ class ViaConstructor:  # pylint: disable=R0904
                         obj["setup"][section][key] = value
 
             ## TODO: layer-setup
-
 
             if "starts" in project_data and uid in project_data["starts"]:
                 obj["start"] = project_data["starts"][uid]
@@ -1063,21 +1040,13 @@ class ViaConstructor:  # pylint: disable=R0904
                 self.tabobjwidget.setTabText(tab_idx, f"{titles.get(sname, sname)}")
             tab_idx += 1
 
-
-
         for obj in self.project["objects"].values():
-            
             if obj["layer"] != layer_active:
                 continue
-            
             for sect in ("mill", "tool", "pockets", "tabs", "leads"):
                 for key, global_value in self.project["layersetup"][layer_active][sect].items():
                     if global_value != old_setup[sect][key] and obj["setup"][sect][key] == old_setup[sect][key]:
-
-                        print("##", sect, key)
-
                         obj["setup"][sect][key] = self.project["layersetup"][layer_active][sect][key]
-
 
         if setup_data["mill"]["step"] >= 0.0:
             setup_data["mill"]["step"] = -0.05
@@ -1245,7 +1214,6 @@ class ViaConstructor:  # pylint: disable=R0904
                     # change object value only if the value changed and the value diffs again the last value in global
                     if global_value != old_setup[sect][key] and obj["setup"][sect][key] == old_setup[sect][key]:
                         obj["setup"][sect][key] = self.project["setup"][sect][key]
-
 
         self.project["maxOuter"] = find_tool_offsets(self.project["objects"])
         self.update_layer_setup()
@@ -2380,7 +2348,6 @@ class ViaConstructor:  # pylint: disable=R0904
                 ulabel.setFont(QFont("Arial", 9))
                 hlayout.addWidget(ulabel)
 
-
     def setup_select_object(self, value):
         if self.project["status"] != "READY":
             return
@@ -2415,9 +2382,6 @@ class ViaConstructor:  # pylint: disable=R0904
         for obj_idx, obj in self.project["objects"].items():
             if obj_idx.startswith(f"{object_active}:"):
                 setup_data = obj["setup"]
-
-        print(setup_data)
-        print(object_active)
 
         tab_idx = 0
         for sname in self.project["setup_defaults"]:
@@ -3328,11 +3292,6 @@ class ViaConstructor:  # pylint: disable=R0904
         self.project["textwidget"] = QPlainTextEdit()
         left_gridlayout = QGridLayout()
 
-        self.project["layerwidget"] = QTableWidget()
-        self.project["layerwidget"].clicked.connect(self.toggle_layer)
-        self.project["layerwidget"].setRowCount(0)
-        self.project["layerwidget"].setColumnCount(2)
-
         tabwidget = QTabWidget()
         tabwidget.addTab(self.project["glwidget"], _("&3D-View"))
         tabwidget.addTab(self.project["textwidget"], _("&Machine-Output"))
@@ -3412,9 +3371,8 @@ class ViaConstructor:  # pylint: disable=R0904
 
         ltabwidget = QTabWidget()
         ltabwidget.addTab(self.tabwidget, _("&Global"))
-        ltabwidget.addTab(self.laywidget, _("L&ayerSetup"))
+        ltabwidget.addTab(self.laywidget, _("&Layers"))
         ltabwidget.addTab(self.objwidget, _("&Objects"))
-        ltabwidget.addTab(self.project["layerwidget"], _("&Layers"))
         ltabwidget.addTab(self.infotext_widget, _("&Infos"))
 
         left_gridlayout.addWidget(ltabwidget)
@@ -3426,14 +3384,12 @@ class ViaConstructor:  # pylint: disable=R0904
             self.project["object_active"] = "0"
             self.combobjwidget.setCurrentText(self.project["object_active"])
 
-
         if self.lcombobjwidget is not None:
             self.lcombobjwidget.clear()
             for layer in self.project["layersetup"]:
                 self.lcombobjwidget.addItem(layer)
             self.project["layer_active"] = list(self.project["layersetup"])[0]
             self.lcombobjwidget.setCurrentText(self.project["layer_active"])
-
 
         self.update_layer_setup()
         self.update_object_setup()
