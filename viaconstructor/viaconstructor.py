@@ -971,6 +971,94 @@ class ViaConstructor:  # pylint: disable=R0904
         if self.save_tabs == "yes" and self.project["draw_reader"]:
             self.project["draw_reader"].save_tabs(self.project["tabs"]["data"])
 
+    def layer_changed(self, value=0) -> None:  # pylint: disable=W0613
+        """layer setup changed."""
+
+        titles = {
+            "mill": "Mill",
+            "tool": "Tool",
+            "pockets": "Pockets",
+            "tabs": "Tabs",
+            "leads": "Leads",
+        }
+
+        if self.project["status"] == "CHANGE":
+            return
+
+        layer_active = self.project["layer_active"]
+        setup_data = self.project["setup"]
+        if layer_active in self.project["layersetup"]:
+            setup_data = self.project["layersetup"][layer_active]
+
+        tab_idx = 0
+        for sname in self.project["setup_defaults"]:
+            show_section = False
+            changed_section = False
+            for entry in self.project["setup_defaults"][sname].values():
+                if entry.get("per_object", False):
+                    show_section = True
+            if not show_section:
+                continue
+            for ename, entry in self.project["setup_defaults"][sname].items():
+                if not entry.get("per_object", False):
+                    continue
+                if entry["type"] == "bool":
+                    setup_data[sname][ename] = entry["widget_obj"].isChecked()
+                elif entry["type"] == "select":
+                    setup_data[sname][ename] = entry["widget_obj"].currentText()
+                elif entry["type"] == "float":
+                    setup_data[sname][ename] = entry["widget_obj"].value()
+                elif entry["type"] == "int":
+                    setup_data[sname][ename] = entry["widget_obj"].value()
+                elif entry["type"] == "str":
+                    setup_data[sname][ename] = entry["widget_obj"].text()
+                elif entry["type"] == "mstr":
+                    setup_data[sname][ename] = entry["widget_obj"].toPlainText()
+                elif entry["type"] == "table":
+                    for row_idx in range(entry["widget_obj"].rowCount()):
+                        col_idx = 0
+                        for key, col_type in entry["columns"].items():
+                            if entry["widget_obj"].item(row_idx, col_idx + 1) is None:
+                                print("TABLE_ERROR")
+                                continue
+                            if col_type["type"] == "str":
+                                value = entry["widget_obj"].item(row_idx, col_idx + 1).text()
+                                setup_data[sname][ename][row_idx][key] = str(value)
+                            elif col_type["type"] == "mstr":
+                                value = entry["widget_obj"].item(row_idx, col_idx + 1).toPlainText()
+                                setup_data[sname][ename][row_idx][key] = str(value)
+                            elif col_type["type"] == "int":
+                                value = entry["widget_obj"].item(row_idx, col_idx + 1).text()
+                                setup_data[sname][ename][row_idx][key] = int(value)
+                            elif col_type["type"] == "float":
+                                value = entry["widget_obj"].item(row_idx, col_idx + 1).text()
+                                setup_data[sname][ename][row_idx][key] = float(value)
+                            col_idx += 1
+                elif entry["type"] == "color":
+                    pass
+                else:
+                    eprint(f"Unknown setup-type: {entry['type']}")
+                if setup_data[sname][ename] != self.project["setup"][sname][ename]:
+                    entry["widget_obj_label"].setStyleSheet("color: black")
+                    changed_section = True
+                else:
+                    entry["widget_obj_label"].setStyleSheet("color: lightgray")
+            if changed_section:
+                self.tabobjwidget.setTabText(tab_idx, f">{titles.get(sname, sname)}<")
+            else:
+                self.tabobjwidget.setTabText(tab_idx, f"{titles.get(sname, sname)}")
+            tab_idx += 1
+
+        if setup_data["mill"]["step"] >= 0.0:
+            setup_data["mill"]["step"] = -0.05
+
+        if not self.project["draw_reader"]:
+            return
+
+        if not self.project["setup"]["view"]["autocalc"]:
+            return
+        self.update_drawing()
+
     def object_changed(self, value=0) -> None:  # pylint: disable=W0613
         """object setup changed."""
 
@@ -1999,9 +2087,7 @@ class ViaConstructor:  # pylint: disable=R0904
 
     def setup_select_layer(self, value):
         layer_active = value
-        print("#### setup_select_layer", self.project["layer_active"], value)
         self.project["layer_active"] = layer_active
-
         if self.project["status"] != "READY":
             return
         self.project["status"] = "CHANGE"
@@ -2145,7 +2231,7 @@ class ViaConstructor:  # pylint: disable=R0904
                     checkbox = QCheckBox(entry.get("title", ename))
                     checkbox.setChecked(self.project["setup"][sname][ename])
                     checkbox.setToolTip(helptext)
-                    checkbox.stateChanged.connect(self.object_changed)  # type: ignore
+                    checkbox.stateChanged.connect(self.layer_changed)  # type: ignore
                     hlayout.addWidget(checkbox)
                     entry["widget_obj"] = checkbox
                 elif entry["type"] == "select":
@@ -2154,7 +2240,7 @@ class ViaConstructor:  # pylint: disable=R0904
                         combobox.addItem(option[0])
                     combobox.setCurrentText(self.project["setup"][sname][ename])
                     combobox.setToolTip(helptext)
-                    combobox.currentTextChanged.connect(self.object_changed)  # type: ignore
+                    combobox.currentTextChanged.connect(self.layer_changed)  # type: ignore
                     hlayout.addWidget(combobox)
                     entry["widget_obj"] = combobox
                 elif entry["type"] == "color":
@@ -2174,7 +2260,7 @@ class ViaConstructor:  # pylint: disable=R0904
                     dspinbox.setMaximum(entry["max"])
                     dspinbox.setValue(self.project["setup"][sname][ename])
                     dspinbox.setToolTip(helptext)
-                    dspinbox.valueChanged.connect(self.object_changed)  # type: ignore
+                    dspinbox.valueChanged.connect(self.layer_changed)  # type: ignore
                     hlayout.addWidget(dspinbox)
                     entry["widget_obj"] = dspinbox
                 elif entry["type"] == "int":
@@ -2184,21 +2270,21 @@ class ViaConstructor:  # pylint: disable=R0904
                     spinbox.setMaximum(entry["max"])
                     spinbox.setValue(self.project["setup"][sname][ename])
                     spinbox.setToolTip(helptext)
-                    spinbox.valueChanged.connect(self.object_changed)  # type: ignore
+                    spinbox.valueChanged.connect(self.layer_changed)  # type: ignore
                     hlayout.addWidget(spinbox)
                     entry["widget_obj"] = spinbox
                 elif entry["type"] == "str":
                     lineedit = QLineEdit()
                     lineedit.setText(self.project["setup"][sname][ename])
                     lineedit.setToolTip(helptext)
-                    lineedit.textChanged.connect(self.object_changed)  # type: ignore
+                    lineedit.textChanged.connect(self.layer_changed)  # type: ignore
                     hlayout.addWidget(lineedit)
                     entry["widget_obj"] = lineedit
                 elif entry["type"] == "mstr":
                     mlineedit = QPlainTextEdit()
                     mlineedit.setPlainText(self.project["setup"][sname][ename])
                     mlineedit.setToolTip(helptext)
-                    mlineedit.textChanged.connect(self.object_changed)  # type: ignore
+                    mlineedit.textChanged.connect(self.layer_changed)  # type: ignore
                     hlayout.addWidget(mlineedit)
                     entry["widget_obj"] = mlineedit
                 elif entry["type"] == "table":
@@ -2239,7 +2325,7 @@ class ViaConstructor:  # pylint: disable=R0904
                             # if entry["columns"][key].get("ro", False):
                             #    item.setFlags(Qt.ItemIsEditable)
                             table.resizeColumnToContents(col_idx + idxf_offset)
-                    table.itemChanged.connect(self.object_changed)  # type: ignore
+                    table.itemChanged.connect(self.layer_changed)  # type: ignore
                     vlayout.addWidget(table)
                     entry["widget_obj"] = table
                 else:
@@ -2839,8 +2925,12 @@ class ViaConstructor:  # pylint: disable=R0904
             else:
                 self.project["layers"][layer] = True
 
+
             if layer not in self.project["layersetup"]:
-                self.project["layersetup"][layer] = self.project["setup"]
+                self.project["layersetup"][layer] = {}
+                for sect in ("mill", "tool", "pockets", "tabs", "leads"):
+                    self.project["layersetup"][layer][sect] = deepcopy(self.project["setup"][sect])
+
 
             # experimental: get some milling data from layer name (https://groups.google.com/g/dxf2gcode-users/c/q3hPQkN2OCo)
             if layer:
