@@ -189,6 +189,7 @@ class ViaConstructor:  # pylint: disable=R0904
         "origin": [0.0, 0.0],
         "layers": {},
         "object_active": "",
+        "layer_active": "",
     }
     info = ""
     save_tabs = "no"
@@ -1996,6 +1997,263 @@ class ViaConstructor:  # pylint: disable=R0904
             self.object_infolabel.setText(info_text)
         return info_text
 
+    def setup_select_layer(self, value):
+        layer_active = value
+        print("#### setup_select_layer", self.project["layer_active"], value)
+        self.project["layer_active"] = layer_active
+
+        if self.project["status"] != "READY":
+            return
+        self.project["status"] = "CHANGE"
+        self.combobjwidget.setCurrentText(layer_active)
+        self.project["layer_active"] = layer_active
+        self.update_layer_setup()
+        self.project["status"] = "READY"
+
+    def update_layer_setup(self) -> None:
+        layer_active = self.project["layer_active"]
+        setup_data = self.project["setup"]
+
+        titles = {
+            "mill": "M&ill",
+            "tool": "&Tool",
+            "workpiece": "&Workpiece",
+            "pockets": "P&ockets",
+            "tabs": "Ta&bs",
+            "leads": "Lea&ds",
+            "machine": "M&achine",
+            "view": "&View",
+        }
+
+        if layer_active in self.project["layersetup"]:
+            setup_data = self.project["layersetup"][layer_active]
+
+        tab_idx = 0
+        for sname in self.project["setup_defaults"]:
+            show_section = False
+            changed_section = False
+            for entry in self.project["setup_defaults"][sname].values():
+                if entry.get("per_object", False):
+                    show_section = True
+            if not show_section:
+                continue
+            for ename, entry in self.project["setup_defaults"][sname].items():
+                if not entry.get("per_object", False):
+                    continue
+
+                if setup_data[sname][ename] != self.project["setup"][sname][ename]:
+                    entry["widget_obj_label"].setStyleSheet("color: black")
+                    changed_section = True
+                else:
+                    entry["widget_obj_label"].setStyleSheet("color: lightgray")
+
+                if entry["type"] == "bool":
+                    entry["widget_obj"].setChecked(setup_data[sname][ename])
+                elif entry["type"] == "select":
+                    entry["widget_obj"].setCurrentText(setup_data[sname][ename])
+                elif entry["type"] == "float":
+                    entry["widget_obj"].setValue(setup_data[sname][ename])
+                elif entry["type"] == "int":
+                    entry["widget_obj"].setValue(setup_data[sname][ename])
+                elif entry["type"] == "str":
+                    entry["widget_obj"].setText(setup_data[sname][ename])
+                elif entry["type"] == "mstr":
+                    entry["widget_obj"].setPlainText(setup_data[sname][ename])
+                elif entry["type"] == "table":
+                    # add empty row if not exist
+                    first_element = list(entry["columns"].keys())[0]
+
+                    if entry.get("column_defaults") is not None and str(setup_data[sname][ename][-1][first_element]) != "":
+                        new_row = {}
+                        for key, default in entry["column_defaults"].items():
+                            new_row[key] = default
+                        setup_data[sname][ename].append(new_row)
+
+                    table = entry["widget_obj"]
+                    table.setRowCount(len(setup_data[sname][ename]))
+                    idxf_offset = 0
+                    table.setColumnCount(len(entry["columns"]))
+                    if entry["selectable"]:
+                        table.setColumnCount(len(entry["columns"]) + 1)
+                        table.setHorizontalHeaderItem(0, QTableWidgetItem("Select"))
+                        idxf_offset = 1
+                    for col_idx, title in enumerate(entry["columns"]):
+                        table.setHorizontalHeaderItem(col_idx + idxf_offset, QTableWidgetItem(title))
+                    for row_idx, row in enumerate(setup_data[sname][ename]):
+                        if entry["selectable"]:
+                            button = QPushButton()
+                            button.setIcon(QIcon(os.path.join(self.module_root, "icons", "select.png")))
+                            button.setToolTip(_("select this row"))
+                            button.clicked.connect(partial(self.table_select, sname, ename, row_idx))  # type: ignore
+                            table.setCellWidget(row_idx, 0, button)
+                            table.resizeColumnToContents(0)
+                        for col_idx, key in enumerate(entry["columns"]):
+                            table.setItem(
+                                row_idx,
+                                col_idx + idxf_offset,
+                                QTableWidgetItem(str(row[key])),
+                            )
+                            table.resizeColumnToContents(col_idx + idxf_offset)
+                elif entry["type"] == "color":
+                    pass
+                else:
+                    eprint(f"Unknown setup-type: {entry['type']}")
+
+            if changed_section:
+                self.tabobjwidget.setTabText(tab_idx, f">{titles.get(sname, sname)}<")
+            else:
+                self.tabobjwidget.setTabText(tab_idx, f"{titles.get(sname, sname)}")
+            tab_idx += 1
+
+    def create_layer_setup(self, tabwidget) -> None:
+        for sname in self.project["setup_defaults"]:
+            show_section = False
+            for entry in self.project["setup_defaults"][sname].values():
+                if entry.get("per_object", False):
+                    show_section = True
+            if not show_section:
+                continue
+
+            titles = {
+                "mill": "Mill",
+                "tool": "Tool",
+                "pockets": "Pockets",
+                "tabs": "Tabs",
+                "leads": "Leads",
+            }
+            scrollarea = QScrollArea()
+            scrollarea.setWidgetResizable(True)
+            vcontainer = QWidget()
+            vlayout = QVBoxLayout(vcontainer)
+            vlayout.setContentsMargins(0, 0, 0, 0)
+            scrollarea.setWidget(vcontainer)
+            tabwidget.addTab(scrollarea, titles.get(sname, sname))
+
+            for ename, entry in self.project["setup_defaults"][sname].items():
+                if not entry.get("per_object", False):
+                    continue
+                helptext = entry.get("tooltip", f"{sname}/{ename}")
+                container = QWidget()
+                hlayout = QHBoxLayout(container)
+                hlayout.setContentsMargins(10, 0, 10, 0)
+                entry["widget_obj_label"] = QLabel(entry.get("title", ename))
+                entry["widget_obj_label"].setToolTip(helptext)
+                hlayout.addWidget(entry["widget_obj_label"])
+                vlayout.addWidget(container)
+                hlayout.addStretch(1)
+                if entry["type"] == "bool":
+                    checkbox = QCheckBox(entry.get("title", ename))
+                    checkbox.setChecked(self.project["setup"][sname][ename])
+                    checkbox.setToolTip(helptext)
+                    checkbox.stateChanged.connect(self.object_changed)  # type: ignore
+                    hlayout.addWidget(checkbox)
+                    entry["widget_obj"] = checkbox
+                elif entry["type"] == "select":
+                    combobox = QComboBox()
+                    for option in entry["options"]:
+                        combobox.addItem(option[0])
+                    combobox.setCurrentText(self.project["setup"][sname][ename])
+                    combobox.setToolTip(helptext)
+                    combobox.currentTextChanged.connect(self.object_changed)  # type: ignore
+                    hlayout.addWidget(combobox)
+                    entry["widget_obj"] = combobox
+                elif entry["type"] == "color":
+                    color = self.project["setup"][sname][ename]
+                    rgb = f"{color[0] * 255:1.0f},{color[1] * 255:1.0f},{color[2] * 255:1.0f}"
+                    button = QPushButton(rgb)
+                    button.setStyleSheet(f"background-color:rgb({rgb})")
+                    button.setToolTip(helptext)
+                    button.clicked.connect(partial(self.color_select, sname, ename))  # type: ignore
+                    hlayout.addWidget(button)
+                    entry["widget_obj"] = button
+                elif entry["type"] == "float":
+                    dspinbox = QDoubleSpinBox()
+                    dspinbox.setDecimals(entry.get("decimals", 4))
+                    dspinbox.setSingleStep(entry.get("step", 1.0))
+                    dspinbox.setMinimum(entry["min"])
+                    dspinbox.setMaximum(entry["max"])
+                    dspinbox.setValue(self.project["setup"][sname][ename])
+                    dspinbox.setToolTip(helptext)
+                    dspinbox.valueChanged.connect(self.object_changed)  # type: ignore
+                    hlayout.addWidget(dspinbox)
+                    entry["widget_obj"] = dspinbox
+                elif entry["type"] == "int":
+                    spinbox = QSpinBox()
+                    spinbox.setSingleStep(entry.get("step", 1))
+                    spinbox.setMinimum(entry["min"])
+                    spinbox.setMaximum(entry["max"])
+                    spinbox.setValue(self.project["setup"][sname][ename])
+                    spinbox.setToolTip(helptext)
+                    spinbox.valueChanged.connect(self.object_changed)  # type: ignore
+                    hlayout.addWidget(spinbox)
+                    entry["widget_obj"] = spinbox
+                elif entry["type"] == "str":
+                    lineedit = QLineEdit()
+                    lineedit.setText(self.project["setup"][sname][ename])
+                    lineedit.setToolTip(helptext)
+                    lineedit.textChanged.connect(self.object_changed)  # type: ignore
+                    hlayout.addWidget(lineedit)
+                    entry["widget_obj"] = lineedit
+                elif entry["type"] == "mstr":
+                    mlineedit = QPlainTextEdit()
+                    mlineedit.setPlainText(self.project["setup"][sname][ename])
+                    mlineedit.setToolTip(helptext)
+                    mlineedit.textChanged.connect(self.object_changed)  # type: ignore
+                    hlayout.addWidget(mlineedit)
+                    entry["widget_obj"] = mlineedit
+                elif entry["type"] == "table":
+                    # add empty row if not exist
+                    first_element = list(entry["columns"].keys())[0]
+                    if entry.get("column_defaults") is not None and str(self.project["setup"][sname][ename][-1][first_element]) != "":
+                        new_row = {}
+                        for key, default in entry["column_defaults"].items():
+                            new_row[key] = default
+                        self.project["setup"][sname][ename].append(new_row)
+
+                    table = QTableWidget()
+                    table.setToolTip(helptext)
+                    table.setRowCount(len(self.project["setup"][sname][ename]))
+                    idxf_offset = 0
+                    table.setColumnCount(len(entry["columns"]))
+                    if entry["selectable"]:
+                        table.setColumnCount(len(entry["columns"]) + 1)
+                        table.setHorizontalHeaderItem(0, QTableWidgetItem("Select"))
+                        idxf_offset = 1
+                    for col_idx, title in enumerate(entry["columns"]):
+                        table.setHorizontalHeaderItem(col_idx + idxf_offset, QTableWidgetItem(title))
+                    for row_idx, row in enumerate(self.project["setup"][sname][ename]):
+                        if entry["selectable"]:
+                            button = QPushButton()
+                            button.setIcon(QIcon(os.path.join(self.module_root, "icons", "select.png")))
+                            button.setToolTip(_("select this row"))
+                            button.clicked.connect(partial(self.table_select, sname, ename, row_idx))  # type: ignore
+                            table.setCellWidget(row_idx, 0, button)
+                            table.resizeColumnToContents(0)
+                        for col_idx, key in enumerate(entry["columns"]):
+                            item = QTableWidgetItem(str(row[key]))
+                            table.setItem(
+                                row_idx,
+                                col_idx + idxf_offset,
+                                item,
+                            )
+                            # if entry["columns"][key].get("ro", False):
+                            #    item.setFlags(Qt.ItemIsEditable)
+                            table.resizeColumnToContents(col_idx + idxf_offset)
+                    table.itemChanged.connect(self.object_changed)  # type: ignore
+                    vlayout.addWidget(table)
+                    entry["widget_obj"] = table
+                else:
+                    eprint(f"Unknown setup-type: {entry['type']}")
+
+                unit = entry.get("unit", "")
+                if unit == "LINEARMEASURE":
+                    unit = self.project["setup"]["machine"]["unit"]
+
+                ulabel = QLabel(unit)
+                ulabel.setFont(QFont("Arial", 9))
+                hlayout.addWidget(ulabel)
+
+
     def setup_select_object(self, value):
         if self.project["status"] != "READY":
             return
@@ -2030,6 +2288,9 @@ class ViaConstructor:  # pylint: disable=R0904
         for obj_idx, obj in self.project["objects"].items():
             if obj_idx.startswith(f"{object_active}:"):
                 setup_data = obj["setup"]
+
+        print(setup_data)
+        print(object_active)
 
         tab_idx = 0
         for sname in self.project["setup_defaults"]:
@@ -2566,6 +2827,7 @@ class ViaConstructor:  # pylint: disable=R0904
         debug("prepare_segments: segments2objects")
         self.project["objects"] = segments2objects(self.project["segments"])
         self.project["layers"] = {}
+        self.project["layersetup"] = {}
         debug("prepare_segments: setup")
         for obj in self.project["objects"].values():
             obj["setup"] = {}
@@ -2576,6 +2838,10 @@ class ViaConstructor:  # pylint: disable=R0904
                 self.project["layers"][layer] = False
             else:
                 self.project["layers"][layer] = True
+
+            if layer not in self.project["layersetup"]:
+                self.project["layersetup"][layer] = self.project["setup"]
+
             # experimental: get some milling data from layer name (https://groups.google.com/g/dxf2gcode-users/c/q3hPQkN2OCo)
             if layer:
                 if layer.startswith("IGNORE:"):
@@ -2995,12 +3261,30 @@ class ViaConstructor:  # pylint: disable=R0904
         object_vbox.addWidget(self.combobjwidget, stretch=0)
         object_vbox.addWidget(self.tabobjwidget, stretch=1)
 
+        self.tablaywidget = QTabWidget()
+        self.create_layer_setup(self.tablaywidget)
+
+        self.laywidget = QWidget()
+        layer_vbox = QVBoxLayout(self.laywidget)
+        layer_vbox.setContentsMargins(0, 0, 0, 0)
+
+        self.lcombobjwidget = QComboBox()
+        self.lcombobjwidget.addItem("0")
+        self.lcombobjwidget.setCurrentText("0")
+        self.lcombobjwidget.setToolTip("Layer settings")
+        self.lcombobjwidget.currentTextChanged.connect(self.setup_select_layer)  # type: ignore
+
+        layer_vbox.addWidget(QLabel(_("Layer:")))
+        layer_vbox.addWidget(self.lcombobjwidget, stretch=0)
+        layer_vbox.addWidget(self.tablaywidget, stretch=1)
+
         self.infotext_widget = QPlainTextEdit()
         self.infotext_widget.setPlainText("info:")
 
         ltabwidget = QTabWidget()
         ltabwidget.addTab(self.tabwidget, _("&Global"))
         ltabwidget.addTab(self.objwidget, _("&Objects"))
+        ltabwidget.addTab(self.laywidget, _("L&ayerSetup"))
         ltabwidget.addTab(self.project["layerwidget"], _("&Layers"))
         ltabwidget.addTab(self.infotext_widget, _("&Infos"))
 
@@ -3012,6 +3296,15 @@ class ViaConstructor:  # pylint: disable=R0904
                 self.combobjwidget.addItem(idx.split(":")[0])
             self.project["object_active"] = "0"
             self.combobjwidget.setCurrentText(self.project["object_active"])
+
+
+        if self.lcombobjwidget is not None:
+            self.lcombobjwidget.clear()
+            for layer in self.project["layersetup"]:
+                self.lcombobjwidget.addItem(layer)
+            self.project["layer_active"] = list(self.project["layersetup"])[0]
+            self.lcombobjwidget.setCurrentText(self.project["layer_active"])
+
 
         self.update_object_setup()
 
