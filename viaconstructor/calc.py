@@ -415,7 +415,7 @@ def segments2objects(segments):
         last = None
 
         part_n = part_l - num_unused_segments(test_segments)
-        percent = round((part_n + 1) * 100 / part_l, 1)
+        percent = min(round((part_n + 1) * 100 / part_l, 1), 100.0)
         if int(percent) != int(last_percent):
             print(f"combining segments: {percent}%", end="\r")
         last_percent = int(percent)
