@@ -1316,6 +1316,53 @@ def draw_machinecode_path(project: dict) -> bool:
                 draw_line(line[0], line[1], line[2], project, tool_number)
             project["outputMinMax"] = gcode_parser.get_minmax()
 
+            # report
+            tool_number = 0
+            tool_dist = {"fast": 0.0, "tool": {}}
+            for line in toolpath:
+                if len(line) > 3 and line[3].startswith("TOOLCHANGE:"):
+                    new_tool = line[3].split(":")[1]
+                    tool_number = int(new_tool)
+
+                p_from = line[0]
+                p_to = line[1]
+                dist = calc_distance3d((p_from["X"], p_from["Y"], p_from["Z"]), (p_to["X"], p_to["Y"], p_to["Z"]))
+                if tool_number not in tool_dist["tool"]:
+                    tool_dist["tool"][tool_number] = {"up": 0.0, "down": 0.0, "move": 0.0}
+
+                if p_from["Z"] > 0.0 and p_to["Z"] > 0.0:
+                    tool_dist["fast"] += dist
+                elif p_from["X"] == p_to["X"] and p_from["Y"] == p_to["Y"]:
+                    if p_from["Z"] > 0.0:
+                        tool_dist["tool"][tool_number]["down"] += dist
+                    elif p_to["Z"] > 0.0:
+                        tool_dist["tool"][tool_number]["up"] += dist
+                else:
+                    tool_dist["tool"][tool_number]["move"] += dist
+
+            report = []
+            report.append("Size:")
+            report.append(f" X: {project['outputMinMax'][0]:0.2f}mm -> {project['outputMinMax'][3]:0.2f}mm ({(project['outputMinMax'][3] - project['outputMinMax'][0]):0.2f}mm)")
+            report.append(f" Y: {project['outputMinMax'][1]:0.2f}mm -> {project['outputMinMax'][4]:0.2f}mm ({(project['outputMinMax'][4] - project['outputMinMax'][1]):0.2f}mm)")
+            report.append(f" Z: {project['outputMinMax'][2]:0.2f}mm -> {project['outputMinMax'][5]:0.2f}mm ({(project['outputMinMax'][5] - project['outputMinMax'][2]):0.2f}mm)")
+            report.append("")
+            report.append("Tools:")
+            for tool, data in enumerate(project["setup"]["tool"]["tooltable"]):
+                number = data["number"]
+                if number in tool_dist["tool"] and tool_dist["tool"][number]["move"] > 0.0:
+                    report.append(f" T{data['number']}: {data['diameter']}mm")
+            report.append("")
+            report.append("Travel-Distance:")
+            report.append(f" Rapid: {tool_dist['fast']:0.2f}mm")
+            for tool, data in tool_dist["tool"].items():
+                if data["move"] == 0.0:
+                    continue
+                report.append(f" Tool(T{tool}): {data['move']:0.2f}mm + UP:{data['up']:0.2f}mm + DOWN:{data['down']:0.2f}mm")
+            project["report"] = "\n".join(report)
+            print("--------------------")
+            print(project["report"])
+            print("--------------------")
+
         elif project["suffix"] in {"hpgl", "hpg"}:
             project["setup"]["machine"]["g54"] = False
             project["setup"]["workpiece"]["offset_z"] = 0.0

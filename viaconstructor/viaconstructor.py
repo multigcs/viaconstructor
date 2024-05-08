@@ -191,6 +191,7 @@ class ViaConstructor:  # pylint: disable=R0904
         "object_active": "",
         "layersetup": {},
         "layer_active": "0",
+        "report": "",
     }
     info = ""
     save_tabs = "no"
