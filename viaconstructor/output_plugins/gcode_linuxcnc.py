@@ -19,6 +19,9 @@ class PostProcessorGcodeLinuxCNC(PostProcessor):
         self.scale: float = 1.0
         self.tool_active = -1
         self.tool_running = 0
+        self.rotation = self.project["setup"]["mill"]["rotation"]
+        self.rotation_radius = self.project["setup"]["mill"]["rotation_radius"]
+        self.rwidth = width = self.rotation_radius * 2 * math.pi
 
     def separation(self) -> None:
         if self.comments:
@@ -101,13 +104,27 @@ class PostProcessorGcodeLinuxCNC(PostProcessor):
     def move(self, x_pos=None, y_pos=None, z_pos=None) -> None:
         line = []
         if x_pos is not None and self.x_pos != x_pos:
-            line.append(f"X{round((x_pos + self.offsets[0]) * self.scale, 6):.6f}")
+            if self.rotation == "x":
+                radius = self.rotation_radius
+                angle = (x_pos + self.offsets[0]) * self.scale / self.rwidth * -360.0
+                line.append(f"B{round(angle, 6):.6f}")
+            else:
+                line.append(f"X{round((x_pos + self.offsets[0]) * self.scale, 6):.6f}")
             self.x_pos = x_pos
         if y_pos is not None and self.y_pos != y_pos:
-            line.append(f"Y{round((y_pos + self.offsets[1]) * self.scale, 6):.6f}")
+            if self.rotation == "y":
+                radius = self.rotation_radius
+                angle = (y_pos + self.offsets[1]) * self.scale / self.rwidth * -360.0
+                line.append(f"A{round(angle, 6):.6f}")
+            else:
+                line.append(f"Y{round((y_pos + self.offsets[1]) * self.scale, 6):.6f}")
             self.y_pos = y_pos
         if z_pos is not None and self.z_pos != z_pos:
-            line.append(f"Z{round((z_pos + self.offsets[2]) * self.scale, 6):.6f}")
+            if self.rotation != "none":
+                radius = self.rotation_radius
+                line.append(f"Z{round(((z_pos + radius) + self.offsets[2]) * self.scale, 6):.6f}")
+            else:
+                line.append(f"Z{round((z_pos + self.offsets[2]) * self.scale, 6):.6f}")
             self.z_pos = z_pos
         if line:
             self.gcode.append("G00 " + " ".join(line))
@@ -117,7 +134,11 @@ class PostProcessorGcodeLinuxCNC(PostProcessor):
             fast_move_z = self.project["setup"]["mill"]["fast_move_z"]
 
             # tool to safe z
-            self.gcode.append(f"G00 Z{fast_move_z}")
+            if self.rotation != "none":
+                radius = self.rotation_radius
+                self.gcode.append(f"G00 Z{fast_move_z + radius}")
+            else:
+                self.gcode.append(f"G00 Z{fast_move_z}")
 
             # tool off
             if self.speed > 0:
@@ -133,7 +154,11 @@ class PostProcessorGcodeLinuxCNC(PostProcessor):
 
             # tool to safe z
             if self.z_pos != fast_move_z:
-                self.gcode.append(f"G00 Z{fast_move_z}")
+                if self.rotation != "none":
+                    radius = self.rotation_radius
+                    self.gcode.append(f"G00 Z{fast_move_z + radius}")
+                else:
+                    self.gcode.append(f"G00 Z{fast_move_z}")
 
             # tool to last xy
             if self.x_pos is not None and self.y_pos is not None:
@@ -141,7 +166,11 @@ class PostProcessorGcodeLinuxCNC(PostProcessor):
 
             # tool to last z
             if self.z_pos is not None and self.z_pos != fast_move_z:
-                self.gcode.append(f"G00 Z{self.z_pos}")
+                if self.rotation != "none":
+                    radius = self.rotation_radius
+                    self.gcode.append(f"G00 Z{self.z_pos + radius}")
+                else:
+                    self.gcode.append(f"G00 Z{self.z_pos}")
 
         self.tool_active = number
 
@@ -208,13 +237,27 @@ class PostProcessorGcodeLinuxCNC(PostProcessor):
     def linear(self, x_pos=None, y_pos=None, z_pos=None) -> None:
         line = []
         if x_pos is not None and self.x_pos != x_pos:
-            line.append(f"X{round((x_pos + self.offsets[0]) * self.scale, 6):.6f}")
+            if self.rotation == "x":
+                radius = self.rotation_radius
+                angle = (x_pos + self.offsets[0]) * self.scale / self.rwidth * -360.0
+                line.append(f"B{round(angle, 6):.6f}")
+            else:
+                line.append(f"X{round((x_pos + self.offsets[0]) * self.scale, 6):.6f}")
             self.x_pos = x_pos
         if y_pos is not None and self.y_pos != y_pos:
-            line.append(f"Y{round((y_pos + self.offsets[1]) * self.scale, 6):.6f}")
+            if self.rotation == "y":
+                radius = self.rotation_radius
+                angle = (y_pos + self.offsets[1]) * self.scale / self.rwidth * -360.0
+                line.append(f"A{round(angle, 6):.6f}")
+            else:
+                line.append(f"Y{round((y_pos + self.offsets[1]) * self.scale, 6):.6f}")
             self.y_pos = y_pos
         if z_pos is not None and self.z_pos != z_pos:
-            line.append(f"Z{round((z_pos + self.offsets[2]) * self.scale, 6):.6f}")
+            if self.rotation != "none":
+                radius = self.rotation_radius
+                line.append(f"Z{round(((z_pos + radius) + self.offsets[2]) * self.scale, 6):.6f}")
+            else:
+                line.append(f"Z{round((z_pos + self.offsets[2]) * self.scale, 6):.6f}")
             self.z_pos = z_pos
         if line:
             self.gcode.append("G01 " + " ".join(line))
@@ -222,13 +265,27 @@ class PostProcessorGcodeLinuxCNC(PostProcessor):
     def arc_cw(self, x_pos=None, y_pos=None, z_pos=None, i_pos=None, j_pos=None, r_pos=None) -> None:
         line = []
         if x_pos is not None and self.x_pos != x_pos:
-            line.append(f"X{round((x_pos + self.offsets[0]) * self.scale, 6):.6f}")
+            if self.rotation == "x":
+                radius = self.rotation_radius
+                angle = (x_pos + self.offsets[0]) * self.scale / self.rwidth * -360.0
+                line.append(f"B{round(angle, 6):.6f}")
+            else:
+                line.append(f"X{round((x_pos + self.offsets[0]) * self.scale, 6):.6f}")
             self.x_pos = x_pos
         if y_pos is not None and self.y_pos != y_pos:
-            line.append(f"Y{round((y_pos + self.offsets[1]) * self.scale, 6):.6f}")
+            if self.rotation == "y":
+                radius = self.rotation_radius
+                angle = (y_pos + self.offsets[1]) * self.scale / self.rwidth * -360.0
+                line.append(f"A{round(angle, 6):.6f}")
+            else:
+                line.append(f"Y{round((y_pos + self.offsets[1]) * self.scale, 6):.6f}")
             self.y_pos = y_pos
         if z_pos is not None and self.z_pos != z_pos:
-            line.append(f"Z{round((z_pos + self.offsets[2]) * self.scale, 6):.6f}")
+            if self.rotation != "none":
+                radius = self.rotation_radius
+                line.append(f"Z{round(((z_pos + radius) + self.offsets[2]) * self.scale, 6):.6f}")
+            else:
+                line.append(f"Z{round((z_pos + self.offsets[2]) * self.scale, 6):.6f}")
             self.z_pos = z_pos
         if self.arcs == "r":
             if i_pos is not None and j_pos is not None:
@@ -247,13 +304,27 @@ class PostProcessorGcodeLinuxCNC(PostProcessor):
     def arc_ccw(self, x_pos=None, y_pos=None, z_pos=None, i_pos=None, j_pos=None, r_pos=None) -> None:
         line = []
         if x_pos is not None and self.x_pos != x_pos:
-            line.append(f"X{round((x_pos + self.offsets[0]) * self.scale, 6):.6f}")
+            if self.rotation == "x":
+                radius = self.rotation_radius
+                angle = (x_pos + self.offsets[0]) * self.scale / self.rwidth * -360.0
+                line.append(f"B{round(angle, 6):.6f}")
+            else:
+                line.append(f"X{round((x_pos + self.offsets[0]) * self.scale, 6):.6f}")
             self.x_pos = x_pos
         if y_pos is not None and self.y_pos != y_pos:
-            line.append(f"Y{round((y_pos + self.offsets[1]) * self.scale, 6):.6f}")
+            if self.rotation == "y":
+                radius = self.rotation_radius
+                angle = (y_pos + self.offsets[1]) * self.scale / self.rwidth * -360.0
+                line.append(f"A{round(angle, 6):.6f}")
+            else:
+                line.append(f"Y{round((y_pos + self.offsets[1]) * self.scale, 6):.6f}")
             self.y_pos = y_pos
         if z_pos is not None and self.z_pos != z_pos:
-            line.append(f"Z{round((z_pos + self.offsets[2]) * self.scale, 6):.6f}")
+            if self.rotation != "none":
+                radius = self.rotation_radius
+                line.append(f"Z{round(((z_pos + radius) + self.offsets[2]) * self.scale, 6):.6f}")
+            else:
+                line.append(f"Z{round((z_pos + self.offsets[2]) * self.scale, 6):.6f}")
             self.z_pos = z_pos
         if self.arcs == "r":
             if i_pos is not None and j_pos is not None:

@@ -689,6 +689,57 @@ class GLWidget(QGLWidget):
             self.scale_xyz -= self.wheel_scale
 
 
+def rotation_pos(px, py, pz, radius, axis):
+    width = radius * 2 * math.pi
+    radius += pz
+    if axis == "x":
+        angle = px / width * -360.0
+        y_pos = py
+        x_pos = radius * math.cos(angle * math.pi / 180.0 + 1.5)
+        z_pos = radius * math.sin(angle * math.pi / 180.0 + 1.5)
+    elif axis == "y":
+        angle = py / width * -360.0
+        x_pos = px
+        y_pos = radius * math.cos(angle * math.pi / 180.0 + 1.5)
+        z_pos = radius * math.sin(angle * math.pi / 180.0 + 1.5)
+    else:
+        x_pos = px
+        y_pos = py
+        z_pos = pz
+
+    return (x_pos, y_pos, z_pos)
+
+
+def gl_line(project, start, end):
+    axis = project["setup"]["mill"]["rotation"]
+    if axis != "none":
+        radius = project["setup"]["mill"]["rotation_radius"]
+        if axis == "y":
+            diff = abs(end[1] - start[1])
+        else:
+            diff = abs(end[0] - start[0])
+        parts = int(diff / 2.0)
+        if parts > 0:
+            last_pos = None
+            for part in range(parts + 1):
+                lpos = part / parts
+                ppos = point_of_line3d((end[0], end[1], end[2]), (start[0], start[1], start[2]), lpos)
+                if last_pos is not None:
+                    rpos = rotation_pos(last_pos[0], last_pos[1], last_pos[2], radius, axis)
+                    GL.glVertex3f(rpos[0], rpos[1], rpos[2])
+                    rpos = rotation_pos(ppos[0], ppos[1], ppos[2], radius, axis)
+                    GL.glVertex3f(rpos[0], rpos[1], rpos[2])
+                last_pos = ppos
+        else:
+            rpos = rotation_pos(start[0], start[1], start[2], radius, axis)
+            GL.glVertex3f(rpos[0], rpos[1], rpos[2])
+            rpos = rotation_pos(end[0], end[1], end[2], radius, axis)
+            GL.glVertex3f(rpos[0], rpos[1], rpos[2])
+    else:
+        GL.glVertex3f(start[0], start[1], start[2])
+        GL.glVertex3f(end[0], end[1], end[2])
+
+
 def draw_circle(center: Sequence[float], radius: float) -> None:
     """draws an circle"""
     GL.glBegin(GL.GL_TRIANGLE_STRIP)
@@ -705,6 +756,7 @@ def draw_circle(center: Sequence[float], radius: float) -> None:
 
 
 def draw_mill_line(
+    project: dict,
     p_from: Sequence[float],
     p_to: Sequence[float],
     width: float,
@@ -743,8 +795,7 @@ def draw_mill_line(
     else:
         GL.glColor3f(0.11, 0.63, 0.36)
     GL.glBegin(GL.GL_LINES)
-    GL.glVertex3fv(p_from)
-    GL.glVertex3fv(p_to)
+    gl_line(project, p_from, p_to)
     GL.glEnd()
 
     if mode != "minimal":
@@ -763,14 +814,13 @@ def draw_mill_line(
         x_arrow_right = x_arrow + 1 * math.sin(line_angle)
         y_arrow_right = y_arrow - 1 * math.cos(line_angle)
         GL.glBegin(GL.GL_LINES)
-        GL.glVertex3f(center[0], center[1], center[2] + 0.01)
-        GL.glVertex3f(x_arrow_left, y_arrow_left, center[2] + 0.01)
-        GL.glVertex3f(center[0], center[1], center[2] + 0.01)
-        GL.glVertex3f(x_arrow_right, y_arrow_right, center[2] + 0.01)
+        gl_line(project, (center[0], center[1], center[2] + 0.01), (x_arrow_left, y_arrow_left, center[2] + 0.01))
+        gl_line(project, (center[0], center[1], center[2] + 0.01), (x_arrow_right, y_arrow_right, center[2] + 0.01))
         GL.glEnd()
 
 
 def draw_text(
+    project: dict,
     text: str,
     pos_x: float,
     pos_y: float,
@@ -793,8 +843,7 @@ def draw_text(
         if center_y:
             pos_y -= height / 2.0
     for (x_1, y_1), (x_2, y_2) in test_data:
-        GL.glVertex3f(pos_x + x_1 * scale, pos_y + y_1 * scale, pos_z)
-        GL.glVertex3f(pos_x + x_2 * scale, pos_y + y_2 * scale, pos_z)
+        gl_line(project, (pos_x + x_1 * scale, pos_y + y_1 * scale, pos_z), (pos_x + x_2 * scale, pos_y + y_2 * scale, pos_z))
 
 
 def draw_grid(project: dict) -> None:
@@ -821,17 +870,21 @@ def draw_grid(project: dict) -> None:
         z_offset *= unitscale
         mill_depth *= unitscale
 
+    axis = project["setup"]["mill"]["rotation"]
+    if axis != "none":
+        mill_depth = 0
+
     if project["setup"]["view"]["grid_show"]:
         # Grid-X
         GL.glLineWidth(0.1)
         GL.glColor3f(0.9, 0.9, 0.9)
         GL.glBegin(GL.GL_LINES)
         for p_x in range(start_x, end_x + size, size):
-            GL.glVertex3f(p_x, start_y, mill_depth)
-            GL.glVertex3f(p_x, end_y, mill_depth)
+            gl_line(project, (p_x, start_y, mill_depth), (p_x, end_y, mill_depth))
+            gl_line(project, (p_x, start_y, mill_depth), (p_x, end_y, mill_depth))
         if project["setup"]["view"]["ruler_show"] and size >= 5:
             for p_x in range(start_x, end_x, size):
-                draw_text(f"{p_x}", p_x, start_y, mill_depth, 0.4)
+                draw_text(project, f"{p_x}", p_x, start_y, mill_depth, 0.4)
         GL.glEnd()
 
         # Grid-Y
@@ -839,23 +892,19 @@ def draw_grid(project: dict) -> None:
         GL.glColor3f(0.9, 0.9, 0.9)
         GL.glBegin(GL.GL_LINES)
         for p_y in range(start_y, end_y + size, size):
-            GL.glVertex3f(start_x, p_y, mill_depth)
-            GL.glVertex3f(end_x, p_y, mill_depth)
+            gl_line(project, (start_x, p_y, mill_depth), (end_x, p_y, mill_depth))
         if project["setup"]["view"]["ruler_show"] and size >= 5:
             for p_y in range(start_y, end_y, size):
-                draw_text(f"{p_y}", start_x, p_y, mill_depth, 0.4)
+                draw_text(project, f"{p_y}", start_x, p_y, mill_depth, 0.4)
         GL.glEnd()
 
     # Zero-Z
     GL.glLineWidth(1)
     GL.glColor3f(1.0, 1.0, 0.0)
     GL.glBegin(GL.GL_LINES)
-    GL.glVertex3f(0.0, 0.0, 100.0)
-    GL.glVertex3f(0.0, 0.0, mill_depth)
-    GL.glVertex3f(-1, -1, 0.0)
-    GL.glVertex3f(1, 1, 0.0)
-    GL.glVertex3f(-1, 1, 0.0)
-    GL.glVertex3f(1, -1, 0.0)
+    gl_line(project, (0.0, 0.0, 100.0), (0.0, 0.0, mill_depth))
+    gl_line(project, (-1, -1, 0.0), (1, 1, 0.0))
+    gl_line(project, (-1, 1, 0.0), (1, -1, 0.0))
     GL.glEnd()
 
     # Z-Offset
@@ -863,34 +912,29 @@ def draw_grid(project: dict) -> None:
         GL.glLineWidth(1)
         GL.glColor3f(1.0, 0.0, 1.0)
         GL.glBegin(GL.GL_LINES)
-        GL.glVertex3f(-2, -1, z_offset)
-        GL.glVertex3f(2, 2, z_offset)
-        GL.glVertex3f(-2, 2, z_offset)
-        GL.glVertex3f(2, -2, z_offset)
+        gl_line(project, (-2, -1, z_offset), (2, 2, z_offset))
+        gl_line(project, (-2, 2, z_offset), (2, -2, z_offset))
         GL.glEnd()
 
     # Zero-X
     GL.glColor3f(0.5, 0.0, 0.0)
     GL.glBegin(GL.GL_LINES)
-    GL.glVertex3f(0.0, start_y, mill_depth)
-    GL.glVertex3f(0.0, end_y, mill_depth)
+    gl_line(project, (0.0, start_y, mill_depth), (0.0, end_y, mill_depth))
     GL.glEnd()
     # Zero-Y
     GL.glColor3f(0.0, 0.0, 0.5)
     GL.glBegin(GL.GL_LINES)
-    GL.glVertex3f(start_x, 0.0, mill_depth)
-    GL.glVertex3f(end_x, 0.0, mill_depth)
+    gl_line(project, (start_x, 0.0, mill_depth), (end_x, 0.0, mill_depth))
     GL.glEnd()
 
     if project["setup"]["view"]["ruler_show"]:
         # MinMax-X
         GL.glColor3f(0.5, 0.0, 0.0)
         GL.glBegin(GL.GL_LINES)
-        GL.glVertex3f(min_max[0], start_y - 5, mill_depth)
-        GL.glVertex3f(min_max[0], end_y, mill_depth)
-        GL.glVertex3f(min_max[2], start_y - 5, mill_depth)
-        GL.glVertex3f(min_max[2], end_y, mill_depth)
+        gl_line(project, (min_max[0], start_y - 5, mill_depth), (min_max[0], end_y, mill_depth))
+        gl_line(project, (min_max[2], start_y - 5, mill_depth), (min_max[2], end_y, mill_depth))
         draw_text(
+            project,
             f"{round(min_max[0], 2)}",
             min_max[0],
             start_y - 5 - 6,
@@ -899,6 +943,7 @@ def draw_grid(project: dict) -> None:
             True,
         )
         draw_text(
+            project,
             f"{round(min_max[2], 2)}",
             min_max[2],
             start_y - 5 - 6,
@@ -910,11 +955,10 @@ def draw_grid(project: dict) -> None:
         # MinMax-Y
         GL.glColor3f(0.0, 0.0, 0.5)
         GL.glBegin(GL.GL_LINES)
-        GL.glVertex3f(start_x, min_max[1], mill_depth)
-        GL.glVertex3f(end_x + 5, min_max[1], mill_depth)
-        GL.glVertex3f(start_x, min_max[3], mill_depth)
-        GL.glVertex3f(end_x + 5, min_max[3], mill_depth)
+        gl_line(project, (start_x, min_max[1], mill_depth), (end_x + 5, min_max[1], mill_depth))
+        gl_line(project, (start_x, min_max[3], mill_depth), (end_x + 5, min_max[3], mill_depth))
         draw_text(
+            project,
             f"{round(min_max[1], 2)}",
             end_x + 5,
             min_max[1],
@@ -924,6 +968,7 @@ def draw_grid(project: dict) -> None:
             True,
         )
         draw_text(
+            project,
             f"{round(min_max[3], 2)}",
             end_x + 5,
             min_max[3],
@@ -936,12 +981,12 @@ def draw_grid(project: dict) -> None:
         # Size-X
         GL.glColor3f(1.0, 0.0, 0.0)
         GL.glBegin(GL.GL_LINES)
-        draw_text(f"{round(size_x, 2)}", center_x, start_y - 5 - 6, mill_depth, 0.5, True)
+        draw_text(project, f"{round(size_x, 2)}", center_x, start_y - 5 - 6, mill_depth, 0.5, True)
         GL.glEnd()
         # Size-Y
         GL.glColor3f(0.0, 0.0, 1.0)
         GL.glBegin(GL.GL_LINES)
-        draw_text(f"{round(size_y, 2)}", end_x + 5, center_y, mill_depth, 0.5, False, True)
+        draw_text(project, f"{round(size_y, 2)}", end_x + 5, center_y, mill_depth, 0.5, False, True)
         GL.glEnd()
 
 
@@ -1015,8 +1060,7 @@ def draw_object_edges(project: dict, selected: int = -1) -> None:
             for segment in obj.segments:
                 p_x = segment.start[0]
                 p_y = segment.start[1]
-                GL.glVertex3f(p_x, p_y, 0.0)
-                GL.glVertex3f(p_x, p_y, depth)
+                gl_line(project, (p_x, p_y, 0.0), (p_x, p_y, depth))
             GL.glEnd()
 
             # top
@@ -1026,15 +1070,12 @@ def draw_object_edges(project: dict, selected: int = -1) -> None:
                     last_x = segment.start[0]
                     last_y = segment.start[1]
                     for point in bulge_points(segment.start, segment.end, segment.bulge):
-                        GL.glVertex3f(last_x, last_y, 0.0)
-                        GL.glVertex3f(point[0], point[1], 0.0)
+                        gl_line(project, (last_x, last_y, 0.0), (point[0], point[1], 0.0))
                         last_x = point[0]
                         last_y = point[1]
-                    GL.glVertex3f(last_x, last_y, 0.0)
-                    GL.glVertex3f(segment.end[0], segment.end[1], 0.0)
+                    gl_line(project, (last_x, last_y, 0.0), (segment.end[0], segment.end[1], 0.0))
                 else:
-                    GL.glVertex3f(segment.start[0], segment.start[1], 0.0)
-                    GL.glVertex3f(segment.end[0], segment.end[1], 0.0)
+                    gl_line(project, (segment.start[0], segment.start[1], 0.0), (segment.end[0], segment.end[1], 0.0))
             GL.glEnd()
 
             # bottom
@@ -1045,15 +1086,12 @@ def draw_object_edges(project: dict, selected: int = -1) -> None:
                         last_x = segment.start[0]
                         last_y = segment.start[1]
                         for point in bulge_points(segment.start, segment.end, segment.bulge):
-                            GL.glVertex3f(last_x, last_y, depth)
-                            GL.glVertex3f(point[0], point[1], depth)
+                            gl_line(project, (last_x, last_y, depth), (point[0], point[1], depth))
                             last_x = point[0]
                             last_y = point[1]
-                        GL.glVertex3f(last_x, last_y, depth)
-                        GL.glVertex3f(segment.end[0], segment.end[1], depth)
+                        gl_line(project, (last_x, last_y, depth), (segment.end[0], segment.end[1], depth))
                     else:
-                        GL.glVertex3f(segment.start[0], segment.start[1], depth)
-                        GL.glVertex3f(segment.end[0], segment.end[1], depth)
+                        gl_line(project, (segment.start[0], segment.start[1], depth), (segment.end[0], segment.end[1], depth))
                 GL.glEnd()
 
             # start points
@@ -1063,10 +1101,8 @@ def draw_object_edges(project: dict, selected: int = -1) -> None:
                 GL.glLineWidth(5)
                 GL.glColor4f(1.0, 1.0, 0.0, 1.0)
                 GL.glBegin(GL.GL_LINES)
-                GL.glVertex3f(start[0] - 1, start[1] - 1, depth)
-                GL.glVertex3f(start[0] + 1, start[1] + 1, depth)
-                GL.glVertex3f(start[0] - 1, start[1] + 1, depth)
-                GL.glVertex3f(start[0] + 1, start[1] - 1, depth)
+                gl_line(project, (start[0] - 1, start[1] - 1, depth), (start[0] + 1, start[1] + 1, depth))
+                gl_line(project, (start[0] - 1, start[1] + 1, depth), (start[0] + 1, start[1] - 1, depth))
                 GL.glEnd()
 
     # tabs
@@ -1077,8 +1113,7 @@ def draw_object_edges(project: dict, selected: int = -1) -> None:
         GL.glColor4f(1.0, 1.0, 0.0, 1.0)
         GL.glBegin(GL.GL_LINES)
         for tab in tabs:
-            GL.glVertex3f(tab[0][0], tab[0][1], tabs_depth)
-            GL.glVertex3f(tab[1][0], tab[1][1], tabs_depth)
+            gl_line(project, (tab[0][0], tab[0][1], tabs_depth), (tab[1][0], tab[1][1], tabs_depth))
         GL.glEnd()
 
 
@@ -1286,7 +1321,7 @@ def draw_line(p_1: dict, p_2: dict, options: str, project: dict, tool_number: in
 
     mode = project["setup"]["view"]["path"]
     project["simulation_data"].append((p_from, p_to, diameter, mode, options))
-    draw_mill_line(p_from, p_to, diameter, mode, options)
+    draw_mill_line(project, p_from, p_to, diameter, mode, options)
 
 
 def draw_machinecode_path(project: dict) -> bool:
@@ -1304,6 +1339,7 @@ def draw_machinecode_path(project: dict) -> bool:
                     tool_number = int(new_tool)
                     GL.glBegin(GL.GL_LINES)
                     draw_text(
+                        project,
                         f"TC:{new_tool}",
                         line[0]["X"],
                         line[0]["Y"],

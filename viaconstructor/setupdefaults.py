@@ -122,6 +122,25 @@ def setup_defaults(_) -> dict:
                 "title": _("Object-Order"),
                 "tooltip": _("how order the objects"),
             },
+            "rotation": {
+                "default": "none",
+                "type": "select",
+                "options": (
+                    ("none", _("none")),
+                    ("x", _("x")),
+                    ("y", _("y")),
+                ),
+                "title": _("Rotation"),
+                "tooltip": _("rotation"),
+            },
+            "rotation_radius": {
+                "default": 100.0,
+                "type": "float",
+                "min": 1.0,
+                "max": 10000.0,
+                "title": _("rotation_radius"),
+                "tooltip": _("rotation radius"),
+            },
         },
         "tool": {
             "number": {
