@@ -195,6 +195,7 @@ class ViaConstructor:  # pylint: disable=R0904
         "layersetup": {},
         "layer_active": "0",
         "report": "",
+        "project_file": None,
     }
     info = ""
     save_tabs = "no"
@@ -571,6 +572,8 @@ class ViaConstructor:  # pylint: disable=R0904
         file_dialog = QFileDialog(self.main)
         file_dialog.setNameFilters(["vcp (*.vcp)"])
         filename_default = f"{'.'.join(self.project['filename_draw'].split('.')[:-1])}.vcp"
+        if self.project["project_file"]:
+            filename_default = self.project["project_file"]
         self.project["filename_machine_cmd"] = f"{'.'.join(self.project['filename_draw'].split('.')[:-1])}.vcp"
         name = file_dialog.getSaveFileName(
             self.main,
@@ -586,12 +589,14 @@ class ViaConstructor:  # pylint: disable=R0904
         """load project."""
         self.status_bar_message(f"{self.info} - load project..")
         file_dialog = QFileDialog(self.main)
-
+        filename_default = f"{'.'.join(self.project['filename_draw'].split('.')[:-1])}.vcp"
+        if self.project["project_file"]:
+            filename_default = self.project["project_file"]
         suffix_list = ["*.vcp"]
         name = file_dialog.getOpenFileName(
             self.main,
             "Load Project",
-            "",
+            filename_default,
             f"project ( {' '.join(suffix_list)} )" "Load Project",
             "",
         )
@@ -789,13 +794,15 @@ class ViaConstructor:  # pylint: disable=R0904
         }
         project_json = json.dumps(project_data, indent=4, sort_keys=True)
         open(filename, "w").write(project_json)
+        self.project["project_file"] = filename
         return True
 
-    def load_project(self, filename: str) -> bool:
-        project_json = open(filename, "r").read()
+    def load_project(self, project_file: str) -> bool:
+        project_json = open(project_file, "r").read()
         project_data = json.loads(project_json)
         for sname in self.project["setup"]:
-            self.project["setup"][sname].update(project_data.get(sname, {}))
+            self.project["setup"][sname].update(project_data.get("general", {}).get(sname, {}))
+        self.project["project_file"] = project_file
 
         filename = project_data.get("filename_draw", "")
         if filename and self.project["filename_draw"] != filename:
