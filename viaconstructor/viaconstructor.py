@@ -1064,6 +1064,8 @@ class ViaConstructor:  # pylint: disable=R0904
 
         if not self.project["setup"]["view"]["autocalc"]:
             return
+
+        self.project["maxOuter"] = find_tool_offsets(self.project["objects"])
         self.update_drawing()
 
     def object_changed(self, value=0) -> None:  # pylint: disable=W0613
@@ -1154,6 +1156,8 @@ class ViaConstructor:  # pylint: disable=R0904
 
         if not self.project["setup"]["view"]["autocalc"]:
             return
+
+        self.project["maxOuter"] = find_tool_offsets(self.project["objects"])
         self.update_drawing()
 
     def global_changed(self, value=0) -> None:  # pylint: disable=W0613
