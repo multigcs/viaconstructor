@@ -74,6 +74,7 @@ from .calc import (
 )
 from .draw2d import CanvasWidget
 from .draw2d import draw_all as draw_all_2d
+from .dxfcolors import dxfcolors
 from .gldraw import GLWidget
 from .gldraw import draw_all as draw_all_gl
 from .machine_cmd import polylines2machine_cmd
@@ -189,6 +190,7 @@ class ViaConstructor:  # pylint: disable=R0904
         "draw_reader": None,
         "origin": [0.0, 0.0],
         "layers": {},
+        "layercolors": {},
         "object_active": "",
         "layersetup": {},
         "layer_active": "0",
@@ -984,9 +986,7 @@ class ViaConstructor:  # pylint: disable=R0904
         layer_active = self.project["layer_active"]
         setup_data = self.project["setup"]
         if layer_active in self.project["layersetup"]:
-
             old_setup = deepcopy(self.project["layersetup"][layer_active])
-
             setup_data = self.project["layersetup"][layer_active]
 
         tab_idx = 0
@@ -2107,14 +2107,16 @@ class ViaConstructor:  # pylint: disable=R0904
         return info_text
 
     def setup_select_layer(self, value):
-        layer_active = value
-        self.project["layer_active"] = layer_active
         if self.project["status"] != "READY":
             return
         self.project["status"] = "CHANGE"
+
+        layer_active = "(".join(value.split("(")[0:-1]).strip()
+        self.project["layer_active"] = layer_active
         self.combobjwidget.setCurrentText(layer_active)
         self.project["layer_active"] = layer_active
         self.update_layer_setup()
+
         self.project["status"] = "READY"
 
     def update_layer_setup(self) -> None:
@@ -2937,10 +2939,18 @@ class ViaConstructor:  # pylint: disable=R0904
             for sect in ("mill", "tool", "pockets", "tabs", "leads"):
                 obj["setup"][sect] = deepcopy(self.project["setup"][sect])
             layer = obj.get("layer")
+            color = obj.get("color")
+
             if layer.startswith(("BREAKS:", "_TABS")):
                 self.project["layers"][layer] = False
             else:
                 self.project["layers"][layer] = True
+
+            if layer not in self.project["layercolors"]:
+                color_name = ""
+                if color in dxfcolors:
+                    color_name = dxfcolors[color][3]
+                self.project["layercolors"][layer] = color_name
 
             if layer not in self.project["layersetup"]:
                 self.project["layersetup"][layer] = {}
@@ -3406,10 +3416,13 @@ class ViaConstructor:  # pylint: disable=R0904
 
         if self.lcombobjwidget is not None:
             self.lcombobjwidget.clear()
+
             for layer in self.project["layersetup"]:
-                self.lcombobjwidget.addItem(layer)
+                color_name = self.project["layercolors"].get(layer) or "---"
+                self.lcombobjwidget.addItem(f"{layer} ({color_name})")
+
             if self.project["layersetup"]:
-                self.project["layer_active"] = list(self.project["layersetup"])[0]
+                self.project["layer_active"] = "(".join(list(self.project["layersetup"])[0].split("(")[0:-1]).strip()
                 self.lcombobjwidget.setCurrentText(self.project["layer_active"])
 
         self.update_layer_setup()
