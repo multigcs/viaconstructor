@@ -1359,9 +1359,6 @@ def draw_machinecode_path(project: dict) -> bool:
                     continue
                 report.append(f" Tool(T{tool}): {data['move']:0.2f}mm + UP:{data['up']:0.2f}mm + DOWN:{data['down']:0.2f}mm")
             project["report"] = "\n".join(report)
-            print("--------------------")
-            print(project["report"])
-            print("--------------------")
 
         elif project["suffix"] in {"hpgl", "hpg"}:
             project["setup"]["machine"]["g54"] = False

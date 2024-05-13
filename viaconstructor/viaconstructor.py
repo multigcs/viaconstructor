@@ -180,6 +180,7 @@ class ViaConstructor:  # pylint: disable=R0904
             "table": None,
         },
         "textwidget": None,
+        "reportwidget": None,
         "simulation": False,
         "simulation_pos": 0,
         "simulation_last": (0.0, 0.0, 0.0),
@@ -748,6 +749,11 @@ class ViaConstructor:  # pylint: disable=R0904
         if self.main:
             self.main.setWindowTitle("viaConstructor")
         self.status_bar_message(f"{self.info} - calculate..done")
+
+        if self.project["reportwidget"]:
+            self.project["reportwidget"].clear()
+            self.project["reportwidget"].insertPlainText(self.project["report"])
+            self.project["reportwidget"].verticalScrollBar().setValue(0)
 
         debug("update_drawing: done")
 
@@ -3298,11 +3304,13 @@ class ViaConstructor:  # pylint: disable=R0904
         self.status_bar_message(f"{self.info} - startup")
 
         self.project["textwidget"] = QPlainTextEdit()
+        self.project["reportwidget"] = QPlainTextEdit()
         left_gridlayout = QGridLayout()
 
         tabwidget = QTabWidget()
         tabwidget.addTab(self.project["glwidget"], _("&3D-View"))
         tabwidget.addTab(self.project["textwidget"], _("&Machine-Output"))
+        tabwidget.addTab(self.project["reportwidget"], _("&Report"))
 
         if openscad or camotics:
             preview = QWidget()
