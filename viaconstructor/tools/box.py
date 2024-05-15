@@ -485,7 +485,7 @@ class BoxTool(QWidget):
 
             doc.saveas(output_file)
 
-            if self.app.load_drawing(output_file, no_setup=True):
+            if self.app.load_drawings([output_file], no_setup=True, append_only=True):
                 pass
 
         # self.gear_width.valueChanged.connect(self.preview)  # type: ignore

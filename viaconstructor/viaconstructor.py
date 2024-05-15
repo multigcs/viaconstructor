@@ -3043,7 +3043,9 @@ class ViaConstructor:  # pylint: disable=R0904
 
     def load_drawings(self, filenames: list, no_setup: bool = False, append_only: bool = False) -> bool:
         # clean project
-        if append_only:
+        if append_only and not self.project["filename_draw"]:
+            append_only = False
+        if not append_only:
             debug("load_drawing: cleanup")
             self.project["filename_draw"] = ""
             self.project["filename_drawings"] = []

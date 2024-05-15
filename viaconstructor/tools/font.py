@@ -103,7 +103,7 @@ class FontTool(QWidget):
             self.app.args.ttfread_space = self.ttfread_space.value()
             self.app.args.ttfread_border = self.ttfread_border.value()
 
-            if self.app.load_drawing(fontfile, no_setup=True):
+            if self.app.load_drawings([fontfile], no_setup=True, append_only=True):
                 # self.app.update_object_setup()
                 # self.app.global_changed(0)
                 # self.app.update_drawing()
