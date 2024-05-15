@@ -35,18 +35,11 @@ OpenSource CAM-Tool to generate gCode from DXF,SVG and HPGL-Files
 ## quikstart
 
 ### install with pip
-
-#### if you have debian/ubuntu please first install:
-```
-sudo apt-get install python3-pip python3-pyqt5
-```
-
 ```
 pip3 install viaconstructor
 ```
 
-
-### install from sources
+### get code
 ```
 git clone https://github.com/multigcs/viaconstructor.git
 cd viaconstructor
@@ -56,6 +49,16 @@ pip3 install -r requirements.txt
 ### start viaconstructor
 ```
 ./bin/viaconstructor tests/data/simple.dxf
+```
+
+### thumbnail generator: gcode to jpg
+```
+./bin/gcodepreview tests/data/simple.ngc -o tests/data/simple.jpg
+```
+
+### thumbnail generator: dxf to jpg
+```
+./bin/dxfpreview tests/data/simple.dxf -o tests/data/simple.jpg
 ```
 
 ### running on macos/osx
@@ -74,9 +77,7 @@ you can simply extract this zip file to you disk and execute the start.bat:
 
 this zip-file includes python3.10.10 and all needed packages
 
-an older version can be found here:  https://www.multixmedia.org/viaconstructor-old.zip (better tested on windows)
-
-or via git-sources
+or 
 
 install python3.10.10 from: https://www.python.org/ftp/python/3.10.10/python-3.10.10-amd64.exe
 install git from: https://github.com/git-for-windows/git/releases/download/v2.40.0.windows.1/Git-2.40.0-64-bit.exe
