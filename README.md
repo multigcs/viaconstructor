@@ -35,14 +35,16 @@ OpenSource CAM-Tool to generate gCode from DXF,SVG and HPGL-Files
 ## quikstart
 
 ### install with pip
+
+#### if you have debian/ubuntu please first install:
+```
+sudo apt-get install python3-pip python3-pyqt5
+```
+
 ```
 pip3 install viaconstructor
 ```
 
-#### if you have debian/ubuntu and no pip
-```
-sudo apt-get install python3-pip
-```
 
 ### install from sources
 ```
