@@ -21,7 +21,11 @@ from ..vc_types import VcSegment
 try:
     from ezdxf.addons import MTextExplode
     from ezdxf.path import Command, make_path
-    from ezdxf.tools import fonts
+
+    try:
+        from ezdxf.fonts import fonts
+    except Exception as error:  # pylint: disable=W0703
+        from ezdxf.tools import fonts
 
     try:
         from ezdxf.addons import text2path
