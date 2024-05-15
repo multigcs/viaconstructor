@@ -16,7 +16,7 @@ format: isort black
 
 pdoc: pyvenv
 	rm -rf docs/pdoc
-	pyvenv/bin/pdoc -o docs/pdoc viaconstructor/ dxfpreview/ gcodepreview/
+	pyvenv/bin/pdoc -o docs/pdoc viaconstructor/
 
 help_gen: pyvenv
 	mkdir -p docs/help
@@ -34,7 +34,6 @@ pyvenv:
 	pyvenv/bin/python -m pip install -r requirements-dev.txt
 	pyvenv/bin/python -m pip install -r requirements.txt
 	@echo "# for testing: pyvenv/bin/python -m viaconstructor tests/data/simple.dxf"
-	@echo "# for testing: pyvenv/bin/python -m gcodepreview tests/data/simple.ngc"
 
 pip-compile: pyvenv requirements-dev.txt requirements.txt
 
@@ -100,9 +99,6 @@ run: run-viaconstructor
 
 run-viaconstructor: pyvenv
 	pyvenv/bin/python -m viaconstructor tests/data/simple.dxf
-
-run-gcodepreview: pyvenv
-	pyvenv/bin/python -m gcodepreview tests/data/simple.ngc
 
 install:
 	python3 setup.py install
