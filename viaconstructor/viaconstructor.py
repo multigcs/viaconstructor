@@ -644,6 +644,36 @@ class ViaConstructor:  # pylint: disable=R0904
         else:
             self.status_bar_message(f"{self.info} - load drawing..cancel")
 
+    def _toolbar_append_drawing(self) -> None:
+        """load drawing."""
+        self.status_bar_message(f"{self.info} - load drawing..")
+        file_dialog = QFileDialog(self.main)
+
+        suffix_list = []
+        for reader_plugin in reader_plugins.values():
+            for suffix in reader_plugin.suffix(self.args):
+                suffix_list.append(f"*.{suffix}")
+        names = file_dialog.getOpenFileNames(
+            self.main,
+            "Load Drawing",
+            "",
+            f"drawing ( {' '.join(suffix_list)} )" "Load Drawing",
+            "",
+        )
+
+        if names[0] and self.load_drawings(names[0], append_only=True):
+            self.update_layer_setup()
+            self.update_object_setup()
+            self.global_changed(0)
+            self.update_drawing()
+
+            self.create_menubar()
+            self.create_toolbar()
+
+            self.status_bar_message(f"{self.info} - load drawing..done ({names[0]})")
+        else:
+            self.status_bar_message(f"{self.info} - load drawing..cancel")
+
     def setup_load_string(self, setup: str) -> bool:
         if setup:
             ndata = json.loads(setup)
@@ -1408,6 +1438,18 @@ class ViaConstructor:  # pylint: disable=R0904
                 "Ctrl+O",
                 _("Load drawing"),
                 self._toolbar_load_drawing,
+                not os.environ.get("LINUXCNCVERSION"),
+                True,
+                False,
+                _("File"),
+                "",
+                None,
+            ],
+            _("Append drawing"): [
+                "append.png",
+                "Ctrl+A",
+                _("Append drawing"),
+                self._toolbar_append_drawing,
                 not os.environ.get("LINUXCNCVERSION"),
                 True,
                 False,
@@ -2999,34 +3041,33 @@ class ViaConstructor:  # pylint: disable=R0904
             self.project["maxOuter"] = find_tool_offsets(self.project["objects"])
         debug("prepare_segments: done")
 
-    def load_drawings(self, filenames: list, no_setup: bool = False) -> bool:
+    def load_drawings(self, filenames: list, no_setup: bool = False, append_only: bool = False) -> bool:
         # clean project
-        debug("load_drawing: cleanup")
-        self.project["filename_draw"] = ""
-        self.project["filename_drawings"] = []
-        self.project["filename_machine_cmd"] = ""
-        self.project["suffix"] = "ngc"
-        self.project["axis"] = ["X", "Y", "Z"]
-        self.project["machine_cmd"] = ""
-        self.project["segments"] = {}
-        self.project["objects"] = {}
-        self.project["offsets"] = {}
-        self.project["gllist"] = []
-        self.project["maxOuter"] = 0
-        self.project["minMax"] = []
-        self.project["table"] = []
-        self.project["status"] = "INIT"
-        self.project["tabs"] = {"data": [], "table": None}
-        self.project["draw_reader"] = None
-        self.info = ""
-        self.save_tabs = "no"
-        self.save_starts = "no"
+        if append_only:
+            debug("load_drawing: cleanup")
+            self.project["filename_draw"] = ""
+            self.project["filename_drawings"] = []
+            self.project["filename_machine_cmd"] = ""
+            self.project["suffix"] = "ngc"
+            self.project["axis"] = ["X", "Y", "Z"]
+            self.project["machine_cmd"] = ""
+            self.project["segments"] = {}
+            self.project["objects"] = {}
+            self.project["offsets"] = {}
+            self.project["gllist"] = []
+            self.project["maxOuter"] = 0
+            self.project["minMax"] = []
+            self.project["table"] = []
+            self.project["status"] = "INIT"
+            self.project["tabs"] = {"data": [], "table": None}
+            self.project["draw_reader"] = None
+            self.info = ""
+            self.save_tabs = "no"
+            self.save_starts = "no"
 
         loaded = False
 
         for file_n, filename in enumerate(filenames):
-            print("-----", filename)
-
             # find plugin
             debug(f"load_drawing: start {filename}")
 
@@ -3076,9 +3117,9 @@ class ViaConstructor:  # pylint: disable=R0904
 
             if self.project["draw_reader"]:
                 debug("load_drawing: get segments")
-
-                if file_n == 0:
+                if file_n == 0 and not append_only:
                     self.project["filename_draw"] = filename
+                    self.project["filename_machine_cmd"] = f"{'.'.join(self.project['filename_draw'].split('.')[:-1])}.{self.project['suffix']}"
                     self.project["segments_org"] = self.project["draw_reader"].get_segments()
                 else:
                     max_y = -9999999
@@ -3096,11 +3137,10 @@ class ViaConstructor:  # pylint: disable=R0904
                                     segment[ptype][1] + max_y + 20,
                                 )
                     self.project["segments_org"] += more_segments
+                self.project["filename_drawings"].append(filename)
                 loaded = True
 
         if loaded:
-            self.project["filename_drawings"] = filenames
-            self.project["filename_machine_cmd"] = f"{'.'.join(self.project['filename_draw'].split('.')[:-1])}.{self.project['suffix']}"
             debug("load_drawing: prepare_segments")
             self.prepare_segments()
             debug("load_drawing: done")
