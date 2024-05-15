@@ -159,6 +159,7 @@ class ViaConstructor:  # pylint: disable=R0904
         "engine": "3D",
         "setup_defaults": setup_defaults(_),
         "filename_draw": "",
+        "filename_drawings": [],
         "filename_machine_cmd": "",
         "suffix": "ngc",
         "axis": ["X", "Y", "Z"],
@@ -622,7 +623,7 @@ class ViaConstructor:  # pylint: disable=R0904
         for reader_plugin in reader_plugins.values():
             for suffix in reader_plugin.suffix(self.args):
                 suffix_list.append(f"*.{suffix}")
-        name = file_dialog.getOpenFileName(
+        names = file_dialog.getOpenFileNames(
             self.main,
             "Load Drawing",
             "",
@@ -630,7 +631,7 @@ class ViaConstructor:  # pylint: disable=R0904
             "",
         )
 
-        if name[0] and self.load_drawing(name[0]):
+        if names[0] and self.load_drawings(names[0]):
             self.update_layer_setup()
             self.update_object_setup()
             self.global_changed(0)
@@ -639,7 +640,7 @@ class ViaConstructor:  # pylint: disable=R0904
             self.create_menubar()
             self.create_toolbar()
 
-            self.status_bar_message(f"{self.info} - load drawing..done ({name[0]})")
+            self.status_bar_message(f"{self.info} - load drawing..done ({names[0]})")
         else:
             self.status_bar_message(f"{self.info} - load drawing..cancel")
 
@@ -783,10 +784,12 @@ class ViaConstructor:  # pylint: disable=R0904
                     object_diffs[uid][section] = section_diff
 
         filename_draw = self.project["filename_draw"]
+        filename_drawings = self.project["filename_drawings"]
         if filename_draw:
             filename_draw = str(Path(filename_draw).resolve())
         project_data = {
             "filename_draw": filename_draw,
+            "filename_drawings": filename_drawings,
             "general": self.project["setup"],
             "tabs": self.project["tabs"],
             "starts": obj_starts,
@@ -804,9 +807,8 @@ class ViaConstructor:  # pylint: disable=R0904
             self.project["setup"][sname].update(project_data.get("general", {}).get(sname, {}))
         self.project["project_file"] = project_file
 
-        filename = project_data.get("filename_draw", "")
-        if filename and self.project["filename_draw"] != filename:
-            self.load_drawing(filename)
+        filenames = project_data.get("filename_drawings", [project_data.get("filename_draw", "")])
+        self.load_drawings(filenames)
 
         if "tabs" in project_data:
             self.project["tabs"] = project_data["tabs"]
@@ -2997,10 +2999,11 @@ class ViaConstructor:  # pylint: disable=R0904
             self.project["maxOuter"] = find_tool_offsets(self.project["objects"])
         debug("prepare_segments: done")
 
-    def load_drawing(self, filename: str, no_setup: bool = False) -> bool:
+    def load_drawings(self, filenames: list, no_setup: bool = False) -> bool:
         # clean project
         debug("load_drawing: cleanup")
         self.project["filename_draw"] = ""
+        self.project["filename_drawings"] = []
         self.project["filename_machine_cmd"] = ""
         self.project["suffix"] = "ngc"
         self.project["axis"] = ["X", "Y", "Z"]
@@ -3019,56 +3022,84 @@ class ViaConstructor:  # pylint: disable=R0904
         self.save_tabs = "no"
         self.save_starts = "no"
 
-        # find plugin
-        debug("load_drawing: start")
-        suffix = filename.rsplit(".", maxsplit=1)[-1].lower()
+        loaded = False
 
-        reader_plugin_list = []
-        for plugin_name, reader_plugin in reader_plugins.items():
-            if suffix in reader_plugin.suffix(self.args):
-                reader_plugin_list.append(plugin_name)
+        for file_n, filename in enumerate(filenames):
+            print("-----", filename)
 
-        if not reader_plugin_list:
-            return False
+            # find plugin
+            debug(f"load_drawing: start {filename}")
 
-        if len(reader_plugin_list) == 1:
-            plugin_name = reader_plugin_list[0]
-        elif self.main is None:
-            plugin_name = reader_plugin_list[0]
-        else:
-            dialog = QDialog()
-            dialog.setWindowTitle(_("Reader-Selection"))
+            suffix = filename.rsplit(".", maxsplit=1)[-1].lower()
 
-            dialog.buttonBox = QDialogButtonBox(QDialogButtonBox.Ok)  # type: ignore
-            dialog.buttonBox.accepted.connect(dialog.accept)  # type: ignore
+            reader_plugin_list = []
+            for plugin_name, reader_plugin in reader_plugins.items():
+                if suffix in reader_plugin.suffix(self.args):
+                    reader_plugin_list.append(plugin_name)
 
-            dialog.layout = QVBoxLayout()  # type: ignore
-            message = QLabel(_("Import-Options"))
-            dialog.layout.addWidget(message)  # type: ignore
+            if not reader_plugin_list:
+                return False
 
-            combobox = QComboBox()
-            for plugin_name in reader_plugin_list:
-                combobox.addItem(plugin_name)  # type: ignore
-            dialog.layout.addWidget(combobox)  # type: ignore
+            if len(reader_plugin_list) == 1:
+                plugin_name = reader_plugin_list[0]
+            elif self.main is None:
+                plugin_name = reader_plugin_list[0]
+            else:
+                dialog = QDialog()
+                dialog.setWindowTitle(f"{_('Reader-Selection')}: {os.path.basename(filename)}")
 
-            dialog.layout.addWidget(dialog.buttonBox)  # type: ignore
-            dialog.setLayout(dialog.layout)  # type: ignore
+                dialog.buttonBox = QDialogButtonBox(QDialogButtonBox.Ok)  # type: ignore
+                dialog.buttonBox.accepted.connect(dialog.accept)  # type: ignore
 
-            if dialog.exec():
-                plugin_name = combobox.currentText()
-                reader_plugin = reader_plugins[plugin_name]
+                dialog.layout = QVBoxLayout()  # type: ignore
+                message = QLabel(_("Import-Options"))
+                dialog.layout.addWidget(message)  # type: ignore
 
-        reader_plugin = reader_plugins[plugin_name]
-        if not no_setup and self.main is not None and hasattr(reader_plugin, "preload_setup"):
-            reader_plugin.preload_setup(filename, self.args)
-        self.project["draw_reader"] = reader_plugin(filename, self.args)
-        if reader_plugin.can_save_tabs:
-            self.save_tabs = "ask"
+                combobox = QComboBox()
+                for plugin_name in reader_plugin_list:
+                    combobox.addItem(plugin_name)  # type: ignore
+                dialog.layout.addWidget(combobox)  # type: ignore
 
-        if self.project["draw_reader"]:
-            debug("load_drawing: get segments")
-            self.project["segments_org"] = self.project["draw_reader"].get_segments()
-            self.project["filename_draw"] = filename
+                dialog.layout.addWidget(dialog.buttonBox)  # type: ignore
+                dialog.setLayout(dialog.layout)  # type: ignore
+
+                if dialog.exec():
+                    plugin_name = combobox.currentText()
+                    reader_plugin = reader_plugins[plugin_name]
+
+            reader_plugin = reader_plugins[plugin_name]
+            if not no_setup and self.main is not None and hasattr(reader_plugin, "preload_setup"):
+                reader_plugin.preload_setup(filename, self.args)
+            self.project["draw_reader"] = reader_plugin(filename, self.args)
+            if reader_plugin.can_save_tabs:
+                self.save_tabs = "ask"
+
+            if self.project["draw_reader"]:
+                debug("load_drawing: get segments")
+
+                if file_n == 0:
+                    self.project["filename_draw"] = filename
+                    self.project["segments_org"] = self.project["draw_reader"].get_segments()
+                else:
+                    max_y = -9999999
+                    for segment in self.project["segments_org"]:
+                        for ptype in ("start", "end", "center"):
+                            if ptype in segment:
+                                max_y = max(max_y, segment[ptype][1])
+
+                    more_segments = self.project["draw_reader"].get_segments()
+                    for segment in more_segments:
+                        for ptype in ("start", "end", "center"):
+                            if ptype in segment:
+                                segment[ptype] = (
+                                    segment[ptype][0],
+                                    segment[ptype][1] + max_y + 20,
+                                )
+                    self.project["segments_org"] += more_segments
+                loaded = True
+
+        if loaded:
+            self.project["filename_drawings"] = filenames
             self.project["filename_machine_cmd"] = f"{'.'.join(self.project['filename_draw'].split('.')[:-1])}.{self.project['suffix']}"
             debug("load_drawing: prepare_segments")
             self.prepare_segments()
@@ -3207,7 +3238,7 @@ class ViaConstructor:  # pylint: disable=R0904
 
         # arguments
         parser = argparse.ArgumentParser()
-        parser.add_argument("filename", help="input file", type=str, nargs="?", default=None)
+        parser.add_argument("filenames", help="input files", type=str, nargs="*", default=None)
         parser.add_argument(
             "--engine",
             help="display engine",
@@ -3267,8 +3298,9 @@ class ViaConstructor:  # pylint: disable=R0904
         # load drawing #
         debug("main: load drawing")
 
-        if self.args.filename and self.args.filename.endswith(".vcp"):
-            self.load_project(self.args.filename)
+        if self.args.filenames and self.args.filenames[0].endswith(".vcp"):
+            self.load_project(self.args.filenames[0])
+
             # save and exit
             if self.args.dxf:
                 self.update_drawing()
@@ -3280,7 +3312,7 @@ class ViaConstructor:  # pylint: disable=R0904
                 eprint(f"saving machine_cmd to file: {self.args.output}")
                 open(self.args.output, "w").write(self.project["machine_cmd"])
                 sys.exit(0)
-        elif self.args.filename and self.load_drawing(self.args.filename):
+        elif self.args.filenames and self.load_drawings(self.args.filenames):
             # save and exit
             if self.args.dxf:
                 self.update_drawing()

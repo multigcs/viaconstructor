@@ -43,7 +43,7 @@ class DrawReader(DrawReaderBase):
         )
 
         dialog = QDialog()
-        dialog.setWindowTitle("SVG-Reader")
+        dialog.setWindowTitle(f"SVG-Reader: {os.path.basename(filename)}")
 
         dialog.buttonBox = QDialogButtonBox(QDialogButtonBox.Ok)
         dialog.buttonBox.accepted.connect(dialog.accept)

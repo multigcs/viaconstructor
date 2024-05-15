@@ -48,7 +48,7 @@ class DrawReader(DrawReaderBase):
         )
 
         dialog = QDialog()
-        dialog.setWindowTitle("TTF-Reader")
+        dialog.setWindowTitle("TTF-Reader: {os.path.basename(filename)}")
 
         dialog.buttonBox = QDialogButtonBox(QDialogButtonBox.Ok)
         dialog.buttonBox.accepted.connect(dialog.accept)

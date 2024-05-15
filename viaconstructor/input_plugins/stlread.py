@@ -92,7 +92,7 @@ class DrawReader(DrawReaderBase):
         )
 
         dialog = QDialog()
-        dialog.setWindowTitle("STL-Reader")
+        dialog.setWindowTitle("STL-Reader: {os.path.basename(filename)}")
 
         dialog.buttonBox = QDialogButtonBox(QDialogButtonBox.Ok)
         dialog.buttonBox.accepted.connect(dialog.accept)

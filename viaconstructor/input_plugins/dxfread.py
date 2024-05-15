@@ -110,7 +110,7 @@ class DrawReader(DrawReaderBase):
         )
 
         dialog = QDialog()
-        dialog.setWindowTitle("DXF-Reader")
+        dialog.setWindowTitle(f"DXF-Reader: {os.path.basename(filename)}")
 
         dialog.buttonBox = QDialogButtonBox(QDialogButtonBox.Ok)
         dialog.buttonBox.accepted.connect(dialog.accept)
