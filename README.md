@@ -4,8 +4,8 @@ OpenSource CAM-Tool to generate gCode from DXF,SVG and HPGL-Files
 
 ## Known Issues:
 * beta - version
-* &gt;= Python-3.9
-* running on Linux, OS-X and Windows
+* &gt;= Python-3.9 (will not work with Debian-10 or lower)
+* running on Linux, OS-X (Intel-Only) and Windows
 * may be unstable on Windows
 * problems with some OpenGL versions (black 3D-View)
 * tabs on circles sometimes broken
@@ -37,7 +37,7 @@ OpenSource CAM-Tool to generate gCode from DXF,SVG and HPGL-Files
 pip3 install viaconstructor
 ```
 
-### get code
+### running from sources
 ```
 git clone https://github.com/multigcs/viaconstructor.git
 cd viaconstructor
