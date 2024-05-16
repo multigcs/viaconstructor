@@ -12,9 +12,15 @@ from PyQt5.QtWidgets import (  # pylint: disable=E0611
     QVBoxLayout,
     QWidget,
 )
-from shapely.affinity import rotate, scale
-from shapely.geometry import MultiPoint, Point, box
-from shapely.ops import unary_union
+
+try:
+    from shapely.affinity import rotate, scale
+    from shapely.geometry import MultiPoint, Point, box
+    from shapely.ops import unary_union
+    shapely = True
+except Exception:  # pylint: disable=W0703
+    print("tools/gear: NO shapely fond")
+    shapely = False
 
 
 def rot_matrix(x):
@@ -96,6 +102,8 @@ class GearTool(QWidget):
     painter = None
 
     def __init__(self, app):
+        if not shapely:
+            return
         super().__init__()
         self.setWindowTitle("Gear-Tool")
         self.app = app
