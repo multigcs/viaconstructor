@@ -1,7 +1,9 @@
 """OpenGL drawing functions"""
 
+import datetime
 import math
 import platform
+import os
 import sys
 from subprocess import call
 from typing import Sequence
@@ -1341,23 +1343,33 @@ def draw_machinecode_path(project: dict) -> bool:
                     tool_dist["tool"][tool_number]["move"] += dist
 
             report = []
-            report.append("Size:")
-            report.append(f" X: {project['outputMinMax'][0]:0.2f}mm -> {project['outputMinMax'][3]:0.2f}mm ({(project['outputMinMax'][3] - project['outputMinMax'][0]):0.2f}mm)")
-            report.append(f" Y: {project['outputMinMax'][1]:0.2f}mm -> {project['outputMinMax'][4]:0.2f}mm ({(project['outputMinMax'][4] - project['outputMinMax'][1]):0.2f}mm)")
-            report.append(f" Z: {project['outputMinMax'][2]:0.2f}mm -> {project['outputMinMax'][5]:0.2f}mm ({(project['outputMinMax'][5] - project['outputMinMax'][2]):0.2f}mm)")
+            datestr = datetime.datetime.now().strftime('%d.%m.%Y %H:%M')
+            report.append("Report:")
+            report.append(f"   Date: {datestr}")
+            for filename in project["filename_drawings"]:
+                report.append(f"   Filename: {os.path.basename(filename)}")
+            report.append("")
+
+            report.append("Milling-Area:")
+            report.append(f"   X: {project['outputMinMax'][0]:0.2f}mm -> {project['outputMinMax'][3]:0.2f}mm ({(project['outputMinMax'][3] - project['outputMinMax'][0]):0.2f}mm)")
+            report.append(f"   Y: {project['outputMinMax'][1]:0.2f}mm -> {project['outputMinMax'][4]:0.2f}mm ({(project['outputMinMax'][4] - project['outputMinMax'][1]):0.2f}mm)")
+            report.append(f"   Z: {project['outputMinMax'][2]:0.2f}mm -> {project['outputMinMax'][5]:0.2f}mm ({(project['outputMinMax'][5] - project['outputMinMax'][2]):0.2f}mm)")
             report.append("")
             report.append("Tools:")
             for tool, data in enumerate(project["setup"]["tool"]["tooltable"]):
                 number = data["number"]
                 if number in tool_dist["tool"] and tool_dist["tool"][number]["move"] > 0.0:
-                    report.append(f" T{data['number']}: {data['diameter']}mm")
+                    report.append(f"   T{number}:")
+                    for key in ("name", "diameter", "blades", "lenght"):
+                        report.append(f"      {key.title()}: {data[key]}")
+
             report.append("")
             report.append("Travel-Distance:")
-            report.append(f" Rapid: {tool_dist['fast']:0.2f}mm")
+            report.append(f"   Rapid: {tool_dist['fast']:0.2f}mm")
             for tool, data in tool_dist["tool"].items():
                 if data["move"] == 0.0:
                     continue
-                report.append(f" Tool(T{tool}): {data['move']:0.2f}mm + UP:{data['up']:0.2f}mm + DOWN:{data['down']:0.2f}mm")
+                report.append(f"   Tool(T{tool}): {data['move']:0.2f}mm + UP:{data['up']:0.2f}mm + DOWN:{data['down']:0.2f}mm")
             project["report"] = "\n".join(report)
 
         elif project["suffix"] in {"hpgl", "hpg"}:
