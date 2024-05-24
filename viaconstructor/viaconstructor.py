@@ -1016,6 +1016,7 @@ class ViaConstructor:  # pylint: disable=R0904
             "tool": "Tool",
             "pockets": "Pockets",
             "tabs": "Tabs",
+            "trochoidal": "Trochoidal",
             "leads": "Leads",
         }
 
@@ -1090,7 +1091,7 @@ class ViaConstructor:  # pylint: disable=R0904
         for obj in self.project["objects"].values():
             if obj["layer"] != layer_active:
                 continue
-            for sect in ("mill", "tool", "pockets", "tabs", "leads"):
+            for sect in ("mill", "tool", "pockets", "tabs", "leads", "trochoidal"):
                 for key, global_value in self.project["layersetup"][layer_active][sect].items():
                     if global_value != old_setup[sect][key] and obj["setup"][sect][key] == old_setup[sect][key]:
                         obj["setup"][sect][key] = self.project["layersetup"][layer_active][sect][key]
@@ -1116,6 +1117,7 @@ class ViaConstructor:  # pylint: disable=R0904
             "pockets": "Pockets",
             "tabs": "Tabs",
             "leads": "Leads",
+            "trochoidal": "Trochoidal",
         }
 
         if self.project["status"] == "CHANGE":
@@ -1253,14 +1255,14 @@ class ViaConstructor:  # pylint: disable=R0904
         self.project["segments"] = clean_segments(self.project["segments"])
 
         for layer in self.project["layersetup"]:
-            for sect in ("mill", "tool", "pockets", "tabs", "leads"):
+            for sect in ("mill", "tool", "pockets", "tabs", "leads", "trochoidal"):
                 for key, global_value in self.project["setup"][sect].items():
                     # change layer value only if the value changed and the value diffs again the last value in global
                     if global_value != old_setup[sect][key] and self.project["layersetup"][layer][sect][key] == old_setup[sect][key]:
                         self.project["layersetup"][layer][sect][key] = self.project["setup"][sect][key]
 
         for obj in self.project["objects"].values():
-            for sect in ("mill", "tool", "pockets", "tabs", "leads"):
+            for sect in ("mill", "tool", "pockets", "tabs", "leads", "trochoidal"):
                 for key, global_value in self.project["setup"][sect].items():
                     # change object value only if the value changed and the value diffs again the last value in global
                     if global_value != old_setup[sect][key] and obj["setup"][sect][key] == old_setup[sect][key]:
@@ -1973,6 +1975,7 @@ class ViaConstructor:  # pylint: disable=R0904
                 "pockets": "P&ockets",
                 "tabs": "Ta&bs",
                 "leads": "Lea&ds",
+                "trochoidal": "Trocho&idal",
                 "machine": "M&achine",
                 "view": "&View",
             }
@@ -2181,6 +2184,7 @@ class ViaConstructor:  # pylint: disable=R0904
             "pockets": "P&ockets",
             "tabs": "Ta&bs",
             "leads": "Lea&ds",
+            "trochoidal": "Trocho&idal",
             "machine": "M&achine",
             "view": "&View",
         }
@@ -2280,6 +2284,7 @@ class ViaConstructor:  # pylint: disable=R0904
                 "pockets": "Pockets",
                 "tabs": "Tabs",
                 "leads": "Leads",
+                "trochoidal": "Trochoidal",
             }
             scrollarea = QScrollArea()
             scrollarea.setWidgetResizable(True)
@@ -2440,6 +2445,7 @@ class ViaConstructor:  # pylint: disable=R0904
             "pockets": "P&ockets",
             "tabs": "Ta&bs",
             "leads": "Lea&ds",
+            "trochoidal": "Trocho&idal",
             "machine": "M&achine",
             "view": "&View",
         }
@@ -2540,6 +2546,7 @@ class ViaConstructor:  # pylint: disable=R0904
                 "pockets": "Pockets",
                 "tabs": "Tabs",
                 "leads": "Leads",
+                "trochoidal": "Trochoidal",
             }
             scrollarea = QScrollArea()
             scrollarea.setWidgetResizable(True)
@@ -2987,7 +2994,7 @@ class ViaConstructor:  # pylint: disable=R0904
         debug("prepare_segments: setup")
         for obj in self.project["objects"].values():
             obj["setup"] = {}
-            for sect in ("mill", "tool", "pockets", "tabs", "leads"):
+            for sect in ("mill", "tool", "pockets", "tabs", "leads", "trochoidal"):
                 obj["setup"][sect] = deepcopy(self.project["setup"][sect])
             layer = obj.get("layer")
             color = obj.get("color")
@@ -3005,7 +3012,7 @@ class ViaConstructor:  # pylint: disable=R0904
 
             if layer not in self.project["layersetup"]:
                 self.project["layersetup"][layer] = {}
-                for sect in ("mill", "tool", "pockets", "tabs", "leads"):
+                for sect in ("mill", "tool", "pockets", "tabs", "leads", "trochoidal"):
                     self.project["layersetup"][layer][sect] = deepcopy(self.project["setup"][sect])
 
             # experimental: get some milling data from layer name (https://groups.google.com/g/dxf2gcode-users/c/q3hPQkN2OCo)

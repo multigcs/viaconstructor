@@ -2,8 +2,8 @@
 
 import datetime
 import math
-import platform
 import os
+import platform
 import sys
 from subprocess import call
 from typing import Sequence
@@ -1343,7 +1343,7 @@ def draw_machinecode_path(project: dict) -> bool:
                     tool_dist["tool"][tool_number]["move"] += dist
 
             report = []
-            datestr = datetime.datetime.now().strftime('%d.%m.%Y %H:%M')
+            datestr = datetime.datetime.now().strftime("%d.%m.%Y %H:%M")
             report.append("Report:")
             report.append(f"   Date: {datestr}")
             for filename in project["filename_drawings"]:

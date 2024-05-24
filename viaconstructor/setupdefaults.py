@@ -468,6 +468,36 @@ def setup_defaults(_) -> dict:
                 "unit": "LINEARMEASURE",
             },
         },
+        "trochoidal": {
+            "active": {
+                "default": False,
+                "type": "bool",
+                "per_object": True,
+                "title": _("enable"),
+                "tooltip": _("trochoidal milling - experimental"),
+            },
+            "diameter": {
+                "default": 5.0,
+                "type": "float",
+                "min": 0.1,
+                "max": 999.0,
+                "title": _("Diameter"),
+                "tooltip": _("trochoidal diameter"),
+                "unit": "LINEARMEASURE",
+                "per_object": True,
+            },
+            "back_radius": {
+                "default": 0.5,
+                "type": "float",
+                "step": 0.1,
+                "min": 0.1,
+                "max": 999.0,
+                "title": _("Back-Radius"),
+                "tooltip": _("Back-Radius"),
+                "unit": "LINEARMEASURE",
+                "per_object": True,
+            },
+        },
         "machine": {
             "feedrate": {
                 "default": 1000,

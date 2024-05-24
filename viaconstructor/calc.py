@@ -1045,6 +1045,9 @@ def object2polyline_offsets(diameter, obj, obj_idx, max_outer, polyline_offsets,
 
     new_polyline_offsets = {}
 
+    if obj.setup["trochoidal"]["active"]:
+        diameter = obj.setup["trochoidal"]["diameter"]
+
     def overcut() -> None:
         quarter_pi = math.pi / 4
         radius_3 = abs(tool_radius * 3)
@@ -1161,7 +1164,120 @@ def object2polyline_offsets(diameter, obj, obj_idx, max_outer, polyline_offsets,
     offset_idx = 0
     if polyline.is_closed() and tool_offset != "none":
         polyline_offset_list = polyline.parallel_offset(delta=tool_radius, check_self_intersect=True)
-        if polyline_offset_list:
+
+        if polyline_offset_list and obj.setup["trochoidal"]["active"]:
+
+            tool_diameter = None
+            for entry in obj.setup["tool"]["tooltable"]:
+                if obj.setup["tool"]["number"] == entry["number"]:
+                    tool_diameter = entry["diameter"]
+
+            trochoidal_diameter = obj.setup["trochoidal"]["diameter"]
+            stepl = 1
+            back_radius = obj.setup["trochoidal"]["back_radius"]
+            tr_radius = (trochoidal_diameter - tool_diameter) / 2
+            if back_radius > tr_radius:
+                back_radius = tr_radius
+
+            for polyline_offset in polyline_offset_list:
+                vertex_data = polyline_offset.vertex_data()
+
+                last_pos = None
+                vertex_data_new = [[], [], []]
+                points = vertex2points(vertex_data, no_bulge=True, interpolate=5)
+                points.append((points[0][0], points[0][1]))
+
+                for point in points:
+                    pos_x = point[0]
+                    pos_y = point[1]
+                    bulge = 0
+
+                    if last_pos is not None:
+                        angle = angle_of_line(last_pos, (pos_x, pos_y))
+                        dist = calc_distance(last_pos, (pos_x, pos_y))
+                        llen = 0.0
+                        while llen < dist:
+
+                            pxN = last_pos[0] + (llen + back_radius) * math.sin(angle + math.pi / 2)
+                            pyN = last_pos[1] - (llen + back_radius) * math.cos(angle + math.pi / 2)
+                            next_pos1 = (pxN, pyN)
+
+                            pxN = last_pos[0] + (llen) * math.sin(angle + math.pi / 2)
+                            pyN = last_pos[1] - (llen) * math.cos(angle + math.pi / 2)
+                            next_pos2 = (pxN, pyN)
+
+                            llen += stepl
+
+                            px1 = next_pos1[0] + tr_radius * math.sin(angle)
+                            py1 = next_pos1[1] - tr_radius * math.cos(angle)
+
+                            px2 = next_pos1[0] + tr_radius * math.sin(angle + math.pi)
+                            py2 = next_pos1[1] - tr_radius * math.cos(angle + math.pi)
+
+                            px3 = next_pos2[0] + (tr_radius - back_radius) * math.sin(angle + math.pi)
+                            py3 = next_pos2[1] - (tr_radius - back_radius) * math.cos(angle + math.pi)
+
+                            px4 = next_pos2[0] + (tr_radius - back_radius) * math.sin(angle)
+                            py4 = next_pos2[1] - (tr_radius - back_radius) * math.cos(angle)
+
+                            # nach rechts (bissle vor)
+                            vertex_data_new[0].append(px1)
+                            vertex_data_new[1].append(py1)
+                            vertex_data_new[2].append(1.0)
+
+                            # halbkreis nach links
+                            vertex_data_new[0].append(px2)
+                            vertex_data_new[1].append(py2)
+                            vertex_data_new[2].append(0.35)
+
+                            # zurück / etwas links von start
+                            vertex_data_new[0].append(px3)
+                            vertex_data_new[1].append(py3)
+                            vertex_data_new[2].append(0)
+
+                            # rechts / durch start nach rechts
+                            vertex_data_new[0].append(px4)
+                            vertex_data_new[1].append(py4)
+                            vertex_data_new[2].append(0.35)
+
+                            # bissle vor
+                            vertex_data_new[0].append(px1)
+                            vertex_data_new[1].append(py1)
+                            vertex_data_new[2].append(0)
+
+                    last_pos = (pos_x, pos_y)
+                vertex_data = vertex_data_new
+
+                polyline_offset.cache = vertex_data
+                polyline_offset.level = len(obj.outer_objects)
+                polyline_offset.start = obj.start
+                polyline_offset.tool_offset = tool_offset
+                polyline_offset.setup = obj.setup
+                polyline_offset.obj_idx = obj_idx
+                polyline_offset.outer_objects = obj.outer_objects
+                polyline_offset.layer = obj.layer
+                polyline_offset.color = obj.color
+                polyline_offset.is_pocket = 0
+                polyline_offset.fixed_direction = False
+                polyline_offset.is_circle = is_circle
+                parent_id = f"{obj_idx}.{offset_idx}"
+                new_polyline_offsets[parent_id] = polyline_offset
+                offset_idx += 1
+                if tool_offset == "inside" and obj.setup["pockets"]["active"]:
+                    if polyline_offset.is_closed():
+                        offset_idx = do_pockets(
+                            polyline_offset,
+                            obj,
+                            obj_idx,
+                            tool_offset,
+                            tool_radius,
+                            polyline_offsets,
+                            offset_idx,
+                            vertex_data,
+                            parent_id,
+                        )
+
+        elif polyline_offset_list:
             for polyline_offset in polyline_offset_list:
                 vertex_data = polyline_offset.vertex_data()
                 polyline_offset.cache = vertex_data
