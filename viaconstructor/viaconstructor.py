@@ -475,9 +475,7 @@ class ViaConstructor:  # pylint: disable=R0904
         else:
             self.toolbuttons[title][9].setChecked(False)
             self.project["maxOuter"] = find_tool_offsets(self.project["objects"])
-            self.combobjwidget.clear()  # type: ignore
-            for idx in self.project["objects"]:
-                self.combobjwidget.addItem(idx.split(":")[0])  # type: ignore
+            self.combobjwidget_update()
 
     def _toolbar_toggle_object_selector(self) -> None:
         """delete selector."""
@@ -2164,7 +2162,7 @@ class ViaConstructor:  # pylint: disable=R0904
 
         layer_active = "(".join(value.split("(")[0:-1]).strip()
         self.project["layer_active"] = layer_active
-        self.combobjwidget.setCurrentText(layer_active)
+        self.lcombobjwidget.setCurrentText(layer_active)
         self.project["layer_active"] = layer_active
         self.update_layer_setup()
 
@@ -2417,7 +2415,7 @@ class ViaConstructor:  # pylint: disable=R0904
         if self.project["status"] != "READY":
             return
         self.project["status"] = "CHANGE"
-        obj_idx = value.split(":")[0]
+        obj_idx = value.split(":")[0].split()[0]
         self.combobjwidget.setCurrentText(obj_idx)
         self.project["object_active"] = obj_idx
         self.object_info(self.project["object_active"])
@@ -2915,9 +2913,7 @@ class ViaConstructor:  # pylint: disable=R0904
                 for inner in object_active_obj["inner_objects"]:
                     clone_object(inner, offset_x, offset_y)
 
-            self.combobjwidget.clear()
-            for idx in self.project["objects"]:
-                self.combobjwidget.addItem(idx.split(":")[0])
+            self.combobjwidget_update()
 
             self.project["maxOuter"] = find_tool_offsets(self.project["objects"])
 
@@ -3157,9 +3153,7 @@ class ViaConstructor:  # pylint: disable=R0904
             self.project["origin"] = objects2minmax(self.project["objects"])[0:2]
 
             if self.combobjwidget is not None:
-                self.combobjwidget.clear()
-                for idx in self.project["objects"]:
-                    self.combobjwidget.addItem(idx.split(":")[0])
+                self.combobjwidget_update()
                 self.combobjwidget.setCurrentText(self.project["object_active"])
 
             return True
@@ -3167,6 +3161,21 @@ class ViaConstructor:  # pylint: disable=R0904
         eprint(f"ERROR: can not load file: {filename}")
         debug("load_drawing: error")
         return False
+
+    def combobjwidget_update(self):
+        if self.combobjwidget is not None:
+            self.combobjwidget.clear()
+            for idx, obj in self.project["objects"].items():
+                self.combobjwidget.addItem(f"{idx.split(':')[0]} (Layer: {obj.layer})")
+            if self.project["object_active"]:
+                self.combobjwidget.setCurrentText(self.project["object_active"])
+
+    def lcombobjwidget_update(self):
+        if self.lcombobjwidget is not None:
+            self.lcombobjwidget.clear()
+            for layer in self.project["layersetup"]:
+                color_name = self.project["layercolors"].get(layer) or "---"
+                self.lcombobjwidget.addItem(f"{layer} ({color_name})")
 
     def open_preview_in_openscad(self):
         if self.project["suffix"] in {"ngc", "gcode"} and self.project["machine_cmd"]:
@@ -3489,19 +3498,12 @@ class ViaConstructor:  # pylint: disable=R0904
         left_gridlayout.addWidget(ltabwidget)
 
         if self.combobjwidget is not None:
-            self.combobjwidget.clear()
-            for idx in self.project["objects"]:
-                self.combobjwidget.addItem(idx.split(":")[0])
+            self.combobjwidget_update()
             self.project["object_active"] = "0"
             self.combobjwidget.setCurrentText(self.project["object_active"])
 
         if self.lcombobjwidget is not None:
-            self.lcombobjwidget.clear()
-
-            for layer in self.project["layersetup"]:
-                color_name = self.project["layercolors"].get(layer) or "---"
-                self.lcombobjwidget.addItem(f"{layer} ({color_name})")
-
+            self.lcombobjwidget_update()
             if self.project["layersetup"]:
                 self.project["layer_active"] = "(".join(list(self.project["layersetup"])[0].split("(")[0:-1]).strip()
                 self.lcombobjwidget.setCurrentText(self.project["layer_active"])
