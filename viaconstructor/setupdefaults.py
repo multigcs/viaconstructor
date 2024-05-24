@@ -486,6 +486,17 @@ def setup_defaults(_) -> dict:
                 "unit": "LINEARMEASURE",
                 "per_object": True,
             },
+            "engagement": {
+                "default": 1.0,
+                "type": "float",
+                "step": 0.1,
+                "min": 0.01,
+                "max": 999.0,
+                "title": _("Engagement"),
+                "tooltip": _("trochoidal engagement"),
+                "unit": "LINEARMEASURE",
+                "per_object": True,
+            },
             "back_radius": {
                 "default": 0.5,
                 "type": "float",

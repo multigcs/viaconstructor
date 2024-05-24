@@ -1173,7 +1173,7 @@ def object2polyline_offsets(diameter, obj, obj_idx, max_outer, polyline_offsets,
                     tool_diameter = entry["diameter"]
 
             trochoidal_diameter = obj.setup["trochoidal"]["diameter"]
-            stepl = 1
+            stepl = obj.setup["trochoidal"]["engagement"]
             back_radius = obj.setup["trochoidal"]["back_radius"]
             tr_radius = (trochoidal_diameter - tool_diameter) / 2
             if back_radius > tr_radius:
