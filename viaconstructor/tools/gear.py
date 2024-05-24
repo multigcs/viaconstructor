@@ -17,6 +17,7 @@ try:
     from shapely.affinity import rotate, scale
     from shapely.geometry import MultiPoint, Point, box
     from shapely.ops import unary_union
+
     shapely = True
 except Exception:  # pylint: disable=W0703
     print("tools/gear: NO shapely fond")

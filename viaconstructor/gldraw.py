@@ -2,8 +2,8 @@
 
 import datetime
 import math
-import platform
 import os
+import platform
 import sys
 from subprocess import call
 from typing import Sequence
@@ -1191,6 +1191,8 @@ def draw_object_faces(project: dict) -> None:
         gluTessCallback(tess, GLU_TESS_END, GL.glEnd)
         gluTessCallback(tess, GLU_TESS_COMBINE, lambda _points, _vertices, _weights: _points)
         gluTessBeginPolygon(tess, 0)
+
+        polyCheck = []
         for obj in project["objects"].values():
             if obj.get("layer", "").startswith("BREAKS:") or obj.get("layer", "").startswith("_TABS"):
                 continue
@@ -1203,6 +1205,18 @@ def draw_object_faces(project: dict) -> None:
 
             if obj.closed:
                 gluTessBeginContour(tess)
+
+                # filter out duplicated objects
+                polyCheckList = []
+                for segment in obj.segments:
+                    posses = [segment.start[0], segment.start[1], segment.end[0], segment.end[1]]
+                    # posses.sort()
+                    polyCheckList.append(posses)
+                polyCheckList.sort()
+                if polyCheckList in polyCheck:
+                    continue
+                polyCheck.append(polyCheckList)
+
                 for segment in obj.segments:
                     p_xy = (segment.start[0], segment.start[1], depth)
                     gluTessVertex(tess, p_xy, p_xy)
@@ -1343,7 +1357,7 @@ def draw_machinecode_path(project: dict) -> bool:
                     tool_dist["tool"][tool_number]["move"] += dist
 
             report = []
-            datestr = datetime.datetime.now().strftime('%d.%m.%Y %H:%M')
+            datestr = datetime.datetime.now().strftime("%d.%m.%Y %H:%M")
             report.append("Report:")
             report.append(f"   Date: {datestr}")
             for filename in project["filename_drawings"]:
