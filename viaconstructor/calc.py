@@ -505,7 +505,7 @@ def segments2objects(segments):
                 min_y = min(min_y, segment.start[1], segment.end[1])
                 max_x = max(max_x, segment.start[0], segment.end[0])
                 max_y = max(max_y, segment.start[1], segment.end[1])
-            uid = hashlib.md5(f"{int(min_x * 100)}_{int(min_y * 100)}_{int(max_x * 100)}_{int(max_y * 100)}".encode("utf-8")).hexdigest()
+            uid = hashlib.md5(f"{int(min_x * 100)}_{int(min_y * 100)}_{int(max_x * 100)}_{int(max_y * 100)}_{obj.layer}".encode("utf-8")).hexdigest()
             obj_uid = f"{obj_idx}:{uid}"
 
             objects[obj_uid] = obj
