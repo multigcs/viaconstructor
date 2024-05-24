@@ -2414,6 +2414,8 @@ class ViaConstructor:  # pylint: disable=R0904
     def setup_select_object(self, value):
         if self.project["status"] != "READY":
             return
+        if not value:
+            return
         self.project["status"] = "CHANGE"
         obj_idx = value.split(":")[0].split()[0]
         self.combobjwidget.setCurrentText(obj_idx)
@@ -2899,6 +2901,7 @@ class ViaConstructor:  # pylint: disable=R0904
             bounding_box = points_to_boundingbox(object2points(self.project["objects"][object_active_obj_idx]))
             offset_x = 0
             offset_y = 0
+            layer = obj.layer
             if offset_direction == "left":
                 offset_x = 0 - (bounding_box[2] - bounding_box[0]) - bounding_box[0] - 10
             elif offset_direction == "right":
@@ -2907,16 +2910,27 @@ class ViaConstructor:  # pylint: disable=R0904
                 offset_y = (self.project["minMax"][3] - self.project["minMax"][1]) - bounding_box[1] + 10
             elif offset_direction == "bottom":
                 offset_y = 0 - (bounding_box[3] - bounding_box[1]) - bounding_box[1] - 10
+            elif offset_direction == "layer":
+                # found new layer-name
+                ln = 0
+                while f"{layer}-{ln}" in self.project["layersetup"]:
+                    ln += 1
+                layer = f"{layer}-{ln}"
 
             new_obj_idx = clone_object(object_active_obj_idx, offset_x, offset_y)
             if new_obj_idx is not None and with_childs:
                 for inner in object_active_obj["inner_objects"]:
-                    clone_object(inner, offset_x, offset_y)
+                    new_inner_obj_idx = clone_object(inner, offset_x, offset_y)
+                    self.project["objects"][new_inner_obj_idx].layer = layer
 
-            self.combobjwidget_update()
-
+            if self.project["objects"][new_obj_idx].layer != layer:
+                self.project["layersetup"][layer] = deepcopy(self.project["layersetup"][self.project["objects"][new_obj_idx].layer])
+                self.project["layers"][layer] = deepcopy(self.project["layers"][self.project["objects"][new_obj_idx].layer])
+                self.project["objects"][new_obj_idx].layer = layer
             self.project["maxOuter"] = find_tool_offsets(self.project["objects"])
 
+            self.lcombobjwidget_update()
+            self.combobjwidget_update()
             self.setup_select_object(new_obj_idx)
 
             self.update_tabs_data()
@@ -2953,6 +2967,11 @@ class ViaConstructor:  # pylint: disable=R0904
         button.setToolTip(_("clone object"))
         button.clicked.connect(partial(object_copy, checkbox, "bottom"))  # type: ignore
         glayout.addWidget(button, 2, 1)
+
+        button = QPushButton("to new Layer")
+        button.setToolTip(_("clone object to new layer"))
+        button.clicked.connect(partial(object_copy, checkbox, "layer"))  # type: ignore
+        glayout.addWidget(button, 1, 1)
 
         vlayout.addStretch(1)
         tabwidget.addTab(scrollarea, _("Manipulate"))
