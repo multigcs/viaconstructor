@@ -1,6 +1,6 @@
 
 VERSION ?= $(shell grep "version=" setup.py | cut -d"'" -f2)
-DOCKERBASE ?= fedora
+DOCKERBASE ?= debian12
 
 
 all: ruff isort black lint pytest help_gen gettext docindex done
@@ -125,11 +125,12 @@ docker-run-pip-install:
 
 docker-run-dev:
 	docker rm viaconstructor || true
-	docker run --net=host -e DISPLAY=:0  --privileged --name viaconstructor -v $(CURDIR):/usr/src/viaconstructor -t -i viaconstructor /bin/bash -c "cd /usr/src/viaconstructor; pip3 install -r requirements.txt; bin/viaconstructor tests/data/simple.dxf"
+	#docker run --net=host -e DISPLAY=:0  --privileged --name viaconstructor -v $(CURDIR):/usr/src/viaconstructor -t -i viaconstructor /bin/bash -c "cd /usr/src/viaconstructor; pip3 install -r requirements.txt; bin/viaconstructor tests/data/simple.dxf"
+	docker run --net=host -v /tmp/.X11-unix:/tmp/.X11-unix -e DISPLAY=$$DISPLAY -v $$HOME/.Xauthority:/root/.Xauthority --privileged --name viaconstructor -v $(CURDIR):/usr/src/viaconstructor -t -i viaconstructor /bin/bash -c "cd /usr/src/viaconstructor; bin/viaconstructor tests/data/simple.dxf"
 
 docker-run-shell:
 	docker rm viaconstructor || true
-	docker run --net=host -e DISPLAY=:0  --privileged --name viaconstructor -v $(CURDIR):/usr/src/viaconstructor -t -i viaconstructor /bin/bash
+	docker run --net=host -v /tmp/.X11-unix:/tmp/.X11-unix -e DISPLAY=$$DISPLAY -v $$HOME/.Xauthority:/root/.Xauthority --privileged --name viaconstructor -v $(CURDIR):/usr/src/viaconstructor -t -i viaconstructor /bin/bash
 
 gettext:
 	/usr/bin/pygettext3 --no-location -d base -o viaconstructor/locales/base.pot viaconstructor/viaconstructor.py viaconstructor/setupdefaults.py
