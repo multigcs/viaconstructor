@@ -135,13 +135,13 @@ docker-build-debian: docker-build-debian11_deb docker-build-debian12_deb
 	ls debian-packages/*deb
 
 docker-build-debian12_deb:
-	sudo rm -rf dist/ deb_dist/ deb_dist_debian12/
+	sudo rm -rf dist/ deb_dist/
 	docker build -t viaconstructor_build_debian12 -f Dockerfile.debian12 .
 	docker rm viaconstructor_build_debian12 || true
 	docker run --net=host --name viaconstructor_build_debian12 -v $(CURDIR):/usr/src/viaconstructor -t -i viaconstructor_build_debian12 /bin/bash -c "cd /usr/src/viaconstructor; SETUPTOOLS_USE_DISTUTILS=stdlib python3 setup.py --command-packages=stdeb.command sdist_dsc && cd deb_dist/viaconstructor-*/ && sed -i 's|Depends: |Depends: python3-pyqt5.qtopengl, |g' debian/control && dpkg-buildpackage -rfakeroot -uc -us"
 	mkdir -p debian-packages/
 	cp deb_dist/*.deb debian-packages/python3-viaconstructor_${VERSION}-bookworm_amd64.deb
-	sudo rm -rf dist/ deb_dist/ deb_dist_debian12/
+	sudo rm -rf dist/ deb_dist/
 	ls debian-packages/*deb
 
 docker-run-debian12_deb:
@@ -151,19 +151,39 @@ docker-run-debian12_deb:
 
 
 docker-build-debian11_deb:
-	sudo rm -rf dist/ deb_dist/ deb_dist_debian11/
+	sudo rm -rf dist/ deb_dist/
 	docker build -t viaconstructor_build_debian11 -f Dockerfile.debian11 .
 	docker rm viaconstructor_build_debian11 || true
 	docker run --net=host --name viaconstructor_build_debian11 -v $(CURDIR):/usr/src/viaconstructor -t -i viaconstructor_build_debian11 /bin/bash -c "cd /usr/src/viaconstructor; SETUPTOOLS_USE_DISTUTILS=stdlib python3 setup.py --command-packages=stdeb.command sdist_dsc && cd deb_dist/viaconstructor-*/ && sed -i 's|Depends: |Depends: python3-pyqt5.qtopengl, |g' debian/control && dpkg-buildpackage -rfakeroot -uc -us"
 	mkdir -p debian-packages/
 	cp deb_dist/*.deb debian-packages/python3-viaconstructor_${VERSION}-bullseye_amd64.deb
-	sudo rm -rf dist/ deb_dist/ deb_dist_debian11/
+	sudo rm -rf dist/ deb_dist/
 	ls debian-packages/*deb
 
 docker-run-debian11_deb:
 	docker build -t viaconstructor_debian11 -f Dockerfile.debian11-min .
 	docker rm viaconstructor_debian11 || true
 	docker run --net=host -v /tmp/.X11-unix:/tmp/.X11-unix -e DISPLAY=$$DISPLAY -v $$HOME/.Xauthority:/root/.Xauthority --name viaconstructor_debian11 -v $(CURDIR):/usr/src/viaconstructor -t -i viaconstructor_debian11 /bin/bash -c "cd /usr/src/viaconstructor; apt-get install --no-install-recommends -y ./debian-packages/python3-viaconstructor_*-bullseye_amd64.deb; cd ~ ; viaconstructor /usr/src/viaconstructor/tests/data/simple.dxf"
+
+
+
+
+docker-build-ubuntu22.04_deb:
+	sudo rm -rf dist/ deb_dist/ deb_dist_ubuntu22.04/
+	docker build -t viaconstructor_build_ubuntu22.04 -f Dockerfile.ubuntu22.04 .
+	docker rm viaconstructor_build_ubuntu22.04 || true
+	docker run --net=host --name viaconstructor_build_ubuntu22.04 -v $(CURDIR):/usr/src/viaconstructor -t -i viaconstructor_build_ubuntu22.04 /bin/bash -c "cd /usr/src/viaconstructor; SETUPTOOLS_USE_DISTUTILS=stdlib python3 setup.py --command-packages=stdeb.command sdist_dsc && cd deb_dist/viaconstructor-*/ && sed -i 's|Depends: |Depends: python3-pyqt5.qtopengl, |g' debian/control && dpkg-buildpackage -rfakeroot -uc -us || /bin/bash"
+	mkdir -p debian-packages/
+	cp deb_dist/*.deb debian-packages/python3-viaconstructor_${VERSION}-jammy_amd64.deb
+	sudo rm -rf dist/ deb_dist/ deb_dist_ubuntu22.04/
+	ls debian-packages/*deb
+
+docker-run-ubuntu22.04_deb:
+	docker build -t viaconstructor_ubuntu22.04 -f Dockerfile.ubuntu22.04-min .
+	docker rm viaconstructor_ubuntu22.04 || true
+	docker run --net=host -v /tmp/.X11-unix:/tmp/.X11-unix -e DISPLAY=$$DISPLAY -v $$HOME/.Xauthority:/root/.Xauthority --name viaconstructor_ubuntu22.04 -v $(CURDIR):/usr/src/viaconstructor -t -i viaconstructor_ubuntu22.04 /bin/bash -c "cd /usr/src/viaconstructor; apt-get install --no-install-recommends -y ./debian-packages/python3-viaconstructor_*-jammy_amd64.deb; cd ~ ; viaconstructor /usr/src/viaconstructor/tests/data/simple.dxf"
+
+
 
 gettext:
 	/usr/bin/pygettext3 --no-location -d base -o viaconstructor/locales/base.pot viaconstructor/viaconstructor.py viaconstructor/setupdefaults.py
