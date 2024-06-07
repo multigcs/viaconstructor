@@ -125,20 +125,45 @@ docker-run-pip-install:
 
 docker-run-dev:
 	docker rm viaconstructor || true
-	#docker run --net=host -e DISPLAY=:0  --privileged --name viaconstructor -v $(CURDIR):/usr/src/viaconstructor -t -i viaconstructor /bin/bash -c "cd /usr/src/viaconstructor; pip3 install -r requirements.txt; bin/viaconstructor tests/data/simple.dxf"
 	docker run --net=host -v /tmp/.X11-unix:/tmp/.X11-unix -e DISPLAY=$$DISPLAY -v $$HOME/.Xauthority:/root/.Xauthority --privileged --name viaconstructor -v $(CURDIR):/usr/src/viaconstructor -t -i viaconstructor /bin/bash -c "cd /usr/src/viaconstructor; bin/viaconstructor tests/data/simple.dxf"
 
 docker-run-shell:
 	docker rm viaconstructor || true
 	docker run --net=host -v /tmp/.X11-unix:/tmp/.X11-unix -e DISPLAY=$$DISPLAY -v $$HOME/.Xauthority:/root/.Xauthority --privileged --name viaconstructor -v $(CURDIR):/usr/src/viaconstructor -t -i viaconstructor /bin/bash
 
-build_debian12_deb:
-	sudo rm -rf dist
-	sudo rm -rf deb_dist/
-	docker build -t viaconstructor -f Dockerfile.debian12 .
-	docker rm viaconstructor || true
-	docker run --net=host -v /tmp/.X11-unix:/tmp/.X11-unix -e DISPLAY=$$DISPLAY -v $$HOME/.Xauthority:/root/.Xauthority --privileged --name viaconstructor -v $(CURDIR):/usr/src/viaconstructor -t -i viaconstructor /bin/bash -c "cd /usr/src/viaconstructor; SETUPTOOLS_USE_DISTUTILS=stdlib python3 setup.py --command-packages=stdeb.command bdist_deb"
-	ls -l deb_dist/*.deb
+docker-build-debian: docker-build-debian11_deb docker-build-debian12_deb
+	ls debian-packages/*deb
+
+docker-build-debian12_deb:
+	sudo rm -rf dist/ deb_dist/ deb_dist_debian12/
+	docker build -t viaconstructor_build_debian12 -f Dockerfile.debian12 .
+	docker rm viaconstructor_build_debian12 || true
+	docker run --net=host --name viaconstructor_build_debian12 -v $(CURDIR):/usr/src/viaconstructor -t -i viaconstructor_build_debian12 /bin/bash -c "cd /usr/src/viaconstructor; SETUPTOOLS_USE_DISTUTILS=stdlib python3 setup.py --command-packages=stdeb.command sdist_dsc && cd deb_dist/viaconstructor-*/ && sed -i 's|Depends: |Depends: python3-pyqt5.qtopengl, |g' debian/control && dpkg-buildpackage -rfakeroot -uc -us"
+	mkdir -p debian-packages/
+	cp deb_dist/*.deb debian-packages/python3-viaconstructor_${VERSION}-bookworm_amd64.deb
+	sudo rm -rf dist/ deb_dist/ deb_dist_debian12/
+	ls debian-packages/*deb
+
+docker-run-debian12_deb:
+	docker build -t viaconstructor_debian12 -f Dockerfile.debian12-min .
+	docker rm viaconstructor_debian12 || true
+	docker run --net=host -v /tmp/.X11-unix:/tmp/.X11-unix -e DISPLAY=$$DISPLAY -v $$HOME/.Xauthority:/root/.Xauthority --name viaconstructor_debian12 -v $(CURDIR):/usr/src/viaconstructor -t -i viaconstructor_debian12 /bin/bash -c "cd /usr/src/viaconstructor; apt-get install --no-install-recommends -y ./debian-packages/python3-viaconstructor_*-bookworm_amd64.deb; cd ~ ; viaconstructor /usr/src/viaconstructor/tests/data/simple.dxf"
+
+
+docker-build-debian11_deb:
+	sudo rm -rf dist/ deb_dist/ deb_dist_debian11/
+	docker build -t viaconstructor_build_debian11 -f Dockerfile.debian11 .
+	docker rm viaconstructor_build_debian11 || true
+	docker run --net=host --name viaconstructor_build_debian11 -v $(CURDIR):/usr/src/viaconstructor -t -i viaconstructor_build_debian11 /bin/bash -c "cd /usr/src/viaconstructor; SETUPTOOLS_USE_DISTUTILS=stdlib python3 setup.py --command-packages=stdeb.command sdist_dsc && cd deb_dist/viaconstructor-*/ && sed -i 's|Depends: |Depends: python3-pyqt5.qtopengl, |g' debian/control && dpkg-buildpackage -rfakeroot -uc -us"
+	mkdir -p debian-packages/
+	cp deb_dist/*.deb debian-packages/python3-viaconstructor_${VERSION}-bullseye_amd64.deb
+	sudo rm -rf dist/ deb_dist/ deb_dist_debian11/
+	ls debian-packages/*deb
+
+docker-run-debian11_deb:
+	docker build -t viaconstructor_debian11 -f Dockerfile.debian11-min .
+	docker rm viaconstructor_debian11 || true
+	docker run --net=host -v /tmp/.X11-unix:/tmp/.X11-unix -e DISPLAY=$$DISPLAY -v $$HOME/.Xauthority:/root/.Xauthority --name viaconstructor_debian11 -v $(CURDIR):/usr/src/viaconstructor -t -i viaconstructor_debian11 /bin/bash -c "cd /usr/src/viaconstructor; apt-get install --no-install-recommends -y ./debian-packages/python3-viaconstructor_*-bullseye_amd64.deb; cd ~ ; viaconstructor /usr/src/viaconstructor/tests/data/simple.dxf"
 
 gettext:
 	/usr/bin/pygettext3 --no-location -d base -o viaconstructor/locales/base.pot viaconstructor/viaconstructor.py viaconstructor/setupdefaults.py
