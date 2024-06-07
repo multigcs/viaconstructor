@@ -1,40 +1,67 @@
-import json
+import glob
+from viaconstructor.setupdefaults import setup_defaults
 
-helpdata = json.loads(open("docs/help.json", "r").read())
+
+# i18n
+def no_translation(text):
+    return text
+
+
+setup = setup_defaults(no_translation)
+
+
+menu = []
+menu.append("")
+menu.append("<h2>viaConstructor</h2>")
+menu.append('<a target="main" href="readme.html">Overview</a><br />')
+menu.append("Help:<br />")
+
+
+for section_name, section_data in setup.items():
+    menu.append(
+        f'&nbsp;&nbsp;&nbsp;<a target="main" href="help/{section_name}.html">{section_name.title()}</a><br />'
+    )
+
+    section = []
+    section.append(f"<h2>{section_name.title()}</h2>")
+    for name, data in section_data.items():
+        section.append("<center>")
+        section.append('<table width="90%" border="0">')
+        section.append('<tr><td valign="top" align="left">')
+        section.append(f"<h3>{data['title']}</h3>")
+        if "unit" in data:
+            section.append(f"unit: {data['unit']}<br/>")
+        section.append("<br/>")
+        section.append(f"{data['tooltip']}<br/>")
+        section.append('<br /></td><td valign="top" align="right">')
+        for image in glob.glob(f"docs/{section_name}-{name}-*.png"):
+            print(image)
+            ipath = image.replace("docs/", "")
+            ivalue = image.replace(f"docs/{section_name}-{name}-", "").replace(
+                f".png", ""
+            )
+            section.append(f"{ivalue}")
+            section.append(
+                f'<a href="../{ipath}"><img width="320" alt="{ipath}" src="../{ipath}" /></a><br />'
+            )
+        section.append("</td></tr>")
+        section.append("<tr><td><br /></td><td></td></tr>")
+        section.append("</table>")
+        section.append("</center>")
+        open(f"docs/help/{section_name}.html", "w").write("\n".join(section))
+
 
 index = []
-index.append("<h1>Help</h1>")
-index.append("<hr />")
-index.append("<center>")
-index.append('<table width="90%" border="0">')
-for name, data in helpdata.items():
-
-    # index.append(f"<a href=\"{name}.html\">{data['title']}</a><br />")
-
-    index.append('<tr><td valign="top" align="left">')
-    index.append(f"<h2>{data['title']}</h2>")
-    index.append(data["text"])
-    index.append('<br /></td><td valign="top" align="right">')
-    for option, filename in data["images"].items():
-        index.append(f"{option}")
-        index.append(
-            f'<a href="../{filename}"><img width="320" alt="{option}" src="../{filename}" /></a><br />'
-        )
-    index.append("</td></tr>")
-
-    index.append("<tr><td><br /></td><td></td></tr>")
-
-    html = []
-    html.append(f"<h1>{data['title']}</h1>")
-    html.append(data["text"])
-    html.append("<br />")
-    for option, filename in data["images"].items():
-        html.append(f'<img width="320" src="../{filename}" />')
-
-    open(f"docs/help/{name}.html", "w").write("\n".join(html))
-
-index.append("</table>")
-index.append("</center>")
-
-
 open(f"docs/help/index.html", "w").write("\n".join(index))
+
+
+menu.append('<a target="main" href="pdoc/index.html">Source-Documentation</a><br />')
+menu.append(
+    '<a target="main" href="pytest/index.html">Pytest-Coverage-Report</a><br />'
+)
+menu.append("<br />")
+menu.append(
+    '<a target="_blank" href="https://github.com/multigcs/viaconstructor">GitHub</a><br />'
+)
+menu.append("")
+open(f"docs/menu.html", "w").write("\n".join(menu))

@@ -20,7 +20,7 @@ pdoc: pyvenv
 
 help_gen: pyvenv
 	mkdir -p docs/help
-	pyvenv/bin/pdoc help_gen.py
+	pyvenv/bin/python help_gen.py
 
 docindex: pyvenv
 	pyvenv/bin/markdown_py README.md | sed "s|https://raw.githubusercontent.com/multigcs/viaconstructor/main/docs/|./|g" > docs/readme.html

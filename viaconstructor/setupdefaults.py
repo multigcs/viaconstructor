@@ -52,7 +52,7 @@ def setup_defaults(_) -> dict:
                 "type": "bool",
                 "per_object": True,
                 "title": _("Helix"),
-                "tooltip": _("Helix"),
+                "tooltip": _("milling circles in helix mode"),
             },
             "fast_move_z": {
                 "default": 5.0,

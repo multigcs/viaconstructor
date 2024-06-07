@@ -5,7 +5,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
-"POT-Creation-Date: 2023-04-20 09:25+0200\n"
+"POT-Creation-Date: 2024-06-07 13:48+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -103,6 +103,9 @@ msgid "nearest"
 msgstr ""
 
 msgid "unordered"
+msgstr ""
+
+msgid "per_object"
 msgstr ""
 
 msgid "Object-Order"
@@ -342,7 +345,25 @@ msgstr ""
 msgid "Unit of the machine"
 msgstr ""
 
+msgid "offset"
+msgstr ""
+
+msgid "radius"
+msgstr ""
+
+msgid "Arcs-Mode (G2/G3)"
+msgstr ""
+
+msgid "Arcs-Mode - G2/G3 with IJ or R (experimental)"
+msgstr ""
+
 msgid "machine supports g54"
+msgstr ""
+
+msgid "extra init cmds"
+msgstr ""
+
+msgid "add gcode after init"
 msgstr ""
 
 msgid "machine supports toolchange"
@@ -498,6 +519,9 @@ msgstr ""
 msgid "File"
 msgstr ""
 
+msgid "Append drawing"
+msgstr ""
+
 msgid "Save drawing as DXF"
 msgstr ""
 
@@ -642,6 +666,18 @@ msgstr ""
 msgid "open fonttool"
 msgstr ""
 
+msgid "Gear-Tool"
+msgstr ""
+
+msgid "open geartool"
+msgstr ""
+
+msgid "Box-Tool"
+msgstr ""
+
+msgid "open boxtool"
+msgstr ""
+
 msgid "select this row"
 msgstr ""
 
@@ -675,10 +711,10 @@ msgstr ""
 msgid "clone object"
 msgstr ""
 
-msgid "Manipulate"
+msgid "clone object to new layer"
 msgstr ""
 
-msgid "Reader-Selection"
+msgid "Manipulate"
 msgstr ""
 
 msgid "Import-Options"
@@ -696,6 +732,9 @@ msgstr ""
 msgid "&Machine-Output"
 msgstr ""
 
+msgid "&Report"
+msgstr ""
+
 msgid "this may take some time"
 msgstr ""
 
@@ -711,13 +750,16 @@ msgstr ""
 msgid "Object:"
 msgstr ""
 
+msgid "Layer:"
+msgstr ""
+
 msgid "&Global"
 msgstr ""
 
-msgid "&Objects"
+msgid "&Layers"
 msgstr ""
 
-msgid "&Layers"
+msgid "&Objects"
 msgstr ""
 
 msgid "&Infos"
