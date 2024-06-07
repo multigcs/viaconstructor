@@ -32,6 +32,15 @@ OpenSource CAM-Tool to generate gCode from DXF,SVG and HPGL-Files
 
 ## quikstart
 
+### for Debian11/12 and Ubuntu 22.04:
+download the right package from:
+https://multixmedia.org/debian-packages
+
+and install with 
+```
+apt-get install python3-viaconstructor_*.deb
+```
+
 ### install with pip
 ```
 pip3 install viaconstructor
