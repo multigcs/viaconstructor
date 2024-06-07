@@ -108,20 +108,20 @@ docker-build:
 
 docker-run-dist-check: dist
 	docker rm viaconstructor || true
-	docker run --net=host -e DISPLAY=:0  --privileged --name viaconstructor -v $(CURDIR):/usr/src/viaconstructor -t -i viaconstructor /bin/bash -c "cd /usr/src/viaconstructor; pip3 install dist/viaconstructor-*.tar.gz; cd ~ ; ln -sf /usr/src/viaconstructor/tests ./ ; viaconstructor tests/data/check.dxf -s tests/data/gcode-2x2mm-d2.cfg -o /tmp/out.ngc ; diff /tmp/out.ngc tests/data/check.dxf-gcode-2x2mm-d2.cfg.check"
+	docker run --net=host -v /tmp/.X11-unix:/tmp/.X11-unix -e DISPLAY=$$DISPLAY -v $$HOME/.Xauthority:/root/.Xauthority --privileged --name viaconstructor -v $(CURDIR):/usr/src/viaconstructor -t -i viaconstructor /bin/bash -c "cd /usr/src/viaconstructor; pip3 install dist/viaconstructor-*.tar.gz; cd ~ ; ln -sf /usr/src/viaconstructor/tests ./ ; viaconstructor tests/data/check.dxf -s tests/data/gcode-2x2mm-d2.cfg -o /tmp/out.ngc ; diff /tmp/out.ngc tests/data/check.dxf-gcode-2x2mm-d2.cfg.check"
 	@echo "--- DISTCHECK OK ---"
 
 docker-run-dist: dist
 	docker rm viaconstructor || true
-	docker run --net=host -e DISPLAY=:0  --privileged --name viaconstructor -v $(CURDIR):/usr/src/viaconstructor -t -i viaconstructor /bin/bash -c "cd /usr/src/viaconstructor; pip3 install dist/viaconstructor-*.tar.gz; cd ~ ; viaconstructor /usr/src/viaconstructor/tests/data/simple.dxf"
+	docker run --net=host -v /tmp/.X11-unix:/tmp/.X11-unix -e DISPLAY=$$DISPLAY -v $$HOME/.Xauthority:/root/.Xauthority --privileged --name viaconstructor -v $(CURDIR):/usr/src/viaconstructor -t -i viaconstructor /bin/bash -c "cd /usr/src/viaconstructor; pip3 install dist/viaconstructor-*.tar.gz; cd ~ ; viaconstructor /usr/src/viaconstructor/tests/data/simple.dxf"
 
-docker-run-deb: bdist_deb
+docker-run-deb:
 	docker rm viaconstructor || true
-	docker run --net=host -e DISPLAY=:0  --privileged --name viaconstructor -v $(CURDIR):/usr/src/viaconstructor -t -i viaconstructor /bin/bash -c "cd /usr/src/viaconstructor; apt-get install -y ./deb_dist/python3-viaconstructor_*.deb; cd ~ ; viaconstructor /usr/src/viaconstructor/tests/data/simple.dxf"
+	docker run --net=host -v /tmp/.X11-unix:/tmp/.X11-unix -e DISPLAY=$$DISPLAY -v $$HOME/.Xauthority:/root/.Xauthority --privileged --name viaconstructor -v $(CURDIR):/usr/src/viaconstructor -t -i viaconstructor /bin/bash -c "cd /usr/src/viaconstructor; apt-get install -y ./deb_dist/python3-viaconstructor_*.deb; cd ~ ; viaconstructor /usr/src/viaconstructor/tests/data/simple.dxf"
 
 docker-run-pip-install:
 	docker rm viaconstructor || true
-	docker run --net=host -e DISPLAY=:0  --privileged --name viaconstructor -v $(CURDIR)/tests/data:/usr/src -t -i viaconstructor /bin/bash -c "cd /usr/src; pip3 install viaconstructor; viaconstructor simple.dxf"
+	docker run --net=host -v /tmp/.X11-unix:/tmp/.X11-unix -e DISPLAY=$$DISPLAY -v $$HOME/.Xauthority:/root/.Xauthority --privileged --name viaconstructor -v $(CURDIR)/tests/data:/usr/src -t -i viaconstructor /bin/bash -c "cd /usr/src; pip3 install viaconstructor; viaconstructor simple.dxf"
 
 docker-run-dev:
 	docker rm viaconstructor || true
@@ -131,6 +131,14 @@ docker-run-dev:
 docker-run-shell:
 	docker rm viaconstructor || true
 	docker run --net=host -v /tmp/.X11-unix:/tmp/.X11-unix -e DISPLAY=$$DISPLAY -v $$HOME/.Xauthority:/root/.Xauthority --privileged --name viaconstructor -v $(CURDIR):/usr/src/viaconstructor -t -i viaconstructor /bin/bash
+
+build_debian12_deb:
+	sudo rm -rf dist
+	sudo rm -rf deb_dist/
+	docker build -t viaconstructor -f Dockerfile.debian12 .
+	docker rm viaconstructor || true
+	docker run --net=host -v /tmp/.X11-unix:/tmp/.X11-unix -e DISPLAY=$$DISPLAY -v $$HOME/.Xauthority:/root/.Xauthority --privileged --name viaconstructor -v $(CURDIR):/usr/src/viaconstructor -t -i viaconstructor /bin/bash -c "cd /usr/src/viaconstructor; SETUPTOOLS_USE_DISTUTILS=stdlib python3 setup.py --command-packages=stdeb.command bdist_deb"
+	ls -l deb_dist/*.deb
 
 gettext:
 	/usr/bin/pygettext3 --no-location -d base -o viaconstructor/locales/base.pot viaconstructor/viaconstructor.py viaconstructor/setupdefaults.py
@@ -147,7 +155,7 @@ pypi: dist
 	twine upload --verbose dist/viaconstructor*
 
 bdist_deb:
-	python3 setup.py --command-packages=stdeb.command bdist_deb
+	SETUPTOOLS_USE_DISTUTILS=stdlib python3 setup.py --command-packages=stdeb.command bdist_deb
 	ls -l deb_dist/*.deb
 
 bdist_rpm:
