@@ -45,7 +45,7 @@ def setup_defaults(_) -> dict:
                 "max": 99,
                 "per_object": True,
                 "title": _("Passes"),
-                "tooltip": _("Passes / in Laser-Mode"),
+                "tooltip": _("number of passes in Laser-Mode"),
             },
             "helix_mode": {
                 "default": False,
@@ -117,7 +117,7 @@ def setup_defaults(_) -> dict:
                 "options": (
                     ("nearest", _("nearest")),
                     ("unordered", _("unordered")),
-                    ("per_object", _("per_object")),
+                    ("per_object", _("per object")),
                 ),
                 "title": _("Object-Order"),
                 "tooltip": _("how order the objects"),
@@ -235,7 +235,7 @@ def setup_defaults(_) -> dict:
                     "blades": 1,
                 },
                 "title": _("Tools"),
-                "tooltip": _("tooltable"),
+                "tooltip": _("the tooltable"),
             },
         },
         "workpiece": {
@@ -244,11 +244,11 @@ def setup_defaults(_) -> dict:
                 "type": "select",
                 "options": (
                     ("original", _("original")),
-                    ("bottomLeft", _("bottomLeft")),
+                    ("bottomLeft", _("bottom left")),
                     ("center", _("center")),
-                    ("bottomRight", _("bottomRight")),
-                    ("topLeft", _("topLeft")),
-                    ("topRight", _("topRight")),
+                    ("bottomRight", _("bottom right")),
+                    ("topLeft", _("top left")),
+                    ("topRight", _("top right")),
                 ),
                 "title": _("Zero-Position"),
                 "tooltip": _("setting the Zero-Postition of the Workpiece"),
@@ -351,7 +351,7 @@ def setup_defaults(_) -> dict:
                     "fz12": 0.05,
                 },
                 "title": _("Materials"),
-                "tooltip": _("materialtable"),
+                "tooltip": _("the materialtable"),
             },
         },
         "pockets": {

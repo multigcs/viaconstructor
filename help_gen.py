@@ -28,14 +28,28 @@ for section_name, section_data in setup.items():
         section.append("<center>")
         section.append('<table width="90%" border="0">')
         section.append('<tr><td valign="top" align="left">')
-        section.append(f"<h3>{data['title']}</h3>")
-        if "unit" in data:
-            section.append(f"unit: {data['unit']}<br/>")
+        section.append(f"<h3>{data['title']}:</h3>")
+
         section.append("<br/>")
         section.append(f"{data['tooltip']}<br/>")
+        section.append("<br/>")
+
+        if "unit" in data:
+            if data['unit'] == "LINEARMEASURE":
+                section.append("unit: mm/inch<br/>")
+            else:
+                section.append(f"unit: {data['unit']}<br/>")
+        if "type" in data:
+            if data['type'] == "select":
+                section.append("Options:<br/>")
+                for option in data["options"]:
+                    section.append(f"&nbsp;&nbsp;{option[1]}<br/>")
+
+
         section.append('<br /></td><td valign="top" align="right">')
-        for image in glob.glob(f"docs/{section_name}-{name}-*.png"):
-            print(image)
+
+        print(f"docs/{section_name}-{name}-*.png")
+        for image in glob.glob(f"docs/{section_name}-{name}*.png"):
             ipath = image.replace("docs/", "")
             ivalue = image.replace(f"docs/{section_name}-{name}-", "").replace(
                 f".png", ""
@@ -44,6 +58,7 @@ for section_name, section_data in setup.items():
             section.append(
                 f'<a href="../{ipath}"><img width="320" alt="{ipath}" src="../{ipath}" /></a><br />'
             )
+
         section.append("</td></tr>")
         section.append("<tr><td><br /></td><td></td></tr>")
         section.append("</table>")
