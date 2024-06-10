@@ -34,21 +34,29 @@ for section_name, section_data in setup.items():
         section.append(f"{data['tooltip']}<br/>")
         section.append("<br/>")
 
+        if "comment" in data:
+            comment = data['comment'].replace("\n", "<BR/>")
+            section.append(f"<i>{comment}</i><br/>")
+            section.append("<br/>")
+
         if "unit" in data:
             if data['unit'] == "LINEARMEASURE":
                 section.append("unit: mm/inch<br/>")
             else:
-                section.append(f"unit: {data['unit']}<br/>")
+                section.append(f"Unit: {data['unit']}<br/>")
+        if "default" in data:
+            if data.get("type") != "table":
+                section.append(f"Default: {data['default']}<br/>")
+
         if "type" in data:
             if data['type'] == "select":
                 section.append("Options:<br/>")
                 for option in data["options"]:
                     section.append(f"&nbsp;&nbsp;{option[1]}<br/>")
 
-
         section.append('<br /></td><td valign="top" align="right">')
 
-        print(f"docs/{section_name}-{name}-*.png")
+        #print(f"docs/{section_name}-{name}-*.png")
         for image in glob.glob(f"docs/{section_name}-{name}*.png"):
             ipath = image.replace("docs/", "")
             ivalue = image.replace(f"docs/{section_name}-{name}-", "").replace(

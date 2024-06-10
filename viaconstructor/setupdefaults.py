@@ -261,6 +261,11 @@ def setup_defaults(_) -> dict:
                 "title": _("Offset X"),
                 "tooltip": _("Offset X (G54)"),
                 "unit": "LINEARMEASURE",
+                "comment": _("""
+                    if G54 support is true, workpiece offsets will set with G10 command:
+                     G10 L2 P1 X10.000000 Y20.000000 Z3.000000 (workpiece offsets for G54)
+                    if G54 support is false, all offsets added to the G0-G3 commands
+                """),
             },
             "offset_y": {
                 "default": 0.0,
@@ -270,6 +275,11 @@ def setup_defaults(_) -> dict:
                 "title": _("Offset Y"),
                 "tooltip": _("Offset Y (G54)"),
                 "unit": "LINEARMEASURE",
+                "comment": _("""
+                    if G54 support is true, workpiece offsets will set with G10 command:
+                     G10 L2 P1 X10.000000 Y20.000000 Z3.000000 (workpiece offsets for G54)
+                    if G54 support is false, all offsets added to the G0-G3 commands
+                """),
             },
             "offset_z": {
                 "default": 0.0,
@@ -279,6 +289,11 @@ def setup_defaults(_) -> dict:
                 "title": _("Offset Z"),
                 "tooltip": _("Offset Z (G54)"),
                 "unit": "LINEARMEASURE",
+                "comment": _("""
+                    if G54 support is true, workpiece offsets will set with G10 command:
+                     G10 L2 P1 X10.000000 Y20.000000 Z3.000000 (workpiece offsets for G54)
+                    if G54 support is false, all offsets added to the G0-G3 commands
+                """),
             },
             "materialtable": {
                 "type": "table",
@@ -352,6 +367,9 @@ def setup_defaults(_) -> dict:
                 },
                 "title": _("Materials"),
                 "tooltip": _("the materialtable"),
+                "comment": _("""
+                    list of predifined materials to calculate feedrate / tool speed
+                """),
             },
         },
         "pockets": {
@@ -531,7 +549,12 @@ def setup_defaults(_) -> dict:
                 "default": False,
                 "type": "bool",
                 "title": _("machine supports g54"),
-                "tooltip": _("machine supports g54"),
+                "tooltip": _("machine supports g54 (workpiece offsets)"),
+                "comment": _("""
+                    if true, workpiece offsets will set with G10 command:
+                     G10 L2 P1 X10.000000 Y20.000000 Z3.000000 (workpiece offsets for G54)
+                    if false, all offsets added to the G0-G3 commands
+                """),
             },
             "init_post": {
                 "default": "",
@@ -610,7 +633,7 @@ def setup_defaults(_) -> dict:
                 "default": True,
                 "type": "bool",
                 "title": _("Colors-Show"),
-                "tooltip": _("showing colors in 3D preview"),
+                "tooltip": _("showing layer colors in 3D preview"),
             },
             "ruler_show": {
                 "default": True,
