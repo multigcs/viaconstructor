@@ -169,13 +169,13 @@ docker-run-debian11_deb:
 
 
 docker-build-ubuntu22.04_deb:
-	sudo rm -rf dist/ deb_dist/ deb_dist_ubuntu22.04/
+	sudo rm -rf dist/ deb_dist/
 	docker build -t viaconstructor_build_ubuntu22.04 -f dockerfiles/Dockerfile.ubuntu22.04 .
 	docker rm viaconstructor_build_ubuntu22.04 || true
 	docker run --net=host --name viaconstructor_build_ubuntu22.04 -v $(CURDIR):/usr/src/viaconstructor -t -i viaconstructor_build_ubuntu22.04 /bin/bash -c "cd /usr/src/viaconstructor; SETUPTOOLS_USE_DISTUTILS=stdlib python3 setup.py --command-packages=stdeb.command sdist_dsc && cd deb_dist/viaconstructor-*/ && sed -i 's|Depends: |Depends: python3-pyqt5.qtopengl, |g' debian/control && dpkg-buildpackage -rfakeroot -uc -us || /bin/bash"
 	mkdir -p debian-packages/
 	cp deb_dist/*.deb debian-packages/python3-viaconstructor_${VERSION}-jammy_amd64.deb
-	sudo rm -rf dist/ deb_dist/ deb_dist_ubuntu22.04/
+	sudo rm -rf dist/ deb_dist/
 	ls debian-packages/*deb
 
 docker-run-ubuntu22.04_deb:
