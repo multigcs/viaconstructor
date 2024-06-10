@@ -106,7 +106,7 @@ for reader in ("dxfread", "hpglread", "stlread", "svgread", "ttfread", "imgread"
         drawing_reader = importlib.import_module(f".{reader}", "viaconstructor.input_plugins")
         reader_plugins[reader] = drawing_reader.DrawReader
     except Exception as reader_error:  # pylint: disable=W0703
-        sys.stderr.write(f"ERRO while loading input plugin {reader}: {reader_error}\n")
+        sys.stderr.write(f"ERROR while loading input plugin {reader}: {reader_error}\n")
 
 
 DEBUG = False

@@ -73,7 +73,13 @@ class DrawReader(DrawReaderBase):
         parser.add_argument(
             "--dxfread-color-layers",
             help="dxfread: using different colors as different layers",
-            type=bool,
+            action="store_false",
+            default=False,
+        )
+        parser.add_argument(
+            "--dxfread-no-text",
+            help="dxfread: do not render text",
+            action="store_true",
             default=False,
         )
         parser.add_argument(
@@ -127,6 +133,10 @@ class DrawReader(DrawReaderBase):
         dxfread_color_layers.setChecked(args.dxfread_color_layers)
         dialog.layout.addWidget(dxfread_color_layers)
 
+        dxfread_render_text = QCheckBox("render text ?")
+        dxfread_render_text.setChecked(not args.dxfread_no_text)
+        dialog.layout.addWidget(dxfread_render_text)
+
         label = QLabel("Scale")
         dialog.layout.addWidget(label)
         dxfread_scale = QDoubleSpinBox()
@@ -160,6 +170,7 @@ class DrawReader(DrawReaderBase):
 
         if dialog.exec():
             args.dxfread_color_layers = dxfread_color_layers.isChecked()
+            args.dxfread_no_text = not dxfread_render_text.isChecked()
             args.dxfread_scale = dxfread_scale.value()
             args.dxfread_points = dxfread_points.value()
             if not args.dxfread_color_layers:
@@ -208,7 +219,9 @@ class DrawReader(DrawReaderBase):
         else:
             self.scale = args.dxfread_scale
 
+        self.dxfread_no_text = False
         if args is not None:
+            self.dxfread_no_text = args.dxfread_no_text
             self.color_layers = args.dxfread_color_layers
             self.select_layers = []
             for layer_name in args.dxfread_select_layers:
@@ -293,14 +306,15 @@ class DrawReader(DrawReaderBase):
                 self.add_entity(v_element)
 
         elif SUPPORT_TEXT and dxftype == "TEXT":
-            pos = (element.dxf.insert[0], element.dxf.insert[1])
-            font_face = fonts.FontFace(family="Times New Roman")
-            paths = text2path.make_paths_from_str(element.dxf.text, font_face)
-            scale = element.dxf.height
-            text_offset = (offset[0] + pos[0], offset[1] + pos[1])
-            text_offset = (offset[0] + pos[0], offset[1] + pos[1])
-            for path in paths:
-                self._add_path(path, text_offset, pscale=scale, layer=layer, color=color)
+            if not self.dxfread_no_text:
+                pos = (element.dxf.insert[0], element.dxf.insert[1])
+                font_face = fonts.FontFace(family="Times New Roman")
+                paths = text2path.make_paths_from_str(element.dxf.text, font_face)
+                scale = element.dxf.height
+                text_offset = (offset[0] + pos[0], offset[1] + pos[1])
+                text_offset = (offset[0] + pos[0], offset[1] + pos[1])
+                for path in paths:
+                    self._add_path(path, text_offset, pscale=scale, layer=layer, color=color)
 
         elif dxftype == "LINE":
             dist = calc_distance(
