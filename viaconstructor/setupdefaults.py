@@ -384,8 +384,8 @@ def setup_defaults(_) -> dict:
                 "default": False,
                 "type": "bool",
                 "per_object": True,
-                "title": _("Zickzack"),
-                "tooltip": _("Zickzack"),
+                "title": _("Zigzag"),
+                "tooltip": _("Zigzag"),
             },
             "islands": {
                 "default": True,

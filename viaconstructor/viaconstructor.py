@@ -1965,14 +1965,14 @@ class ViaConstructor:  # pylint: disable=R0904
             scrollarea.setWidget(vcontainer)
 
             titles = {
-                "mill": "M&ill",
-                "tool": "&Tool",
-                "workpiece": "&Workpiece",
-                "pockets": "P&ockets",
-                "tabs": "Ta&bs",
-                "leads": "Lea&ds",
-                "machine": "M&achine",
-                "view": "&View",
+                "mill": _("M&ill"),
+                "tool": _("&Tool"),
+                "workpiece": _("&Workpiece"),
+                "pockets": _("P&ockets"),
+                "tabs": _("Ta&bs"),
+                "leads": _("Lea&ds"),
+                "machine": _("M&achine"),
+                "view": _("&View"),
             }
             tabwidget.addTab(scrollarea, titles.get(sname, sname))
             for ename, entry in self.project["setup_defaults"][sname].items():
@@ -2173,14 +2173,14 @@ class ViaConstructor:  # pylint: disable=R0904
         setup_data = self.project["setup"]
 
         titles = {
-            "mill": "M&ill",
-            "tool": "&Tool",
-            "workpiece": "&Workpiece",
-            "pockets": "P&ockets",
-            "tabs": "Ta&bs",
-            "leads": "Lea&ds",
-            "machine": "M&achine",
-            "view": "&View",
+            "mill": _("M&ill"),
+            "tool": _("&Tool"),
+            "workpiece": _("&Workpiece"),
+            "pockets": _("P&ockets"),
+            "tabs": _("Ta&bs"),
+            "leads": _("Lea&ds"),
+            "machine": _("M&achine"),
+            "view": _("&View"),
         }
 
         if layer_active in self.project["layersetup"]:
@@ -2434,14 +2434,14 @@ class ViaConstructor:  # pylint: disable=R0904
         setup_data = self.project["setup"]
 
         titles = {
-            "mill": "M&ill",
-            "tool": "&Tool",
-            "workpiece": "&Workpiece",
-            "pockets": "P&ockets",
-            "tabs": "Ta&bs",
-            "leads": "Lea&ds",
-            "machine": "M&achine",
-            "view": "&View",
+            "mill": _("M&ill"),
+            "tool": _("&Tool"),
+            "workpiece": _("&Workpiece"),
+            "pockets": _("P&ockets"),
+            "tabs": _("Ta&bs"),
+            "leads": _("Lea&ds"),
+            "machine": _("M&achine"),
+            "view": _("&View"),
         }
 
         for obj_idx, obj in self.project["objects"].items():
@@ -2713,9 +2713,9 @@ class ViaConstructor:  # pylint: disable=R0904
         self.object_infolabel = QLabel("")
         vlayout.addWidget(self.object_infolabel)
 
-        vlayout.addWidget(QLabel("Move:"))
+        vlayout.addWidget(QLabel(_("Move:")))
 
-        vlayout.addWidget(QLabel("Steps"))
+        vlayout.addWidget(QLabel(_("Steps")))
 
         dspinbox = QDoubleSpinBox()
         dspinbox.setDecimals(4)
@@ -2726,9 +2726,9 @@ class ViaConstructor:  # pylint: disable=R0904
         dspinbox.setToolTip("")
         vlayout.addWidget(dspinbox)
 
-        checkbox = QCheckBox("with childs")
+        checkbox = QCheckBox(_("with childs"))
         checkbox.setChecked(True)
-        checkbox.setToolTip("move all childs")
+        checkbox.setToolTip(_("move all childs"))
         vlayout.addWidget(checkbox)
 
         gcontainer = QWidget()
@@ -2736,22 +2736,22 @@ class ViaConstructor:  # pylint: disable=R0904
         gcontainer.setLayout(glayout)
         vlayout.addWidget(gcontainer)
 
-        button = QPushButton("Left")
+        button = QPushButton(_("Left"))
         button.setToolTip(_("move left"))
         button.clicked.connect(partial(object_move, dspinbox, checkbox, "left"))  # type: ignore
         glayout.addWidget(button, 1, 0)
 
-        button = QPushButton("Right")
+        button = QPushButton(_("Right"))
         button.setToolTip(_("move right"))
         button.clicked.connect(partial(object_move, dspinbox, checkbox, "right"))  # type: ignore
         glayout.addWidget(button, 1, 2)
 
-        button = QPushButton("Up")
+        button = QPushButton(_("Up"))
         button.setToolTip(_("move up"))
         button.clicked.connect(partial(object_move, dspinbox, checkbox, "up"))  # type: ignore
         glayout.addWidget(button, 0, 1)
 
-        button = QPushButton("Down")
+        button = QPushButton(_("Down"))
         button.setToolTip(_("move down"))
         button.clicked.connect(partial(object_move, dspinbox, checkbox, "down"))  # type: ignore
         glayout.addWidget(button, 2, 1)
@@ -2785,8 +2785,8 @@ class ViaConstructor:  # pylint: disable=R0904
             self.update_tabs_data()
             self.update_drawing()
 
-        vlayout.addWidget(QLabel("Rotate:"))
-        vlayout.addWidget(QLabel("Angle"))
+        vlayout.addWidget(QLabel(_("Rotate:")))
+        vlayout.addWidget(QLabel(_("Angle")))
 
         dspinbox = QDoubleSpinBox()
         dspinbox.setDecimals(4)
@@ -2797,9 +2797,9 @@ class ViaConstructor:  # pylint: disable=R0904
         dspinbox.setToolTip("")
         vlayout.addWidget(dspinbox)
 
-        checkbox = QCheckBox("with childs")
+        checkbox = QCheckBox(_("with childs"))
         checkbox.setChecked(True)
-        checkbox.setToolTip("move all childs")
+        checkbox.setToolTip(_("move all childs"))
         vlayout.addWidget(checkbox)
 
         gcontainer = QWidget()
@@ -2841,8 +2841,8 @@ class ViaConstructor:  # pylint: disable=R0904
             self.update_tabs_data()
             self.update_drawing()
 
-        vlayout.addWidget(QLabel("Scale:"))
-        vlayout.addWidget(QLabel("Scale"))
+        vlayout.addWidget(QLabel(_("Scale:")))
+        vlayout.addWidget(QLabel(_("Scale")))
 
         dspinbox = QDoubleSpinBox()
         dspinbox.setDecimals(4)
@@ -2850,12 +2850,12 @@ class ViaConstructor:  # pylint: disable=R0904
         dspinbox.setMinimum(0.0)
         dspinbox.setMaximum(1000.0)
         dspinbox.setValue(1.1)
-        dspinbox.setToolTip("scale multiplier")
+        dspinbox.setToolTip(_("scale multiplier"))
         vlayout.addWidget(dspinbox)
 
-        checkbox = QCheckBox("with childs")
+        checkbox = QCheckBox(_("with childs"))
         checkbox.setChecked(True)
-        checkbox.setToolTip("move all childs")
+        checkbox.setToolTip(_("move all childs"))
         vlayout.addWidget(checkbox)
 
         gcontainer = QWidget()
@@ -2863,7 +2863,7 @@ class ViaConstructor:  # pylint: disable=R0904
         gcontainer.setLayout(glayout)
         vlayout.addWidget(gcontainer)
 
-        button = QPushButton("Scale")
+        button = QPushButton(_("Scale"))
         button.setToolTip(_("scale"))
         button.clicked.connect(partial(object_scale, dspinbox, checkbox))  # type: ignore
         glayout.addWidget(button, 0, 0)
@@ -2936,11 +2936,11 @@ class ViaConstructor:  # pylint: disable=R0904
             self.update_tabs_data()
             self.update_drawing()
 
-        vlayout.addWidget(QLabel("Copy:"))
+        vlayout.addWidget(QLabel(_("Copy:")))
 
-        checkbox = QCheckBox("with childs")
+        checkbox = QCheckBox(_("with childs"))
         checkbox.setChecked(True)
-        checkbox.setToolTip("move all childs")
+        checkbox.setToolTip(_("move all childs"))
         vlayout.addWidget(checkbox)
 
         gcontainer = QWidget()
@@ -2948,27 +2948,27 @@ class ViaConstructor:  # pylint: disable=R0904
         gcontainer.setLayout(glayout)
         vlayout.addWidget(gcontainer)
 
-        button = QPushButton("Clone Top")
+        button = QPushButton(_("Clone Top"))
         button.setToolTip(_("clone object"))
         button.clicked.connect(partial(object_copy, checkbox, "top"))  # type: ignore
         glayout.addWidget(button, 0, 1)
 
-        button = QPushButton("Clone Left")
+        button = QPushButton(_("Clone Left"))
         button.setToolTip(_("clone object"))
         button.clicked.connect(partial(object_copy, checkbox, "left"))  # type: ignore
         glayout.addWidget(button, 1, 0)
 
-        button = QPushButton("Clone Right")
+        button = QPushButton(_("Clone Right"))
         button.setToolTip(_("clone object"))
         button.clicked.connect(partial(object_copy, checkbox, "right"))  # type: ignore
         glayout.addWidget(button, 1, 2)
 
-        button = QPushButton("Clone Bottom")
+        button = QPushButton(_("Clone Bottom"))
         button.setToolTip(_("clone object"))
         button.clicked.connect(partial(object_copy, checkbox, "bottom"))  # type: ignore
         glayout.addWidget(button, 2, 1)
 
-        button = QPushButton("to new Layer")
+        button = QPushButton(_("to new Layer"))
         button.setToolTip(_("clone object to new layer"))
         button.clicked.connect(partial(object_copy, checkbox, "layer"))  # type: ignore
         glayout.addWidget(button, 1, 1)
