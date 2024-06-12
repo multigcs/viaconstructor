@@ -553,6 +553,17 @@ class ViaConstructor:  # pylint: disable=R0904
 
     def machine_cmd_save(self, filename: str) -> bool:
         with open(filename, "w") as fd_machine_cmd:
+
+            """
+            # adding thumbnail to gcode
+            from textwrap import wrap
+            self.project["machine_cmd"] += f"; thumbnail begin 220x124 11052"
+            base64 = self.project["glwidget"].screenshot()
+            self.project["machine_cmd"] += "\n"
+            for line in wrap(base64.decode(), 78):
+                self.project["machine_cmd"] += f"; {line}\n"
+            """
+
             fd_machine_cmd.write(self.project["machine_cmd"])
             fd_machine_cmd.write("\n")
             if self.project["setup"]["machine"]["postcommand"]:
@@ -604,20 +615,20 @@ class ViaConstructor:  # pylint: disable=R0904
 
     def _toolbar_save_gl(self) -> None:
         """save glview as png."""
-        self.status_bar_message(f"{self.info} - save 3d-view as png..")
+        self.status_bar_message(f"{self.info} - save 3d-view as image..")
         file_dialog = QFileDialog(self.main)
-        file_dialog.setNameFilters(["png (*.png)"])
+        file_dialog.setNameFilters(["png (*.png)", "jpg (*.jpg)"])
         filename_default = f"{'.'.join(self.project['filename_draw'].split('.')[:-1])}.png"
         name = file_dialog.getSaveFileName(
             self.main,
             "Save as Image",
             filename_default,
-            "png (*.png)",
+            "png (*.png);;jpg (*.jpg);;bmp (*.bmp)",
         )
         if name[0] and self.project["glwidget"].screenshot(name[0]):
-            self.status_bar_message(f"{self.info} - save dxf..done ({name[0]})")
+            self.status_bar_message(f"{self.info} - save 3d-view..done ({name[0]})")
         else:
-            self.status_bar_message(f"{self.info} - save dxf..cancel")
+            self.status_bar_message(f"{self.info} - save 3d-view..cancel")
 
     def _toolbar_save_project(self) -> None:
         """save project."""
