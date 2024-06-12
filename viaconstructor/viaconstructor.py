@@ -18,8 +18,15 @@ from typing import Optional, Union
 
 import ezdxf
 import setproctitle
-from PyQt5.QtCore import Qt, QMimeData  # pylint: disable=E0611
-from PyQt5.QtGui import QFont, QIcon, QImage, QPalette, QPixmap, QDrag  # pylint: disable=E0611
+from PyQt5.QtCore import QMimeData, Qt  # pylint: disable=E0611
+from PyQt5.QtGui import (  # pylint: disable=E0611
+    QDrag,
+    QFont,
+    QIcon,
+    QImage,
+    QPalette,
+    QPixmap,
+)
 from PyQt5.QtWidgets import (  # pylint: disable=E0611
     QAction,
     QApplication,
@@ -579,7 +586,7 @@ class ViaConstructor:  # pylint: disable=R0904
             self.status_bar_message(f"{self.info} - save machine-code..cancel")
 
     def _toolbar_save_dxf(self) -> None:
-        """save doawing as dxf."""
+        """save drawing as dxf."""
         self.status_bar_message(f"{self.info} - save drawing as dxf..")
         file_dialog = QFileDialog(self.main)
         file_dialog.setNameFilters(["dxf (*.dxf)"])
@@ -591,6 +598,23 @@ class ViaConstructor:  # pylint: disable=R0904
             "dxf (*.dxf)",
         )
         if name[0] and self.save_objects_as_dxf(name[0]):
+            self.status_bar_message(f"{self.info} - save dxf..done ({name[0]})")
+        else:
+            self.status_bar_message(f"{self.info} - save dxf..cancel")
+
+    def _toolbar_save_gl(self) -> None:
+        """save glview as png."""
+        self.status_bar_message(f"{self.info} - save 3d-view as png..")
+        file_dialog = QFileDialog(self.main)
+        file_dialog.setNameFilters(["png (*.png)"])
+        filename_default = f"{'.'.join(self.project['filename_draw'].split('.')[:-1])}.png"
+        name = file_dialog.getSaveFileName(
+            self.main,
+            "Save as Image",
+            filename_default,
+            "png (*.png)",
+        )
+        if name[0] and self.project["glwidget"].screenshot(name[0]):
             self.status_bar_message(f"{self.info} - save dxf..done ({name[0]})")
         else:
             self.status_bar_message(f"{self.info} - save dxf..cancel")
@@ -1504,6 +1528,18 @@ class ViaConstructor:  # pylint: disable=R0904
                 "Ctrl+D",
                 _("Save drawing as DXF"),
                 self._toolbar_save_dxf,
+                not os.environ.get("LINUXCNCVERSION"),
+                True,
+                False,
+                _("File"),
+                "",
+                None,
+            ],
+            _("Save 3d-view as PNG"): [
+                "save-image.png",
+                "Ctrl+P",
+                _("Save 3d-view as PNG"),
+                self._toolbar_save_gl,
                 not os.environ.get("LINUXCNCVERSION"),
                 True,
                 False,

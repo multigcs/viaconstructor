@@ -511,6 +511,10 @@ class GLWidget(QGLWidget):
         self.scale_xyz = 1.0
         self.initializeGL()
 
+    def screenshot(self, filename: str) -> None:
+        self.grabFrameBuffer().save(filename)
+        return True
+
     def timerEvent(self, event) -> None:  # pylint: disable=C0103,W0613
         """gltimer function."""
         if self.project["status"] == "INIT":
