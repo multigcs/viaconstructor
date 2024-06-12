@@ -150,6 +150,25 @@ if lang:
         sys.stderr.write(f"WARNING: localedir not found {localedir}\n")
 
 
+class myQMainWindow(QMainWindow):
+    def __init__(self, app):
+        super(QMainWindow, self).__init__()
+        self.app = app
+        self.setAcceptDrops(True)
+
+    def dragEnterEvent(self, event):
+        if event.mimeData().hasText():
+            event.acceptProposedAction()
+
+    def dropEvent(self, event):
+        files = []
+        for url in event.mimeData().urls():
+            files.append(url.toLocalFile())
+        if files:
+            self.app.load_drawings_and_redraw(files)
+            event.acceptProposedAction()
+
+
 class ViaConstructor:  # pylint: disable=R0904
     """viaconstructor main class."""
 
@@ -204,7 +223,7 @@ class ViaConstructor:  # pylint: disable=R0904
     combobjwidget = None
     status_bar: Optional[QStatusBar] = None
     infotext_widget: Optional[QPlainTextEdit] = None
-    main: Optional[QMainWindow] = None
+    main: Optional[myQMainWindow] = None
     toolbar: Optional[QToolBar] = None
     menubar: Optional[QMenuBar] = None
     toolbuttons: dict = {}
@@ -3427,7 +3446,7 @@ class ViaConstructor:  # pylint: disable=R0904
         self.project["imgwidget"].setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Ignored)  # type: ignore
         self.project["imgwidget"].setScaledContents(True)
 
-        self.main = QMainWindow()
+        self.main = myQMainWindow(self)
         self.main.setWindowTitle("viaConstructor")
         self.main.setCentralWidget(self.project["window"])
 
