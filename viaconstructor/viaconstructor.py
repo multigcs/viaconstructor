@@ -642,6 +642,20 @@ class ViaConstructor:  # pylint: disable=R0904
         else:
             self.status_bar_message(f"{self.info} - load drawing..cancel")
 
+    def load_drawings_and_redraw(self, filenames: list) -> None:
+        if filenames and self.load_drawings(filenames, append_only=True):
+            self.update_layer_setup()
+            self.update_object_setup()
+            self.global_changed(0)
+            self.update_drawing()
+
+            self.create_menubar()
+            self.create_toolbar()
+
+            self.status_bar_message(f"{self.info} - load drawing..done")
+        else:
+            self.status_bar_message(f"{self.info} - load drawing..cancel")
+
     def _toolbar_append_drawing(self) -> None:
         """load drawing."""
         self.status_bar_message(f"{self.info} - load drawing..")

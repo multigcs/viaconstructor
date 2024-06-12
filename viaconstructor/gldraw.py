@@ -116,6 +116,20 @@ class GLWidget(QGLWidget):
             )
         self.wheel_scale = 0.005 if self.retina else 0.1
 
+        self.setAcceptDrops(True)
+
+    def dragEnterEvent(self, event):
+        if event.mimeData().hasText():
+            event.acceptProposedAction()
+
+    def dropEvent(self, event):
+        files = []
+        for url in event.mimeData().urls():
+            files.append(url.toLocalFile())
+        if files:
+            self.project["app"].load_drawings_and_redraw(files)
+            event.acceptProposedAction()
+
     def initializeGL(self) -> None:  # pylint: disable=C0103
         """glinit function."""
 
