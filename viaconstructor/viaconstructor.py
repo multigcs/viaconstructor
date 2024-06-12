@@ -18,8 +18,8 @@ from typing import Optional, Union
 
 import ezdxf
 import setproctitle
-from PyQt5.QtCore import Qt  # pylint: disable=E0611
-from PyQt5.QtGui import QFont, QIcon, QImage, QPalette, QPixmap  # pylint: disable=E0611
+from PyQt5.QtCore import Qt, QMimeData  # pylint: disable=E0611
+from PyQt5.QtGui import QFont, QIcon, QImage, QPalette, QPixmap, QDrag  # pylint: disable=E0611
 from PyQt5.QtWidgets import (  # pylint: disable=E0611
     QAction,
     QApplication,
@@ -155,6 +155,17 @@ class myQMainWindow(QMainWindow):
         super(QMainWindow, self).__init__()
         self.app = app
         self.setAcceptDrops(True)
+
+    def dragLeaveEvent(self, event):
+        event.accept()
+
+    def mousePressEvent(self, event):
+        if event.button() == Qt.LeftButton:
+            drag = QDrag(self)
+            mime = QMimeData()
+            mime.setText(self.app.project["machine_cmd"])
+            drag.setMimeData(mime)
+            drag.exec_()
 
     def dragEnterEvent(self, event):
         if event.mimeData().hasText():
@@ -3464,6 +3475,7 @@ class ViaConstructor:  # pylint: disable=R0904
         left_gridlayout = QGridLayout()
 
         tabwidget = QTabWidget()
+        tabwidget.setMovable(True)
         tabwidget.addTab(self.project["glwidget"], _("&3D-View"))
         tabwidget.addTab(self.project["textwidget"], _("&Machine-Output"))
         tabwidget.addTab(self.project["reportwidget"], _("&Report"))
