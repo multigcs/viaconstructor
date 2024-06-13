@@ -453,6 +453,7 @@ def get_nearest_free_object(
     milling: set,
     objectorder: str,
     master_idx: str,
+    next_master: bool = False,
 ) -> tuple:
     found: bool = False
     nearest_dist: Union[None, float] = None
@@ -474,7 +475,6 @@ def get_nearest_free_object(
 
         # find nearest
         if offset_num not in milling and (((level == -1 or offset.level == level) and offset.setup["tool"]["number"] == tool and offset.setup["mill"]["active"])):  # pylint: disable=R0916
-
             if offset.setup["pockets"]["insideout"]:
                 sub_found = False
                 for pocket_offset_num, pocket_offset in polylines.items():
@@ -530,6 +530,35 @@ def get_nearest_free_object(
     return (found, nearest_idx, nearest_point, nearest_dist)
 
 
+def reorder_master_ids(project: dict, master_ids: list) -> list:
+    polylines = project["offsets"]
+    check_master_ids = master_ids.copy()
+    first_master = check_master_ids.pop()
+    last_pos = (0, 0)
+    reordered_master_ids = []
+    while check_master_ids:
+        nearest_dist = None
+        nearest_idx = -1
+        nearest_offset_id = -1
+        for offset_n, offset_id in enumerate(check_master_ids):
+            if f"{offset_id}.0" in polylines:
+                offset = polylines[f"{offset_id}.0"]
+                vertex_data = vertex_data_cache(offset)
+                dist = calc_distance(last_pos, (vertex_data[0][0], vertex_data[1][0]))
+                if nearest_dist is None or dist < nearest_dist:
+                    nearest_dist = dist
+                    nearest_idx = offset_n
+                    nearest_offset_id = offset_id
+        if nearest_idx is None:
+            break
+        next_master = check_master_ids.pop(nearest_idx)
+        reordered_master_ids.append(next_master)
+        offset = polylines[f"{next_master}.0"]
+        vertex_data = vertex_data_cache(offset)
+        last_pos = (vertex_data[0][0], vertex_data[1][0])
+    return reordered_master_ids
+
+
 def polylines2machine_cmd(project: dict, post: PostProcessor) -> str:
     """generates machine_cmd from polilines"""
     milling: set = set()
@@ -560,10 +589,10 @@ def polylines2machine_cmd(project: dict, post: PostProcessor) -> str:
 
     master_ids = []
     if objectorder == "per_object":
-        # TODO: reorder master_ids (nearest)
         for obj_idx, obj_data in project["objects"].items():
             if not obj_data.outer_objects:
                 master_ids.append(obj_idx)
+        master_ids = reorder_master_ids(project, master_ids)
     else:
         master_ids = [""]
 
