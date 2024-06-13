@@ -535,7 +535,7 @@ def reorder_master_ids(project: dict, master_ids: list) -> list:
     check_master_ids = master_ids.copy()
     first_master = check_master_ids.pop()
     last_pos = (0, 0)
-    reordered_master_ids = []
+    reordered_master_ids = [first_master]
     while check_master_ids:
         nearest_dist = None
         nearest_idx = -1
