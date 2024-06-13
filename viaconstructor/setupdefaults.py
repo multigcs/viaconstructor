@@ -614,6 +614,12 @@ def setup_defaults(_) -> dict:
                 "title": _("line numbers"),
                 "tooltip": _("adding line numbers"),
             },
+            "thumbnail": {
+                "default": False,
+                "type": "bool",
+                "title": _("add thumbnail to gcode"),
+                "tooltip": _("add thumbnail to gcode output (3d-view)"),
+            },
             "postcommand": {
                 "default": "",
                 "type": "str",

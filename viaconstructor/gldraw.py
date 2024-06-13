@@ -26,7 +26,7 @@ from OpenGL.GLU import (
     gluTessProperty,
     gluTessVertex,
 )
-from PyQt5.QtCore import QBuffer, QByteArray, QIODevice  # pylint: disable=E0611
+from PyQt5.QtCore import QBuffer, QByteArray, QIODevice, Qt  # pylint: disable=E0611
 from PyQt5.QtOpenGL import QGLFormat, QGLWidget  # pylint: disable=E0611
 from PyQt5.QtWidgets import QMessageBox  # pylint: disable=E0611
 
@@ -512,15 +512,19 @@ class GLWidget(QGLWidget):
         self.scale_xyz = 1.0
         self.initializeGL()
 
-    def screenshot(self, filename: str = None) -> None:
+    def screenshot(self, filename: str = None, scale: tuple = ()) -> None:
         screenshot = self.grabFrameBuffer()
+        if scale:
+            screenshot = screenshot.scaled(scale[0], scale[1], Qt.KeepAspectRatio)
+
         if filename is None:
             ba = QByteArray()
-            buffer = QBuffer(ba)
-            buffer.open(QIODevice.WriteOnly)
-            screenshot.save(buffer, "JPG")
+            img_buffer = QBuffer(ba)
+            img_buffer.open(QIODevice.WriteOnly)
+            screenshot.save(img_buffer, "JPG")
             base64_data = ba.toBase64().data()
-            return base64_data
+            return ((screenshot.width(), screenshot.height()), base64_data)
+
         screenshot.save(filename)
         return True
 

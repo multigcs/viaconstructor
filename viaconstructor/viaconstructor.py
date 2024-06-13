@@ -14,6 +14,7 @@ import time
 from copy import deepcopy
 from functools import partial
 from pathlib import Path
+from textwrap import wrap
 from typing import Optional, Union
 
 import ezdxf
@@ -553,16 +554,16 @@ class ViaConstructor:  # pylint: disable=R0904
 
     def machine_cmd_save(self, filename: str) -> bool:
         with open(filename, "w") as fd_machine_cmd:
-
-            """
             # adding thumbnail to gcode
-            from textwrap import wrap
-            self.project["machine_cmd"] += f"; thumbnail begin 220x124 11052"
-            base64 = self.project["glwidget"].screenshot()
-            self.project["machine_cmd"] += "\n"
-            for line in wrap(base64.decode(), 78):
-                self.project["machine_cmd"] += f"; {line}\n"
-            """
+            if self.project["setup"]["machine"]["thumbnail"] and self.project["setup"]["machine"]["plugin"].startswith("gcode") and self.project["glwidget"]:
+                size, base64 = self.project["glwidget"].screenshot(scale=(220, 220))
+                base64_bc = base64.decode()
+                base64_len = len(base64_bc)
+                self.project["machine_cmd"] += "\n"
+                self.project["machine_cmd"] += f"; thumbnail begin {size[0]}x{size[1]} {base64_len}\n"
+                for line in wrap(base64_bc, 78):
+                    self.project["machine_cmd"] += f"; {line}\n"
+                self.project["machine_cmd"] += "; thumbnail end\n"
 
             fd_machine_cmd.write(self.project["machine_cmd"])
             fd_machine_cmd.write("\n")
