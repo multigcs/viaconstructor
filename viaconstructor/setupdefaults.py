@@ -634,6 +634,12 @@ def setup_defaults(_) -> dict:
                 "title": _("Auto-Recalculation"),
                 "tooltip": _("update drawing automatically"),
             },
+            "autosave": {
+                "default": True,
+                "type": "bool",
+                "title": _("Autosave (Setup)"),
+                "tooltip": _("save setup as default automatically on exit"),
+            },
             "path": {
                 "default": "simple",
                 "type": "select",

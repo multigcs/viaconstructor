@@ -1500,6 +1500,10 @@ class ViaConstructor:  # pylint: disable=R0904
         """exit button."""
         if os.environ.get("LINUXCNCVERSION"):
             print(self.project["machine_cmd"])
+        if self.project["setup"]["view"]["autosave"]:
+            if not os.environ.get("LINUXCNCVERSION"):
+                print("saving setup defaults")
+            self._toolbar_save_setup()
         sys.exit(0)
 
     def create_actions(self) -> None:
@@ -3658,7 +3662,12 @@ class ViaConstructor:  # pylint: disable=R0904
                 self.project["status"] = "READY"
             self.update_drawing()
 
-        sys.exit(qapp.exec_())
+        ret = qapp.exec_()
+        if self.project["setup"]["view"]["autosave"]:
+            print("saving setup defaults")
+            self._toolbar_save_setup()
+
+        sys.exit(ret)
 
 
 if __name__ == "__main__":
