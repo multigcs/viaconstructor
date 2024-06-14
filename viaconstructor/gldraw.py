@@ -823,6 +823,13 @@ def draw_grid(project: dict) -> None:
     if not min_max:
         return
     size = project["setup"]["view"]["grid_size"]
+
+    # prevent too much grid lines on lage drawings
+    diff_x = min_max[2] - min_max[0]
+    diff_y = min_max[3] - min_max[1]
+    while diff_x / size > 100 or diff_y / size > 100:
+        size *= 10
+
     start_x = int(min_max[0] / size) * size - size
     end_x = int(min_max[2] / size) * size + size
     start_y = int(min_max[1] / size) * size - size
