@@ -184,7 +184,15 @@ class DrawReader(DrawReaderBase):
         """converting dxf into single segments."""
         self.args = args
         self.filename = filename
-        if self.filename.lower().endswith(".svg") and os.path.isfile("/usr/share/inkscape/extensions/dxf_outlines.py"):
+
+        if self.filename.lower().endswith(".plt"):
+            from ezdxf.addons.hpgl2 import api as hpgl2
+
+            with open(self.filename, "rb") as fp:
+                data = fp.read()
+            self.doc = hpgl2.to_dxf(data, color_mode=hpgl2.ColorMode.ACI)
+
+        elif self.filename.lower().endswith(".svg") and os.path.isfile("/usr/share/inkscape/extensions/dxf_outlines.py"):
             print("INFO: converting svg to dxf with inkscape")
             print("    you can disable this with: --dxfread-no-svg")
             _fd, tmp_path = tempfile.mkstemp()
@@ -687,7 +695,7 @@ class DrawReader(DrawReaderBase):
 
     @staticmethod
     def suffix(args: argparse.Namespace = None) -> list[str]:
-        suffixes = ["dxf"]
+        suffixes = ["dxf", "plt"]
         if not hasattr(args, "dxfread_no_bmp") or (not args.dxfread_no_svg and os.path.isfile("/usr/share/inkscape/extensions/dxf_outlines.py")):
             suffixes.append("svg")
         if not hasattr(args, "dxfread_no_bmp") or (not args.dxfread_no_bmp and potrace):

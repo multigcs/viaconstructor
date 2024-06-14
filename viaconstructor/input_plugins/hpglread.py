@@ -149,4 +149,4 @@ class DrawReader(DrawReaderBase):
 
     @staticmethod
     def suffix(args: argparse.Namespace = None) -> list[str]:  # pylint: disable=W0613
-        return ["hpgl", "plt", "hpg", "hp2", "pl2", "pm"]
+        return ["hpgl", "hpg", "hp2", "pl2", "pm"]
