@@ -71,9 +71,9 @@ milling circles in helix mode
 
 * Default: False
 <p align="right">
-<img alt="true" title="true" height="240" src="docs/mill-helix_mode-true.png">
+<img alt="true" title="true" height="240" src="mill-helix_mode-true.png">
 
-<img alt="false" title="false" height="240" src="docs/mill-helix_mode-false.png">
+<img alt="false" title="false" height="240" src="mill-helix_mode-false.png">
 
 </p>
 
@@ -126,9 +126,9 @@ milling small circles even if the tool is bigger
 
 * Default: False
 <p align="right">
-<img alt="true" title="true" height="240" src="docs/mill-small_circles-true.png">
+<img alt="true" title="true" height="240" src="mill-small_circles-true.png">
 
-<img alt="false" title="false" height="240" src="docs/mill-small_circles-false.png">
+<img alt="false" title="false" height="240" src="mill-small_circles-false.png">
 
 </p>
 
@@ -140,9 +140,9 @@ Overcuting edges
 
 * Default: False
 <p align="right">
-<img alt="false" title="false" height="240" src="docs/mill-overcut-false.png">
+<img alt="false" title="false" height="240" src="mill-overcut-false.png">
 
-<img alt="true" title="true" height="240" src="docs/mill-overcut-true.png">
+<img alt="true" title="true" height="240" src="mill-overcut-true.png">
 
 </p>
 
@@ -173,11 +173,11 @@ how order the objects
 * unordered
 * per object
 <p align="right">
-<img alt="nearest" title="nearest" height="240" src="docs/mill-objectorder-nearest.png">
+<img alt="nearest" title="nearest" height="240" src="mill-objectorder-nearest.png">
 
-<img alt="per_object" title="per_object" height="240" src="docs/mill-objectorder-per_object.png">
+<img alt="per_object" title="per_object" height="240" src="mill-objectorder-per_object.png">
 
-<img alt="unsorted" title="unsorted" height="240" src="docs/mill-objectorder-unsorted.png">
+<img alt="unsorted" title="unsorted" height="240" src="mill-objectorder-unsorted.png">
 
 </p>
 
@@ -281,9 +281,9 @@ setting the Zero-Postition of the Workpiece
 * top left
 * top right
 <p align="right">
-<img alt="center" title="center" height="240" src="docs/workpiece-zero-center.png">
+<img alt="center" title="center" height="240" src="workpiece-zero-center.png">
 
-<img alt="bottom-right" title="bottom-right" height="240" src="docs/workpiece-zero-bottom-right.png">
+<img alt="bottom-right" title="bottom-right" height="240" src="workpiece-zero-bottom-right.png">
 
 </p>
 
@@ -360,9 +360,9 @@ do pocket operation on this object
 
 * Default: False
 <p align="right">
-<img alt="false" title="false" height="240" src="docs/pockets-active-false.png">
+<img alt="false" title="false" height="240" src="pockets-active-false.png">
 
-<img alt="true" title="true" height="240" src="docs/pockets-active-true.png">
+<img alt="true" title="true" height="240" src="pockets-active-true.png">
 
 </p>
 
@@ -374,7 +374,7 @@ Zigzag
 
 * Default: False
 <p align="right">
-<img alt="docs/pockets-zigzag" title="docs/pockets-zigzag" height="240" src="docs/pockets-zigzag.png">
+<img alt="docs/pockets-zigzag" title="docs/pockets-zigzag" height="240" src="pockets-zigzag.png">
 
 </p>
 
@@ -386,7 +386,7 @@ keep islands
 
 * Default: True
 <p align="right">
-<img alt="docs/pockets-islands" title="docs/pockets-islands" height="240" src="docs/pockets-islands.png">
+<img alt="docs/pockets-islands" title="docs/pockets-islands" height="240" src="pockets-islands.png">
 
 </p>
 
@@ -409,9 +409,9 @@ activate tabs
 
 * Default: True
 <p align="right">
-<img alt="false" title="false" height="240" src="docs/tabs-active-false.png">
+<img alt="false" title="false" height="240" src="tabs-active-false.png">
 
-<img alt="true" title="true" height="240" src="docs/tabs-active-true.png">
+<img alt="true" title="true" height="240" src="tabs-active-true.png">
 
 </p>
 
@@ -448,9 +448,9 @@ type of the tab
 * rectangle
 * triangle
 <p align="right">
-<img alt="triangle" title="triangle" height="240" src="docs/tabs-type-triangle.png">
+<img alt="triangle" title="triangle" height="240" src="tabs-type-triangle.png">
 
-<img alt="rectangle" title="rectangle" height="240" src="docs/tabs-type-rectangle.png">
+<img alt="rectangle" title="rectangle" height="240" src="tabs-type-rectangle.png">
 
 </p>
 
@@ -467,7 +467,7 @@ type of the lead-in's
 * arc
 * straight
 <p align="right">
-<img alt="arc" title="arc" height="240" src="docs/leads-in-arc.png">
+<img alt="arc" title="arc" height="240" src="leads-in-arc.png">
 
 </p>
 
@@ -494,7 +494,7 @@ type of the lead-out's
 * arc
 * straight
 <p align="right">
-<img alt="straight" title="straight" height="240" src="docs/leads-out-straight.png">
+<img alt="straight" title="straight" height="240" src="leads-out-straight.png">
 
 </p>
 
@@ -582,9 +582,9 @@ Arcs-Mode - G2/G3 with IJ or R (experimental)
 * offset
 * radius
 <p align="right">
-<img alt="true" title="true" height="240" src="docs/machine-arcs-true.png">
+<img alt="true" title="true" height="240" src="machine-arcs-true.png">
 
-<img alt="false" title="false" height="240" src="docs/machine-arcs-false.png">
+<img alt="false" title="false" height="240" src="machine-arcs-false.png">
 
 </p>
 
@@ -737,11 +737,11 @@ how to show the gcode path in the 3d-View
 * simple
 * full
 <p align="right">
-<img alt="full" title="full" height="240" src="docs/view-path-full.png">
+<img alt="full" title="full" height="240" src="view-path-full.png">
 
-<img alt="minimal" title="minimal" height="240" src="docs/view-path-minimal.png">
+<img alt="minimal" title="minimal" height="240" src="view-path-minimal.png">
 
-<img alt="simple" title="simple" height="240" src="docs/view-path-simple.png">
+<img alt="simple" title="simple" height="240" src="view-path-simple.png">
 
 </p>
 
@@ -753,9 +753,9 @@ showing layer colors in 3D preview
 
 * Default: True
 <p align="right">
-<img alt="true" title="true" height="240" src="docs/view-colors_show-true.png">
+<img alt="true" title="true" height="240" src="view-colors_show-true.png">
 
-<img alt="false" title="false" height="240" src="docs/view-colors_show-false.png">
+<img alt="false" title="false" height="240" src="view-colors_show-false.png">
 
 </p>
 
@@ -797,7 +797,7 @@ showing as polygon in 3D preview
 
 * Default: True
 <p align="right">
-<img alt="false" title="false" height="240" src="docs/view-polygon_show-false.png">
+<img alt="false" title="false" height="240" src="view-polygon_show-false.png">
 
 </p>
 
@@ -819,9 +819,9 @@ draw arcs / Interpolation
 
 * Default: True
 <p align="right">
-<img alt="true" title="true" height="240" src="docs/view-arcs-true.png">
+<img alt="true" title="true" height="240" src="view-arcs-true.png">
 
-<img alt="false" title="false" height="240" src="docs/view-arcs-false.png">
+<img alt="false" title="false" height="240" src="view-arcs-false.png">
 
 </p>
 
@@ -843,11 +843,11 @@ color of the workpeace in 3d view
 
 * Default: (0.5, 0.5, 0.5)
 <p align="right">
-<img alt="gray" title="gray" height="240" src="docs/view-color-gray.png">
+<img alt="gray" title="gray" height="240" src="view-color-gray.png">
 
-<img alt="docs/view-colors_show-true" title="docs/view-colors_show-true" height="240" src="docs/view-colors_show-true.png">
+<img alt="docs/view-colors_show-true" title="docs/view-colors_show-true" height="240" src="view-colors_show-true.png">
 
-<img alt="docs/view-colors_show-false" title="docs/view-colors_show-false" height="240" src="docs/view-colors_show-false.png">
+<img alt="docs/view-colors_show-false" title="docs/view-colors_show-false" height="240" src="view-colors_show-false.png">
 
 </p>
 
@@ -859,9 +859,9 @@ transparency of the workpeace in 3d view
 
 * Default: 0.6
 <p align="right">
-<img alt="1.0" title="1.0" height="240" src="docs/view-alpha-1.0.png">
+<img alt="1.0" title="1.0" height="240" src="view-alpha-1.0.png">
 
-<img alt="0.7" title="0.7" height="240" src="docs/view-alpha-0.7.png">
+<img alt="0.7" title="0.7" height="240" src="view-alpha-0.7.png">
 
 </p>
 
