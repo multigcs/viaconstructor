@@ -364,8 +364,11 @@ class DrawReader(DrawReaderBase):
             else:
                 start_angle = element.dxf.start_angle
                 adiff = element.dxf.end_angle - element.dxf.start_angle
+
             if adiff < 0.0:
                 adiff += 360.0
+            if adiff == 0.0:
+                adiff = 360.0
 
             # fixing 132_2000.dxf
             if element.dxf.extrusion and len(element.dxf.extrusion) == 3 and element.dxf.extrusion[2] == -1.0:
@@ -377,6 +380,7 @@ class DrawReader(DrawReaderBase):
                 gstep = 360.0 / num_parts
             else:
                 gstep = 1.0
+
             gstep = min(gstep, 45.0)
             steps = abs(math.ceil(adiff / gstep))
             if steps > 0:
