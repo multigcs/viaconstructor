@@ -561,6 +561,11 @@ def bulge_points(start, end, bulge, parts=10):
             ap_y = center[1] - radius * math.cos(angle + math.pi / 2)
             points.append((ap_x, ap_y))
             angle += steps
+
+    # bad direction hack
+    if calc_distance(start, points[-1]) < calc_distance(start, points[0]):
+        points.reverse()
+
     return points
 
 
