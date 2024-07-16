@@ -20,7 +20,7 @@ try:
 
     shapely = True
 except Exception:  # pylint: disable=W0703
-    print("tools/gear: NO shapely fond")
+    print("tools/gear: NO shapely found")
     shapely = False
 
 
