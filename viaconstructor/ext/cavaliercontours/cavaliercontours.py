@@ -11,7 +11,7 @@ if platform.system().lower() == "windows":
 else:
     libname = f"{module_root}/lib/libCavalierContours.{platform.machine().lower()}-{platform.system().lower()}.so"
     if not pathlib.Path(libname).is_file():
-        for libname in glob.glob(f"{module_root}/lib/libCavalierContours.*-x86_64-{platform.system().lower()}.so"):
+        for libname in glob.glob(f"{module_root}/lib/libCavalierContours.*-{platform.machine().lower()}-{platform.system().lower()}.so"):
             break
 
 c_lib = ctypes.CDLL(libname)
