@@ -200,8 +200,7 @@ pypi: dist
 	twine upload --verbose dist/viaconstructor*
 
 bdist_deb:
-	SETUPTOOLS_USE_DISTUTILS=stdlib python3 setup.py --command-packages=stdeb.command bdist_deb
-	ls -l deb_dist/*.deb
+	bash build_deb.sh
 
 bdist_rpm:
 	python setup.py bdist_rpm
