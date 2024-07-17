@@ -5,6 +5,7 @@ import math
 import math
 import os
 import re
+import ezdxf
 
 from ..calc import angle_of_line, calc_distance  # pylint: disable=E0402
 from ..input_plugins_base import DrawReaderBase
@@ -51,25 +52,21 @@ class DrawReader(DrawReaderBase):
                                 end_angle = end_angle + math.pi * 2
                         diff_angle = end_angle - start_angle
                         if start_angle < end_angle:
-                            angle = start_angle
-                            while angle < end_angle:
-                                new_x2 = center_x - radius * math.sin(angle - math.pi / 2)
-                                new_y2 = center_y + radius * math.cos(angle - math.pi / 2)
-                                distance = math.dist((last_x, last_y), (new_x2, new_y2))
-                                self._add_line((last_x, last_y), (new_x2, new_y2))
-                                last_x = new_x2
-                                last_y = new_y2
-                                angle += 0.2
+                            (start, end, bulge) = ezdxf.math.arc_to_bulge(
+                                (center_x, center_y),
+                                start_angle,
+                                end_angle,
+                                radius,
+                            )
                         elif start_angle > end_angle:
-                            angle = start_angle
-                            while angle > end_angle:
-                                new_x2 = center_x - radius * math.sin(angle - math.pi / 2)
-                                new_y2 = center_y + radius * math.cos(angle - math.pi / 2)
-                                self._add_line((last_x, last_y), (new_x2, new_y2))
-                                last_x = new_x2
-                                last_y = new_y2
-                                angle -= 0.2
-                        self._add_line((last_x, last_y), (new_x, new_y))
+                            (start, end, bulge) = ezdxf.math.arc_to_bulge(
+                                (center_x, center_y),
+                                end_angle,
+                                start_angle,
+                                radius,
+                            )
+                            bulge = -bulge
+                        self._add_line((last_x, last_y), (new_x, new_y), bulge=bulge)
 
                     last_pos = (new_x, new_y, new_z)
                 elif result["type"] in {"STRAIGHT_FEED", "STRAIGHT_TRAVERSE", "ARC_FEED"}:
