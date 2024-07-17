@@ -257,7 +257,7 @@ class DrawReader(DrawReaderBase):
         h_x2_div_d = 4.0 * arc_r * arc_r - diff_x * diff_x - diff_y * diff_y
         if h_x2_div_d < 0:
             print("### ARC ERROR ###")
-            self.path.append([self.state["position"], cords, self.state["spindle"]["dir"]])
+            #self.path.append([self.state["position"], cords, self.state["spindle"]["dir"]])
             self.state["position"] = cords
             return
         h_x2_div_d = -math.sqrt(h_x2_div_d) / math.hypot(diff_x, diff_y)
