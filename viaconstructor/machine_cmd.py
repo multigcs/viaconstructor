@@ -586,6 +586,9 @@ def polylines2machine_cmd(project: dict, post: PostProcessor) -> str:
     polylines_len = len(polylines.keys())
     polylines_n = 0
     last_percent = -1
+    
+    if not project["objects"]:
+        return
 
     master_ids = []
     if objectorder == "per_object":
