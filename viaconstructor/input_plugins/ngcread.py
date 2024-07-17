@@ -14,12 +14,27 @@ from ..input_plugins_base import DrawReaderBase
 COMMAND = re.compile("(?P<line>\d+) N\.* (?P<type>[A-Z_]+)\((?P<coords>.*)\)")
 
 class DrawReader(DrawReaderBase):
+
+    state: dict = {
+        "scale": 1.0,
+        "move_mode": "",
+        "offsets": "OFF",
+        "metric": "",
+        "absolute": True,
+        "feedrate": "0",
+        "tool": None,
+        "spindle": {"dir": "OFF", "rpm": 0},
+        "position": {"X": 0.0, "Y": 0.0, "Z": 0.0},
+        "last": {"X": 0.0, "Y": 0.0, "Z": 0.0},
+        "minmax": {},
+    }
+
     def __init__(self, filename: str, args: argparse.Namespace = None):  # pylint: disable=W0613
         """converting ngc into single segments."""
         self.filename = filename
         self.segments: list[dict] = []
 
-        if os.path.isfile("/usr/bin/___rs274"):
+        if os.path.isfile("/usr/bin/rs274"):
             p = os.popen(f"rs274 -n 0 -g '{self.filename}'")
             output = p.readlines()
             r = p.close()
@@ -94,34 +109,22 @@ class DrawReader(DrawReaderBase):
 
 
     def rs274(self, filename):
-        output = []
+        self.output = []
         REGEX = re.compile(r"([a-zA-Z])([+-]?([0-9]+([.][0-9]*)?|[.][0-9]+))")
         gcode = open(filename, "r").read()
         gcode = gcode.split("\n")
 
-        state: dict = {
-            "scale": 1.0,
-            "move_mode": "",
-            "offsets": "OFF",
-            "metric": "",
-            "absolute": True,
-            "feedrate": "0",
-            "tool": None,
-            "spindle": {"dir": "OFF", "rpm": 0},
-            "position": {"X": 0.0, "Y": 0.0, "Z": 0.0},
-            "last": {"X": 0.0, "Y": 0.0, "Z": 0.0},
-            "minmax": {},
-        }
 
         path: list[list] = []
         gcode = gcode
         for ln, line in enumerate(gcode):
+            self.ln = ln
             line = line.strip()
             if not line:
                 continue
             elif line[0] == "(":
                 comment = line.split('(', 1)[1].split(')', 1)[0]
-                output.append(f"  {ln} N..... COMMENT(\"{comment}\")")
+                self.output.append(f"  {self.ln} N..... COMMENT(\"{comment}\")")
                 continue
             ldata = {"T": 0}
             matches = REGEX.findall(line)
@@ -133,89 +136,147 @@ class DrawReader(DrawReaderBase):
                 ldata[cmd] = float(match[1])
             if first == "M":
                 if ldata["M"] == 6:
-                    if state["tool"] != int(ldata["T"]):
-                        state["tool"] = int(ldata["T"])
+                    if self.state["tool"] != int(ldata["T"]):
+                        self.state["tool"] = int(ldata["T"])
                         path.append(
                             [
-                                state["position"],
-                                state["position"],
-                                state["spindle"]["dir"],
-                                f"TOOLCHANGE:{        state['tool']}",
+                                self.state["position"],
+                                self.state["position"],
+                                self.state["spindle"]["dir"],
+                                f"TOOLCHANGE:{        self.state['tool']}",
                             ]
                         )
                 elif ldata["M"] == 5:
-                    state["spindle"]["dir"] = "OFF"
-                    output.append(f"  {ln} N..... STOP_SPINDLE_TURNING(0)")
+                    self.state["spindle"]["dir"] = "OFF"
+                    self.output.append(f"  {self.ln} N..... STOP_SPINDLE_TURNING(0)")
                 elif ldata["M"] == 3:
-                    state["spindle"]["dir"] = "CW"
+                    self.state["spindle"]["dir"] = "CW"
                     if "S" in ldata:
-                        state["spindle"]["rpm"] = ldata["S"]
-                        output.append(f"  {ln} N..... SET_SPINDLE_SPEED(0, {ldata['S']})")
-                    output.append(f"  {ln} N..... START_SPINDLE_CLOCKWISE(0)")
+                        self.state["spindle"]["rpm"] = ldata["S"]
+                        self.output.append(f"  {self.ln} N..... SET_SPINDLE_SPEED(0, {ldata['S']})")
+                    self.output.append(f"  {self.ln} N..... START_SPINDLE_CLOCKWISE(0)")
                 elif ldata["M"] == 4:
-                    state["spindle"]["dir"] = "CCW"
+                    self.state["spindle"]["dir"] = "CCW"
                     if "S" in ldata:
-                        state["spindle"]["rpm"] = ldata["S"]
-                        output.append(f"  {ln} N..... SET_SPINDLE_SPEED(0, {ldata['S']})")
-                    output.append(f"  {ln} N..... START_SPINDLE_COUNTERCLOCKWISE(0)")
+                        self.state["spindle"]["rpm"] = ldata["S"]
+                        self.output.append(f"  {self.ln} N..... SET_SPINDLE_SPEED(0, {ldata['S']})")
+                    self.output.append(f"  {self.ln} N..... START_SPINDLE_COUNTERCLOCKWISE(0)")
                 elif ldata["M"] == 2:
-                    output.append(f"  {ln} N..... PROGRAM_END()")
-                    output.append(f"  {ln} N..... ON_RESET()")
+                    self.output.append(f"  {self.ln} N..... PROGRAM_END()")
+                    self.output.append(f"  {self.ln} N..... ON_RESET()")
 
             elif first == "G":
                 if ldata["G"] < 4:
-                            state["move_mode"] = int(ldata["G"])
+                            self.state["move_mode"] = int(ldata["G"])
                 elif ldata["G"] == 4:
                     if "P" in ldata:
                         pass
                 elif ldata["G"] == 20:
-                    state["metric"] = "INCH"
-                    state["scale"] = 1.0 / 25.4
+                    self.state["metric"] = "INCH"
+                    self.state["scale"] = 1.0 / 25.4
                 elif ldata["G"] == 21:
-                    state["metric"] = "MM"
-                    state["scale"] = 1.0
+                    self.state["metric"] = "MM"
+                    self.state["scale"] = 1.0
                 elif ldata["G"] == 40:
-                    state["offsets"] = "OFF"
+                    self.state["offsets"] = "OFF"
                 elif ldata["G"] == 41:
-                    state["offsets"] = "LEFT"
+                    self.state["offsets"] = "LEFT"
                 elif ldata["G"] == 42:
-                    state["offsets"] = "RIGHT"
+                    self.state["offsets"] = "RIGHT"
                 elif ldata["G"] == 54:
                     pass
                 elif ldata["G"] == 64:
                     if "P" in ldata:
                         pass
                 elif ldata["G"] == 90:
-                    state["absolute"] = True
+                    self.state["absolute"] = True
                 elif ldata["G"] == 91:
-                    state["absolute"] = False
+                    self.state["absolute"] = False
                 else:
                     print("##### UNSUPPORTED GCODE #####", f"G{ldata['G']}", line)
 
             if "F" in ldata:
-                state["feedrate"] = ldata["F"]
+                self.state["feedrate"] = ldata["F"]
             cords = {}
             for axis in ("X", "Y", "Z", "R"):
                 if axis in ldata:
                     cords[axis] = ldata[axis]
 
-            state["last"] = copy.deepcopy(state["position"])
             for axis in ("X", "Y", "Z", "R"):
                 if axis in cords:
-                    state["position"][axis] = cords[axis]
+                    self.state["position"][axis] = cords[axis]
             if cords:
-                if state["move_mode"] == 0:
-                    output.append(f"  {ln} N..... STRAIGHT_TRAVERSE({state['position']['X']}, {state['position']['Y']}, {state['position']['Z']}, 0.0000, 0.0000, 0.0000)")
-                elif state["move_mode"] == 1:
-                    output.append(f"  {ln} N..... STRAIGHT_FEED({state['position']['X']}, {state['position']['Y']}, {state['position']['Z']}, 0.0000, 0.0000, 0.0000)")
-                elif state["move_mode"] in {2, 3}:
+                if self.state["move_mode"] == 0:
+                    self.linear_move(cords, True)
+                elif self.state["move_mode"] == 1:
+                    self.linear_move(cords, False)
+                elif self.state["move_mode"] in {2, 3}:
                     if "R" in cords:
-                        pass
-                        #arc_move_r(        state["move_mode"], cords, cords["R"])
+                        self.arc_move_r(self.state["move_mode"], cords, cords["R"])
                     elif "I" in ldata and "J" in ldata:
-                        center_x = state['last']['X'] + ldata["I"]
-                        center_y = state['last']['Y'] + ldata["J"]
-                        #arc_move_ij(        state["move_mode"], cords, ldata["I"], ldata["J"])
-                        output.append(f"  {ln} N..... ARC_FEED({state['position']['X']}, {state['position']['Y']}, {center_x}, {center_y}, -1, {state['position']['Z']}, 0.0000, 0.0000, 0.0000)")
+                        self.arc_move_ij(self.state["move_mode"], cords, ldata["I"], ldata["J"])
 
-        return output
+        return self.output
+
+
+    def linear_move(self, cords: dict, fast: bool = False) -> None:  # pylint: disable=W0613
+        last_pos = self.state["position"]
+        for axis in self.state["position"]:
+            if axis in cords:
+                cords[axis] /= self.state["scale"]
+            else:
+                cords[axis] = self.state["position"][axis]
+
+        x = cords.get('X', last_pos.get("X", 0))
+        y = cords.get('Y', last_pos.get("Y", 0))
+        z = cords.get('Z', last_pos.get("Z", 0))
+
+        if fast:
+            self.output.append(f"  {self.ln} N..... STRAIGHT_TRAVERSE({x}, {y}, {z}, 0.0000, 0.0000, 0.0000)")
+        else:
+            self.output.append(f"  {self.ln} N..... STRAIGHT_FEED({x}, {y}, {z}, 0.0000, 0.0000, 0.0000)")
+
+        self.state["position"] = cords
+
+    def arc_move_r(self, angle_dir, cords, radius) -> None:  # pylint: disable=W0613
+        for axis in self.state["position"]:
+            if axis in cords:
+                cords[axis] /= self.state["scale"]
+            else:
+                cords[axis] = self.state["position"][axis]
+        last_pos = self.state["position"]
+        x = cords.get('X', last_pos.get("X", 0))
+        y = cords.get('Y', last_pos.get("Y", 0))
+        z = cords.get('Z', last_pos.get("Z", 0))
+
+        diff_x = x - last_pos.get("X", 0)
+        diff_y = y - last_pos.get("Y", 0)
+        arc_r = cords["R"]
+        if diff_x == 0.0 and diff_y == 0.0:
+            return
+        h_x2_div_d = 4.0 * arc_r * arc_r - diff_x * diff_x - diff_y * diff_y
+        if h_x2_div_d < 0:
+            print("### ARC ERROR ###")
+            self.path.append([self.state["position"], cords, self.state["spindle"]["dir"]])
+            self.state["position"] = cords
+            return
+        h_x2_div_d = -math.sqrt(h_x2_div_d) / math.hypot(diff_x, diff_y)
+        if angle_dir == 3:
+            h_x2_div_d = -h_x2_div_d
+        if arc_r < 0:
+            h_x2_div_d = -h_x2_div_d
+            arc_r = -arc_r
+        i = 0.5 * (diff_x - (diff_y * h_x2_div_d))
+        j = 0.5 * (diff_y + (diff_x * h_x2_div_d))
+        self.arc_move_ij(angle_dir, cords, i, j, radius)
+
+    def arc_move_ij(self, angle_dir, cords, i, j, radius=None) -> None:
+        last_pos = self.state["position"]
+        center_x = last_pos["X"] + i
+        center_y = last_pos["Y"] + j
+        x = cords.get('X', last_pos.get("X", 0))
+        y = cords.get('Y', last_pos.get("Y", 0))
+        z = cords.get('Z', last_pos.get("Z", 0))
+        self.output.append(f"  {self.ln} N..... ARC_FEED({x}, {y}, {center_x}, {center_y}, -1, {z}, 0.0000, 0.0000, 0.0000)")
+        self.state["position"] = cords
+
