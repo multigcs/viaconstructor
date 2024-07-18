@@ -109,7 +109,7 @@ except Exception:  # pylint: disable=W0703
     HAVE_NEST = False
 
 reader_plugins: dict = {}
-for reader in ("dxfread", "hpglread", "ngcread", "stlread", "svgread", "ttfread", "imgread"):
+for reader in ("dxfread", "hpglread", "ngcread", "cdrread", "stlread", "svgread", "ttfread", "imgread"):
     try:
         drawing_reader = importlib.import_module(f".{reader}", "viaconstructor.input_plugins")
         reader_plugins[reader] = drawing_reader.DrawReader

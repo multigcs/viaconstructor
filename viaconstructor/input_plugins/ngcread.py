@@ -16,7 +16,6 @@ COMMAND = re.compile("(?P<line>\d+) N\.* (?P<type>[A-Z_]+)\((?P<coords>.*)\)")
 
 class DrawReader(DrawReaderBase):
     def __init__(self, filename: str, args: argparse.Namespace = None):  # pylint: disable=W0613
-        """converting ngc into single segments."""
         self.filename = filename
         self.segments: list[dict] = []
 
