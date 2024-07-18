@@ -196,6 +196,12 @@ class DrawReader(DrawReaderBase):
                         last_x = cords["x"]
                         last_y = cords["y"]
 
+        self._calc_size()
+        diff_y = self.min_max[3] - self.min_max[1]
+        for segment in self.segments:
+            segment.start = (segment.start[0], diff_y - segment.start[1])
+            segment.end = (segment.end[0], diff_y - segment.end[1])
+
     @staticmethod
     def arg_parser(parser) -> None:
         parser.add_argument(
