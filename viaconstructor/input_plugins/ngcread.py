@@ -20,7 +20,7 @@ class DrawReader(DrawReaderBase):
         self.filename = filename
         self.segments: list[dict] = []
 
-        if os.path.isfile("/usr/bin/rs274"):
+        if not args.ngcread_fallback and os.path.isfile("/usr/bin/rs274"):
             p = os.popen(f"rs274 -n 0 -g '{self.filename}'")
             output = p.readlines()
             r = p.close()
@@ -88,6 +88,15 @@ class DrawReader(DrawReaderBase):
                     last_pos = (new_x, new_y, new_z)
                 # else:
                 #    print(result)
+
+    @staticmethod
+    def arg_parser(parser) -> None:
+        parser.add_argument(
+            "--ngcread-fallback",
+            help="ngcread: using internal rs274 parser",
+            action="store_true",
+            default=False,
+        )
 
     @staticmethod
     def suffix(args: argparse.Namespace = None) -> list[str]:  # pylint: disable=W0613
