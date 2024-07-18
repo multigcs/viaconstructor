@@ -3,9 +3,9 @@
 import argparse
 import copy
 import math
-import math
 import os
 import re
+
 import ezdxf
 
 from ..calc import angle_of_line, calc_distance  # pylint: disable=E0402
@@ -13,28 +13,14 @@ from ..input_plugins_base import DrawReaderBase
 
 COMMAND = re.compile("(?P<line>\d+) N\.* (?P<type>[A-Z_]+)\((?P<coords>.*)\)")
 
+
 class DrawReader(DrawReaderBase):
-
-    state: dict = {
-        "scale": 1.0,
-        "move_mode": "",
-        "offsets": "OFF",
-        "metric": "",
-        "absolute": True,
-        "feedrate": "0",
-        "tool": None,
-        "spindle": {"dir": "OFF", "rpm": 0},
-        "position": {"X": 0.0, "Y": 0.0, "Z": 0.0},
-        "last": {"X": 0.0, "Y": 0.0, "Z": 0.0},
-        "minmax": {},
-    }
-
     def __init__(self, filename: str, args: argparse.Namespace = None):  # pylint: disable=W0613
         """converting ngc into single segments."""
         self.filename = filename
         self.segments: list[dict] = []
 
-        if os.path.isfile("/usr/bin/rs274"):
+        if os.path.isfile("/usr/bin/__rs274"):
             p = os.popen(f"rs274 -n 0 -g '{self.filename}'")
             output = p.readlines()
             r = p.close()
@@ -107,13 +93,25 @@ class DrawReader(DrawReaderBase):
     def suffix(args: argparse.Namespace = None) -> list[str]:  # pylint: disable=W0613
         return ["gcode", "ngc", "nc"]
 
+    state: dict = {
+        "scale": 1.0,
+        "move_mode": "",
+        "offsets": "OFF",
+        "metric": "",
+        "absolute": True,
+        "feedrate": "0",
+        "tool": None,
+        "spindle": {"dir": "OFF", "rpm": 0},
+        "position": {"X": 0.0, "Y": 0.0, "Z": 0.0},
+        "last": {"X": 0.0, "Y": 0.0, "Z": 0.0},
+        "minmax": {},
+    }
 
     def rs274(self, filename):
         self.output = []
         REGEX = re.compile(r"([a-zA-Z])([+-]?([0-9]+([.][0-9]*)?|[.][0-9]+))")
         gcode = open(filename, "r").read()
         gcode = gcode.split("\n")
-
 
         path: list[list] = []
         gcode = gcode
@@ -123,8 +121,12 @@ class DrawReader(DrawReaderBase):
             if not line:
                 continue
             elif line[0] == "(":
-                comment = line.split('(', 1)[1].split(')', 1)[0]
-                self.output.append(f"  {self.ln} N..... COMMENT(\"{comment}\")")
+                comment = line.split("(", 1)[1].split(")", 1)[0]
+                self.output.append(f'{self.ln:5d} N..... COMMENT("{comment}")')
+                continue
+            elif line[0] == ";":
+                comment = line.strip(";")
+                self.output.append(f'{self.ln:5d} N..... COMMENT("{comment}")')
                 continue
             ldata = {"T": 0}
             matches = REGEX.findall(line)
@@ -148,35 +150,37 @@ class DrawReader(DrawReaderBase):
                         )
                 elif ldata["M"] == 5:
                     self.state["spindle"]["dir"] = "OFF"
-                    self.output.append(f"  {self.ln} N..... STOP_SPINDLE_TURNING(0)")
+                    self.output.append(f"{self.ln:5d} N..... STOP_SPINDLE_TURNING(0)")
                 elif ldata["M"] == 3:
                     self.state["spindle"]["dir"] = "CW"
                     if "S" in ldata:
                         self.state["spindle"]["rpm"] = ldata["S"]
-                        self.output.append(f"  {self.ln} N..... SET_SPINDLE_SPEED(0, {ldata['S']})")
-                    self.output.append(f"  {self.ln} N..... START_SPINDLE_CLOCKWISE(0)")
+                        self.output.append(f"{self.ln:5d} N..... SET_SPINDLE_SPEED(0, {ldata['S']})")
+                    self.output.append(f"{self.ln:5d} N..... START_SPINDLE_CLOCKWISE(0)")
                 elif ldata["M"] == 4:
                     self.state["spindle"]["dir"] = "CCW"
                     if "S" in ldata:
                         self.state["spindle"]["rpm"] = ldata["S"]
-                        self.output.append(f"  {self.ln} N..... SET_SPINDLE_SPEED(0, {ldata['S']})")
-                    self.output.append(f"  {self.ln} N..... START_SPINDLE_COUNTERCLOCKWISE(0)")
+                        self.output.append(f"{self.ln:5d} N..... SET_SPINDLE_SPEED(0, {ldata['S']})")
+                    self.output.append(f"{self.ln:5d} N..... START_SPINDLE_COUNTERCLOCKWISE(0)")
                 elif ldata["M"] == 2:
-                    self.output.append(f"  {self.ln} N..... PROGRAM_END()")
-                    self.output.append(f"  {self.ln} N..... ON_RESET()")
+                    self.output.append(f"{self.ln:5d} N..... PROGRAM_END()")
+                    self.output.append(f"{self.ln:5d} N..... ON_RESET()")
 
             elif first == "G":
                 if ldata["G"] < 4:
-                            self.state["move_mode"] = int(ldata["G"])
+                    self.state["move_mode"] = int(ldata["G"])
                 elif ldata["G"] == 4:
                     if "P" in ldata:
                         pass
                 elif ldata["G"] == 20:
                     self.state["metric"] = "INCH"
                     self.state["scale"] = 1.0 / 25.4
+                    self.output.append(f"{self.ln:5d} N..... USE_LENGTH_UNITS(CANON_UNITS_INCH)")
                 elif ldata["G"] == 21:
                     self.state["metric"] = "MM"
                     self.state["scale"] = 1.0
+                    self.output.append(f"{self.ln:5d} N..... USE_LENGTH_UNITS(CANON_UNITS_MM)")
                 elif ldata["G"] == 40:
                     self.state["offsets"] = "OFF"
                 elif ldata["G"] == 41:
@@ -202,9 +206,6 @@ class DrawReader(DrawReaderBase):
                 if axis in ldata:
                     cords[axis] = ldata[axis]
 
-            for axis in ("X", "Y", "Z", "R"):
-                if axis in cords:
-                    self.state["position"][axis] = cords[axis]
             if cords:
                 if self.state["move_mode"] == 0:
                     self.linear_move(cords, True)
@@ -218,7 +219,6 @@ class DrawReader(DrawReaderBase):
 
         return self.output
 
-
     def linear_move(self, cords: dict, fast: bool = False) -> None:  # pylint: disable=W0613
         last_pos = self.state["position"]
         for axis in self.state["position"]:
@@ -227,14 +227,14 @@ class DrawReader(DrawReaderBase):
             else:
                 cords[axis] = self.state["position"][axis]
 
-        x = cords.get('X', last_pos.get("X", 0))
-        y = cords.get('Y', last_pos.get("Y", 0))
-        z = cords.get('Z', last_pos.get("Z", 0))
+        x = cords.get("X", last_pos.get("X", 0))
+        y = cords.get("Y", last_pos.get("Y", 0))
+        z = cords.get("Z", last_pos.get("Z", 0))
 
         if fast:
-            self.output.append(f"  {self.ln} N..... STRAIGHT_TRAVERSE({x}, {y}, {z}, 0.0000, 0.0000, 0.0000)")
+            self.output.append(f"{self.ln:5d} N..... STRAIGHT_TRAVERSE({x:0.4f}, {y:0.4f}, {z:0.4f}, 0.0000, 0.0000, 0.0000)")
         else:
-            self.output.append(f"  {self.ln} N..... STRAIGHT_FEED({x}, {y}, {z}, 0.0000, 0.0000, 0.0000)")
+            self.output.append(f"{self.ln:5d} N..... STRAIGHT_FEED({x:0.4f}, {y:0.4f}, {z:0.4f}, 0.0000, 0.0000, 0.0000)")
 
         self.state["position"] = cords
 
@@ -245,9 +245,9 @@ class DrawReader(DrawReaderBase):
             else:
                 cords[axis] = self.state["position"][axis]
         last_pos = self.state["position"]
-        x = cords.get('X', last_pos.get("X", 0))
-        y = cords.get('Y', last_pos.get("Y", 0))
-        z = cords.get('Z', last_pos.get("Z", 0))
+        x = cords.get("X", last_pos.get("X", 0))
+        y = cords.get("Y", last_pos.get("Y", 0))
+        z = cords.get("Z", last_pos.get("Z", 0))
 
         diff_x = x - last_pos.get("X", 0)
         diff_y = y - last_pos.get("Y", 0)
@@ -257,7 +257,6 @@ class DrawReader(DrawReaderBase):
         h_x2_div_d = 4.0 * arc_r * arc_r - diff_x * diff_x - diff_y * diff_y
         if h_x2_div_d < 0:
             print("### ARC ERROR ###")
-            #self.path.append([self.state["position"], cords, self.state["spindle"]["dir"]])
             self.state["position"] = cords
             return
         h_x2_div_d = -math.sqrt(h_x2_div_d) / math.hypot(diff_x, diff_y)
@@ -274,9 +273,12 @@ class DrawReader(DrawReaderBase):
         last_pos = self.state["position"]
         center_x = last_pos["X"] + i
         center_y = last_pos["Y"] + j
-        x = cords.get('X', last_pos.get("X", 0))
-        y = cords.get('Y', last_pos.get("Y", 0))
-        z = cords.get('Z', last_pos.get("Z", 0))
-        self.output.append(f"  {self.ln} N..... ARC_FEED({x}, {y}, {center_x}, {center_y}, -1, {z}, 0.0000, 0.0000, 0.0000)")
-        self.state["position"] = cords
+        x = cords.get("X", last_pos.get("X", 0))
+        y = cords.get("Y", last_pos.get("Y", 0))
+        z = cords.get("Z", last_pos.get("Z", 0))
+        direction = -1
+        if angle_dir == 3:
+            direction = 1
+        self.output.append(f"{self.ln:5d} N..... ARC_FEED({x:0.4f}, {y:0.4f}, {center_x:0.4f}, {center_y:0.4f}, {direction}, {z:0.5f}, 0.0000, 0.0000, 0.0000)")
 
+        self.state["position"] = cords

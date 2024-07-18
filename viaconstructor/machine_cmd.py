@@ -586,7 +586,7 @@ def polylines2machine_cmd(project: dict, post: PostProcessor) -> str:
     polylines_len = len(polylines.keys())
     polylines_n = 0
     last_percent = -1
-    
+
     if not project["objects"]:
         return
 
