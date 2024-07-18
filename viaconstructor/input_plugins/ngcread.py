@@ -20,7 +20,7 @@ class DrawReader(DrawReaderBase):
         self.filename = filename
         self.segments: list[dict] = []
 
-        if os.path.isfile("/usr/bin/__rs274"):
+        if os.path.isfile("/usr/bin/rs274"):
             p = os.popen(f"rs274 -n 0 -g '{self.filename}'")
             output = p.readlines()
             r = p.close()
