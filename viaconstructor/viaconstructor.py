@@ -476,6 +476,18 @@ class ViaConstructor:  # pylint: disable=R0904
             self.update_tabs_data()
             self.update_drawing()
 
+    def _toolbar_inch_mm(self) -> None:
+        scale_objects(self.project["objects"], 25.4)
+        self.project["minMax"] = objects2minmax(self.project["objects"])
+        self.update_tabs_data()
+        self.update_drawing()
+
+    def _toolbar_mm_inch(self) -> None:
+        scale_objects(self.project["objects"], 1.0 / 25.4)
+        self.project["minMax"] = objects2minmax(self.project["objects"])
+        self.update_tabs_data()
+        self.update_drawing()
+
     def _toolbar_view_2d(self) -> None:
         """center view."""
         self.project["glwidget"].view_2d()
@@ -1761,6 +1773,30 @@ class ViaConstructor:  # pylint: disable=R0904
                 _("Scale workpiece"),
                 self._toolbar_scale,
                 True,
+                True,
+                False,
+                _("Workpiece"),
+                "",
+                None,
+            ],
+            _("inch->mm"): [
+                "scale.png",
+                "",
+                _("Scale workpiece"),
+                self._toolbar_inch_mm,
+                False,
+                True,
+                False,
+                _("Workpiece"),
+                "",
+                None,
+            ],
+            _("mm->inch"): [
+                "scale.png",
+                "",
+                _("Scale workpiece"),
+                self._toolbar_mm_inch,
+                False,
                 True,
                 False,
                 _("Workpiece"),

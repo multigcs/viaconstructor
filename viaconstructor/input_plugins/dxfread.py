@@ -192,13 +192,37 @@ class DrawReader(DrawReaderBase):
                 data = fp.read()
             self.doc = hpgl2.to_dxf(data, color_mode=hpgl2.ColorMode.ACI)
 
-        elif self.filename.lower().endswith(".svg") and os.path.isfile("/usr/share/inkscape/extensions/dxf_outlines.py"):
-            print("INFO: converting svg to dxf with inkscape")
+        elif self.filename.lower().endswith(".svg") or self.filename.lower().endswith(".pdf") or self.filename.lower().endswith(".eps"):
+            print("INFO: converting pdf to svg to dxf with pdf2svg and inkscape")
             print("    you can disable this with: --dxfread-no-svg")
-            _fd, tmp_path = tempfile.mkstemp()
-            os.system(f"cd /usr/share/inkscape/extensions/ ; python3 dxf_outlines.py --output='{tmp_path}' '{os.path.realpath(self.filename)}'")
+
+            tempfiles = []
+            docpath = os.path.realpath(self.filename)
+
+            if docpath.lower().endswith(".eps"):
+                _fd_svg, tmp_path_eps = tempfile.mkstemp(prefix="viaconstructor-", suffix=".pdf")
+                tempfiles.append(tmp_path_eps)
+                cmd = f"epstopdf '{docpath}' '{tmp_path_eps}'"
+                print(f"INFO: conveting: {cmd}")
+                os.system(f"epstopdf '{docpath}' '{tmp_path_eps}'")
+                docpath = tmp_path_eps
+
+            if docpath.lower().endswith(".pdf"):
+                _fd_svg, tmp_path_svg = tempfile.mkstemp(prefix="viaconstructor-", suffix=".svg")
+                tempfiles.append(tmp_path_svg)
+                cmd = f"pdf2svg '{docpath}' '{tmp_path_svg}'"
+                print(f"INFO: conveting: {cmd}")
+                os.system(cmd)
+                docpath = tmp_path_svg
+
+            _fd, tmp_path = tempfile.mkstemp(prefix="viaconstructor-", suffix=".dxf")
+            tempfiles.append(tmp_path)
+            os.system(f"cd /usr/share/inkscape/extensions/ ; python3 dxf_outlines.py --output='{tmp_path}' '{docpath}'")
             self.doc = ezdxf.readfile(tmp_path)
-            os.remove(tmp_path)
+
+            for tmpfile in tempfiles:
+                os.remove(tmpfile)
+
         elif self.filename.lower().endswith(BITMAP_FORMATS) and potrace:
             print("INFO: converting bitmap to dxf with potrace")
             print("    you can disable this with: --dxfread-no-bmp")
@@ -702,6 +726,11 @@ class DrawReader(DrawReaderBase):
         suffixes = ["dxf", "plt"]
         if not hasattr(args, "dxfread_no_bmp") or (not args.dxfread_no_svg and os.path.isfile("/usr/share/inkscape/extensions/dxf_outlines.py")):
             suffixes.append("svg")
+            if os.path.isfile("/usr/bin/pdf2svg"):
+                suffixes.append("pdf")
+                if os.path.isfile("/usr/bin/epstopdf"):
+                    suffixes.append("eps")
+
         if not hasattr(args, "dxfread_no_bmp") or (not args.dxfread_no_bmp and potrace):
             if convert:
                 suffixes += BITMAP_FORMATS
