@@ -31,27 +31,32 @@ class DrawReader(DrawReaderBase):
         output = p.readlines()
         r = p.close()
 
+        layer_n = 1
+        layer_color = ""
+
         last_x = 0.0
         last_y = 0.0
         for line in output:
             line = line.strip()
             if line == "endPage":
-                # break
-                pass
-            if line.startswith("drawPath"):
+                layer_n += 1
+            elif line.startswith("setStyle"):
+                for part in line.split(","):
+                    part = part.strip().split(":")
+                    if part[1] == "stroke-color":
+                        layer_color = part[2].strip()
+
+            elif line.startswith("drawPath"):
                 res = re.findall(r"\(([a-z-:]*: [a-z]*, )?librevenge:path-action: (.*?)\)", line)
                 for part in res:
-
                     if "librevenge:large-arc: true," in part[0]:
                         larc = True
                     else:
                         larc = False
-
                     part = part[1]
                     parts = part.split(",")
                     atype = parts[0]
                     cords = {}
-
                     for cord in parts[1:]:
                         splitted = cord.split(":")
                         name = splitted[1]
@@ -59,7 +64,14 @@ class DrawReader(DrawReaderBase):
                         if value.endswith("in"):
                             value = float(value[:-2]) * 25.4
                         else:
-                            value = float(value)
+                            if value.replace(".", "").isnumeric():
+                                value = float(value)
+                            elif value == "true":
+                                value = True
+                            elif value == "false":
+                                value = False
+                            else:
+                                print(f"WARNING: cdrread: unknown value format: {name} = {value}")
                         cords[name] = value
                     if atype == "M":
                         # moveto (move from one point to another point)
@@ -70,19 +82,19 @@ class DrawReader(DrawReaderBase):
                         pass
                     elif atype == "L":
                         # lineto (create a line)
-                        self._add_line((last_x, last_y), (cords["x"], cords["y"]))
+                        self._add_line((last_x, last_y), (cords["x"], cords["y"]), layer=f"L{layer_n}{layer_color}")
                         last_x = cords["x"]
                         last_y = cords["y"]
                     elif atype in {"Q", "T"}:
                         # quadratic Bézier curve (create a quadratic Bézier curve)
                         # smooth quadratic Bézier curveto (create a smooth quadratic Bézier curve)
-                        self._add_line((last_x, last_y), (cords["x"], cords["y"]))
+                        self._add_line((last_x, last_y), (cords["x"], cords["y"]), layer=f"L{layer_n}{layer_color}")
                         last_x = cords["x"]
                         last_y = cords["y"]
                     elif atype == "A":
                         # elliptical Arc (create a elliptical arc)
                         rotation = float(cords["rotate"]) * math.pi / 180.0
-                        sweep = cords["sweep"] == "true"
+                        sweep = cords["sweep"]
                         rx = cords["rx"]
                         ry = cords["ry"]
                         x = cords["x"]
@@ -141,20 +153,20 @@ class DrawReader(DrawReaderBase):
                             angle = math.radians(theta + (delta * pos))
                             ap_x = cosr * math.cos(angle) * rx - sinr * math.sin(angle) * ry + cx
                             ap_y = sinr * math.cos(angle) * rx + cosr * math.sin(angle) * ry + cy
-                            self._add_line((last_x, last_y), (ap_x, ap_y))
+                            self._add_line((last_x, last_y), (ap_x, ap_y), layer=f"L{layer_n}{layer_color}")
                             last_x = ap_x
                             last_y = ap_y
 
-                        self._add_line((last_x, last_y), (x, y))
+                        self._add_line((last_x, last_y), (x, y), layer=f"L{layer_n}{layer_color}")
                         last_x = x
                         last_y = y
                     elif atype == "H":
                         # horizontal lineto (create a horizontal line)
-                        self._add_line((last_x, last_y), (cords["x"], last_y))
+                        self._add_line((last_x, last_y), (cords["x"], last_y), layer=f"L{layer_n}{layer_color}")
                         last_x = cords["x"]
                     elif atype == "V":
                         # vertical lineto (create a vertical line)
-                        self._add_line((last_x, last_y), (last_x, cords["y"]))
+                        self._add_line((last_x, last_y), (last_x, cords["y"]), layer=f"L{layer_n}{layer_color}")
                         last_y = cords["y"]
                     elif atype in {"C", "S"}:
                         # curveto (create a curve)
@@ -173,14 +185,14 @@ class DrawReader(DrawReaderBase):
                         for pn in range(args.cdrread_curveres):
                             xpos = x_values[pn]
                             ypos = y_values[pn]
-                            self._add_line((last_x, last_y), (xpos, ypos))
+                            self._add_line((last_x, last_y), (xpos, ypos), layer=f"L{layer_n}{layer_color}")
                             last_x = xpos
                             last_y = ypos
-                        self._add_line((last_x, last_y), (cords["x"], cords["y"]))
+                        self._add_line((last_x, last_y), (cords["x"], cords["y"]), layer=f"L{layer_n}{layer_color}")
                         last_x = cords["x"]
                         last_y = cords["y"]
                     elif "x" in cords and "y" in cords:
-                        self._add_line((last_x, last_y), (cords["x"], cords["y"]))
+                        self._add_line((last_x, last_y), (cords["x"], cords["y"]), layer=f"L{layer_n}{layer_color}")
                         last_x = cords["x"]
                         last_y = cords["y"]
 
