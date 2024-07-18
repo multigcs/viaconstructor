@@ -57,8 +57,9 @@ class DrawReader(DrawReaderBase):
                         name = splitted[1]
                         value = splitted[2].strip()
                         if value.endswith("in"):
-                            # value = float(value[:-2]) * 25.4
-                            value = float(value[:-2]) * 72
+                            value = float(value[:-2]) * 25.4
+                        else:
+                            value = float(value)
                         cords[name] = value
                     if atype == "M":
                         # moveto (move from one point to another point)
