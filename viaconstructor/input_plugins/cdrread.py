@@ -36,13 +36,22 @@ class DrawReader(DrawReaderBase):
         for line in output:
             line = line.strip()
             if line == "endPage":
-                break
+                # break
+                pass
             if line.startswith("drawPath"):
-                res = re.findall(r"\(librevenge:path-action: (.*?)\)", line)
+                res = re.findall(r"\(([a-z-:]*: [a-z]*, )?librevenge:path-action: (.*?)\)", line)
                 for part in res:
+
+                    if "librevenge:large-arc: true," in part[0]:
+                        larc = True
+                    else:
+                        larc = False
+
+                    part = part[1]
                     parts = part.split(",")
                     atype = parts[0]
                     cords = {}
+
                     for cord in parts[1:]:
                         splitted = cord.split(":")
                         name = splitted[1]
@@ -71,9 +80,73 @@ class DrawReader(DrawReaderBase):
                         last_y = cords["y"]
                     elif atype == "A":
                         # elliptical Arc (create a elliptical arc)
-                        self._add_line((last_x, last_y), (cords["x"], cords["y"]))
-                        last_x = cords["x"]
-                        last_y = cords["y"]
+                        rotation = float(cords["rotate"]) * math.pi / 180.0
+                        sweep = cords["sweep"] == "true"
+                        rx = cords["rx"]
+                        ry = cords["ry"]
+                        x = cords["x"]
+                        y = cords["y"]
+
+                        cosr = math.cos(rotation)
+                        sinr = math.sin(rotation)
+                        dx = (last_x - x) / 2
+                        dy = (last_y - y) / 2
+                        x1prim = cosr * dx + sinr * dy
+                        x1prim_sq = x1prim * x1prim
+                        y1prim = -sinr * dx + cosr * dy
+                        y1prim_sq = y1prim * y1prim
+                        rx_sq = rx * rx
+                        ry_sq = ry * ry
+                        t1 = rx_sq * y1prim_sq
+                        t2 = ry_sq * x1prim_sq
+                        c = math.sqrt(abs((rx_sq * ry_sq - t1 - t2) / (t1 + t2)))
+                        if sweep == larc:
+                            c = -c
+                        cxprim = c * rx * y1prim / ry
+                        cyprim = -c * ry * x1prim / rx
+                        cx = (cosr * cxprim - sinr * cyprim) + ((last_x + x) / 2)
+                        cy = (sinr * cxprim + cosr * cyprim) + ((last_y + y) / 2)
+
+                        ux = (x1prim - cxprim) / rx
+                        uy = (y1prim - cyprim) / ry
+                        vx = (-x1prim - cxprim) / rx
+                        vy = (-y1prim - cyprim) / ry
+                        n = math.sqrt(ux * ux + uy * uy)
+                        p = ux
+                        theta = (math.acos(p / n)) * 180 / math.pi
+                        if uy < 0:
+                            theta = -theta
+                        theta = theta % 360
+
+                        n = math.sqrt((ux * ux + uy * uy) * (vx * vx + vy * vy))
+                        p = ux * vx + uy * vy
+                        d = p / n
+                        if d > 1.0:
+                            d = 1.0
+                        elif d < -1.0:
+                            d = -1.0
+                        delta = (math.acos(d)) * 180 / math.pi
+                        if (ux * vy - uy * vx) < 0:
+                            delta = -delta
+                        delta = delta % 360
+                        if not sweep:
+                            delta -= 360
+
+                        cosr = math.cos(rotation)
+                        sinr = math.sin(rotation)
+                        cres = 20
+                        for pos in range(cres):
+                            pos = pos / cres
+                            angle = math.radians(theta + (delta * pos))
+                            ap_x = cosr * math.cos(angle) * rx - sinr * math.sin(angle) * ry + cx
+                            ap_y = sinr * math.cos(angle) * rx + cosr * math.sin(angle) * ry + cy
+                            self._add_line((last_x, last_y), (ap_x, ap_y))
+                            last_x = ap_x
+                            last_y = ap_y
+
+                        self._add_line((last_x, last_y), (x, y))
+                        last_x = x
+                        last_y = y
                     elif atype == "H":
                         # horizontal lineto (create a horizontal line)
                         self._add_line((last_x, last_y), (cords["x"], last_y))
