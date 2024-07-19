@@ -201,19 +201,41 @@ class DrawReader(DrawReaderBase):
                             y_values.append(y)
 
                         clen = 0
+                        dangle = 0
                         last2_x = last_x
                         last2_y = last_y
+                        last_angle = None
+                        rpi = math.pi - 0.001
                         for pn in range(cres):
                             xpos = x_values[pn]
                             ypos = y_values[pn]
-                            clen += calc_distance((last2_x, last2_y), (xpos, ypos))
+                            langle = angle_of_line((last2_x, last2_y), (xpos, ypos))
+
+                            # optimize by angle
+                            if args.cdrread_noop:
+                                clen += calc_distance((last2_x, last2_y), (xpos, ypos))
+                            else:
+                                if last_angle is not None:
+                                    diff = last_angle - langle
+                                    while diff >= rpi:
+                                        diff -= rpi
+                                    while diff <= -rpi:
+                                        diff += rpi
+                                    dangle += diff
+                                if abs(dangle) > 0.005:
+                                    clen += calc_distance((last2_x, last2_y), (xpos, ypos))
+                                    dangle = 0
+
+                            # optimize by len
                             if clen >= args.cdrread_curveres:
                                 self._add_line((last_x, last_y), (xpos, ypos), layer=f"L{layer_n}{layer_color}")
                                 last_x = xpos
                                 last_y = ypos
                                 clen = 0
+                                dangle = 0
                             last2_x = xpos
                             last2_y = ypos
+                            last_angle = langle
 
                         self._add_line((last_x, last_y), (cords["x"], cords["y"]), layer=f"L{layer_n}{layer_color}")
                         last_x = cords["x"]
@@ -236,6 +258,12 @@ class DrawReader(DrawReaderBase):
             help="cdrread: resolution of curves",
             type=int,
             default=2,
+        )
+        parser.add_argument(
+            "--cdrread-noop",
+            help="cdrread: disable curve optimizer",
+            action="store_true",
+            default=False,
         )
 
     @staticmethod
