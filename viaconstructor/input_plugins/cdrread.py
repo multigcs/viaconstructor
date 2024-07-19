@@ -256,7 +256,7 @@ class DrawReader(DrawReaderBase):
         parser.add_argument(
             "--cdrread-curveres",
             help="cdrread: resolution of curves",
-            type=int,
+            type=float,
             default=2,
         )
         parser.add_argument(
