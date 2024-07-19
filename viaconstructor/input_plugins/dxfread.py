@@ -73,7 +73,7 @@ class DrawReader(DrawReaderBase):
         parser.add_argument(
             "--dxfread-color-layers",
             help="dxfread: using different colors as different layers",
-            action="store_false",
+            action="store_true",
             default=False,
         )
         parser.add_argument(
@@ -106,6 +106,7 @@ class DrawReader(DrawReaderBase):
                 "--dxfread-no-bmp",
                 help="dxfread: disable bmp support (potrace converter)",
                 action="store_true",
+                default=False,
             )
 
     @staticmethod
