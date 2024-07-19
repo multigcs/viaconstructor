@@ -145,44 +145,36 @@ class DrawReader(DrawReaderBase):
                         if not sweep:
                             delta -= 360
 
-                        if rx == ry and args.cdrread_arcs:
-                            # is circle
-                            start_angle = math.radians(theta)
-                            end_angle = math.radians(theta + delta)
-                            diff = (end_angle - start_angle) / 2
-                            angle = start_angle
-                            bulge = 0.0
-                            while angle < end_angle:
+                        cosr = math.cos(rotation)
+                        sinr = math.sin(rotation)
+                        hmax = max(rx, ry) / 360 * delta
+                        cres = max(4, int(hmax * 2 * math.pi / 4.0))
+                        if rx == ry:
+                            # no oval
+                            cres = max(2, int(hmax * 2 * math.pi / 20.0))
+
+                        last_angle = math.radians(theta)
+                        bulge = 0.0
+                        for pos in range(cres + 1):
+                            angle = math.radians(theta + (delta * (pos / cres)))
+                            ap_x = cosr * math.cos(angle) * rx - sinr * math.sin(angle) * ry + cx
+                            ap_y = sinr * math.cos(angle) * rx + cosr * math.sin(angle) * ry + cy
+                            if rx == ry:
+                                # no oval / calc bulge
                                 (start, end, bulge) = ezdxf.math.arc_to_bulge(
                                     (cx, cy),
+                                    last_angle,
                                     angle,
-                                    angle + diff,
                                     rx,
                                 )
-                                angle += diff
-                                self._add_line((last_x, last_y), end, layer=f"L{layer_n}{layer_color}", bulge=-bulge)
-                                last_x = end[0]
-                                last_y = end[1]
+                            self._add_line((last_x, last_y), (ap_x, ap_y), layer=f"L{layer_n}{layer_color}", bulge=-bulge)
+                            last_x = ap_x
+                            last_y = ap_y
+                            last_angle = angle
 
-                            # self._add_line((last_x, last_y), (x, y), layer=f"L{layer_n}{layer_color}",bulge=-bulge)
-                            # last_x = x
-                            # last_y = y
-                        else:
-                            cosr = math.cos(rotation)
-                            sinr = math.sin(rotation)
-                            cres = args.cdrread_arcres
-                            for pos in range(cres):
-                                pos = pos / cres
-                                angle = math.radians(theta + (delta * pos))
-                                ap_x = cosr * math.cos(angle) * rx - sinr * math.sin(angle) * ry + cx
-                                ap_y = sinr * math.cos(angle) * rx + cosr * math.sin(angle) * ry + cy
-                                self._add_line((last_x, last_y), (ap_x, ap_y), layer=f"L{layer_n}{layer_color}")
-                                last_x = ap_x
-                                last_y = ap_y
-
-                            self._add_line((last_x, last_y), (x, y), layer=f"L{layer_n}{layer_color}")
-                            last_x = x
-                            last_y = y
+                        # self._add_line((last_x, last_y), (x, y), layer=f"L{layer_n}{layer_color}", bulge=-bulge)
+                        # last_x = x
+                        # last_y = y
                     elif atype == "H":
                         # horizontal lineto (create a horizontal line)
                         self._add_line((last_x, last_y), (cords["x"], last_y), layer=f"L{layer_n}{layer_color}")
@@ -232,18 +224,6 @@ class DrawReader(DrawReaderBase):
             help="cdrread: resolution of curves",
             type=int,
             default=10,
-        )
-        parser.add_argument(
-            "--cdrread-arcres",
-            help="cdrread: resolution of arcs",
-            type=int,
-            default=40,
-        )
-        parser.add_argument(
-            "--cdrread-arcs",
-            help="cdrread: using arcs for non oval (buggy)",
-            action="store_true",
-            default=False,
         )
 
     @staticmethod
