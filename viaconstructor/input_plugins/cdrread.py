@@ -214,7 +214,7 @@ class DrawReader(DrawReaderBase):
             "--cdrread-arcres",
             help="cdrread: resolution of arcs",
             type=int,
-            default=20,
+            default=40,
         )
 
     @staticmethod
