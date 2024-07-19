@@ -190,19 +190,31 @@ class DrawReader(DrawReaderBase):
                         p1 = np.array([cords["x1"], cords["y1"]])
                         p2 = np.array([cords["x2"], cords["y2"]])
                         p3 = np.array([cords["x"], cords["y"]])
-                        t_values = np.linspace(0, 1, args.cdrread_curveres)
+
+                        cres = 200
+                        t_values = np.linspace(0, 1, cres)
                         x_values = []
                         y_values = []
                         for t in t_values:
                             x, y = cubic_bezier(t, p0, p1, p2, p3)
                             x_values.append(x)
                             y_values.append(y)
-                        for pn in range(args.cdrread_curveres):
+
+                        clen = 0
+                        last2_x = last_x
+                        last2_y = last_y
+                        for pn in range(cres):
                             xpos = x_values[pn]
                             ypos = y_values[pn]
-                            self._add_line((last_x, last_y), (xpos, ypos), layer=f"L{layer_n}{layer_color}")
-                            last_x = xpos
-                            last_y = ypos
+                            clen += calc_distance((last2_x, last2_y), (xpos, ypos))
+                            if clen >= args.cdrread_curveres:
+                                self._add_line((last_x, last_y), (xpos, ypos), layer=f"L{layer_n}{layer_color}")
+                                last_x = xpos
+                                last_y = ypos
+                                clen = 0
+                            last2_x = xpos
+                            last2_y = ypos
+
                         self._add_line((last_x, last_y), (cords["x"], cords["y"]), layer=f"L{layer_n}{layer_color}")
                         last_x = cords["x"]
                         last_y = cords["y"]
@@ -223,7 +235,7 @@ class DrawReader(DrawReaderBase):
             "--cdrread-curveres",
             help="cdrread: resolution of curves",
             type=int,
-            default=10,
+            default=2,
         )
 
     @staticmethod
