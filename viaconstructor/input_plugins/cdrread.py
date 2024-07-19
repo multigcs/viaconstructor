@@ -147,7 +147,7 @@ class DrawReader(DrawReaderBase):
 
                         cosr = math.cos(rotation)
                         sinr = math.sin(rotation)
-                        cres = 20
+                        cres = args.cdrread_arcres
                         for pos in range(cres):
                             pos = pos / cres
                             angle = math.radians(theta + (delta * pos))
@@ -209,6 +209,12 @@ class DrawReader(DrawReaderBase):
             help="cdrread: resolution of curves",
             type=int,
             default=10,
+        )
+        parser.add_argument(
+            "--cdrread-arcres",
+            help="cdrread: resolution of arcs",
+            type=int,
+            default=20,
         )
 
     @staticmethod

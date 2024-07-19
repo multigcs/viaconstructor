@@ -3500,12 +3500,16 @@ class ViaConstructor:  # pylint: disable=R0904
         # load drawing #
         debug("main: load drawing")
 
+        if self.args.dxf:
+            # set laser-mode to disable offset calculation
+            self.args.laser = True
+
         if self.args.filenames and self.args.filenames[0].endswith(".vcp"):
             self.load_project(self.args.filenames[0])
 
             # save and exit
             if self.args.dxf:
-                self.update_drawing()
+                #  self.update_drawing()
                 eprint(f"saving dawing to file: {self.args.dxf}")
                 self.save_objects_as_dxf(self.args.dxf)
                 sys.exit(0)
@@ -3517,7 +3521,7 @@ class ViaConstructor:  # pylint: disable=R0904
         elif self.args.filenames and self.load_drawings(self.args.filenames):
             # save and exit
             if self.args.dxf:
-                self.update_drawing()
+                # self.update_drawing()
                 eprint(f"saving dawing to file: {self.args.dxf}")
                 self.save_objects_as_dxf(self.args.dxf)
                 sys.exit(0)
