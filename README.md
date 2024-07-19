@@ -2,15 +2,6 @@
 
 OpenSource CAM-Tool to generate gCode from DXF,SVG and HPGL-Files
 
-## Known Issues:
-* beta - version
-* &gt;= Python-3.9 (will not work with Debian-10 or lower)
-* running on Linux, OS-X (Intel-Only) and Windows
-* may be unstable on Windows
-* problems with some OpenGL versions (black 3D-View)
-* tabs on circles sometimes broken
-* slow on very big files
-
 ## Features:
  * 3D-Preview
  * Tabs and Pockets with Islands
@@ -21,8 +12,17 @@ OpenSource CAM-Tool to generate gCode from DXF,SVG and HPGL-Files
  * automatic order of multiple parts (nearest first)
  * nested parts will milled in the right order (inside parts first)
  * can read DXF, SVG, HPGL and STL (cross section)
+ * can also convert and read (limited support) CDR, PDF, EPS and some raster-image's
  * Truetype-Fonts to generate simple Text
  * generates gCode and HPGL output
+
+## Known Issues:
+* &gt;= Python-3.9 (will not work with Debian-10 or lower)
+* running on Linux, OS-X (Intel-Only) and Windows
+* may be unstable on Windows
+* problems with some OpenGL versions (black 3D-View)
+* tabs on circles sometimes broken
+* slow on very big files
 
 ## demo-video
 [![Demo-Video](http://img.youtube.com/vi/4OBiqeqKDsk/0.jpg)](https://www.youtube.com/watch?v=4OBiqeqKDsk "Demo-Video")
