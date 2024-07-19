@@ -64,7 +64,7 @@ class DrawReader(DrawReaderBase):
                         if value.endswith("in"):
                             value = float(value[:-2]) * 25.4
                         else:
-                            if value.replace(".", "").isnumeric():
+                            if value.replace(".", "").replace("-", "").isnumeric():
                                 value = float(value)
                             elif value == "true":
                                 value = True
