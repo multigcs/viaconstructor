@@ -117,7 +117,6 @@ for reader in ("dxfread", "hpglread", "ngcread", "cdrread", "stlread", "svgread"
         sys.stderr.write(f"ERROR while loading input plugin {reader}: {reader_error}\n")
 
 
-DEBUG = False
 TIMESTAMP = 0
 
 TEMP_PREFIX = get_tmp_prefix()
@@ -127,17 +126,6 @@ camotics = external_command("camotics")
 
 def eprint(message, *args, **kwargs):  # pylint: disable=W0613
     sys.stderr.write(f"{message}\n")
-
-
-def debug(message):
-    global TIMESTAMP  # pylint: disable=W0603
-    if DEBUG:
-        now = time.time()
-        if TIMESTAMP == 0:
-            TIMESTAMP = now
-        eprint(round(now - TIMESTAMP, 1))
-        eprint(f"{message} ", end="", flush=True)
-        TIMESTAMP = now
 
 
 # i18n
@@ -236,6 +224,7 @@ class ViaConstructor:  # pylint: disable=R0904
         "report": "",
         "project_file": None,
     }
+    args = None
     info = ""
     save_tabs = "no"
     save_starts = "no"
@@ -248,6 +237,16 @@ class ViaConstructor:  # pylint: disable=R0904
     toolbuttons: dict = {}
 
     module_root = Path(__file__).resolve().parent
+
+    def debug(self, message):
+        global TIMESTAMP  # pylint: disable=W0603
+        if self.args and self.args.debug:
+            now = time.time()
+            if TIMESTAMP == 0:
+                TIMESTAMP = now
+            eprint(round(now - TIMESTAMP, 1))
+            eprint(f"{message} ", end="", flush=True)
+            TIMESTAMP = now
 
     def save_objects_as_dxf(self, output_file) -> bool:
         try:
@@ -292,7 +291,7 @@ class ViaConstructor:  # pylint: disable=R0904
         if not self.project["draw_reader"]:
             return
 
-        debug("run_calculation: centercalc")
+        self.debug("run_calculation: centercalc")
 
         psetup: dict = self.project["setup"]
         min_max = objects2minmax(self.project["objects"])
@@ -323,7 +322,7 @@ class ViaConstructor:  # pylint: disable=R0904
             )
         self.project["minMax"] = objects2minmax(self.project["objects"])
 
-        debug("run_calculation: offsets")
+        self.debug("run_calculation: offsets")
 
         # create toolpath from objects
         self.project["offsets"] = objects2polyline_offsets(
@@ -333,7 +332,7 @@ class ViaConstructor:  # pylint: disable=R0904
         )
 
         # create machine commands
-        debug("run_calculation: machine_commands")
+        self.debug("run_calculation: machine_commands")
         output_plugin: Union[PostProcessorHpgl, PostProcessorGcodeLinuxCNC, PostProcessorGcodeGrbl]
         if self.project["setup"]["machine"]["plugin"] == "gcode_linuxcnc":
             output_plugin = PostProcessorGcodeLinuxCNC(
@@ -357,13 +356,13 @@ class ViaConstructor:  # pylint: disable=R0904
             eprint(f"ERROR: Unknown machine output plugin: {self.project['setup']['machine']['plugin']}")
             sys.exit(1)
         self.project["machine_cmd"] = polylines2machine_cmd(self.project, output_plugin)
-        debug("run_calculation: update textwidget")
+        self.debug("run_calculation: update textwidget")
         if self.project["textwidget"]:
             self.project["textwidget"].clear()
             self.project["textwidget"].insertPlainText(self.project["machine_cmd"])
             self.project["textwidget"].verticalScrollBar().setValue(0)
 
-        debug("run_calculation: done")
+        self.debug("run_calculation: done")
 
     def _toolbar_fonttool(self) -> None:
         self.font_tool.show()
@@ -846,12 +845,12 @@ class ViaConstructor:  # pylint: disable=R0904
         if not self.project["draw_reader"]:
             return
 
-        debug("update_drawing: start")
+        self.debug("update_drawing: start")
         self.status_bar_message(f"{self.info} - calculate..")
         if not draw_only:
-            debug("update_drawing: run_calculation")
+            self.debug("update_drawing: run_calculation")
             self.run_calculation()
-            debug("update_drawing: run_calculation done")
+            self.debug("update_drawing: run_calculation done")
 
         if self.project["engine"] == "2D":
             draw_all_2d(self.project)
@@ -883,7 +882,7 @@ class ViaConstructor:  # pylint: disable=R0904
             self.project["reportwidget"].insertPlainText(self.project["report"])
             self.project["reportwidget"].verticalScrollBar().setValue(0)
 
-        debug("update_drawing: done")
+        self.debug("update_drawing: done")
 
     def save_project(self, filename: str) -> bool:
         object_diffs: dict = {}
@@ -3123,15 +3122,15 @@ class ViaConstructor:  # pylint: disable=R0904
                     )
 
     def prepare_segments(self) -> None:
-        debug("prepare_segments: copy")
+        self.debug("prepare_segments: copy")
         segments = deepcopy(self.project["segments_org"])
-        debug("prepare_segments: clean_segments")
+        self.debug("prepare_segments: clean_segments")
         self.project["segments"] = clean_segments(segments)
-        debug("prepare_segments: segments2objects")
+        self.debug("prepare_segments: segments2objects")
         self.project["objects"] = segments2objects(self.project["segments"])
         self.project["layers"] = {}
         self.project["layersetup"] = {}
-        debug("prepare_segments: setup")
+        self.debug("prepare_segments: setup")
         for obj in self.project["objects"].values():
             obj["setup"] = {}
             for sect in ("mill", "tool", "pockets", "tabs", "leads"):
@@ -3181,19 +3180,19 @@ class ViaConstructor:  # pylint: disable=R0904
                                 self.project["layersetup"][layer]["tool"]["rate_v"] = int(value)
                                 obj["setup"]["tool"]["rate_v"] = int(value)
 
-        debug("prepare_segments: update_tabs_data")
+        self.debug("prepare_segments: update_tabs_data")
         self.update_tabs_data()
         if not self.args.laser:
-            debug("prepare_segments: find_tool_offsets")
+            self.debug("prepare_segments: find_tool_offsets")
             self.project["maxOuter"] = find_tool_offsets(self.project["objects"])
-        debug("prepare_segments: done")
+        self.debug("prepare_segments: done")
 
     def load_drawings(self, filenames: list, no_setup: bool = False, append_only: bool = False) -> bool:
         # clean project
         if append_only and not self.project["filename_draw"]:
             append_only = False
         if not append_only:
-            debug("load_drawing: cleanup")
+            self.debug("load_drawing: cleanup")
             self.project["filename_draw"] = ""
             self.project["filename_drawings"] = []
             self.project["filename_machine_cmd"] = ""
@@ -3218,7 +3217,7 @@ class ViaConstructor:  # pylint: disable=R0904
 
         for file_n, filename in enumerate(filenames):
             # find plugin
-            debug(f"load_drawing: start {filename}")
+            self.debug(f"load_drawing: start {filename}")
 
             suffix = filename.rsplit(".", maxsplit=1)[-1].lower()
 
@@ -3265,7 +3264,7 @@ class ViaConstructor:  # pylint: disable=R0904
                 self.save_tabs = "ask"
 
             if self.project["draw_reader"]:
-                debug("load_drawing: get segments")
+                self.debug("load_drawing: get segments")
                 if file_n == 0 and not append_only:
                     self.project["filename_draw"] = filename
                     self.project["filename_machine_cmd"] = f"{'.'.join(self.project['filename_draw'].split('.')[:-1])}.{self.project['suffix']}"
@@ -3290,9 +3289,9 @@ class ViaConstructor:  # pylint: disable=R0904
                 loaded = True
 
         if loaded:
-            debug("load_drawing: prepare_segments")
+            self.debug("load_drawing: prepare_segments")
             self.prepare_segments()
-            debug("load_drawing: done")
+            self.debug("load_drawing: done")
 
             # disable some options on big drawings for a better view
             if len(self.project["objects"]) >= 50:
@@ -3310,7 +3309,7 @@ class ViaConstructor:  # pylint: disable=R0904
             return True
 
         eprint(f"ERROR: can not load file: {filename}")
-        debug("load_drawing: error")
+        self.debug("load_drawing: error")
         return False
 
     def combobjwidget_update(self):
@@ -3435,7 +3434,6 @@ class ViaConstructor:  # pylint: disable=R0904
 
     def __init__(self) -> None:
         """viaconstructor main init."""
-        debug("main: startup")
         setproctitle.setproctitle("viaconstructor")  # pylint: disable=I1101
 
         # arguments
@@ -3475,6 +3473,13 @@ class ViaConstructor:  # pylint: disable=R0904
             type=str,
             default=None,
         )
+        parser.add_argument(
+            "-D",
+            "--debug",
+            help="enable debug output",
+            action="store_true",
+            default=False,
+        )
 
         for reader_plugin in reader_plugins.values():
             reader_plugin.arg_parser(parser)
@@ -3483,7 +3488,7 @@ class ViaConstructor:  # pylint: disable=R0904
         self.project["engine"] = self.args.engine
 
         # load setup
-        debug("main: load setup")
+        self.debug("main: load setup")
         self.project["setup"] = {}
         for sname in self.project["setup_defaults"]:
             self.project["setup"][sname] = {}
@@ -3498,7 +3503,7 @@ class ViaConstructor:  # pylint: disable=R0904
             self.project["setup"]["mill"]["offset"] = "none"
 
         # load drawing #
-        debug("main: load drawing")
+        self.debug("main: load drawing")
 
         if self.args.dxf:
             # set laser-mode to disable offset calculation
@@ -3532,7 +3537,7 @@ class ViaConstructor:  # pylint: disable=R0904
                 sys.exit(0)
 
         # gui #
-        debug("main: load gui")
+        self.debug("main: load gui")
         # QApplication.setAttribute(Qt.AA_UseSoftwareOpenGL)  # needed for windows ?
         QApplication.setAttribute(Qt.AA_UseDesktopOpenGL)  # type: ignore
         qapp = QApplication(sys.argv)
@@ -3695,7 +3700,8 @@ class ViaConstructor:  # pylint: disable=R0904
 
         self.main.resize(mwin_width, mwin_height)
         self.main.show()
-        debug("main: gui ready")
+        self.debug("main: gui ready")
+        sys.stdout.flush()
 
         if self.project["engine"] == "2D":
             if self.project["status"] == "INIT":
