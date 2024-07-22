@@ -29,4 +29,5 @@ def test_DxfReader(filename, cfg):
         # assert False
     expected = open(f"tests/data/{filename}-{cfg}.check", "r").read()
     os.system(f"rm tests/data/{filename}-{cfg}.out")
+    # open(f"tests/data/{filename}-{cfg}.check", "w").write(result)
     assert result == expected

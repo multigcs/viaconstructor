@@ -558,7 +558,7 @@ def test_find_tool_offsets(objects, expected):
                 ),
             ],
             {
-                "0:8e4bfaa42b72193ab62f81d19ce497b7": VcObject(
+                "0:f88f0f6d793fd9d1dc49f7fb84b15b79": VcObject(
                     {
                         "segments": [
                             VcSegment(
@@ -600,7 +600,7 @@ def test_find_tool_offsets(objects, expected):
                         "layer": "0",
                     }
                 ),
-                "1:25e319fcf0222e867027739f33abcfe6": VcObject(
+                "1:198f3c082172922b5a529418ef5b515b": VcObject(
                     {
                         "segments": [
                             VcSegment(
@@ -957,7 +957,10 @@ def test_objects2polyline_offsets(diameter, objects, max_outer, small_circles, e
                 }
             ]
         },
-        "machine": {"unit": "mm"},
+        "machine": {
+            "unit": "mm",
+            "init_post": "",
+        },
         "mill": {"small_circles": False},
     }
 

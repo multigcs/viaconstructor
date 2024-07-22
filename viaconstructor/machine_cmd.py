@@ -587,11 +587,8 @@ def polylines2machine_cmd(project: dict, post: PostProcessor) -> str:
     polylines_n = 0
     last_percent = -1
 
-    if not project["objects"]:
-        return
-
     master_ids = []
-    if objectorder == "per_object":
+    if objectorder == "per_object" and project.get("objects"):
         for obj_idx, obj_data in project["objects"].items():
             if not obj_data.outer_objects:
                 master_ids.append(obj_idx)

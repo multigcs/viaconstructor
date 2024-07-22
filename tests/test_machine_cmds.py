@@ -169,6 +169,7 @@ class fakeOffset:
                     "view": {"path": "simple"},
                     "leads": {"active": False},
                     "machine": {
+                        "init_post": "",
                         "mode": "mill",
                         "unit": "mm",
                         "comments": True,
