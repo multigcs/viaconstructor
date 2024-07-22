@@ -1,96 +1,98 @@
-# testfile screenshots
+# Screenshots (testfile)
 
-## tests/data/all.dxf
-drawing: [../../tests/data/all.dxf](../../tests/data/all.dxf)
+screenshots of the testfiles in tests/data/ loaded in viaconstructor with the default configuration
 
-![all.dxf.png](all.dxf.png)
+## all.dxf
+drawing: [all.dxf](../../tests/data/all.dxf)
 
-## tests/data/all.ngc
-drawing: [../../tests/data/all.ngc](../../tests/data/all.ngc)
+<img src="all.dxf.png" width="320">
 
-![all.ngc.png](all.ngc.png)
+## all.ngc
+drawing: [all.ngc](../../tests/data/all.ngc)
 
-## tests/data/check.dxf
-drawing: [../../tests/data/check.dxf](../../tests/data/check.dxf)
+<img src="all.ngc.png" width="320">
 
-![check.dxf.png](check.dxf.png)
+## check.dxf
+drawing: [check.dxf](../../tests/data/check.dxf)
 
-## tests/data/check.hpgl
-drawing: [../../tests/data/check.hpgl](../../tests/data/check.hpgl)
+<img src="check.dxf.png" width="320">
 
-![check.hpgl.png](check.hpgl.png)
+## check.hpgl
+drawing: [check.hpgl](../../tests/data/check.hpgl)
 
-## tests/data/check.stl
-drawing: [../../tests/data/check.stl](../../tests/data/check.stl)
+<img src="check.hpgl.png" width="320">
 
-![check.stl.png](check.stl.png)
+## check.stl
+drawing: [check.stl](../../tests/data/check.stl)
 
-## tests/data/check.svg
-drawing: [../../tests/data/check.svg](../../tests/data/check.svg)
+<img src="check.stl.png" width="320">
 
-![check.svg.png](check.svg.png)
+## check.svg
+drawing: [check.svg](../../tests/data/check.svg)
 
-## tests/data/check.svg
-drawing: [../../tests/data/check.svg](../../tests/data/check.svg)
+<img src="check.svg.png" width="320">
+
+## check.svg
+drawing: [check.svg](../../tests/data/check.svg)
 
 with option: --dxfread-no-svg
 
-![check.svg.png](check.svg--dxfread-no-svg.png)
+<img src="check.svg--dxfread-no-svg.png" width="320">
 
-## tests/data/colors.dxf
-drawing: [../../tests/data/colors.dxf](../../tests/data/colors.dxf)
+## colors.dxf
+drawing: [colors.dxf](../../tests/data/colors.dxf)
 
-![colors.dxf.png](colors.dxf.png)
+<img src="colors.dxf.png" width="320">
 
-## tests/data/harry1.cdr
-drawing: [../../tests/data/harry1.cdr](../../tests/data/harry1.cdr)
+## harry1.cdr
+drawing: [harry1.cdr](../../tests/data/harry1.cdr)
 
-![harry1.cdr.png](harry1.cdr.png)
+<img src="harry1.cdr.png" width="320">
 
-## tests/data/harry2.cdr
-drawing: [../../tests/data/harry2.cdr](../../tests/data/harry2.cdr)
+## harry2.cdr
+drawing: [harry2.cdr](../../tests/data/harry2.cdr)
 
-![harry2.cdr.png](harry2.cdr.png)
+<img src="harry2.cdr.png" width="320">
 
-## tests/data/layerconf.dxf
-drawing: [../../tests/data/layerconf.dxf](../../tests/data/layerconf.dxf)
+## layerconf.dxf
+drawing: [layerconf.dxf](../../tests/data/layerconf.dxf)
 
-![layerconf.dxf.png](layerconf.dxf.png)
+<img src="layerconf.dxf.png" width="320">
 
-## tests/data/nest.dxf
-drawing: [../../tests/data/nest.dxf](../../tests/data/nest.dxf)
+## nest.dxf
+drawing: [nest.dxf](../../tests/data/nest.dxf)
 
-![nest.dxf.png](nest.dxf.png)
+<img src="nest.dxf.png" width="320">
 
-## tests/data/simple.dxf
-drawing: [../../tests/data/simple.dxf](../../tests/data/simple.dxf)
+## simple.dxf
+drawing: [simple.dxf](../../tests/data/simple.dxf)
 
-![simple.dxf.png](simple.dxf.png)
+<img src="simple.dxf.png" width="320">
 
-## tests/data/simple.ngc
-drawing: [../../tests/data/simple.ngc](../../tests/data/simple.ngc)
+## simple.ngc
+drawing: [simple.ngc](../../tests/data/simple.ngc)
 
-![simple.ngc.png](simple.ngc.png)
+<img src="simple.ngc.png" width="320">
 
-## tests/data/simple.stl
-drawing: [../../tests/data/simple.stl](../../tests/data/simple.stl)
+## simple.stl
+drawing: [simple.stl](../../tests/data/simple.stl)
 
-![simple.stl.png](simple.stl.png)
+<img src="simple.stl.png" width="320">
 
-## tests/data/test.hpgl
-drawing: [../../tests/data/test.hpgl](../../tests/data/test.hpgl)
+## test.hpgl
+drawing: [test.hpgl](../../tests/data/test.hpgl)
 
-![test.hpgl.png](test.hpgl.png)
+<img src="test.hpgl.png" width="320">
 
-## tests/data/tux.bmp
-drawing: [../../tests/data/tux.bmp](../../tests/data/tux.bmp)
+## tux.bmp
+drawing: [tux.bmp](../../tests/data/tux.bmp)
 
-![tux.bmp.png](tux.bmp.png)
+<img src="tux.bmp.png" width="320">
 
-## tests/data/tux.bmp
-drawing: [../../tests/data/tux.bmp](../../tests/data/tux.bmp)
+## tux.bmp
+drawing: [tux.bmp](../../tests/data/tux.bmp)
 
 with option: --dxfread-no-bmp --imgread-scale 10
 
-![tux.bmp.png](tux.bmp--dxfread-no-bmp.png)
+<img src="tux.bmp--dxfread-no-bmp--imgread-scale10.png" width="320">
 
