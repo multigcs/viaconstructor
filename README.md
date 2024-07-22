@@ -1,8 +1,9 @@
 # viaConstructor
 
-OpenSource CAM-Tool to generate gCode from DXF,SVG and HPGL-Files
+OpenSource CAM-Tool to generate gCode from DXF,SVG,CDR,HPGL-Files and more
 
 ## Features:
+ * running on Linux (incl. Raspberry PI 4), OS-X (Intel-Only) and Windows
  * 3D-Preview
  * Tabs and Pockets with Islands
  * Headless-Support to generate gcode on the console
@@ -18,7 +19,6 @@ OpenSource CAM-Tool to generate gCode from DXF,SVG and HPGL-Files
 
 ## Known Issues:
 * &gt;= Python-3.9 (will not work with Debian-10 or lower)
-* running on Linux, OS-X (Intel-Only) and Windows
 * may be unstable on Windows
 * problems with some OpenGL versions (black 3D-View)
 * tabs on circles sometimes broken
