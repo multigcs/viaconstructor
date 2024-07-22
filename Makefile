@@ -2,7 +2,6 @@
 VERSION ?= $(shell grep "version=" setup.py | cut -d"'" -f2)
 DOCKERBASE ?= debian12
 
-
 all: ruff isort black lint pytest help_gen gettext docindex done
 
 done:
@@ -149,7 +148,6 @@ docker-run-debian12_deb:
 	docker rm viaconstructor_debian12 || true
 	docker run --net=host -v /tmp/.X11-unix:/tmp/.X11-unix -e DISPLAY=$$DISPLAY -v $$HOME/.Xauthority:/root/.Xauthority --name viaconstructor_debian12 -v $(CURDIR):/usr/src/viaconstructor -t -i viaconstructor_debian12 /bin/bash -c "cd /usr/src/viaconstructor; apt-get install --no-install-recommends -y ./debian-packages/python3-viaconstructor_*-bookworm_amd64.deb; cd ~ ; viaconstructor /usr/src/viaconstructor/tests/data/simple.dxf"
 
-
 docker-build-debian11_deb:
 	sudo rm -rf dist/ deb_dist/
 	docker build -t viaconstructor_build_debian11 -f dockerfiles/Dockerfile.debian11 .
@@ -165,9 +163,6 @@ docker-run-debian11_deb:
 	docker rm viaconstructor_debian11 || true
 	docker run --net=host -v /tmp/.X11-unix:/tmp/.X11-unix -e DISPLAY=$$DISPLAY -v $$HOME/.Xauthority:/root/.Xauthority --name viaconstructor_debian11 -v $(CURDIR):/usr/src/viaconstructor -t -i viaconstructor_debian11 /bin/bash -c "cd /usr/src/viaconstructor; apt-get install --no-install-recommends -y ./debian-packages/python3-viaconstructor_*-bullseye_amd64.deb; cd ~ ; viaconstructor /usr/src/viaconstructor/tests/data/simple.dxf"
 
-
-
-
 docker-build-ubuntu22.04_deb:
 	sudo rm -rf dist/ deb_dist/
 	docker build -t viaconstructor_build_ubuntu22.04 -f dockerfiles/Dockerfile.ubuntu22.04 .
@@ -182,8 +177,6 @@ docker-run-ubuntu22.04_deb:
 	docker build -t viaconstructor_ubuntu22.04 -f dockerfiles/Dockerfile.ubuntu22.04-min .
 	docker rm viaconstructor_ubuntu22.04 || true
 	docker run --net=host -v /tmp/.X11-unix:/tmp/.X11-unix -e DISPLAY=$$DISPLAY -v $$HOME/.Xauthority:/root/.Xauthority --name viaconstructor_ubuntu22.04 -v $(CURDIR):/usr/src/viaconstructor -t -i viaconstructor_ubuntu22.04 /bin/bash -c "cd /usr/src/viaconstructor; apt-get install --no-install-recommends -y ./debian-packages/python3-viaconstructor_*-jammy_amd64.deb; cd ~ ; viaconstructor /usr/src/viaconstructor/tests/data/simple.dxf"
-
-
 
 gettext:
 	/usr/bin/pygettext3 --no-location -d base -o viaconstructor/locales/base.pot viaconstructor/viaconstructor.py viaconstructor/setupdefaults.py

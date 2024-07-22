@@ -983,10 +983,10 @@ def draw_object_ids(project: dict, selected: int = -1) -> None:
             GL.glLineWidth(2)
             GL.glColor3f(0.63, 0.36, 0.11)
 
-        GL.glBegin(GL.GL_LINES)
-
         if obj.get("layer", "").startswith("BREAKS:") or obj.get("layer", "").startswith("_TABS"):
             continue
+
+        GL.glBegin(GL.GL_LINES)
         p_x = obj["segments"][0]["start"][0]
         p_y = obj["segments"][0]["start"][1]
         for (x_1, y_1), (x_2, y_2) in font.lines_for_text(f"#{obj_idx.split(':')[0]}"):
