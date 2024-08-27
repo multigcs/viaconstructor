@@ -1182,21 +1182,24 @@ def object2polyline_offsets(diameter, obj, obj_idx, max_outer, polyline_offsets,
                 polyline_offset.fixed_direction = False
                 polyline_offset.is_circle = is_circle
                 parent_id = f"{obj_idx}.{offset_idx}"
-                new_polyline_offsets[parent_id] = polyline_offset
                 offset_idx += 1
-                if tool_offset == "inside" and obj.setup["pockets"]["active"]:
-                    if polyline_offset.is_closed():
-                        offset_idx = do_pockets(
-                            polyline_offset,
-                            obj,
-                            obj_idx,
-                            tool_offset,
-                            tool_radius,
-                            polyline_offsets,
-                            offset_idx,
-                            vertex_data,
-                            parent_id,
-                        )
+                if tool_offset == "inside" and obj.setup["pockets"]["active"] and polyline_offset.is_closed():
+                    if not obj.setup["pockets"]["nocontour"]:
+                        new_polyline_offsets[parent_id] = polyline_offset
+
+                    offset_idx = do_pockets(
+                        polyline_offset,
+                        obj,
+                        obj_idx,
+                        tool_offset,
+                        tool_radius,
+                        polyline_offsets,
+                        offset_idx,
+                        vertex_data,
+                        parent_id,
+                    )
+                else:
+                    new_polyline_offsets[parent_id] = polyline_offset
 
         elif is_circle and small_circles:
             # adding holes that smaler as the tool

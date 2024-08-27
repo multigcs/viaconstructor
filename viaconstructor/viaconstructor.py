@@ -1100,6 +1100,9 @@ class ViaConstructor:  # pylint: disable=R0904
     def layer_changed(self, value=0) -> None:  # pylint: disable=W0613
         """layer setup changed."""
 
+        if self.project["status"] in {"CHANGE", "INIT"}:
+            return
+
         titles = {
             "mill": "Mill",
             "tool": "Tool",
@@ -1107,9 +1110,6 @@ class ViaConstructor:  # pylint: disable=R0904
             "tabs": "Tabs",
             "leads": "Leads",
         }
-
-        if self.project["status"] == "CHANGE":
-            return
 
         layer_active = self.project["layer_active"]
         setup_data = self.project["setup"]
@@ -1199,6 +1199,9 @@ class ViaConstructor:  # pylint: disable=R0904
     def object_changed(self, value=0) -> None:  # pylint: disable=W0613
         """object setup changed."""
 
+        if self.project["status"] in {"CHANGE", "INIT"}:
+            return
+
         titles = {
             "mill": "Mill",
             "tool": "Tool",
@@ -1206,9 +1209,6 @@ class ViaConstructor:  # pylint: disable=R0904
             "tabs": "Tabs",
             "leads": "Leads",
         }
-
-        if self.project["status"] == "CHANGE":
-            return
 
         object_active = self.project["object_active"]
         setup_data = self.project["setup"]
@@ -2292,6 +2292,7 @@ class ViaConstructor:  # pylint: disable=R0904
         self.project["status"] = "CHANGE"
 
         layer_active = "(".join(value.split("(")[0:-1]).strip()
+        print("---layer_active", layer_active)
         self.project["layer_active"] = layer_active
         self.lcombobjwidget.setCurrentText(layer_active)
         self.project["layer_active"] = layer_active
@@ -3180,6 +3181,14 @@ class ViaConstructor:  # pylint: disable=R0904
                                 self.project["layersetup"][layer]["tool"]["rate_v"] = int(value)
                                 obj["setup"]["tool"]["rate_v"] = int(value)
 
+        for obj in self.project["objects"].values():
+            layer = obj.get("layer")
+            if layer.endswith("_hatch"):
+                obj["setup"]["pockets"]["active"] = True
+                obj["setup"]["pockets"]["nocontour"] = True
+                self.project["layersetup"][layer]["pockets"]["active"] = True
+                self.project["layersetup"][layer]["pockets"]["nocontour"] = True
+
         self.debug("prepare_segments: update_tabs_data")
         self.update_tabs_data()
         if not self.args.laser:
@@ -3432,6 +3441,14 @@ class ViaConstructor:  # pylint: disable=R0904
             self.project["preview_generate"].setText(_("generating preview image with openscad.... please wait"))
             threading.Thread(target=openscad_convert).start()
 
+    def tab_changed(self, idx) -> None:
+        if idx == 1:
+            value = self.lcombobjwidget.currentText()
+            self.setup_select_layer(value)
+        elif idx == 2:
+            value = self.combobjwidget.currentText()
+            self.setup_select_object(value)
+
     def __init__(self) -> None:
         """viaconstructor main init."""
         setproctitle.setproctitle("viaconstructor")  # pylint: disable=I1101
@@ -3655,6 +3672,7 @@ class ViaConstructor:  # pylint: disable=R0904
         ltabwidget.addTab(self.laywidget, _("&Layers"))
         ltabwidget.addTab(self.objwidget, _("&Objects"))
         ltabwidget.addTab(self.infotext_widget, _("&Infos"))
+        ltabwidget.currentChanged.connect(self.tab_changed)
 
         left_gridlayout.addWidget(ltabwidget)
 

@@ -379,6 +379,11 @@ class DrawReader(DrawReaderBase):
             path = make_path(element)
             self._add_path(path, offset, layer=layer, color=color)
 
+        elif dxftype in {"HATCH"}:
+            path = make_path(element)
+            new_layer = f"{layer}_hatch"
+            self._add_path(path, offset, layer=new_layer, color=color)
+
         elif dxftype in {"ARC", "CIRCLE"}:
             if dxftype == "CIRCLE":
                 start_angle = 0.0

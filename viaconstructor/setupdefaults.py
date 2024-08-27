@@ -388,6 +388,13 @@ def setup_defaults(_) -> dict:
                 "title": _("Pocket"),
                 "tooltip": _("do pocket operation on this object"),
             },
+            "nocontour": {
+                "default": False,
+                "type": "bool",
+                "per_object": True,
+                "title": _("no Contour"),
+                "tooltip": _("do not mill the contour"),
+            },
             "zigzag": {
                 "default": False,
                 "type": "bool",
