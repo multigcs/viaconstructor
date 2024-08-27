@@ -130,12 +130,12 @@ docker-run-shell:
 	docker rm viaconstructor || true
 	docker run --net=host -v /tmp/.X11-unix:/tmp/.X11-unix -e DISPLAY=$$DISPLAY -v $$HOME/.Xauthority:/root/.Xauthority --privileged --name viaconstructor -v $(CURDIR):/usr/src/viaconstructor -t -i viaconstructor /bin/bash
 
-docker-build-debian: docker-build-debian11_deb docker-build-debian12_deb
+docker-build-debian: docker-build-debian11_deb docker-build-debian12_deb docker-build-ubuntu22.04_deb
 	ls debian-packages/*deb
 
 docker-build-debian12_deb:
 	sudo rm -rf dist/ deb_dist/
-	docker build -t viaconstructor_build_debian12 -f dockerfiles/Dockerfile.debian12 .
+	docker build --no-cache -t viaconstructor_build_debian12 -f dockerfiles/Dockerfile.debian12 .
 	docker rm viaconstructor_build_debian12 || true
 	docker run --net=host --name viaconstructor_build_debian12 -v $(CURDIR):/usr/src/viaconstructor -t -i viaconstructor_build_debian12 /bin/bash -c "cd /usr/src/viaconstructor; SETUPTOOLS_USE_DISTUTILS=stdlib python3 setup.py --command-packages=stdeb.command sdist_dsc && cd deb_dist/viaconstructor-*/ && sed -i 's|Depends: |Depends: python3-pyqt5.qtopengl, |g' debian/control && dpkg-buildpackage -rfakeroot -uc -us"
 	mkdir -p debian-packages/
@@ -150,7 +150,7 @@ docker-run-debian12_deb:
 
 docker-build-debian11_deb:
 	sudo rm -rf dist/ deb_dist/
-	docker build -t viaconstructor_build_debian11 -f dockerfiles/Dockerfile.debian11 .
+	docker build --no-cache -t viaconstructor_build_debian11 -f dockerfiles/Dockerfile.debian11 .
 	docker rm viaconstructor_build_debian11 || true
 	docker run --net=host --name viaconstructor_build_debian11 -v $(CURDIR):/usr/src/viaconstructor -t -i viaconstructor_build_debian11 /bin/bash -c "cd /usr/src/viaconstructor; SETUPTOOLS_USE_DISTUTILS=stdlib python3 setup.py --command-packages=stdeb.command sdist_dsc && cd deb_dist/viaconstructor-*/ && sed -i 's|Depends: |Depends: python3-pyqt5.qtopengl, |g' debian/control && dpkg-buildpackage -rfakeroot -uc -us"
 	mkdir -p debian-packages/
@@ -165,7 +165,7 @@ docker-run-debian11_deb:
 
 docker-build-ubuntu22.04_deb:
 	sudo rm -rf dist/ deb_dist/
-	docker build -t viaconstructor_build_ubuntu22.04 -f dockerfiles/Dockerfile.ubuntu22.04 .
+	docker build --no-cache -t viaconstructor_build_ubuntu22.04 -f dockerfiles/Dockerfile.ubuntu22.04 .
 	docker rm viaconstructor_build_ubuntu22.04 || true
 	docker run --net=host --name viaconstructor_build_ubuntu22.04 -v $(CURDIR):/usr/src/viaconstructor -t -i viaconstructor_build_ubuntu22.04 /bin/bash -c "cd /usr/src/viaconstructor; SETUPTOOLS_USE_DISTUTILS=stdlib python3 setup.py --command-packages=stdeb.command sdist_dsc && cd deb_dist/viaconstructor-*/ && sed -i 's|Depends: |Depends: python3-pyqt5.qtopengl, |g' debian/control && dpkg-buildpackage -rfakeroot -uc -us || /bin/bash"
 	mkdir -p debian-packages/
