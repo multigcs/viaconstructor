@@ -3184,8 +3184,10 @@ class ViaConstructor:  # pylint: disable=R0904
         for obj in self.project["objects"].values():
             layer = obj.get("layer")
             if layer.endswith("_hatch"):
+                obj["setup"]["mill"]["offset"] = "inside"
                 obj["setup"]["pockets"]["active"] = True
                 obj["setup"]["pockets"]["nocontour"] = True
+                self.project["layersetup"][layer]["mill"]["offset"] = "inside"
                 self.project["layersetup"][layer]["pockets"]["active"] = True
                 self.project["layersetup"][layer]["pockets"]["nocontour"] = True
 

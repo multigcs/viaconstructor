@@ -1225,6 +1225,9 @@ def draw_object_faces(project: dict) -> None:
             if odepth > depth:
                 continue
 
+            if obj.layer.endswith("_hatch"):
+                continue
+
             depth *= unitscale
 
             if obj.closed:

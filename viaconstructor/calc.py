@@ -349,6 +349,9 @@ def find_outer_objects(objects, point, exclude=None):
         exclude = []
     outer = []
     for obj_idx, obj in objects.items():
+        # ignore hatches
+        if obj.layer.endswith("_hatch"):
+            continue
         if obj.closed and obj_idx not in exclude:
             inside = is_inside_polygon(obj, point)
             if inside:
