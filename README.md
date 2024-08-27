@@ -18,6 +18,7 @@ OpenSource CAM-Tool to generate gCode from DXF,SVG,CDR,HPGL-Files and more
  * generates gCode and HPGL output
 
 ## Known Issues:
+* SVG-Support is very bad, better using DXF
 * &gt;= Python-3.9 (will not work with Debian-10 or lower)
 * may be unstable on Windows
 * problems with some OpenGL versions (black 3D-View)
