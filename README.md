@@ -29,7 +29,7 @@ OpenSource CAM-Tool to generate gCode from DXF,SVG,CDR,HPGL-Files and more
 [![Demo-Video](http://img.youtube.com/vi/4OBiqeqKDsk/0.jpg)](https://www.youtube.com/watch?v=4OBiqeqKDsk "Demo-Video")
 
 ## screenshot
-![viaconstructor](main/docs/viaconstructor.png)
+![viaconstructor](docs/viaconstructor.png)
 
 ## quikstart
 
@@ -92,19 +92,19 @@ python3.exe -m viaconstructor tests/data/simple.dxf
 ![helix](docs/helix-true.png)
 
 ### Overcut
-![overcut](main/docs/overcut-true.png)
+![overcut](docs/overcut-true.png)
 
 ### Tabs
-![tabs](main/docs/tabs-true.png)
+![tabs](docs/tabs-true.png)
 
 ### Pockets
-![pockets](main/docs/pockets-true.png)
+![pockets](docs/pockets-true.png)
 
 ### Lead-In/Lead-Out
-![leads](main/docs/leads.png)
+![leads](docs/leads.png)
 
 ### OSX
-![osx](main/docs/osx.png)
+![osx](docs/osx.png)
 
 ### Windows
-![osx](main/docs/windows.png)
+![osx](docs/windows.png)
