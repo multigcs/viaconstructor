@@ -89,19 +89,19 @@ python3.exe -m viaconstructor tests/data/simple.dxf
 ## Screenshots
 
 ### Helix
-![helix](docs/helix-true.png)
+![helix](docs/mill-helix_mode-true.png)
 
 ### Overcut
-![overcut](docs/overcut-true.png)
+![overcut](docs/mill-overcut-true.png)
 
 ### Tabs
-![tabs](docs/tabs-true.png)
+![tabs](docs/tabs-active-true.png)
 
 ### Pockets
-![pockets](docs/pockets-true.png)
+![pockets](docs/pockets-active-true.png)
 
 ### Lead-In/Lead-Out
-![leads](docs/leads.png)
+![leads](docs/leads-in-arc.png)
 
 ### OSX
 ![osx](docs/osx.png)
