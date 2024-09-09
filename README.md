@@ -29,7 +29,7 @@ OpenSource CAM-Tool to generate gCode from DXF,SVG,CDR,HPGL-Files and more
 [![Demo-Video](http://img.youtube.com/vi/4OBiqeqKDsk/0.jpg)](https://www.youtube.com/watch?v=4OBiqeqKDsk "Demo-Video")
 
 ## screenshot
-![viaconstructor](https://raw.githubusercontent.com/multigcs/viaconstructor/main/docs/viaconstructor.png)
+![viaconstructor](main/docs/viaconstructor.png)
 
 ## quikstart
 
@@ -89,22 +89,22 @@ python3.exe -m viaconstructor tests/data/simple.dxf
 ## Screenshots
 
 ### Helix
-![helix](https://raw.githubusercontent.com/multigcs/viaconstructor/main/docs/helix-true.png)
+![helix](docs/helix-true.png)
 
 ### Overcut
-![overcut](https://raw.githubusercontent.com/multigcs/viaconstructor/main/docs/overcut-true.png)
+![overcut](main/docs/overcut-true.png)
 
 ### Tabs
-![tabs](https://raw.githubusercontent.com/multigcs/viaconstructor/main/docs/tabs-true.png)
+![tabs](main/docs/tabs-true.png)
 
 ### Pockets
-![pockets](https://raw.githubusercontent.com/multigcs/viaconstructor/main/docs/pockets-true.png)
+![pockets](main/docs/pockets-true.png)
 
 ### Lead-In/Lead-Out
-![leads](https://raw.githubusercontent.com/multigcs/viaconstructor/main/docs/leads.png)
+![leads](main/docs/leads.png)
 
 ### OSX
-![osx](https://raw.githubusercontent.com/multigcs/viaconstructor/main/docs/osx.png)
+![osx](main/docs/osx.png)
 
 ### Windows
-![osx](https://raw.githubusercontent.com/multigcs/viaconstructor/main/docs/windows.png)
+![osx](main/docs/windows.png)
