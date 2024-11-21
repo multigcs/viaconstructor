@@ -3,7 +3,7 @@
 OpenSource CAM-Tool to generate gCode from DXF,SVG,CDR,HPGL-Files and more
 
 ## Features:
- * running on Linux (incl. Raspberry PI 4), OS-X (Intel-Only) and Windows
+ * running on Linux (incl. Raspberry PI 4), OS-X (Intel and ARM) and Windows
  * 3D-Preview
  * Tabs and Pockets with Islands
  * Headless-Support to generate gcode on the console
