@@ -461,8 +461,27 @@ def segment2machine_cmd(
             point_off2 = (last[0] + off_x, last[1] - off_y)
             post.linear(x_pos=point_off1[0], y_pos=point_off1[1], z_pos=set_depth)
 
-            # do arc
-            if abs(new_angle - last_angle) > math.pi/2:
+            new_angle_d = new_angle
+            last_angle_d = last_angle
+            while new_angle_d > math.pi:
+                new_angle_d -= math.pi
+            while last_angle_d > math.pi:
+                last_angle_d -= math.pi
+            while new_angle_d < 0:
+                new_angle_d += math.pi
+            while last_angle_d < 0:
+                last_angle_d += math.pi
+
+
+            diff_angle = new_angle_d - last_angle_d
+
+            while diff_angle > math.pi:
+                diff_angle -= math.pi
+            while diff_angle > math.pi:
+                diff_angle -= math.pi
+
+            print(diff_angle, last_angle_d, new_angle_d)
+            if diff_angle < 0:
                 post.arc_ccw(
                     x_pos=point_off2[0],
                     y_pos=point_off2[1],
