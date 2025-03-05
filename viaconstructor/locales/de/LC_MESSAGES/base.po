@@ -5,7 +5,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
-"POT-Creation-Date: 2024-06-11 09:22+0200\n"
+"POT-Creation-Date: 2025-01-24 13:11+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -237,6 +237,12 @@ msgstr "Taschen"
 msgid "do pocket operation on this object"
 msgstr "Taschen ausfräsen"
 
+msgid "no Contour"
+msgstr ""
+
+msgid "do not mill the contour"
+msgstr ""
+
 msgid "Zigzag"
 msgstr "Zickzack"
 
@@ -438,6 +444,12 @@ msgstr ""
 msgid "adding line numbers"
 msgstr ""
 
+msgid "add thumbnail to gcode"
+msgstr ""
+
+msgid "add thumbnail to gcode output (3d-view)"
+msgstr ""
+
 msgid "Post-Command"
 msgstr ""
 
@@ -449,6 +461,14 @@ msgstr ""
 
 msgid "update drawing automatically"
 msgstr ""
+
+#, fuzzy
+msgid "Autosave (Setup)"
+msgstr "Einstellungen sichern"
+
+#, fuzzy
+msgid "save setup as default automatically on exit"
+msgstr "speichere Einstellungen als Default"
 
 msgid "minimal"
 msgstr "minimal"
@@ -558,6 +578,9 @@ msgstr "Zeichnung hinzufühgen"
 msgid "Save drawing as DXF"
 msgstr "speichere Zeichnung als DXF"
 
+msgid "Save 3d-view as PNG"
+msgstr ""
+
 msgid "Exit"
 msgstr "Beenden"
 
@@ -647,6 +670,12 @@ msgstr "Skalieren"
 
 msgid "Scale workpiece"
 msgstr "Werkstück skalieren"
+
+msgid "inch->mm"
+msgstr ""
+
+msgid "mm->inch"
+msgstr ""
 
 msgid "Nesting"
 msgstr ""
@@ -759,9 +788,6 @@ msgstr "nach lenks schieben"
 msgid "Right"
 msgstr "Rechts"
 
-msgid "Height"
-msgstr "Höhe"
-
 msgid "move right"
 msgstr "nach richts schieben"
 
@@ -830,6 +856,10 @@ msgstr "kopiere das Objekt zu neuer Ebene"
 
 msgid "Manipulate"
 msgstr "Bearbeiten"
+
+#, fuzzy
+msgid "Reader-Selection"
+msgstr "Reparatur-Auswahl"
 
 msgid "Import-Options"
 msgstr "Import-Optionen"

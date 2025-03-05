@@ -12,6 +12,7 @@ from .calc import (
     rotate_list,
     vertex2points,
     vertex_data_cache,
+    angle_2d,
 )
 
 TWO_PI = math.pi * 2.0
@@ -170,6 +171,8 @@ def machine_cmd_end(project: dict, post: PostProcessor) -> None:
     post.separation()
 
 
+last_angle = 0
+
 def segment2machine_cmd(
     project: dict,
     post: PostProcessor,
@@ -180,6 +183,7 @@ def segment2machine_cmd(
     tabs: dict,
     tool: dict,
 ) -> None:
+    global last_angle
     bulge = last[2]
     if last[0] == point[0] and last[1] == point[1] and last[2] == point[2]:
         return
@@ -442,7 +446,44 @@ def segment2machine_cmd(
                         tool["pause"],
                     )
 
+
+        offset = 2.0
+        new_angle = angle_of_line((last[0], last[1]), (point[0], point[1])) + math.pi / 2
+
+        if last[2] == set_depth and abs(new_angle - last_angle) > 0.0:
+
+            off_x = offset * math.sin(last_angle)
+            off_y = offset * math.cos(last_angle)
+            point_off1 = (last[0] + off_x, last[1] - off_y)
+
+            off_x = offset * math.sin(new_angle)
+            off_y = offset * math.cos(new_angle)
+            point_off2 = (last[0] + off_x, last[1] - off_y)
+            post.linear(x_pos=point_off1[0], y_pos=point_off1[1], z_pos=set_depth)
+
+            # do arc
+            if abs(new_angle - last_angle) > math.pi/2:
+                post.arc_ccw(
+                    x_pos=point_off2[0],
+                    y_pos=point_off2[1],
+                    z_pos=set_depth,
+                    i_pos=(last[0]-point_off1[0]),
+                    j_pos=(last[1]-point_off1[1]),
+                )
+            else:
+                post.arc_cw(
+                    x_pos=point_off2[0],
+                    y_pos=point_off2[1],
+                    z_pos=set_depth,
+                    i_pos=(last[0]-point_off1[0]),
+                    j_pos=(last[1]-point_off1[1]),
+                )
+
         post.linear(x_pos=point[0], y_pos=point[1], z_pos=set_depth)
+
+        last_angle = new_angle
+
+
 
 
 def get_nearest_free_object(

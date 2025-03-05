@@ -192,7 +192,7 @@ dist:
 pypi: dist
 	twine upload --verbose dist/viaconstructor*
 
-bdist_deb:
+bdist_deb: gettext
 	bash build_deb.sh
 
 bdist_rpm:
