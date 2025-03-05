@@ -5,6 +5,7 @@ from typing import Union
 import ezdxf
 
 from .calc import (
+    angle_2d,
     angle_of_line,
     calc_distance,
     found_next_offset_point,
@@ -12,7 +13,6 @@ from .calc import (
     rotate_list,
     vertex2points,
     vertex_data_cache,
-    angle_2d,
 )
 
 TWO_PI = math.pi * 2.0
@@ -171,7 +171,8 @@ def machine_cmd_end(project: dict, post: PostProcessor) -> None:
     post.separation()
 
 
-last_angle = 0
+last_angle = None
+
 
 def segment2machine_cmd(
     project: dict,
@@ -196,6 +197,7 @@ def segment2machine_cmd(
     tabs_type = tabs.get("type", "rectangle")
 
     if bulge > 0.0:
+        last_angle = None
         (
             center,
             start_angle,  # pylint: disable=W0612
@@ -301,6 +303,7 @@ def segment2machine_cmd(
         )
 
     elif bulge < 0.0:
+        last_angle = None
         (
             center,
             start_angle,
@@ -446,12 +449,10 @@ def segment2machine_cmd(
                         tool["pause"],
                     )
 
-
         offset = 2.0
         new_angle = angle_of_line((last[0], last[1]), (point[0], point[1])) + math.pi / 2
 
-        if last[2] == set_depth and abs(new_angle - last_angle) > 0.0:
-
+        if last_angle is not None:
             off_x = offset * math.sin(last_angle)
             off_y = offset * math.cos(last_angle)
             point_off1 = (last[0] + off_x, last[1] - off_y)
@@ -463,46 +464,43 @@ def segment2machine_cmd(
 
             new_angle_d = new_angle
             last_angle_d = last_angle
-            while new_angle_d > math.pi:
-                new_angle_d -= math.pi
-            while last_angle_d > math.pi:
-                last_angle_d -= math.pi
-            while new_angle_d < 0:
-                new_angle_d += math.pi
-            while last_angle_d < 0:
-                last_angle_d += math.pi
 
+            while new_angle_d >= math.pi * 2:
+                new_angle_d -= math.pi * 2
+            while last_angle_d >= math.pi * 2:
+                last_angle_d -= math.pi * 2
+            while new_angle_d <= 0:
+                new_angle_d += math.pi * 2
+            while last_angle_d <= 0:
+                last_angle_d += math.pi * 2
 
             diff_angle = new_angle_d - last_angle_d
-
             while diff_angle > math.pi:
-                diff_angle -= math.pi
-            while diff_angle > math.pi:
-                diff_angle -= math.pi
+                diff_angle -= math.pi * 2
+            while diff_angle < -math.pi:
+                diff_angle += math.pi * 2
 
-            print(diff_angle, last_angle_d, new_angle_d)
-            if diff_angle < 0:
+            # print("#", diff_angle * 180 / math.pi, last_angle_d * 180 / math.pi, new_angle_d * 180 / math.pi)
+            if diff_angle > 0:
                 post.arc_ccw(
                     x_pos=point_off2[0],
                     y_pos=point_off2[1],
                     z_pos=set_depth,
-                    i_pos=(last[0]-point_off1[0]),
-                    j_pos=(last[1]-point_off1[1]),
+                    i_pos=(last[0] - point_off1[0]),
+                    j_pos=(last[1] - point_off1[1]),
                 )
             else:
                 post.arc_cw(
                     x_pos=point_off2[0],
                     y_pos=point_off2[1],
                     z_pos=set_depth,
-                    i_pos=(last[0]-point_off1[0]),
-                    j_pos=(last[1]-point_off1[1]),
+                    i_pos=(last[0] - point_off1[0]),
+                    j_pos=(last[1] - point_off1[1]),
                 )
 
         post.linear(x_pos=point[0], y_pos=point[1], z_pos=set_depth)
 
         last_angle = new_angle
-
-
 
 
 def get_nearest_free_object(
@@ -621,6 +619,7 @@ def reorder_master_ids(project: dict, master_ids: list) -> list:
 
 def polylines2machine_cmd(project: dict, post: PostProcessor) -> str:
     """generates machine_cmd from polilines"""
+    global last_angle
     milling: set = set()
     last_pos: list = [0, 0]
     polylines = project["offsets"]
@@ -673,6 +672,9 @@ def polylines2machine_cmd(project: dict, post: PostProcessor) -> str:
                         master_idx,
                     )
                     if found:
+
+                        last_angle = None
+
                         percent = round((polylines_n + 1) * 100 / polylines_len, 1)
                         if int(percent) != int(last_percent):
                             print(f"generating machine commands: {percent}%", end="\r")
