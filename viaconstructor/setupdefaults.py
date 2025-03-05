@@ -219,6 +219,14 @@ def setup_defaults(_) -> dict:
                         "lenght": 10.0,
                         "blades": 0,
                     },
+                    {
+                        "name": "DragKnife",
+                        "number": 20,
+                        "diameter": 0.0,
+                        "lenght": 0.0,
+                        "blades": 0,
+                        "dragoff": 0.2,
+                    },
                 ],
                 "columns": {
                     "name": {"type": "str"},
@@ -226,6 +234,7 @@ def setup_defaults(_) -> dict:
                     "diameter": {"type": "float"},
                     "lenght": {"type": "float"},
                     "blades": {"type": "int"},
+                    "dragoff": {"type": "float"},
                 },
                 "column_defaults": {
                     "name": "",
@@ -233,6 +242,7 @@ def setup_defaults(_) -> dict:
                     "diameter": 1.0,
                     "lenght": 1.0,
                     "blades": 1,
+                    "dragoff": 0.0,
                 },
                 "title": _("Tools"),
                 "tooltip": _("the tooltable"),

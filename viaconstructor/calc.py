@@ -375,11 +375,18 @@ def find_tool_offsets(objects):
         outer = find_outer_objects(objects, obj.segments[0].start, [obj_idx])
         obj.outer_objects = outer
         if obj.closed:
-
-            if obj.setup["mill"]["offset"] == "auto":
-                obj.tool_offset = "outside" if len(outer) % 2 == 0 else "inside"
+            diameter = 0.0
+            for entry in obj.setup["tool"]["tooltable"]:
+                if obj.setup["tool"]["number"] == entry["number"]:
+                    diameter = entry["diameter"]
+            if diameter == 0.0:
+                obj.tool_offset = "none"
             else:
-                obj.tool_offset = obj.setup["mill"]["offset"]
+                if obj.setup["mill"]["offset"] == "auto":
+                    obj.tool_offset = "outside" if len(outer) % 2 == 0 else "inside"
+                else:
+                    obj.tool_offset = obj.setup["mill"]["offset"]
+
         if max_outer < len(outer):
             max_outer = len(outer)
 

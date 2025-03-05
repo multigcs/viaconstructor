@@ -183,6 +183,7 @@ def segment2machine_cmd(
     max_depth: float,
     tabs: dict,
     tool: dict,
+    dragoff: float = None,
 ) -> None:
     global last_angle
     bulge = last[2]
@@ -449,16 +450,14 @@ def segment2machine_cmd(
                         tool["pause"],
                     )
 
-        offset = 2.0
         new_angle = angle_of_line((last[0], last[1]), (point[0], point[1])) + math.pi / 2
-
-        if last_angle is not None:
-            off_x = offset * math.sin(last_angle)
-            off_y = offset * math.cos(last_angle)
+        if last_angle is not None and dragoff:
+            off_x = dragoff * math.sin(last_angle)
+            off_y = dragoff * math.cos(last_angle)
             point_off1 = (last[0] + off_x, last[1] - off_y)
 
-            off_x = offset * math.sin(new_angle)
-            off_y = offset * math.cos(new_angle)
+            off_x = dragoff * math.sin(new_angle)
+            off_y = dragoff * math.cos(new_angle)
             point_off2 = (last[0] + off_x, last[1] - off_y)
             post.linear(x_pos=point_off1[0], y_pos=point_off1[1], z_pos=set_depth)
 
@@ -735,10 +734,12 @@ def polylines2machine_cmd(project: dict, post: PostProcessor) -> str:
                         if is_closed:
                             obj_distance += calc_distance(point, points[0])
 
+                        dragoff = None
                         diameter = None
                         for entry in project["setup"]["tool"]["tooltable"]:
                             if polyline.setup["tool"]["number"] == entry["number"]:
                                 diameter = entry["diameter"]
+                                dragoff = entry.get("dragoff")
                         if diameter is None:
                             print("ERROR: TOOL not found")
                             break
@@ -920,6 +921,7 @@ def polylines2machine_cmd(project: dict, post: PostProcessor) -> str:
                                     max_depth,
                                     polyline.setup["tabs"],
                                     polyline.setup["tool"],
+                                    dragoff = dragoff,
                                 )
                                 last = point
 
@@ -941,6 +943,7 @@ def polylines2machine_cmd(project: dict, post: PostProcessor) -> str:
                                     max_depth,
                                     polyline.setup["tabs"],
                                     polyline.setup["tool"],
+                                    dragoff = dragoff,
                                 )
 
                             last_depth = depth

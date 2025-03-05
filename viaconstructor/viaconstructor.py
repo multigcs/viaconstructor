@@ -2077,7 +2077,7 @@ class ViaConstructor:  # pylint: disable=R0904
                             table.setItem(
                                 row_idx,
                                 col_idx + idxf_offset,
-                                QTableWidgetItem(str(row[key])),
+                                QTableWidgetItem(str(row.get(key, 0))),
                             )
                             table.resizeColumnToContents(col_idx + idxf_offset)
 
@@ -2205,7 +2205,7 @@ class ViaConstructor:  # pylint: disable=R0904
                             table.setCellWidget(row_idx, 0, button)
                             table.resizeColumnToContents(0)
                         for col_idx, key in enumerate(entry["columns"]):
-                            item = QTableWidgetItem(str(row[key]))
+                            item = QTableWidgetItem(str(row.get(key, 0)))
                             table.setItem(
                                 row_idx,
                                 col_idx + idxf_offset,
