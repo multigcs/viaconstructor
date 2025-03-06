@@ -139,7 +139,7 @@ def setup_defaults(_) -> dict:
                 "min": 100,
                 "max": 100000,
                 "title": _("Speed"),
-                "tooltip": _("setting the Tool-Speed in RPM"),
+                "tooltip": _("setting the Spindle Speed in RPM"),
                 "unit": "RPM",
                 "per_object": True,
             },
@@ -385,7 +385,7 @@ def setup_defaults(_) -> dict:
                 "tooltip": _("the materialtable"),
                 "comment": _(
                     """
-                    list of predifined materials to calculate feedrate / tool speed
+                    list of predifined materials to calculate feedrate / spindle speed
                 """
                 ),
             },
@@ -525,8 +525,8 @@ def setup_defaults(_) -> dict:
                 "type": "int",
                 "min": 100,
                 "max": 100000,
-                "title": _("Tool-Speed"),
-                "tooltip": _("maximum tool-speed"),
+                "title": _("Spindle Speed"),
+                "tooltip": _("maximum spindle speed"),
             },
             "plugin": {
                 "default": "gcode_linuxcnc",
