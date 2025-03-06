@@ -955,12 +955,18 @@ class ViaConstructor:  # pylint: disable=R0904
             self.project["status"] = "READY"
         return True
 
-    def materials_select(self, material_idx) -> None:
+
+
+    def calculate_cutting_data(self) -> None:
         """calculates the milling feedrate and tool-speed for the selected material
         see: https://www.precifast.de/schnittgeschwindigkeit-beim-fraesen-berechnen/
         """
         machine_feedrate = self.project["setup"]["machine"]["feedrate"]
         machine_toolspeed = self.project["setup"]["machine"]["tool_speed"]
+        material_idx = self.project["setup"]["workpiece"]["number"]
+        if material_idx is None:
+            print("Material (workpiece) not set")
+            return
 
         diameter = None
         blades = 0
@@ -1014,8 +1020,13 @@ class ViaConstructor:  # pylint: disable=R0904
         self.update_global_setup()
         self.update_layer_setup()
         self.update_object_setup()
+        self.global_changed(0)
         self.update_drawing()
         self.project["status"] = "READY"
+
+    def materials_select(self, material_idx) -> None:
+        self.project["setup"]["workpiece"]["number"] = material_idx
+        self.calculate_cutting_data()
 
     def tools_select(self, tool_idx) -> None:
         self.project["status"] = "CHANGE"
@@ -1025,12 +1036,7 @@ class ViaConstructor:  # pylint: disable=R0904
         for obj in self.project["objects"].values():
             if obj.setup["tool"]["number"] == old_tool_number:
                 obj.setup["tool"]["number"] = new_tool_number
-        self.update_global_setup()
-        self.update_layer_setup()
-        self.update_object_setup()
-        self.global_changed(0)
-        self.update_drawing()
-        self.project["status"] = "READY"
+        self.calculate_cutting_data()  
 
     def table_select(self, section, name, row_idx) -> None:
         if section == "tool" and name == "tooltable":
