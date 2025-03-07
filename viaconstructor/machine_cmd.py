@@ -448,7 +448,7 @@ def segment2machine_cmd(
                         tool["pause"],
                     )
 
-        new_angle = angle_of_line((last[0], last[1]), (point[0], point[1])) + math.pi / 2
+        new_angle = angle_of_line((last[0], last[1]), (point[0], point[1])) + HALF_PI
         if post.last_angle is not None and dragoff:
             off_x = dragoff * math.sin(post.last_angle)
             off_y = dragoff * math.cos(post.last_angle)
