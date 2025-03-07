@@ -16,6 +16,7 @@ OpenSource CAM-Tool to generate gCode from DXF,SVG,CDR,HPGL-Files and more
  * can also convert and read (limited support) CDR, PDF, EPS and some raster-image's
  * Truetype-Fonts to generate simple Text
  * generates gCode and HPGL output
+ * limited drag knife support
 
 ## Known Issues:
 * SVG-Support is very bad, better using DXF
