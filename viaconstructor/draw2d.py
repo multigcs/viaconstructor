@@ -121,7 +121,7 @@ class CanvasWidget(QLabel):  # pylint: disable=R0903
                     elif self.selector_mode == "delete":
                         self.selection_set = self.selection
                         self.project["app"].update_object_setup()
-                    elif self.selector_mode == "oselect":
+                    elif self.selector_mode == "object":
                         self.selection_set = self.selection
                         self.project["app"].update_object_setup()
                     elif self.selector_mode == "repair":
@@ -168,7 +168,7 @@ class CanvasWidget(QLabel):  # pylint: disable=R0903
                     self.update_drawing()
                     self.update()
                     self.selection = ()
-                elif self.selector_mode == "oselect":
+                elif self.selector_mode == "object":
                     pass
                 elif self.selector_mode == "start":
                     obj_idx = self.selection[0]
@@ -212,7 +212,7 @@ class CanvasWidget(QLabel):  # pylint: disable=R0903
             (self.mouse_pos_x, self.mouse_pos_y) = self.mouse_pos_to_real_pos(event.pos())
             self.selection = found_next_segment_point((self.mouse_pos_x, self.mouse_pos_y), self.project["objects"])
             draw_all(self.project)
-        elif self.selector_mode == "oselect":
+        elif self.selector_mode == "object":
             (self.mouse_pos_x, self.mouse_pos_y) = self.mouse_pos_to_real_pos(event.pos())
             self.selection = found_next_segment_point((self.mouse_pos_x, self.mouse_pos_y), self.project["objects"])
             draw_all(self.project)
@@ -255,6 +255,11 @@ class CanvasWidget(QLabel):  # pylint: disable=R0903
     def toggle_tab_selector(self) -> bool:
         self.selection = ()
         self.selection_set = ()
+        if self.selector_mode != "" and self.selector_mode != "tab":
+            tfunc = f"toggle_{self.selector_mode}_selector"
+            if hasattr(self, tfunc):
+                getattr(self, tfunc)()
+
         if self.selector_mode == "":
             self.selector_mode = "tab"
             self.view_2d()
@@ -267,6 +272,11 @@ class CanvasWidget(QLabel):  # pylint: disable=R0903
     def toggle_start_selector(self) -> bool:
         self.selection = ()
         self.selection_set = ()
+        if self.selector_mode != "" and self.selector_mode != "start":
+            tfunc = f"toggle_{self.selector_mode}_selector"
+            if hasattr(self, tfunc):
+                getattr(self, tfunc)()
+
         if self.selector_mode == "":
             self.selector_mode = "start"
             self.view_2d()
@@ -279,6 +289,11 @@ class CanvasWidget(QLabel):  # pylint: disable=R0903
     def toggle_repair_selector(self) -> bool:
         self.selection = ()
         self.selection_set = ()
+        if self.selector_mode != "" and self.selector_mode != "repair":
+            tfunc = f"toggle_{self.selector_mode}_selector"
+            if hasattr(self, tfunc):
+                getattr(self, tfunc)()
+
         if self.selector_mode == "":
             self.selector_mode = "repair"
             self.view_2d()
@@ -291,6 +306,11 @@ class CanvasWidget(QLabel):  # pylint: disable=R0903
     def toggle_delete_selector(self) -> bool:
         self.selection = ()
         self.selection_set = ()
+        if self.selector_mode != "" and self.selector_mode != "delete":
+            tfunc = f"toggle_{self.selector_mode}_selector"
+            if hasattr(self, tfunc):
+                getattr(self, tfunc)()
+
         if self.selector_mode == "":
             self.selector_mode = "delete"
             self.view_2d()
@@ -303,11 +323,16 @@ class CanvasWidget(QLabel):  # pylint: disable=R0903
     def toggle_object_selector(self) -> bool:
         self.selection = ()
         self.selection_set = ()
+        if self.selector_mode != "" and self.selector_mode != "object":
+            tfunc = f"toggle_{self.selector_mode}_selector"
+            if hasattr(self, tfunc):
+                getattr(self, tfunc)()
+
         if self.selector_mode == "":
-            self.selector_mode = "oselect"
+            self.selector_mode = "object"
             self.view_2d()
             return True
-        if self.selector_mode == "oselect":
+        if self.selector_mode == "object":
             self.selector_mode = ""
             self.view_reset()
         return False
@@ -525,7 +550,7 @@ def draw_all(project: dict) -> None:
             print("error while drawing machine commands")
 
     selected = -1
-    if project["glwidget"] and project["glwidget"].selection_set and project["glwidget"].selector_mode in {"delete", "oselect"}:
+    if project["glwidget"] and project["glwidget"].selection_set and project["glwidget"].selector_mode in {"delete", "object"}:
         selected = project["glwidget"].selection_set[2]
 
     draw_object_edges(project, selected=selected)
@@ -585,7 +610,7 @@ def draw_all(project: dict) -> None:
                     project["glwidget"].selection[1] - 1,
                 ),
             )
-        elif project["glwidget"].selector_mode == "oselect":
+        elif project["glwidget"].selector_mode == "object":
             draw_line_2d(
                 (
                     project["glwidget"].selection[0] - 1,

@@ -384,7 +384,7 @@ class GLWidget(QGLWidget):
                 GL.glVertex3f(self.selection[0] - 1, self.selection[1] + 1, depth)
                 GL.glVertex3f(self.selection[0] + 1, self.selection[1] - 1, depth)
                 GL.glEnd()
-            elif self.selector_mode == "oselect":
+            elif self.selector_mode == "object":
                 depth = 0.1
                 GL.glLineWidth(5)
                 GL.glColor4f(0.0, 1.0, 0.0, 1.0)
@@ -433,6 +433,11 @@ class GLWidget(QGLWidget):
     def toggle_tab_selector(self) -> bool:
         self.selection = ()
         self.selection_set = ()
+        if self.selector_mode != "" and self.selector_mode != "tab":
+            tfunc = f"toggle_{self.selector_mode}_selector"
+            if hasattr(self, tfunc):
+                getattr(self, tfunc)()
+
         if self.selector_mode == "":
             self.selector_mode = "tab"
             self.view_2d()
@@ -445,6 +450,11 @@ class GLWidget(QGLWidget):
     def toggle_start_selector(self) -> bool:
         self.selection = ()
         self.selection_set = ()
+        if self.selector_mode != "" and self.selector_mode != "start":
+            tfunc = f"toggle_{self.selector_mode}_selector"
+            if hasattr(self, tfunc):
+                getattr(self, tfunc)()
+
         if self.selector_mode == "":
             self.selector_mode = "start"
             self.view_2d()
@@ -457,6 +467,11 @@ class GLWidget(QGLWidget):
     def toggle_repair_selector(self) -> bool:
         self.selection = ()
         self.selection_set = ()
+        if self.selector_mode != "" and self.selector_mode != "repair":
+            tfunc = f"toggle_{self.selector_mode}_selector"
+            if hasattr(self, tfunc):
+                getattr(self, tfunc)()
+
         if self.selector_mode == "":
             self.selector_mode = "repair"
             self.view_2d()
@@ -469,6 +484,11 @@ class GLWidget(QGLWidget):
     def toggle_delete_selector(self) -> bool:
         self.selection = ()
         self.selection_set = ()
+        if self.selector_mode != "" and self.selector_mode != "delete":
+            tfunc = f"toggle_{self.selector_mode}_selector"
+            if hasattr(self, tfunc):
+                getattr(self, tfunc)()
+
         if self.selector_mode == "":
             self.selector_mode = "delete"
             self.view_2d()
@@ -481,11 +501,16 @@ class GLWidget(QGLWidget):
     def toggle_object_selector(self) -> bool:
         self.selection = ()
         self.selection_set = ()
+        if self.selector_mode != "" and self.selector_mode != "object":
+            tfunc = f"toggle_{self.selector_mode}_selector"
+            if hasattr(self, tfunc):
+                getattr(self, tfunc)()
+
         if self.selector_mode == "":
-            self.selector_mode = "oselect"
+            self.selector_mode = "object"
             self.view_2d()
             return True
-        if self.selector_mode == "oselect":
+        if self.selector_mode == "object":
             self.selector_mode = ""
             self.view_reset()
         return False
@@ -580,7 +605,7 @@ class GLWidget(QGLWidget):
                         self.selection_set = self.selection
                         # self.project["app"].update_object_setup()
                         self.project["app"].setup_select_object(self.selection_set[2])
-                    elif self.selector_mode == "oselect":
+                    elif self.selector_mode == "object":
                         self.selection_set = self.selection
                         # self.project["app"].update_object_setup()
                         self.project["app"].setup_select_object(self.selection_set[2])
@@ -629,7 +654,7 @@ class GLWidget(QGLWidget):
                     self.update_drawing()
                     self.update()
                     self.selection = ()
-                elif self.selector_mode == "oselect":
+                elif self.selector_mode == "object":
                     pass
                 elif self.selector_mode == "start":
                     obj_idx = self.selection[0]
@@ -667,7 +692,7 @@ class GLWidget(QGLWidget):
         elif self.selector_mode == "delete":
             (self.mouse_pos_x, self.mouse_pos_y) = self.mouse_pos_to_real_pos(event.pos())
             self.selection = found_next_segment_point((self.mouse_pos_x, self.mouse_pos_y), self.project["objects"])
-        elif self.selector_mode == "oselect":
+        elif self.selector_mode == "object":
             (self.mouse_pos_x, self.mouse_pos_y) = self.mouse_pos_to_real_pos(event.pos())
             self.selection = found_next_segment_point((self.mouse_pos_x, self.mouse_pos_y), self.project["objects"])
         elif self.selector_mode == "repair":
