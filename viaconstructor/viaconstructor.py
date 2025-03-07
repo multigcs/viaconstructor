@@ -601,16 +601,30 @@ class ViaConstructor:  # pylint: disable=R0904
     def _toolbar_save_machine_cmd(self) -> None:
         """save machine_cmd."""
         self.status_bar_message(f"{self.info} - save machine_cmd..")
+
+        if self.project["setup"]["view"]["outputfolder"] == "use last dir" and self.project['setup']['view']['lastdir']:
+            dirname = self.project['setup']['view']['lastdir']
+            inputname = '.'.join(self.project['filename_draw'].split('.')[:-1])
+            basename = os.path.basename(inputname)
+            target = os.path.join(dirname, basename)
+            target_file = f"{target}.{self.project['suffix']}"
+        else:
+            target_file = f"{'.'.join(self.project['filename_draw'].split('.')[:-1])}.{self.project['suffix']}"
+
         file_dialog = QFileDialog(self.main)
         file_dialog.setNameFilters([f"{self.project['suffix']} (*.{self.project['suffix']})"])
-        self.project["filename_machine_cmd"] = f"{'.'.join(self.project['filename_draw'].split('.')[:-1])}.{self.project['suffix']}"
         name = file_dialog.getSaveFileName(
             self.main,
             "Save File",
-            self.project["filename_machine_cmd"],
+            target_file,
             f"{self.project['suffix']} (*.{self.project['suffix']})",
         )
         if name[0] and self.machine_cmd_save(name[0]):
+            self.project["filename_machine_cmd"] = name[0]
+            self.project["setup"]["view"]["lastdir"] = os.path.dirname(name[0])
+            self.project["status"] = "CHANGE"
+            self.update_global_setup()
+            self.project["status"] = "READY"
             self.status_bar_message(f"{self.info} - save machine-code..done ({name[0]})")
         else:
             self.status_bar_message(f"{self.info} - save machine-code..cancel")
@@ -618,13 +632,22 @@ class ViaConstructor:  # pylint: disable=R0904
     def _toolbar_save_dxf(self) -> None:
         """save drawing as dxf."""
         self.status_bar_message(f"{self.info} - save drawing as dxf..")
+
+        if self.project["setup"]["view"]["outputfolder"] == "use last dir" and self.project['setup']['view']['lastdir']:
+            dirname = self.project['setup']['view']['lastdir']
+            inputname = '.'.join(self.project['filename_draw'].split('.')[:-1])
+            basename = os.path.basename(inputname)
+            target = os.path.join(dirname, basename)
+            target_file = f"{target}.{self.project['suffix']}"
+        else:
+            target_file = f"{'.'.join(self.project['filename_draw'].split('.')[:-1])}.{self.project['suffix']}"
+
         file_dialog = QFileDialog(self.main)
         file_dialog.setNameFilters(["dxf (*.dxf)"])
-        self.project["filename_machine_cmd"] = f"{'.'.join(self.project['filename_draw'].split('.')[:-1])}.dxf"
         name = file_dialog.getSaveFileName(
             self.main,
             "Save File",
-            self.project["filename_machine_cmd"],
+            target_file,
             "dxf (*.dxf)",
         )
         if name[0] and self.save_objects_as_dxf(name[0]):
@@ -657,7 +680,6 @@ class ViaConstructor:  # pylint: disable=R0904
         filename_default = f"{'.'.join(self.project['filename_draw'].split('.')[:-1])}.vcp"
         if self.project["project_file"]:
             filename_default = self.project["project_file"]
-        self.project["filename_machine_cmd"] = f"{'.'.join(self.project['filename_draw'].split('.')[:-1])}.vcp"
         name = file_dialog.getSaveFileName(
             self.main,
             "Save File",

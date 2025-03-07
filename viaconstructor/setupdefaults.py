@@ -734,5 +734,21 @@ def setup_defaults(_) -> dict:
                 "title": _("transparency"),
                 "tooltip": _("transparency of the workpeace in 3d view"),
             },
+            "outputfolder": {
+                "default": "use dir of input file",
+                "type": "select",
+                "options": (
+                    ("use last dir", _("use last dir")),
+                    ("use dir of input file", _("use dir of input file")),
+                ),
+                "title": _("Output Folder"),
+                "tooltip": _("Output Folder"),
+            },
+            "lastdir": {
+                "default": "",
+                "type": "str",
+                "title": _("last output dir"),
+                "tooltip": _("last output dir / internal use"),
+            },
         },
     }
