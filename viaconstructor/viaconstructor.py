@@ -2225,6 +2225,7 @@ class ViaConstructor:  # pylint: disable=R0904
                     unit = self.project["setup"]["machine"]["unit"]
 
                 ulabel = QLabel(unit)
+                ulabel.setMinimumWidth(36)
                 ulabel.setFont(QFont("Arial", 9))
                 hlayout.addWidget(ulabel)
             vlayout.addStretch(1)
@@ -2434,7 +2435,7 @@ class ViaConstructor:  # pylint: disable=R0904
                 vlayout.addWidget(container)
                 hlayout.addStretch(1)
                 if entry["type"] == "bool":
-                    checkbox = QCheckBox(entry.get("title", ename))
+                    checkbox = QCheckBox()
                     checkbox.setChecked(self.project["setup"][sname][ename])
                     checkbox.setToolTip(helptext)
                     checkbox.stateChanged.connect(self.layer_changed)  # type: ignore
@@ -2542,8 +2543,10 @@ class ViaConstructor:  # pylint: disable=R0904
                     unit = self.project["setup"]["machine"]["unit"]
 
                 ulabel = QLabel(unit)
+                ulabel.setMinimumWidth(36)
                 ulabel.setFont(QFont("Arial", 9))
                 hlayout.addWidget(ulabel)
+            vlayout.addStretch(1)
 
     def setup_select_object(self, value):
         if self.project["status"] != "READY":
@@ -2696,7 +2699,7 @@ class ViaConstructor:  # pylint: disable=R0904
                 vlayout.addWidget(container)
                 hlayout.addStretch(1)
                 if entry["type"] == "bool":
-                    checkbox = QCheckBox(entry.get("title", ename))
+                    checkbox = QCheckBox()
                     checkbox.setChecked(self.project["setup"][sname][ename])
                     checkbox.setToolTip(helptext)
                     checkbox.stateChanged.connect(self.object_changed)  # type: ignore
@@ -2804,8 +2807,10 @@ class ViaConstructor:  # pylint: disable=R0904
                     unit = self.project["setup"]["machine"]["unit"]
 
                 ulabel = QLabel(unit)
+                ulabel.setMinimumWidth(36)
                 ulabel.setFont(QFont("Arial", 9))
                 hlayout.addWidget(ulabel)
+            vlayout.addStretch(1)
 
         def object_move(spinbox_steps, checkbox_childs, direction):
             object_active = self.project["object_active"]
