@@ -980,6 +980,11 @@ def polylines2machine_cmd(project: dict, post: PostProcessor) -> str:
                                         j_pos=(lead_out_center_y - points[0][1]),
                                     )
                             lead_out_active = "off"
+                        elif post.last_angle is not None and dragoff:
+                            off_x = dragoff * math.sin(post.last_angle)
+                            off_y = dragoff * math.cos(post.last_angle)
+                            point_off1 = (points[0][0] + off_x, points[0][1] - off_y)
+                            post.linear(x_pos=point_off1[0], y_pos=point_off1[1], z_pos=set_depth)
 
                         if project["setup"]["machine"]["mode"] != "mill":
                             post.spindle_off()
