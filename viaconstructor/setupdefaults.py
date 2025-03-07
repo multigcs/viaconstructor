@@ -423,8 +423,8 @@ def setup_defaults(_) -> dict:
                 "default": True,
                 "type": "bool",
                 "per_object": True,
-                "title": _("insideout"),
-                "tooltip": _("from inside to out"),
+                "title": _("inside first"),
+                "tooltip": _("from inside to outside"),
             },
         },
         "tabs": {
