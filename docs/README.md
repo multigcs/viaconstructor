@@ -205,9 +205,9 @@ setting the Spindle Speed in RPM
 
 </p>
 
-### Feed-Rate(Horizontal)
+### Feedrate(Horizontal)
 <p>
-the Horizotal Feetrate
+the Horizontal Feedrate
 
 * Unit: mm/min
 * Default: 1000
@@ -216,9 +216,9 @@ the Horizotal Feetrate
 
 </p>
 
-### Feed-Rate(Vertical)
+### Feedrate(Vertical)
 <p>
-the Vertical Feetrate
+the Vertical Feedrate
 
 * Unit: mm/min
 * Default: 100
