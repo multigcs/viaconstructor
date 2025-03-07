@@ -1,19 +1,20 @@
-# SOME DESCRIPTIVE TITLE.
 # Copyright (C) YEAR ORGANIZATION
-# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
 #
+# Hans <hansunzner@gmail.com>, 2025.
 msgid ""
 msgstr ""
-"Project-Id-Version: PACKAGE VERSION\n"
-"POT-Creation-Date: 2025-03-07 22:55+0100\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
-"Language-Team: LANGUAGE <LL@li.org>\n"
-"Language: \n"
+"Project-Id-Version: \n"
+"POT-Creation-Date: 2025-03-07 15:47+0100\n"
+"PO-Revision-Date: 2025-03-07 22:29+0100\n"
+"Last-Translator: Hans <hansunzner@gmail.com>\n"
+"Language-Team: German <kde-i18n-de@kde.org>\n"
+"Language: de_DE\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: pygettext.py 1.5\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Generator: Lokalize 21.12.3\n"
 
 msgid "Active"
 msgstr "Aktiv"
@@ -43,7 +44,7 @@ msgid "Depth"
 msgstr "Tiefe"
 
 msgid "the end depth for milling"
-msgstr "voller Frästiefe"
+msgstr "Die Endtiefe beim Fräsen"
 
 msgid "Step"
 msgstr "Eintauchtiefe"
@@ -103,7 +104,7 @@ msgid "Overcuting edges"
 msgstr "Überschnitt in Ecken"
 
 msgid "nearest"
-msgstr "näheste"
+msgstr "nächstgelegene"
 
 msgid "unordered"
 msgstr "unsortiert"
@@ -162,22 +163,20 @@ msgstr "aktiviere Fluten"
 msgid "name"
 msgstr ""
 
-#, fuzzy
 msgid "number"
 msgstr "Nummer"
 
 msgid "diameter"
-msgstr ""
+msgstr "Durchmesser"
 
-#, fuzzy
 msgid "lenght"
-msgstr "Start-Länge"
+msgstr "Länge"
 
 msgid "flutes"
-msgstr ""
+msgstr "Schneiden"
 
 msgid "drag knife offset"
-msgstr ""
+msgstr "Schleppmesser-Offset"
 
 msgid "Tools"
 msgstr "Werkzeuge"
@@ -242,7 +241,7 @@ msgid "Materials"
 msgstr "Materialien"
 
 msgid "the materialtable"
-msgstr "liste der Materialien"
+msgstr "Liste der Materialien"
 
 msgid ""
 "\n"
@@ -272,13 +271,11 @@ msgstr "Inseln"
 msgid "keep islands"
 msgstr "Inseln stehen lassen"
 
-#, fuzzy
 msgid "inside first"
-msgstr "Innenseite"
+msgstr "zuerst innen"
 
-#, fuzzy
 msgid "from inside to outside"
-msgstr "von innen nach aussen"
+msgstr "von innen nach außen"
 
 msgid "active"
 msgstr "aktiv"
@@ -296,7 +293,7 @@ msgid "Height"
 msgstr "Höhe"
 
 msgid "height of the tabs"
-msgstr "höhe der Haltestege"
+msgstr "Höhe der Haltestege"
 
 msgid "rectangle"
 msgstr "Rechteck"
@@ -484,13 +481,11 @@ msgstr ""
 msgid "update drawing automatically"
 msgstr ""
 
-#, fuzzy
 msgid "Autosave (Setup)"
-msgstr "Einstellungen sichern"
+msgstr "Einstellungen automatisch speichern"
 
-#, fuzzy
 msgid "save setup as default automatically on exit"
-msgstr "speichere Einstellungen als Default"
+msgstr "speichere Einstellungen als Standard beim Beenden"
 
 msgid "minimal"
 msgstr "minimal"
@@ -643,7 +638,7 @@ msgid "Machine"
 msgstr "Maschine"
 
 msgid "Save setup as default"
-msgstr "speichere Einstellungen als Default"
+msgstr "speichere Einstellungen als Standard"
 
 msgid "Save-Setup"
 msgstr "Einstellungen sichern"
@@ -655,13 +650,13 @@ msgid "Load setup from"
 msgstr "lade Einstellungen von"
 
 msgid "Save setup as"
-msgstr "speicher Einstellungen als"
+msgstr "speichere Einstellungen als"
 
 msgid "Load setup from drawing"
-msgstr "laden von der Zeichnung"
+msgstr "Einstellungen von Zeichnung laden"
 
 msgid "Save setup to drawing"
-msgstr "in der Zeichnung speichern"
+msgstr "Einstellungen in der Zeichnung speichern"
 
 msgid "load tooltable from"
 msgstr "lade Werkzeug-Tabelle von"
@@ -673,19 +668,19 @@ msgid "save tooltable as"
 msgstr "speichere Werkzeug-Tabelle als"
 
 msgid "Flip-X"
-msgstr ""
+msgstr "horizontal spiegeln"
 
 msgid "Flip-X workpiece"
-msgstr "Flip-X Werkstück"
+msgstr "Werkstück horizontal spiegeln"
 
 msgid "Workpiece"
 msgstr "Werkstück"
 
 msgid "Flip-Y"
-msgstr ""
+msgstr "vertikal spiegeln"
 
 msgid "Flip-Y workpiece"
-msgstr "Flip-Y Werkstück"
+msgstr "Werkstück vertikal spiegeln"
 
 msgid "Rotate"
 msgstr "Rotieren"
@@ -709,13 +704,13 @@ msgid "2D-View"
 msgstr "2D-Ansicht"
 
 msgid "inch->mm"
-msgstr ""
+msgstr "Inch->mm"
 
 msgid "mm->inch"
-msgstr ""
+msgstr "mm->Inch"
 
 msgid "Nesting"
-msgstr ""
+msgstr "Verschachtelung"
 
 msgid "nesting workpiece"
 msgstr ""
@@ -778,7 +773,7 @@ msgid "open boxtool"
 msgstr "öffne Kasten-Werkzeug"
 
 msgid "select this row"
-msgstr "diese Zeile makieren"
+msgstr "diese Zeile markieren"
 
 msgid "M&ill"
 msgstr "Fräsen"
@@ -805,28 +800,28 @@ msgid "&View"
 msgstr "&Ansicht"
 
 msgid "Move:"
-msgstr ""
+msgstr "Verschieben:"
 
 msgid "Steps"
-msgstr "Eintauchtiefe"
+msgstr "Z-Zustellung"
 
 msgid "with children"
-msgstr ""
+msgstr "mit Unterelementen"
 
 msgid "move all children"
-msgstr ""
+msgstr "Alle Unterelemente verschieben"
 
 msgid "Left"
 msgstr "Links"
 
 msgid "move left"
-msgstr "nach lenks schieben"
+msgstr "nach links schieben"
 
 msgid "Right"
 msgstr "Rechts"
 
 msgid "move right"
-msgstr "nach richts schieben"
+msgstr "nach rechts schieben"
 
 msgid "Up"
 msgstr "Hoch"
@@ -859,44 +854,43 @@ msgid "rotate clockwise"
 msgstr "Rotieren im Uhrzeigersinn"
 
 msgid "Scale:"
-msgstr "Skalieren"
+msgstr "Skalieren:"
 
 msgid "scale multiplier"
-msgstr ""
+msgstr "Skalierungsfaktor"
 
 msgid "scale"
 msgstr "Skalieren"
 
 msgid "Copy:"
-msgstr "Kopieren"
+msgstr "Kopieren:"
 
 msgid "Clone Top"
-msgstr ""
+msgstr "nach oben kopieren"
 
 msgid "clone object"
-msgstr "kopiere das Objekt"
+msgstr "Objekt kopieren"
 
 msgid "Clone Left"
-msgstr "kopiere das Objekt"
+msgstr "nach links kopieren"
 
 msgid "Clone Right"
-msgstr "nach richts schieben"
+msgstr "nach rechts kopieren"
 
 msgid "Clone Bottom"
-msgstr ""
+msgstr "nach unten kopieren"
 
 msgid "to new Layer"
-msgstr "zauf neue Ebene"
+msgstr "auf neue Ebene"
 
 msgid "clone object to new layer"
-msgstr "kopiere das Objekt zu neuer Ebene"
+msgstr "Objekt zu neuer Ebene kopieren"
 
 msgid "Manipulate"
 msgstr "Bearbeiten"
 
-#, fuzzy
 msgid "Reader-Selection"
-msgstr "Reparatur-Auswahl"
+msgstr ""
 
 msgid "Import-Options"
 msgstr "Import-Optionen"
@@ -905,7 +899,7 @@ msgid "generate Preview"
 msgstr "erzeuge Vorschau"
 
 msgid "generating preview image with openscad.... please wait"
-msgstr "erzeuge Vorschau-Bild mit OpenSCAD...... bitte warten"
+msgstr "erzeuge Vorschau-Bild mit OpenSCAD.... bitte warten"
 
 msgid "&3D-View"
 msgstr "&3D-Ansicht"
@@ -917,7 +911,7 @@ msgid "&Report"
 msgstr "&Report"
 
 msgid "this may take some time"
-msgstr "dies kann einige zeit dauern"
+msgstr "dies kann einige Zeit dauern"
 
 msgid "open preview in openscad"
 msgstr "öffne vorschau in openscad"
