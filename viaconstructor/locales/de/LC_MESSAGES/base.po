@@ -87,7 +87,7 @@ msgstr "Richtungsumkehr"
 msgid "Back-Home"
 msgstr "Zurück zum Startpunkt"
 
-msgid "move tool back to Zero-Possition after milling"
+msgid "move tool back to Zero-Position after milling"
 msgstr "bewegt das Werkzeug nach dem fräsen zum Startpunkt zurück"
 
 msgid "Small-Circles"
@@ -206,7 +206,7 @@ msgstr "Oben-Rechts"
 msgid "Zero-Position"
 msgstr "Nullpunkt"
 
-msgid "setting the Zero-Postition of the Workpiece"
+msgid "setting the Zero-Position of the Workpiece"
 msgstr "setzt den Nullpunkt des Werkstücks"
 
 msgid "Offset X"

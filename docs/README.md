@@ -112,7 +112,7 @@ Reverse
 
 ### Back-Home
 <p>
-move tool back to Zero-Possition after milling
+move tool back to Zero-Position after milling
 
 * Default: True
 <p align="right">
@@ -270,7 +270,7 @@ the tooltable
 ## Workpiece
 ### Zero-Position
 <p>
-setting the Zero-Postition of the Workpiece
+setting the Zero-Position of the Workpiece
 
 * Default: bottomLeft
 ### Options:
