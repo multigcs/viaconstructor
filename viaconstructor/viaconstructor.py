@@ -962,9 +962,6 @@ class ViaConstructor:  # pylint: disable=R0904
         machine_feedrate = self.project["setup"]["machine"]["feedrate"]
         machine_toolspeed = self.project["setup"]["machine"]["tool_speed"]
         material_idx = self.project["setup"]["workpiece"].get("number")
-        if material_idx is None:
-            print("Material (workpiece) not set")
-            return
 
         diameter = None
         blades = 0
@@ -979,42 +976,47 @@ class ViaConstructor:  # pylint: disable=R0904
         unit = self.project["setup"]["machine"]["unit"]
         if unit == "inch":
             diameter *= 25.4
-        tool_vc = self.project["setup"]["workpiece"]["materialtable"][material_idx]["vc"]
-        tool_speed = tool_vc * 1000 / (diameter * math.pi)
-        tool_speed = int(min(tool_speed, machine_toolspeed))
-        if diameter <= 4.0:
-            fz_key = "fz4"
-        elif diameter <= 8.0:
-            fz_key = "fz8"
+
+        if material_idx is None:
+            print("Material (workpiece) not set")
         else:
-            fz_key = "fz12"
-        material_fz = self.project["setup"]["workpiece"]["materialtable"][material_idx][fz_key]
-        feedrate = tool_speed * blades * material_fz
-        feedrate = int(min(feedrate, machine_feedrate))
+            tool_vc = self.project["setup"]["workpiece"]["materialtable"][material_idx]["vc"]
+            tool_speed = tool_vc * 1000 / (diameter * math.pi)
+            tool_speed = int(min(tool_speed, machine_toolspeed))
+            if diameter <= 4.0:
+                fz_key = "fz4"
+            elif diameter <= 8.0:
+                fz_key = "fz8"
+            else:
+                fz_key = "fz12"
+            material_fz = self.project["setup"]["workpiece"]["materialtable"][material_idx][fz_key]
+            feedrate = tool_speed * blades * material_fz
+            feedrate = int(min(feedrate, machine_feedrate))
 
-        info_test = []
-        info_test.append("Some Milling and Tool Values will be changed:")
-        info_test.append("")
-        info_test.append(f" Feedrate: {feedrate} {'(!MACHINE-LIMIT)' if feedrate == machine_feedrate else ''}")
-        info_test.append(f" Tool-Speed: {tool_speed} {'(!MACHINE-LIMIT)' if tool_speed == machine_toolspeed else ''}")
-        info_test.append("")
-        ret = QMessageBox.question(
-            self.main,  # type: ignore
-            "Warning",
-            "\n".join(info_test),
-            QMessageBox.Ok | QMessageBox.Cancel,  # type: ignore
-        )
-        if ret != QMessageBox.Ok:  # type: ignore
-            return
+            info_test = []
+            info_test.append("Some Milling and Tool Values will be changed:")
+            info_test.append("")
+            info_test.append(f" Feedrate: {feedrate} {'(!MACHINE-LIMIT)' if feedrate == machine_feedrate else ''}")
+            info_test.append(f" Tool-Speed: {tool_speed} {'(!MACHINE-LIMIT)' if tool_speed == machine_toolspeed else ''}")
+            info_test.append("")
+            ret = QMessageBox.question(
+                self.main,  # type: ignore
+                "Warning",
+                "\n".join(info_test),
+                QMessageBox.Ok | QMessageBox.Cancel,  # type: ignore
+            )
+            if ret != QMessageBox.Ok:  # type: ignore
+                return
 
-        self.project["status"] = "CHANGE"
-        for obj in self.project["objects"].values():
-            if obj.setup["tool"]["rate_h"] == self.project["setup"]["tool"]["rate_h"]:
-                obj.setup["tool"]["rate_h"] = int(feedrate)
-            if obj.setup["tool"]["speed"] == self.project["setup"]["tool"]["speed"]:
-                obj.setup["tool"]["speed"] = int(tool_speed)
-        self.project["setup"]["tool"]["rate_h"] = int(feedrate)
-        self.project["setup"]["tool"]["speed"] = int(tool_speed)
+            self.project["status"] = "CHANGE"
+            for obj in self.project["objects"].values():
+                if obj.setup["tool"]["rate_h"] == self.project["setup"]["tool"]["rate_h"]:
+                    obj.setup["tool"]["rate_h"] = int(feedrate)
+                if obj.setup["tool"]["speed"] == self.project["setup"]["tool"]["speed"]:
+                    obj.setup["tool"]["speed"] = int(tool_speed)
+            self.project["setup"]["tool"]["rate_h"] = int(feedrate)
+            self.project["setup"]["tool"]["speed"] = int(tool_speed)
+
         self.update_global_setup()
         self.update_layer_setup()
         self.update_object_setup()
