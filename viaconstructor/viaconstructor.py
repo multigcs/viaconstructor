@@ -963,7 +963,7 @@ class ViaConstructor:  # pylint: disable=R0904
         """
         machine_feedrate = self.project["setup"]["machine"]["feedrate"]
         machine_toolspeed = self.project["setup"]["machine"]["tool_speed"]
-        material_idx = self.project["setup"]["workpiece"]["number"]
+        material_idx = self.project["setup"]["workpiece"].get("number")
         if material_idx is None:
             print("Material (workpiece) not set")
             return
