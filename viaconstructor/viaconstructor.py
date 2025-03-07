@@ -2189,6 +2189,7 @@ class ViaConstructor:  # pylint: disable=R0904
                     mlineedit.setPlainText(self.project["setup"][sname][ename])
                     mlineedit.setToolTip(helptext)
                     mlineedit.textChanged.connect(self.global_changed)  # type: ignore
+                    mlineedit.setFixedHeight(27)
                     hlayout.addWidget(mlineedit)
                     entry["widget"] = mlineedit
                 elif entry["type"] == "table":
