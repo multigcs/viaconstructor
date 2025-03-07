@@ -20,6 +20,8 @@ HALF_PI = math.pi / 2.0
 
 
 class PostProcessor:
+    last_angle = None
+
     def separation(self) -> None:
         pass
 
@@ -171,9 +173,6 @@ def machine_cmd_end(project: dict, post: PostProcessor) -> None:
     post.separation()
 
 
-last_angle = None
-
-
 def segment2machine_cmd(
     project: dict,
     post: PostProcessor,
@@ -185,7 +184,6 @@ def segment2machine_cmd(
     tool: dict,
     dragoff: float = None,
 ) -> None:
-    global last_angle
     bulge = last[2]
     if last[0] == point[0] and last[1] == point[1] and last[2] == point[2]:
         return
@@ -198,7 +196,7 @@ def segment2machine_cmd(
     tabs_type = tabs.get("type", "rectangle")
 
     if bulge > 0.0:
-        last_angle = None
+        post.last_angle = None
         (
             center,
             start_angle,  # pylint: disable=W0612
@@ -304,7 +302,7 @@ def segment2machine_cmd(
         )
 
     elif bulge < 0.0:
-        last_angle = None
+        post.last_angle = None
         (
             center,
             start_angle,
@@ -451,9 +449,9 @@ def segment2machine_cmd(
                     )
 
         new_angle = angle_of_line((last[0], last[1]), (point[0], point[1])) + math.pi / 2
-        if last_angle is not None and dragoff:
-            off_x = dragoff * math.sin(last_angle)
-            off_y = dragoff * math.cos(last_angle)
+        if post.last_angle is not None and dragoff:
+            off_x = dragoff * math.sin(post.last_angle)
+            off_y = dragoff * math.cos(post.last_angle)
             point_off1 = (last[0] + off_x, last[1] - off_y)
 
             off_x = dragoff * math.sin(new_angle)
@@ -462,7 +460,7 @@ def segment2machine_cmd(
             post.linear(x_pos=point_off1[0], y_pos=point_off1[1], z_pos=set_depth)
 
             new_angle_d = new_angle
-            last_angle_d = last_angle
+            last_angle_d = post.last_angle
 
             while new_angle_d >= math.pi * 2:
                 new_angle_d -= math.pi * 2
@@ -499,7 +497,7 @@ def segment2machine_cmd(
 
         post.linear(x_pos=point[0], y_pos=point[1], z_pos=set_depth)
 
-        last_angle = new_angle
+        post.last_angle = new_angle
 
 
 def get_nearest_free_object(
@@ -618,7 +616,6 @@ def reorder_master_ids(project: dict, master_ids: list) -> list:
 
 def polylines2machine_cmd(project: dict, post: PostProcessor) -> str:
     """generates machine_cmd from polilines"""
-    global last_angle
     milling: set = set()
     last_pos: list = [0, 0]
     polylines = project["offsets"]
@@ -671,9 +668,7 @@ def polylines2machine_cmd(project: dict, post: PostProcessor) -> str:
                         master_idx,
                     )
                     if found:
-
-                        last_angle = None
-
+                        post.last_angle = None
                         percent = round((polylines_n + 1) * 100 / polylines_len, 1)
                         if int(percent) != int(last_percent):
                             print(f"generating machine commands: {percent}%", end="\r")
@@ -921,7 +916,7 @@ def polylines2machine_cmd(project: dict, post: PostProcessor) -> str:
                                     max_depth,
                                     polyline.setup["tabs"],
                                     polyline.setup["tool"],
-                                    dragoff = dragoff,
+                                    dragoff=dragoff,
                                 )
                                 last = point
 
@@ -943,7 +938,7 @@ def polylines2machine_cmd(project: dict, post: PostProcessor) -> str:
                                     max_depth,
                                     polyline.setup["tabs"],
                                     polyline.setup["tool"],
-                                    dragoff = dragoff,
+                                    dragoff=dragoff,
                                 )
 
                             last_depth = depth
