@@ -2227,6 +2227,8 @@ class ViaConstructor:  # pylint: disable=R0904
                 ulabel = QLabel(unit)
                 ulabel.setFont(QFont("Arial", 9))
                 hlayout.addWidget(ulabel)
+            vlayout.addStretch(1)
+
 
     def object_info_text(self, object_active_obj):
         if object_active_obj:
