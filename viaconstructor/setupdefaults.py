@@ -229,12 +229,12 @@ def setup_defaults(_) -> dict:
                     },
                 ],
                 "columns": {
-                    "name": {"type": "str"},
-                    "number": {"type": "int"},
-                    "diameter": {"type": "float"},
-                    "lenght": {"type": "float"},
-                    "blades": {"type": "int"},
-                    "dragoff": {"type": "float"},
+                    "name": {"type": "str", "title": _("name")},
+                    "number": {"type": "int", "title": _("number")},
+                    "diameter": {"type": "float", "title": _("diameter")},
+                    "lenght": {"type": "float", "title": _("lenght")},
+                    "blades": {"type": "int", "title": _("flutes")},
+                    "dragoff": {"type": "float", "title": _("drag knife offset")},
                 },
                 "column_defaults": {
                     "name": "",

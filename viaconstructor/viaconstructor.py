@@ -2073,6 +2073,7 @@ class ViaConstructor:  # pylint: disable=R0904
                         table.setHorizontalHeaderItem(0, QTableWidgetItem("Select"))
                         idxf_offset = 1
                     for col_idx, title in enumerate(entry["columns"]):
+                        title = entry["columns"][title].get("title", title)
                         table.setHorizontalHeaderItem(col_idx + idxf_offset, QTableWidgetItem(title))
                     for row_idx, row in enumerate(self.project["setup"][sname][ename]):
                         if entry["selectable"]:
@@ -2205,6 +2206,7 @@ class ViaConstructor:  # pylint: disable=R0904
                         table.setHorizontalHeaderItem(0, QTableWidgetItem("Select"))
                         idxf_offset = 1
                     for col_idx, title in enumerate(entry["columns"]):
+                        title = entry["columns"][title].get("title", title)
                         table.setHorizontalHeaderItem(col_idx + idxf_offset, QTableWidgetItem(title))
                     for row_idx, row in enumerate(self.project["setup"][sname][ename]):
                         if entry["selectable"]:
@@ -2382,6 +2384,7 @@ class ViaConstructor:  # pylint: disable=R0904
                         table.setHorizontalHeaderItem(0, QTableWidgetItem("Select"))
                         idxf_offset = 1
                     for col_idx, title in enumerate(entry["columns"]):
+                        title = entry["columns"][title].get("title", title)
                         table.setHorizontalHeaderItem(col_idx + idxf_offset, QTableWidgetItem(title))
                     for row_idx, row in enumerate(setup_data[sname][ename]):
                         if entry["selectable"]:
@@ -2524,6 +2527,7 @@ class ViaConstructor:  # pylint: disable=R0904
                         table.setHorizontalHeaderItem(0, QTableWidgetItem("Select"))
                         idxf_offset = 1
                     for col_idx, title in enumerate(entry["columns"]):
+                        title = entry["columns"][title].get("title", title)
                         table.setHorizontalHeaderItem(col_idx + idxf_offset, QTableWidgetItem(title))
                     for row_idx, row in enumerate(self.project["setup"][sname][ename]):
                         if entry["selectable"]:
@@ -2648,6 +2652,7 @@ class ViaConstructor:  # pylint: disable=R0904
                         table.setHorizontalHeaderItem(0, QTableWidgetItem("Select"))
                         idxf_offset = 1
                     for col_idx, title in enumerate(entry["columns"]):
+                        title = entry["columns"][title].get("title", title)
                         table.setHorizontalHeaderItem(col_idx + idxf_offset, QTableWidgetItem(title))
                     for row_idx, row in enumerate(setup_data[sname][ename]):
                         if entry["selectable"]:
@@ -2790,6 +2795,7 @@ class ViaConstructor:  # pylint: disable=R0904
                         table.setHorizontalHeaderItem(0, QTableWidgetItem("Select"))
                         idxf_offset = 1
                     for col_idx, title in enumerate(entry["columns"]):
+                        title = entry["columns"][title].get("title", title)
                         table.setHorizontalHeaderItem(col_idx + idxf_offset, QTableWidgetItem(title))
                     for row_idx, row in enumerate(self.project["setup"][sname][ename]):
                         if entry["selectable"]:
