@@ -795,10 +795,10 @@ msgstr ""
 msgid "Steps"
 msgstr "Eintauchtiefe"
 
-msgid "with childs"
+msgid "with children"
 msgstr ""
 
-msgid "move all childs"
+msgid "move all children"
 msgstr ""
 
 msgid "Left"

@@ -2917,9 +2917,9 @@ class ViaConstructor:  # pylint: disable=R0904
         dspinbox.setToolTip("")
         vlayout.addWidget(dspinbox)
 
-        checkbox = QCheckBox(_("with childs"))
+        checkbox = QCheckBox(_("with children"))
         checkbox.setChecked(True)
-        checkbox.setToolTip(_("move all childs"))
+        checkbox.setToolTip(_("move all children"))
         vlayout.addWidget(checkbox)
 
         gcontainer = QWidget()
@@ -2988,9 +2988,9 @@ class ViaConstructor:  # pylint: disable=R0904
         dspinbox.setToolTip("")
         vlayout.addWidget(dspinbox)
 
-        checkbox = QCheckBox(_("with childs"))
+        checkbox = QCheckBox(_("with children"))
         checkbox.setChecked(True)
-        checkbox.setToolTip(_("move all childs"))
+        checkbox.setToolTip(_("move all children"))
         vlayout.addWidget(checkbox)
 
         gcontainer = QWidget()
@@ -3044,9 +3044,9 @@ class ViaConstructor:  # pylint: disable=R0904
         dspinbox.setToolTip(_("scale multiplier"))
         vlayout.addWidget(dspinbox)
 
-        checkbox = QCheckBox(_("with childs"))
+        checkbox = QCheckBox(_("with children"))
         checkbox.setChecked(True)
-        checkbox.setToolTip(_("move all childs"))
+        checkbox.setToolTip(_("move all children"))
         vlayout.addWidget(checkbox)
 
         gcontainer = QWidget()
@@ -3129,9 +3129,9 @@ class ViaConstructor:  # pylint: disable=R0904
 
         vlayout.addWidget(QLabel(_("Copy:")))
 
-        checkbox = QCheckBox(_("with childs"))
+        checkbox = QCheckBox(_("with children"))
         checkbox.setChecked(True)
-        checkbox.setToolTip(_("move all childs"))
+        checkbox.setToolTip(_("move all children"))
         vlayout.addWidget(checkbox)
 
         gcontainer = QWidget()
