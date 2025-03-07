@@ -904,10 +904,10 @@ msgstr "&Report"
 msgid "this may take some time"
 msgstr "dies kann einige zeit dauern"
 
-msgid "open's preview in openscad"
+msgid "open preview in openscad"
 msgstr "öffne vorschau in openscad"
 
-msgid "open's preview in camotics"
+msgid "open preview in camotics"
 msgstr "öffne vorschau in camotics"
 
 msgid "&Preview"
