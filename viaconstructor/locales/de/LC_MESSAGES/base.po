@@ -5,7 +5,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
-"POT-Creation-Date: 2025-01-24 13:11+0100\n"
+"POT-Creation-Date: 2025-03-07 15:47+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -20,6 +20,24 @@ msgstr "Aktiv"
 
 msgid "enable/disable this object"
 msgstr "dieses Objekt aktivieren/deaktivieren"
+
+msgid "auto"
+msgstr "Automatik"
+
+msgid "inside"
+msgstr "Innenseite"
+
+msgid "outside"
+msgstr "Aussenseite"
+
+msgid "none"
+msgstr "keine"
+
+msgid "Offset"
+msgstr "Versatz"
+
+msgid "tool offset"
+msgstr "Werkzeug-Versatz"
 
 msgid "Depth"
 msgstr "Tiefe"
@@ -84,24 +102,6 @@ msgstr "Überschnitt"
 msgid "Overcuting edges"
 msgstr "Überschnitt in Ecken"
 
-msgid "auto"
-msgstr "Automatik"
-
-msgid "inside"
-msgstr "Innenseite"
-
-msgid "outside"
-msgstr "Aussenseite"
-
-msgid "none"
-msgstr "keine"
-
-msgid "Offset"
-msgstr "Versatz"
-
-msgid "tool offset"
-msgstr "Werkzeug-Versatz"
-
 msgid "nearest"
 msgstr "näheste"
 
@@ -158,6 +158,26 @@ msgstr "Fluten"
 
 msgid "activate flood"
 msgstr "aktiviere Fluten"
+
+msgid "name"
+msgstr ""
+
+#, fuzzy
+msgid "number"
+msgstr "Nummer"
+
+msgid "diameter"
+msgstr ""
+
+#, fuzzy
+msgid "lenght"
+msgstr "Start-Länge"
+
+msgid "flutes"
+msgstr ""
+
+msgid "drag knife offset"
+msgstr ""
 
 msgid "Tools"
 msgstr "Werkzeuge"
@@ -252,10 +272,12 @@ msgstr "Inseln"
 msgid "keep islands"
 msgstr "Inseln stehen lassen"
 
-msgid "insideout"
-msgstr "insideout"
+#, fuzzy
+msgid "inside first"
+msgstr "Innenseite"
 
-msgid "from inside to out"
+#, fuzzy
+msgid "from inside to outside"
 msgstr "von innen nach aussen"
 
 msgid "active"
@@ -635,15 +657,6 @@ msgstr "Werkzeug-Tabelle"
 msgid "save tooltable as"
 msgstr "speichere Werkzeug-Tabelle als"
 
-msgid "View-Reset"
-msgstr "Ansicht zurücksetzen"
-
-msgid "View"
-msgstr "Ansicht"
-
-msgid "2D-View"
-msgstr "2D-Ansicht"
-
 msgid "Flip-X"
 msgstr ""
 
@@ -670,6 +683,15 @@ msgstr "Skalieren"
 
 msgid "Scale workpiece"
 msgstr "Werkstück skalieren"
+
+msgid "View-Reset"
+msgstr "Ansicht zurücksetzen"
+
+msgid "View"
+msgstr "Ansicht"
+
+msgid "2D-View"
+msgstr "2D-Ansicht"
 
 msgid "inch->mm"
 msgstr ""
@@ -908,3 +930,6 @@ msgstr "&Objekte"
 
 msgid "&Infos"
 msgstr "&Informationen"
+
+#~ msgid "insideout"
+#~ msgstr "insideout"
