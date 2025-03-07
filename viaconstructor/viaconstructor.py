@@ -2098,7 +2098,7 @@ class ViaConstructor:  # pylint: disable=R0904
             scrollarea.setWidgetResizable(True)
             vcontainer = QWidget()
             vlayout = QVBoxLayout(vcontainer)
-            vlayout.setContentsMargins(0, 0, 0, 0)
+            vlayout.setContentsMargins(0, 10, 0, 0)
             scrollarea.setWidget(vcontainer)
 
             titles = {
@@ -2426,7 +2426,7 @@ class ViaConstructor:  # pylint: disable=R0904
             scrollarea.setWidgetResizable(True)
             vcontainer = QWidget()
             vlayout = QVBoxLayout(vcontainer)
-            vlayout.setContentsMargins(0, 0, 0, 0)
+            vlayout.setContentsMargins(0, 10, 0, 0)
             scrollarea.setWidget(vcontainer)
             tabwidget.addTab(scrollarea, titles.get(sname, sname))
             streched = False
@@ -2692,7 +2692,7 @@ class ViaConstructor:  # pylint: disable=R0904
             scrollarea.setWidgetResizable(True)
             vcontainer = QWidget()
             vlayout = QVBoxLayout(vcontainer)
-            vlayout.setContentsMargins(0, 0, 0, 0)
+            vlayout.setContentsMargins(0, 10, 0, 0)
             scrollarea.setWidget(vcontainer)
             tabwidget.addTab(scrollarea, titles.get(sname, sname))
             streched = False
@@ -2856,7 +2856,7 @@ class ViaConstructor:  # pylint: disable=R0904
         scrollarea.setWidgetResizable(True)
         vcontainer = QWidget()
         vlayout = QVBoxLayout(vcontainer)
-        vlayout.setContentsMargins(0, 0, 0, 0)
+        vlayout.setContentsMargins(0, 10, 0, 0)
         scrollarea.setWidget(vcontainer)
 
         vlayout.addWidget(QLabel("Info:"))

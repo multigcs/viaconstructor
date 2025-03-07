@@ -8,6 +8,19 @@ def setup_defaults(_) -> dict:
                 "title": _("Active"),
                 "tooltip": _("enable/disable this object"),
             },
+            "offset": {
+                "default": "auto",
+                "type": "select",
+                "per_object": True,
+                "options": (
+                    ("auto", _("auto")),
+                    ("inside", _("inside")),
+                    ("outside", _("outside")),
+                    ("none", _("none")),
+                ),
+                "title": _("Offset"),
+                "tooltip": _("tool offset"),
+            },
             "depth": {
                 "default": -9.0,
                 "type": "float",
@@ -97,19 +110,6 @@ def setup_defaults(_) -> dict:
                 "per_object": True,
                 "title": _("Overcut"),
                 "tooltip": _("Overcuting edges"),
-            },
-            "offset": {
-                "default": "auto",
-                "type": "select",
-                "per_object": True,
-                "options": (
-                    ("auto", _("auto")),
-                    ("inside", _("inside")),
-                    ("outside", _("outside")),
-                    ("none", _("none")),
-                ),
-                "title": _("Offset"),
-                "tooltip": _("tool offset"),
             },
             "objectorder": {
                 "default": "nearest",
