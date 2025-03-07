@@ -135,7 +135,11 @@ def no_translation(text):
 
 _ = no_translation
 lang = os.environ.get("LANGUAGE")
-if lang:
+if not lang:
+    lang = os.environ.get("LANG")
+    if lang:
+        lang = lang.split("_")[0]
+if lang and lang != "en":
     localedir = os.path.join(Path(__file__).resolve().parent, "locales")
     try:
         lang_translations = gettext.translation("base", localedir=localedir, languages=[lang])
@@ -143,7 +147,7 @@ if lang:
         lang_translations.install()
         _ = lang_translations.gettext
     except FileNotFoundError:
-        sys.stderr.write(f"WARNING: localedir not found {localedir}\n")
+        sys.stderr.write(f"WARNING: localedir not found for lang '{lang}' in {localedir}\n")
 
 
 class myQMainWindow(QMainWindow):
