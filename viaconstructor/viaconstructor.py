@@ -2917,9 +2917,9 @@ class ViaConstructor:  # pylint: disable=R0904
         dspinbox.setToolTip("")
         vlayout.addWidget(dspinbox)
 
-        checkbox = QCheckBox(_("with childs"))
+        checkbox = QCheckBox(_("with children"))
         checkbox.setChecked(True)
-        checkbox.setToolTip(_("move all childs"))
+        checkbox.setToolTip(_("move all children"))
         vlayout.addWidget(checkbox)
 
         gcontainer = QWidget()
@@ -2988,9 +2988,9 @@ class ViaConstructor:  # pylint: disable=R0904
         dspinbox.setToolTip("")
         vlayout.addWidget(dspinbox)
 
-        checkbox = QCheckBox(_("with childs"))
+        checkbox = QCheckBox(_("with children"))
         checkbox.setChecked(True)
-        checkbox.setToolTip(_("move all childs"))
+        checkbox.setToolTip(_("move all children"))
         vlayout.addWidget(checkbox)
 
         gcontainer = QWidget()
@@ -3044,9 +3044,9 @@ class ViaConstructor:  # pylint: disable=R0904
         dspinbox.setToolTip(_("scale multiplier"))
         vlayout.addWidget(dspinbox)
 
-        checkbox = QCheckBox(_("with childs"))
+        checkbox = QCheckBox(_("with children"))
         checkbox.setChecked(True)
-        checkbox.setToolTip(_("move all childs"))
+        checkbox.setToolTip(_("move all children"))
         vlayout.addWidget(checkbox)
 
         gcontainer = QWidget()
@@ -3129,9 +3129,9 @@ class ViaConstructor:  # pylint: disable=R0904
 
         vlayout.addWidget(QLabel(_("Copy:")))
 
-        checkbox = QCheckBox(_("with childs"))
+        checkbox = QCheckBox(_("with children"))
         checkbox.setChecked(True)
-        checkbox.setToolTip(_("move all childs"))
+        checkbox.setToolTip(_("move all children"))
         vlayout.addWidget(checkbox)
 
         gcontainer = QWidget()
@@ -3666,12 +3666,12 @@ class ViaConstructor:  # pylint: disable=R0904
                 self.project["preview_generate"].pressed.connect(self.generate_preview)
                 preview_vbox.addWidget(self.project["preview_generate"])
                 self.project["preview_open"] = QPushButton(_("view in openscad"))
-                self.project["preview_open"].setToolTip(_("open's preview in openscad"))
+                self.project["preview_open"].setToolTip(_("open preview in openscad"))
                 self.project["preview_open"].pressed.connect(self.open_preview_in_openscad)
                 preview_vbox.addWidget(self.project["preview_open"])
             if camotics:
                 self.project["preview_open2"] = QPushButton(_("view in camotics"))
-                self.project["preview_open2"].setToolTip(_("open's preview in camotics"))
+                self.project["preview_open2"].setToolTip(_("open preview in camotics"))
                 self.project["preview_open2"].pressed.connect(self.open_preview_in_camotics)
                 preview_vbox.addWidget(self.project["preview_open2"])
 

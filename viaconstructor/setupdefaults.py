@@ -95,7 +95,7 @@ def setup_defaults(_) -> dict:
                 "default": True,
                 "type": "bool",
                 "title": _("Back-Home"),
-                "tooltip": _("move tool back to Zero-Possition after milling"),
+                "tooltip": _("move tool back to Zero-Position after milling"),
             },
             "small_circles": {
                 "default": False,
@@ -261,7 +261,7 @@ def setup_defaults(_) -> dict:
                     ("topRight", _("top right")),
                 ),
                 "title": _("Zero-Position"),
-                "tooltip": _("setting the Zero-Postition of the Workpiece"),
+                "tooltip": _("setting the Zero-Position of the Workpiece"),
             },
             "offset_x": {
                 "default": 0.0,
