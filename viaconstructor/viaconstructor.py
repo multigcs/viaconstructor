@@ -2112,6 +2112,7 @@ class ViaConstructor:  # pylint: disable=R0904
                 "view": _("&View"),
             }
             tabwidget.addTab(scrollarea, titles.get(sname, sname))
+            streched = False
             for ename, entry in self.project["setup_defaults"][sname].items():
                 helptext = entry.get("tooltip", f"{sname}/{ename}")
                 container = QWidget()
@@ -2221,7 +2222,8 @@ class ViaConstructor:  # pylint: disable=R0904
                             #    item.setFlags(Qt.ItemIsEditable)
                             table.resizeColumnToContents(col_idx + idxf_offset)
                     table.itemChanged.connect(self.global_changed)  # type: ignore
-                    vlayout.addWidget(table)
+                    vlayout.addWidget(table, stretch=1)
+                    streched = True
                     entry["widget"] = table
                 else:
                     eprint(f"Unknown setup-type: {entry['type']}")
@@ -2234,7 +2236,8 @@ class ViaConstructor:  # pylint: disable=R0904
                 ulabel.setMinimumWidth(36)
                 ulabel.setFont(QFont("Arial", 9))
                 hlayout.addWidget(ulabel)
-            vlayout.addStretch(1)
+            if not streched:
+                vlayout.addStretch(1)
 
     def object_info_text(self, object_active_obj):
         if object_active_obj:
@@ -2426,7 +2429,7 @@ class ViaConstructor:  # pylint: disable=R0904
             vlayout.setContentsMargins(0, 0, 0, 0)
             scrollarea.setWidget(vcontainer)
             tabwidget.addTab(scrollarea, titles.get(sname, sname))
-
+            streched = False
             for ename, entry in self.project["setup_defaults"][sname].items():
                 if not entry.get("per_object", False):
                     continue
@@ -2538,7 +2541,8 @@ class ViaConstructor:  # pylint: disable=R0904
                             #    item.setFlags(Qt.ItemIsEditable)
                             table.resizeColumnToContents(col_idx + idxf_offset)
                     table.itemChanged.connect(self.layer_changed)  # type: ignore
-                    vlayout.addWidget(table)
+                    vlayout.addWidget(table, stretch=1)
+                    streched = True
                     entry["widget_lay"] = table
                 else:
                     eprint(f"Unknown setup-type: {entry['type']}")
@@ -2551,7 +2555,8 @@ class ViaConstructor:  # pylint: disable=R0904
                 ulabel.setMinimumWidth(36)
                 ulabel.setFont(QFont("Arial", 9))
                 hlayout.addWidget(ulabel)
-            vlayout.addStretch(1)
+            if not streched:
+                vlayout.addStretch(1)
 
     def setup_select_object(self, value):
         if self.project["status"] != "READY":
@@ -2690,7 +2695,7 @@ class ViaConstructor:  # pylint: disable=R0904
             vlayout.setContentsMargins(0, 0, 0, 0)
             scrollarea.setWidget(vcontainer)
             tabwidget.addTab(scrollarea, titles.get(sname, sname))
-
+            streched = False
             for ename, entry in self.project["setup_defaults"][sname].items():
                 if not entry.get("per_object", False):
                     continue
@@ -2802,7 +2807,8 @@ class ViaConstructor:  # pylint: disable=R0904
                             #    item.setFlags(Qt.ItemIsEditable)
                             table.resizeColumnToContents(col_idx + idxf_offset)
                     table.itemChanged.connect(self.object_changed)  # type: ignore
-                    vlayout.addWidget(table)
+                    vlayout.addWidget(table, stretch=1)
+                    streched = True
                     entry["widget_obj"] = table
                 else:
                     eprint(f"Unknown setup-type: {entry['type']}")
@@ -2815,7 +2821,8 @@ class ViaConstructor:  # pylint: disable=R0904
                 ulabel.setMinimumWidth(36)
                 ulabel.setFont(QFont("Arial", 9))
                 hlayout.addWidget(ulabel)
-            vlayout.addStretch(1)
+            if not streched:
+                vlayout.addStretch(1)
 
         def object_move(spinbox_steps, checkbox_childs, direction):
             object_active = self.project["object_active"]
