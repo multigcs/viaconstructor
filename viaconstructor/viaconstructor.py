@@ -959,7 +959,7 @@ class ViaConstructor:  # pylint: disable=R0904
         return True
 
     def calculate_cutting_data(self) -> None:
-        """calculates the milling feedrate and tool-speed for the selected material
+        """calculates the milling feedrate and spindle speed for the selected material
         see: https://www.precifast.de/schnittgeschwindigkeit-beim-fraesen-berechnen/
         """
         machine_feedrate = self.project["setup"]["machine"]["feedrate"]
@@ -1000,7 +1000,7 @@ class ViaConstructor:  # pylint: disable=R0904
             info_test.append("Some Milling and Tool Values will be changed:")
             info_test.append("")
             info_test.append(f" Feedrate: {feedrate} {'(!MACHINE-LIMIT)' if feedrate == machine_feedrate else ''}")
-            info_test.append(f" Tool-Speed: {tool_speed} {'(!MACHINE-LIMIT)' if tool_speed == machine_toolspeed else ''}")
+            info_test.append(f" Spindle Speed: {tool_speed} {'(!MACHINE-LIMIT)' if tool_speed == machine_toolspeed else ''}")
             info_test.append("")
             ret = QMessageBox.question(
                 self.main,  # type: ignore

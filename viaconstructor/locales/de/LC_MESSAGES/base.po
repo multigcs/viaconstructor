@@ -126,19 +126,19 @@ msgstr "Werkzeug-Nummer im gCode"
 msgid "Speed"
 msgstr "Geschwindigkeit"
 
-msgid "setting the Tool-Speed in RPM"
-msgstr "Werkzeug-Geschwindigkeit"
+msgid "setting the Spindle Speed in RPM"
+msgstr "Spindeldrehzahl setzen"
 
-msgid "Feed-Rate(Horizontal)"
+msgid "Feedrate(Horizontal)"
 msgstr "Vorschub (Horizontal)"
 
-msgid "the Horizotal Feetrate"
+msgid "the Horizontal Feedrate"
 msgstr "Horizontaler Vorschub"
 
-msgid "Feed-Rate(Vertical)"
+msgid "Feedrate(Vertical)"
 msgstr "Vorschub (Vertikal)"
 
-msgid "the Vertical Feetrate"
+msgid "the Vertical Feedrate"
 msgstr "Vertikaler Vorschub"
 
 msgid "Pause"
@@ -227,7 +227,7 @@ msgstr "liste der Materialien"
 msgid ""
 "\n"
 "                    list of predifined materials to calculate feedrate / "
-"tool speed\n"
+"spindle speed\n"
 "                "
 msgstr ""
 
@@ -325,13 +325,13 @@ msgid "Feedrate"
 msgstr "Vorschub"
 
 msgid "maximum feedrate while milling"
-msgstr "maximaler Vorschub beim fräsen"
+msgstr "maximaler Vorschub beim Fräsen"
 
-msgid "Tool-Speed"
-msgstr "Werkzeug-Geschwindigkeit"
+msgid "Spindle Speed"
+msgstr "Spindeldrehzahl"
 
-msgid "maximum tool-speed"
-msgstr "maximale Werkzeug-Geschwindigkeit"
+msgid "maximum spindle speed"
+msgstr "maximale Spindeldrehzahl"
 
 msgid "gcode_linuxcnc"
 msgstr ""

@@ -196,7 +196,7 @@ setting the Tool-Number to load in gcode
 
 ### Speed
 <p>
-setting the Tool-Speed in RPM
+setting the Spindle Speed in RPM
 
 * Unit: RPM
 * Default: 10000
@@ -205,9 +205,9 @@ setting the Tool-Speed in RPM
 
 </p>
 
-### Feed-Rate(Horizontal)
+### Feedrate(Horizontal)
 <p>
-the Horizotal Feetrate
+the Horizontal Feedrate
 
 * Unit: mm/min
 * Default: 1000
@@ -216,9 +216,9 @@ the Horizotal Feetrate
 
 </p>
 
-### Feed-Rate(Vertical)
+### Feedrate(Vertical)
 <p>
-the Vertical Feetrate
+the Vertical Feedrate
 
 * Unit: mm/min
 * Default: 100
@@ -345,7 +345,7 @@ Offset Z (G54)
 the materialtable
 
 
-                    list of predifined materials to calculate feedrate / tool speed
+                    list of predifined materials to calculate feedrate / spindle speed
                 
 
 <p align="right">
@@ -522,9 +522,9 @@ maximum feedrate while milling
 
 </p>
 
-### Tool-Speed
+### Spindle Speed
 <p>
-maximum tool-speed
+maximum spindle speed
 
 * Default: 15000
 <p align="right">
