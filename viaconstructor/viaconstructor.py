@@ -980,9 +980,11 @@ class ViaConstructor:  # pylint: disable=R0904
         if unit == "inch":
             diameter *= 25.4
 
+        self.project["status"] = "CHANGE"
+
         if material_idx is None:
             print("Material (workpiece) not set")
-        else:
+        elif diameter > 0.0:
             tool_vc = self.project["setup"]["workpiece"]["materialtable"][material_idx]["vc"]
             tool_speed = tool_vc * 1000 / (diameter * math.pi)
             tool_speed = int(min(tool_speed, machine_toolspeed))
@@ -1011,7 +1013,6 @@ class ViaConstructor:  # pylint: disable=R0904
             if ret != QMessageBox.Ok:  # type: ignore
                 return
 
-            self.project["status"] = "CHANGE"
             for obj in self.project["objects"].values():
                 if obj.setup["tool"]["rate_h"] == self.project["setup"]["tool"]["rate_h"]:
                     obj.setup["tool"]["rate_h"] = int(feedrate)
@@ -1156,6 +1157,7 @@ class ViaConstructor:  # pylint: disable=R0904
                         for key, col_type in entry["columns"].items():
                             if entry["widget_lay"].item(row_idx, col_idx + 1) is None:
                                 print("TABLE_ERROR")
+                                col_idx += 1
                                 continue
                             if col_type["type"] == "str":
                                 value = entry["widget_lay"].item(row_idx, col_idx + 1).text()
@@ -1256,6 +1258,7 @@ class ViaConstructor:  # pylint: disable=R0904
                         for key, col_type in entry["columns"].items():
                             if entry["widget_obj"].item(row_idx, col_idx + 1) is None:
                                 print("TABLE_ERROR")
+                                col_idx += 1
                                 continue
                             if col_type["type"] == "str":
                                 value = entry["widget_obj"].item(row_idx, col_idx + 1).text()
@@ -1322,6 +1325,7 @@ class ViaConstructor:  # pylint: disable=R0904
                         for key, col_type in entry["columns"].items():
                             if entry["widget"].item(row_idx, col_idx + 1) is None:
                                 print("TABLE_ERROR")
+                                col_idx += 1
                                 continue
                             if col_type["type"] == "str":
                                 value = entry["widget"].item(row_idx, col_idx + 1).text()
