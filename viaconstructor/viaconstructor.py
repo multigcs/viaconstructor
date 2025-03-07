@@ -955,8 +955,6 @@ class ViaConstructor:  # pylint: disable=R0904
             self.project["status"] = "READY"
         return True
 
-
-
     def calculate_cutting_data(self) -> None:
         """calculates the milling feedrate and tool-speed for the selected material
         see: https://www.precifast.de/schnittgeschwindigkeit-beim-fraesen-berechnen/
@@ -1036,7 +1034,7 @@ class ViaConstructor:  # pylint: disable=R0904
         for obj in self.project["objects"].values():
             if obj.setup["tool"]["number"] == old_tool_number:
                 obj.setup["tool"]["number"] = new_tool_number
-        self.calculate_cutting_data()  
+        self.calculate_cutting_data()
 
     def table_select(self, section, name, row_idx) -> None:
         if section == "tool" and name == "tooltable":
@@ -2235,7 +2233,6 @@ class ViaConstructor:  # pylint: disable=R0904
                 ulabel.setFont(QFont("Arial", 9))
                 hlayout.addWidget(ulabel)
             vlayout.addStretch(1)
-
 
     def object_info_text(self, object_active_obj):
         if object_active_obj:
