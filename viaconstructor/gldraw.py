@@ -630,6 +630,10 @@ class GLWidget(QGLWidget):
 
                 self.update_drawing()
                 self.update()
+
+                if self.selector_mode == "delete":
+                    self.project["app"].status_bar_message("please use right mouse click to delete")
+
             elif self.mbutton == 2:
                 if self.selector_mode == "tab":
                     sel_idx = -1
