@@ -525,8 +525,12 @@ class GLWidget(QGLWidget):
 
     def view_reset(self) -> None:
         """toggle view function."""
+
         if self.selector_mode != "":
-            return
+            tfunc = f"toggle_{self.selector_mode}_selector"
+            if hasattr(self, tfunc):
+                getattr(self, tfunc)()
+
         self.ortho = False
         self.rot_x = -20.0
         self.rot_y = -30.0

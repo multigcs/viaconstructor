@@ -562,6 +562,9 @@ class ViaConstructor:  # pylint: disable=R0904
     def _toolbar_view_reset(self) -> None:
         """center view."""
         self.project["glwidget"].view_reset()
+        for toolbutton in self.toolbuttons.values():
+            if toolbutton[6]:
+                toolbutton[9].setChecked(False)
 
     def machine_cmd_save(self, filename: str) -> bool:
         with open(filename, "w") as fd_machine_cmd:
