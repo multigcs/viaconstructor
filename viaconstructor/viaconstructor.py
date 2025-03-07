@@ -2117,7 +2117,7 @@ class ViaConstructor:  # pylint: disable=R0904
                 vlayout.addWidget(container)
                 hlayout.addStretch(1)
                 if entry["type"] == "bool":
-                    checkbox = QCheckBox(entry.get("title", ename))
+                    checkbox = QCheckBox()
                     checkbox.setChecked(self.project["setup"][sname][ename])
                     checkbox.setToolTip(helptext)
                     checkbox.stateChanged.connect(self.global_changed)  # type: ignore
