@@ -638,9 +638,9 @@ class ViaConstructor:  # pylint: disable=R0904
             inputname = '.'.join(self.project['filename_draw'].split('.')[:-1])
             basename = os.path.basename(inputname)
             target = os.path.join(dirname, basename)
-            target_file = f"{target}.{self.project['suffix']}"
+            target_file = f"{target}.dxf"
         else:
-            target_file = f"{'.'.join(self.project['filename_draw'].split('.')[:-1])}.{self.project['suffix']}"
+            target_file = f"{'.'.join(self.project['filename_draw'].split('.')[:-1])}.dxf"
 
         file_dialog = QFileDialog(self.main)
         file_dialog.setNameFilters(["dxf (*.dxf)"])
