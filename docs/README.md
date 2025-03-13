@@ -136,7 +136,7 @@ milling small circles even if the tool is bigger
 
 ### Overcut
 <p>
-Overcuting edges
+Overcutting edges
 
 * Default: False
 <p align="right">
@@ -791,9 +791,9 @@ size of the grid
 
 </p>
 
-### Show as Polygon
+### Show as Solid
 <p>
-showing as polygon in 3D preview
+showing as solid in 3D preview
 
 * Default: True
 <p align="right">

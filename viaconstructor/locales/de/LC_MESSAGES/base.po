@@ -4,8 +4,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: \n"
-"POT-Creation-Date: 2025-03-07 15:47+0100\n"
-"PO-Revision-Date: 2025-03-07 22:29+0100\n"
+"POT-Creation-Date: 2025-03-13 14:17+0100\n"
+"PO-Revision-Date: 2025-03-13 14:37+0100\n"
 "Last-Translator: Hans <hansunzner@gmail.com>\n"
 "Language-Team: German <kde-i18n-de@kde.org>\n"
 "Language: de_DE\n"
@@ -38,7 +38,7 @@ msgid "Offset"
 msgstr "Versatz"
 
 msgid "tool offset"
-msgstr "Werkzeug-Versatz"
+msgstr "Werkzeugversatz"
 
 msgid "Depth"
 msgstr "Tiefe"
@@ -71,16 +71,16 @@ msgid "milling circles in helix mode"
 msgstr "Kreise im Helix-Modus fräsen"
 
 msgid "Fast-Move Z"
-msgstr "Schnellgang-Höhe"
+msgstr "Eilgang-Höhe"
 
 msgid "the Z-Position for fast moves"
-msgstr "Z-Position im Schnellgang"
+msgstr "Z-Position im Eilgang"
 
 msgid "G64-Value"
 msgstr "G64-Wert"
 
 msgid "value for the G64 command"
-msgstr "Wert für das G64 Kommando"
+msgstr "Wert für den G64-Befehl"
 
 msgid "Reverse"
 msgstr "Richtungsumkehr"
@@ -89,7 +89,7 @@ msgid "Back-Home"
 msgstr "Zurück zum Startpunkt"
 
 msgid "move tool back to Zero-Position after milling"
-msgstr "bewegt das Werkzeug nach dem fräsen zum Startpunkt zurück"
+msgstr "bewegt das Werkzeug nach dem Fräsen zum Startpunkt zurück"
 
 msgid "Small-Circles"
 msgstr "Kleine-Kreise"
@@ -100,7 +100,7 @@ msgstr "fräst Kreise auch wenn sie kleiner sind als das Werkzeug"
 msgid "Overcut"
 msgstr "Überschnitt"
 
-msgid "Overcuting edges"
+msgid "Overcutting edges"
 msgstr "Überschnitt in Ecken"
 
 msgid "nearest"
@@ -122,7 +122,7 @@ msgid "Number"
 msgstr "Nummer"
 
 msgid "setting the Tool-Number to load in gcode"
-msgstr "Werkzeug-Nummer im gCode"
+msgstr "Werkzeugnummer zum Laden im G-Code"
 
 msgid "Speed"
 msgstr "Geschwindigkeit"
@@ -161,7 +161,7 @@ msgid "activate flood"
 msgstr "aktiviere Fluten"
 
 msgid "name"
-msgstr ""
+msgstr "Name"
 
 msgid "number"
 msgstr "Nummer"
@@ -182,7 +182,7 @@ msgid "Tools"
 msgstr "Werkzeuge"
 
 msgid "the tooltable"
-msgstr "Die Werkzeug-Tabelle"
+msgstr "Die Werkzeugtabelle"
 
 msgid "original"
 msgstr "Original"
@@ -257,10 +257,10 @@ msgid "do pocket operation on this object"
 msgstr "Taschen ausfräsen"
 
 msgid "no Contour"
-msgstr ""
+msgstr "keine Kontur"
 
 msgid "do not mill the contour"
-msgstr ""
+msgstr "Kontur nicht fräsen"
 
 msgid "Zigzag"
 msgstr "Zickzack"
@@ -362,7 +362,7 @@ msgid "hpgl"
 msgstr ""
 
 msgid "Plugin"
-msgstr ""
+msgstr "Plugin"
 
 msgid "output plugin selection"
 msgstr ""
@@ -377,13 +377,13 @@ msgid "laser+z"
 msgstr "Laser+Z"
 
 msgid "Tool-Mode"
-msgstr "Werkzeug-Modus"
+msgstr "Werkzeugmodus"
 
 msgid "mm"
-msgstr ""
+msgstr "mm"
 
 msgid "inch"
-msgstr ""
+msgstr "Inch"
 
 msgid "Unit"
 msgstr "Einheit"
@@ -401,13 +401,13 @@ msgid "Arcs-Mode (G2/G3)"
 msgstr "Kreisbogen-Modus (G2/G3)"
 
 msgid "Arcs-Mode - G2/G3 with IJ or R (experimental)"
-msgstr ""
+msgstr "Bogen-Modus - G2/G3 mit IJ or R (experimentell)"
 
 msgid "machine supports g54"
 msgstr "Maschinen unterstüzt G54"
 
 msgid "machine supports g54 (workpiece offsets)"
-msgstr ""
+msgstr "Maschine unterstützt G54 (Werkstück-Nullpunkt)"
 
 msgid ""
 "\n"
@@ -452,16 +452,16 @@ msgid "add gcode after turning the spindle off"
 msgstr ""
 
 msgid "Comments in output"
-msgstr ""
+msgstr "Kommentare in der Ausgabe"
 
 msgid "add comments to output"
 msgstr ""
 
 msgid "line numbers"
-msgstr ""
+msgstr "Zeilennummern"
 
 msgid "adding line numbers"
-msgstr ""
+msgstr "Zeilennummern hinzufügen"
 
 msgid "add thumbnail to gcode"
 msgstr ""
@@ -476,10 +476,10 @@ msgid "Post-Command to do things after save like upload to cnc"
 msgstr ""
 
 msgid "Auto-Recalculation"
-msgstr ""
+msgstr "Automatisch aktualisieren"
 
 msgid "update drawing automatically"
-msgstr ""
+msgstr "Zeichnung automatisch aktualisieren"
 
 msgid "Autosave (Setup)"
 msgstr "Einstellungen automatisch speichern"
@@ -500,43 +500,43 @@ msgid "Path"
 msgstr "Pfad"
 
 msgid "how to show the gcode path in the 3d-View"
-msgstr ""
+msgstr "Darstellung des Werkzeugpfades in der 3D-Ansicht"
 
 msgid "Colors-Show"
-msgstr ""
+msgstr "Farben anzeigen"
 
 msgid "showing layer colors in 3D preview"
 msgstr "zeige Ebenen-Farben in 3D-Ansicht"
 
 msgid "Ruler-Show"
-msgstr ""
+msgstr "Lineal anzeigen"
 
 msgid "showing ruler in 3D preview"
-msgstr ""
+msgstr "Lineal in 3D-Ansicht anzeigen"
 
 msgid "Grid-Show"
-msgstr ""
+msgstr "Raster anzeigen"
 
 msgid "showing grid in 3D preview"
-msgstr ""
+msgstr "Raster in 3D-Ansicht anzeigen"
 
 msgid "Grid-Size"
-msgstr ""
+msgstr "Raster"
 
 msgid "size of the grid"
-msgstr ""
+msgstr "Größe der Rasteranzeige"
 
-msgid "Show as Polygon"
-msgstr ""
+msgid "Show as Solid"
+msgstr "Als Solid darstellen"
 
-msgid "showing as polygon in 3D preview"
-msgstr ""
+msgid "showing as solid in 3D preview"
+msgstr "Als Volumenkörper in der 3D-Ansicht darstellen"
 
 msgid "Show Object-ID's"
-msgstr ""
+msgstr "Objekt-IDs anzeigen"
 
 msgid "shows id of each object"
-msgstr ""
+msgstr "Von jedem Objekt die Objekt-ID anzeigen"
 
 msgid "arcs"
 msgstr "Rundungen"
@@ -545,10 +545,10 @@ msgid "draw arcs / Interpolation"
 msgstr "zeichne Rundungen (Interpolieren)"
 
 msgid "Show inputfile in 3d"
-msgstr ""
+msgstr "3D-Modell anzeigen"
 
 msgid "Show inputfile in 3d if possible"
-msgstr ""
+msgstr "3D-Modell (STL-Datei) anzeigen wenn möglich"
 
 msgid "color"
 msgstr "Farbe"
@@ -563,16 +563,16 @@ msgid "transparency of the workpeace in 3d view"
 msgstr "Transparenz des Werkstücks in der 3D ansicht"
 
 msgid "use last dir"
-msgstr ""
+msgstr "Letztes Verzeichnis verwenden"
 
 msgid "use dir of input file"
-msgstr ""
+msgstr "Verzeichnung der Zeichnung verwenden"
 
 msgid "Output Folder"
-msgstr ""
+msgstr "Ausgabeverzeichnis"
 
 msgid "last output dir"
-msgstr ""
+msgstr "Letztes Ausgabeverzeichnis"
 
 msgid "last output dir / internal use"
 msgstr ""
@@ -611,13 +611,13 @@ msgid "Save drawing as DXF"
 msgstr "speichere Zeichnung als DXF"
 
 msgid "Save 3d-view as PNG"
-msgstr ""
+msgstr "3D-Ansicht als PNG-Bild speichern"
 
 msgid "Exit"
 msgstr "Beenden"
 
 msgid "Exit application"
-msgstr "Anwendung Beenden"
+msgstr "Anwendung beenden"
 
 msgid "Load project"
 msgstr "Projekt laden"
@@ -659,13 +659,13 @@ msgid "Save setup to drawing"
 msgstr "Einstellungen in der Zeichnung speichern"
 
 msgid "load tooltable from"
-msgstr "lade Werkzeug-Tabelle von"
+msgstr "lade Werkzeugtabelle von"
 
 msgid "Tooltable"
-msgstr "Werkzeug-Tabelle"
+msgstr "Werkzeugtabelle"
 
 msgid "save tooltable as"
-msgstr "speichere Werkzeug-Tabelle als"
+msgstr "speichere Werkzeugtabelle als"
 
 msgid "Flip-X"
 msgstr "horizontal spiegeln"
@@ -694,6 +694,12 @@ msgstr "Skalieren"
 msgid "Scale workpiece"
 msgstr "Werkstück skalieren"
 
+msgid "inch->mm"
+msgstr "Inch->mm"
+
+msgid "mm->inch"
+msgstr "mm->Inch"
+
 msgid "View-Reset"
 msgstr "Ansicht zurücksetzen"
 
@@ -702,12 +708,6 @@ msgstr "Ansicht"
 
 msgid "2D-View"
 msgstr "2D-Ansicht"
-
-msgid "inch->mm"
-msgstr "Inch->mm"
-
-msgid "mm->inch"
-msgstr "mm->Inch"
 
 msgid "Nesting"
 msgstr "Verschachtelung"
@@ -759,6 +759,9 @@ msgstr "Schrift-Werkzeug"
 
 msgid "open fonttool"
 msgstr "öffne Schrift-Werkzeug"
+
+msgid "Utilities"
+msgstr "Hilfsmittel"
 
 msgid "Gear-Tool"
 msgstr "Zahnrad-Werkzeug"
@@ -905,7 +908,7 @@ msgid "&3D-View"
 msgstr "&3D-Ansicht"
 
 msgid "&Machine-Output"
-msgstr "&Machine-Programm"
+msgstr "&Maschinen-Programm"
 
 msgid "&Report"
 msgstr "&Report"
