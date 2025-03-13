@@ -109,7 +109,7 @@ def setup_defaults(_) -> dict:
                 "type": "bool",
                 "per_object": True,
                 "title": _("Overcut"),
-                "tooltip": _("Overcuting edges"),
+                "tooltip": _("Overcutting edges"),
             },
             "objectorder": {
                 "default": "nearest",
@@ -697,8 +697,8 @@ def setup_defaults(_) -> dict:
             "polygon_show": {
                 "default": True,
                 "type": "bool",
-                "title": _("Show as Polygon"),
-                "tooltip": _("showing as polygon in 3D preview"),
+                "title": _("Show as Solid"),
+                "tooltip": _("showing as solid in 3D preview"),
             },
             "object_ids": {
                 "default": True,
