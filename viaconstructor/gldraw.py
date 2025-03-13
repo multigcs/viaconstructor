@@ -444,7 +444,6 @@ class GLWidget(QGLWidget):
             return True
         if self.selector_mode == "tab":
             self.selector_mode = ""
-            self.view_reset()
         return False
 
     def toggle_start_selector(self) -> bool:
@@ -461,7 +460,6 @@ class GLWidget(QGLWidget):
             return True
         if self.selector_mode == "start":
             self.selector_mode = ""
-            self.view_reset()
         return False
 
     def toggle_repair_selector(self) -> bool:
@@ -478,7 +476,6 @@ class GLWidget(QGLWidget):
             return True
         if self.selector_mode == "repair":
             self.selector_mode = ""
-            self.view_reset()
         return False
 
     def toggle_delete_selector(self) -> bool:
@@ -495,7 +492,6 @@ class GLWidget(QGLWidget):
             return True
         if self.selector_mode == "delete":
             self.selector_mode = ""
-            self.view_reset()
         return False
 
     def toggle_object_selector(self) -> bool:
@@ -512,7 +508,6 @@ class GLWidget(QGLWidget):
             return True
         if self.selector_mode == "object":
             self.selector_mode = ""
-            self.view_reset()
         return False
 
     def view_2d(self) -> None:
