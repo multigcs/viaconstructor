@@ -2127,7 +2127,24 @@ class ViaConstructor:  # pylint: disable=R0904
                     eprint(f"Unknown setup-type: {entry['type']}")
 
     def create_global_setup(self, tabwidget) -> None:
+        titles = {
+            "mill": _("M&ill"),
+            "tool": _("&Tool"),
+            "workpiece": _("&Workpiece"),
+            "pockets": _("P&ockets"),
+            "tabs": _("Ta&bs"),
+            "leads": _("Lea&ds"),
+            "machine": _("M&achine"),
+            "view": _("&View"),
+        }
         for sname in self.project["setup_defaults"]:
+        #     show_section = False
+        #     for entry in self.project["setup_defaults"][sname].values():
+        #         if entry.get("per_object", False):
+        #             show_section = True
+        #     if not show_section:
+        #         continue
+            
             scrollarea = QScrollArea()
             scrollarea.setWidgetResizable(True)
             vcontainer = QWidget()
@@ -2135,26 +2152,18 @@ class ViaConstructor:  # pylint: disable=R0904
             vlayout.setContentsMargins(0, 10, 0, 0)
             scrollarea.setWidget(vcontainer)
 
-            titles = {
-                "mill": _("M&ill"),
-                "tool": _("&Tool"),
-                "workpiece": _("&Workpiece"),
-                "pockets": _("P&ockets"),
-                "tabs": _("Ta&bs"),
-                "leads": _("Lea&ds"),
-                "machine": _("M&achine"),
-                "view": _("&View"),
-            }
             tabwidget.addTab(scrollarea, titles.get(sname, sname))
             streched = False
             for ename, entry in self.project["setup_defaults"][sname].items():
+                # if not entry.get("per_object", False):
+                #     continue
                 helptext = entry.get("tooltip", f"{sname}/{ename}")
                 container = QWidget()
                 hlayout = QHBoxLayout(container)
                 hlayout.setContentsMargins(10, 0, 10, 0)
-                label = QLabel(entry.get("title", ename))
-                label.setToolTip(helptext)
-                hlayout.addWidget(label)
+                entry["widget"] = QLabel(entry.get("title", ename))
+                entry["widget"].setToolTip(helptext)
+                hlayout.addWidget(entry["widget"])
                 vlayout.addWidget(container)
                 hlayout.addStretch(1)
                 if entry["type"] == "bool":
@@ -2228,7 +2237,7 @@ class ViaConstructor:  # pylint: disable=R0904
                         self.project["setup"][sname][ename].append(new_row)
 
                     table = QTableWidget()
-                    label.setToolTip(helptext)
+                    table.setToolTip(helptext)
                     table.setRowCount(len(self.project["setup"][sname][ename]))
                     idxf_offset = 0
                     table.setColumnCount(len(entry["columns"]))
@@ -2248,7 +2257,8 @@ class ViaConstructor:  # pylint: disable=R0904
                             table.setCellWidget(row_idx, 0, button)
                             table.resizeColumnToContents(0)
                         for col_idx, key in enumerate(entry["columns"]):
-                            item = QTableWidgetItem(str(row.get(key, 0)))
+                            #####
+                            item = QTableWidgetItem(str(row[key]))
                             table.setItem(
                                 row_idx,
                                 col_idx + idxf_offset,
@@ -2444,6 +2454,13 @@ class ViaConstructor:  # pylint: disable=R0904
             tab_idx += 1
 
     def create_layer_setup(self, tabwidget) -> None:
+        titles = {
+            "mill": _("M&ill"),
+            "tool": _("&Tool"),
+            "pockets": _("P&ockets"),
+            "tabs": _("Ta&bs"),
+            "leads": _("Lea&ds"),
+        }
         for sname in self.project["setup_defaults"]:
             show_section = False
             for entry in self.project["setup_defaults"][sname].values():
@@ -2451,14 +2468,6 @@ class ViaConstructor:  # pylint: disable=R0904
                     show_section = True
             if not show_section:
                 continue
-
-            titles = {
-                "mill": "Mill",
-                "tool": "Tool",
-                "pockets": "Pockets",
-                "tabs": "Tabs",
-                "leads": "Leads",
-            }
             scrollarea = QScrollArea()
             scrollarea.setWidgetResizable(True)
             vcontainer = QWidget()
@@ -2712,6 +2721,13 @@ class ViaConstructor:  # pylint: disable=R0904
             tab_idx += 1
 
     def create_object_setup(self, tabwidget) -> None:
+        titles = {
+            "mill": _("M&ill"),
+            "tool": _("&Tool"),
+            "pockets": _("P&ockets"),
+            "tabs": _("Ta&bs"),
+            "leads": _("Lea&ds"),
+        }
         for sname in self.project["setup_defaults"]:
             show_section = False
             for entry in self.project["setup_defaults"][sname].values():
@@ -2719,14 +2735,6 @@ class ViaConstructor:  # pylint: disable=R0904
                     show_section = True
             if not show_section:
                 continue
-
-            titles = {
-                "mill": "Mill",
-                "tool": "Tool",
-                "pockets": "Pockets",
-                "tabs": "Tabs",
-                "leads": "Leads",
-            }
             scrollarea = QScrollArea()
             scrollarea.setWidgetResizable(True)
             vcontainer = QWidget()
