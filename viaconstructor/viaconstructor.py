@@ -602,9 +602,9 @@ class ViaConstructor:  # pylint: disable=R0904
         """save machine_cmd."""
         self.status_bar_message(f"{self.info} - save machine_cmd..")
 
-        if self.project["setup"]["view"]["outputfolder"] == "use last dir" and self.project['setup']['view']['lastdir']:
-            dirname = self.project['setup']['view']['lastdir']
-            inputname = '.'.join(self.project['filename_draw'].split('.')[:-1])
+        if self.project["setup"]["view"]["outputfolder"] == "use last dir" and self.project["setup"]["view"]["lastdir"]:
+            dirname = self.project["setup"]["view"]["lastdir"]
+            inputname = ".".join(self.project["filename_draw"].split(".")[:-1])
             basename = os.path.basename(inputname)
             target = os.path.join(dirname, basename)
             target_file = f"{target}.{self.project['suffix']}"
@@ -633,9 +633,9 @@ class ViaConstructor:  # pylint: disable=R0904
         """save drawing as dxf."""
         self.status_bar_message(f"{self.info} - save drawing as dxf..")
 
-        if self.project["setup"]["view"]["outputfolder"] == "use last dir" and self.project['setup']['view']['lastdir']:
-            dirname = self.project['setup']['view']['lastdir']
-            inputname = '.'.join(self.project['filename_draw'].split('.')[:-1])
+        if self.project["setup"]["view"]["outputfolder"] == "use last dir" and self.project["setup"]["view"]["lastdir"]:
+            dirname = self.project["setup"]["view"]["lastdir"]
+            inputname = ".".join(self.project["filename_draw"].split(".")[:-1])
             basename = os.path.basename(inputname)
             target = os.path.join(dirname, basename)
             target_file = f"{target}.dxf"

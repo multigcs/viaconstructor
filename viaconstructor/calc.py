@@ -1346,6 +1346,8 @@ def rotate_object(obj: VcObject, origin_x: float, origin_y: float, angle: float)
 
 def move_object(obj: VcObject, xoff: float, yoff: float) -> None:
     """moves an object"""
+    obj.offset[0] += xoff
+    obj.offset[1] += yoff
     for segment in obj.segments:
         for ptype in ("start", "end", "center"):
             if ptype in segment:

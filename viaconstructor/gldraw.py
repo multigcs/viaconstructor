@@ -611,6 +611,8 @@ class GLWidget(QGLWidget):
 
                     elif self.selector_mode == "repair":
                         obj_idx = self.selection[2]
+                        xoff = self.project["objects"][obj_idx].offset[0]
+                        yoff = self.project["objects"][obj_idx].offset[1]
                         self.project["segments_org"].append(
                             VcSegment(
                                 {
@@ -618,8 +620,8 @@ class GLWidget(QGLWidget):
                                     "object": None,
                                     "layer": self.project["objects"][obj_idx]["layer"],
                                     "color": self.project["objects"][obj_idx]["color"],
-                                    "start": (self.selection[0], self.selection[1]),
-                                    "end": (self.selection[4], self.selection[5]),
+                                    "start": (self.selection[0] - xoff, self.selection[1] - yoff),
+                                    "end": (self.selection[4] - xoff, self.selection[5] - yoff),
                                     "bulge": 0.0,
                                 }
                             )
@@ -1463,9 +1465,16 @@ def draw_all(project: dict) -> None:
     GL.glNewList(project["gllist"], GL.GL_COMPILE)
     draw_grid(project)
 
+    first_obj = list(project["objects"])[0]
+
     if project["setup"]["view"]["3d_show"]:
         if hasattr(project["draw_reader"], "draw_3d"):
+            xoff = project["objects"][first_obj].offset[0]
+            yoff = project["objects"][first_obj].offset[1]
+            GL.glPushMatrix()
+            GL.glTranslatef(xoff, yoff, 0.0)
             project["draw_reader"].draw_3d()
+            GL.glPopMatrix()
 
     if project["glwidget"] and project["glwidget"].selector_mode != "repair":
         if not draw_machinecode_path(project):

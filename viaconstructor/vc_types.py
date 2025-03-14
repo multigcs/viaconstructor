@@ -61,6 +61,7 @@ class VcObject:
     color = 256
     setup: dict = {}
     start = ()
+    offset = [0.0, 0.0]
 
     def __init__(self, data):
         self.segments = data.get("segments", [])
@@ -73,6 +74,7 @@ class VcObject:
         self.color = data.get("color", 256)
         self.setup = data.get("setup", "")
         self.start = data.get("start", ())
+        self.offset = [0.0, 0.0]
 
     def __repr__(self):
         return "VcObject"
