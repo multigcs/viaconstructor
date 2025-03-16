@@ -1649,10 +1649,10 @@ class ViaConstructor:  # pylint: disable=R0904
                 "",
                 None,
             ],
-            _("Save Machine-Commands"): [
+            _("Save Machine Output"): [
                 "save-gcode.png",
                 "Ctrl+S",
-                _("Save machine commands"),
+                _("Save machine commands in a file"),
                 self._toolbar_save_machine_cmd,
                 True,
                 True,

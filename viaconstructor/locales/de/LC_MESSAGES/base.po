@@ -4,7 +4,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: \n"
-"POT-Creation-Date: 2025-03-13 14:17+0100\n"
+"POT-Creation-Date: 2025-03-16 15:12+0100\n"
 "PO-Revision-Date: 2025-03-13 14:37+0100\n"
 "Last-Translator: Hans <hansunzner@gmail.com>\n"
 "Language-Team: German <kde-i18n-de@kde.org>\n"
@@ -628,11 +628,11 @@ msgstr "Projekt"
 msgid "Save project"
 msgstr "Projekt speichern"
 
-msgid "Save Machine-Commands"
-msgstr "speichere Maschinen-Befehle"
+msgid "Save Machine Output"
+msgstr "&Maschinen-Programm speichern"
 
-msgid "Save machine commands"
-msgstr "speichere Maschinen-Befehle"
+msgid "Save machine commands in a file"
+msgstr "Maschinen-Befehle in Datei speichern"
 
 msgid "Machine"
 msgstr "Maschine"
@@ -784,9 +784,6 @@ msgstr "Fräsen"
 msgid "&Tool"
 msgstr "&Werkzeuge"
 
-msgid "&Workpiece"
-msgstr "W&erkstück"
-
 msgid "P&ockets"
 msgstr "&Taschen"
 
@@ -795,6 +792,9 @@ msgstr "Ta&bs"
 
 msgid "Lea&ds"
 msgstr "Lea&ds"
+
+msgid "&Workpiece"
+msgstr "W&erkstück"
 
 msgid "M&achine"
 msgstr "Maschine"
@@ -806,7 +806,7 @@ msgid "Move:"
 msgstr "Verschieben:"
 
 msgid "Steps"
-msgstr "Z-Zustellung"
+msgstr "Schrittweite"
 
 msgid "with children"
 msgstr "mit Unterelementen"
@@ -842,7 +842,7 @@ msgid "Rotate:"
 msgstr "Rotieren"
 
 msgid "Angle"
-msgstr "Dreieck"
+msgstr "Winkel"
 
 msgid "CCW"
 msgstr "CCW"
@@ -941,7 +941,7 @@ msgid "&Objects"
 msgstr "&Objekte"
 
 msgid "&Infos"
-msgstr "&Informationen"
+msgstr "&Infos"
 
-#~ msgid "insideout"
-#~ msgstr "insideout"
+msgid "&Setup"
+msgstr "Einstellungen"
