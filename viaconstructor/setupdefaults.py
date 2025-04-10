@@ -478,6 +478,7 @@ def setup_defaults(_) -> dict:
                 ),
                 "title": _("in-type"),
                 "tooltip": _("type of the lead-in's"),
+                "per_object": True,
             },
             "in_lenght": {
                 "default": 3.0,
@@ -499,6 +500,7 @@ def setup_defaults(_) -> dict:
                 ),
                 "title": _("out-type"),
                 "tooltip": _("type of the lead-out's"),
+                "per_object": True,
             },
             "out_lenght": {
                 "default": 3.0,
