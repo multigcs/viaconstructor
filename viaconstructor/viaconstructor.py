@@ -239,6 +239,7 @@ class ViaConstructor:  # pylint: disable=R0904
     toolbar: Optional[QToolBar] = None
     menubar: Optional[QMenuBar] = None
     toolbuttons: dict = {}
+    lcombobjwidget = None
 
     module_root = Path(__file__).resolve().parent
 
