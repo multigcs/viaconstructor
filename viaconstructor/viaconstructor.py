@@ -1213,6 +1213,9 @@ class ViaConstructor:  # pylint: disable=R0904
                 self.tabobjwidget.setTabText(tab_idx, f"{titles.get(sname, sname)}")
             tab_idx += 1
 
+        if setup_data["mill"]["step"] >= 0.0:
+            setup_data["mill"]["step"] = -0.05
+
         for obj in self.project["objects"].values():
             if obj["layer"] != layer_active:
                 continue
@@ -1220,9 +1223,6 @@ class ViaConstructor:  # pylint: disable=R0904
                 for key, global_value in self.project["layersetup"][layer_active][sect].items():
                     if global_value != old_setup[sect][key] and obj["setup"][sect][key] == old_setup[sect][key]:
                         obj["setup"][sect][key] = self.project["layersetup"][layer_active][sect][key]
-
-        if setup_data["mill"]["step"] >= 0.0:
-            setup_data["mill"]["step"] = -0.05
 
         if not self.project["draw_reader"]:
             return
