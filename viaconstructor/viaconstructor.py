@@ -3376,6 +3376,10 @@ class ViaConstructor:  # pylint: disable=R0904
                 self.combobjwidget_update()
                 self.combobjwidget.setCurrentText(self.project["object_active"])
 
+            if self.lcombobjwidget is not None:
+               self.lcombobjwidget_update()
+               self.lcombobjwidget.setCurrentText(self.project["layer_active"])
+
             return True
 
         eprint(f"ERROR: can not load file: {filename}")
