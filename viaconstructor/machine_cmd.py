@@ -857,7 +857,14 @@ def polylines2machine_cmd(project: dict, post: PostProcessor) -> str:
 
                             if not is_closed:
                                 if project["setup"]["machine"]["mode"] == "mill" and "Z" in project["axis"]:
-                                    post.move(z_pos=fast_move_z)
+                                    if last[0] == points[0][0] and last[1] == points[0][1]:
+                                        # drilling holes
+                                        if last_depth < 0.5:
+                                            post.move(z_pos=0.5)
+                                        if not helix_mode:
+                                            post.move(z_pos=last_depth + 0.5)
+                                    else:
+                                        post.move(z_pos=fast_move_z)
                                 post.move(x_pos=points[0][0], y_pos=points[0][1])
 
                             if project["setup"]["machine"]["mode"] != "laser" and "Z" in project["axis"]:
